@@ -1,0 +1,41 @@
+{
+  "project": {
+    "name": "A.T.L.A.S.",
+    "version": "4.7.2",
+    "repository_url": "",
+    "issues_url": "",
+    "release_channel": "experimental"
+  },
+  "boards": [
+    {
+      "id": "matek-h743-wing-v2",
+      "name": "Matek H743-WING V2",
+      "family": "Matek Systems / H743",
+      "description": "Целевая аппаратная платформа. Совместимость и прошивку конкретной ревизии необходимо подтвердить до публикации.",
+      "status": "planned",
+      "target": "Уточняется для релиза",
+      "version": "4.7.2",
+      "downloads": []
+    },
+    {
+      "id": "matek-h743-wing-v3",
+      "name": "Matek H743-WING V3",
+      "family": "Matek Systems / H743",
+      "description": "Целевая аппаратная платформа. Сборка ещё не добавлена в публичный каталог.",
+      "status": "planned",
+      "target": "Уточняется для релиза",
+      "version": "4.7.2",
+      "downloads": []
+    },
+    {
+      "id": "other-boards",
+      "name": "Другие контроллеры",
+      "family": "Дополнительные платформы",
+      "description": "Поддержка пока не заявлена. Для каждой новой платы нужны отдельная сборка и проверка.",
+      "status": "unverified",
+      "target": "Нет подтверждённых сборок",
+      "version": "—",
+      "downloads": []
+    }
+  ]
+}
