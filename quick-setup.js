@@ -88,6 +88,16 @@ function safeLink(s){return !!s.connected&&s.armed===false&&Date.now()-s.lastHea
 function persist(){try{localStorage.setItem('atlas.quicksetup.v1',JSON.stringify({step:qs.step,paramsMode:qs.paramsMode,updated:Date.now()}));}catch{}}
 function translateStatic(){document.querySelectorAll('[data-qs-t]').forEach(node=>{const key=node.dataset.qsT;if(t(key)!==key)node.textContent=t(key);});}
 function complete(step,status='done'){qs.completed[step]=status;persist();render();}
+function invalidateFrom(step){
+ for(let index=step;index<stepKeys.length;index++)delete qs.completed[index];
+ if(step<=3){
+  qs.paramsApplied=false;
+  qs.rebootBaseline=0;qs.rebootSawDisconnect=false;qs.rebootReady=false;qs.rebootUserConfirmed=false;
+  qs.rebootReading=false;qs.escConfirmed=false;qs.compassAwaitingSave=false;qs.compassError='';
+  qs.accelError='';qs.levelError='';qs.finalChecks.fill(false);
+ }
+ persist();
+}
 function setStep(index){if(qs.applyBusy||index<0||index>=stepKeys.length)return;qs.step=index;if(index===6&&qs.paramsApplied&&!qs.rebootBaseline)qs.rebootBaseline=state().lastHeartbeat||Date.now();persist();render();}
 function canNext(){
  if(qs.step===6&&!qs.paramsApplied)return true;
@@ -129,7 +139,7 @@ function renderIntro(box){
  checkbox(box,t('introAck'),!!qs.completed[0],checked=>{if(checked)complete(0,'manual');else{delete qs.completed[0];render();}});
  if(qs.resumeFrom>0){
   const notice=el('div','qs-resume',t('resume')+' '+qs.resumeFrom+' / '+stepKeys.length+'. '+t('resumeBody'));box.append(notice);
-  button(box,t('reset'),()=>{qs.resumeFrom=0;qs.step=0;qs.completed={};qs.paramsMode='keep';persist();render();});
+  button(box,t('reset'),()=>{qs.resumeFrom=0;qs.step=0;invalidateFrom(0);qs.safety.fill(false);qs.paramsMode='keep';qs.preview=null;qs.fileName='';qs.compatConfirmed=false;qs.keepConfirmed=false;qs.backupDownloaded=false;qs.firmwareSource=null;qs.firmwareBoard=null;qs.firmwareError='';persist();render();});
  }
  button(box,t('start'),()=>{if(!qs.completed[0])return;qs.resumeFrom=0;render();}).disabled=!qs.completed[0];
 }
@@ -197,7 +207,8 @@ function paramErrorText(error){
  return t(keys[error.reason]||'paramInvalid')+(error.name?' · '+error.name:'')+(error.line?' · line '+error.line:'');
 }
 async function onParamFile(file){
- if(!file)return;
+ if(!file||qs.applyBusy)return;
+ invalidateFrom(3);qs.compatConfirmed=false;qs.keepConfirmed=false;qs.preview=null;
  const s=state();
  if(!paramReady(s)){qs.paramsMessage=t('readWaiting');render();return;}
  qs.fileName=file.name;qs.paramsMessage=t('readWaiting');render();
@@ -209,7 +220,7 @@ async function applyCustomParams(){
  if(!qs.preview?.valid||!qs.backupDownloaded||!qs.compatConfirmed||!paramReady(s)||!safeLink(s)){qs.paramsMessage=t('paramInvalid');render();return;}
  if(!qs.preview.changes.length){qs.paramsApplied=false;qs.paramsMessage=t('paramNoChanges');complete(3,'manual');return;}
  if(!window.confirm(t('applyConfirm')+'\n\n'+qs.preview.changes.length+' '+t('changed')))return;
- qs.applyBusy=true;qs.cancelApply=false;qs.paramsMessage=t('applying');render();
+ invalidateFrom(3);qs.applyBusy=true;qs.cancelApply=false;qs.paramsMessage=t('applying');render();
  try{
   const updates=Object.fromEntries(qs.preview.changes);
   const result=await api.writeAdvancedParams(updates,p=>{qs.paramsMessage=t('applying')+' · '+p.done+'/'+p.total+' · '+(p.name||'');setGlobal(qs.paramsMessage);},()=>qs.cancelApply);
@@ -231,16 +242,16 @@ function renderParams(box){
  const a=el('div');a.append(el('small','',t('live')),el('strong','',s.connected?(s.armed===false?t('disarmed'):'ARM / UNKNOWN'):t('disconnected')));
  const b=el('div');b.append(el('small','',t('readCount')),el('strong','',String(s.params?.size||0)+' / '+(s.paramCount??'?')));
  status.append(a,b);box.append(status);
- const actions=el('div','qs-inline-actions');button(actions,t('readParams'),loadParams,'cc-button ghost');button(actions,t('backup'),()=>{try{downloadBackup();}catch(e){setGlobal(e.message,true);}},'cc-button outline');box.append(actions);
+ const actions=el('div','qs-inline-actions');button(actions,t('readParams'),loadParams,'cc-button ghost').disabled=qs.applyBusy;button(actions,t('backup'),()=>{try{downloadBackup();}catch(e){setGlobal(e.message,true);}},'cc-button outline').disabled=qs.applyBusy;box.append(actions);
  if(ready&&qs.backupDownloaded)callout(box,t('backupDone'),'success');
  if(qs.paramsMessage)callout(box,qs.paramsMessage,qs.paramsMessage.includes(t('applyPartial'))||qs.paramsMessage===t('paramInvalid')?'danger':'');
- radio(box,t('paramsKeep'), 'keep',qs.paramsMode==='keep',value=>{qs.paramsMode=value;qs.preview=null;qs.fileName='';qs.compatConfirmed=false;qs.keepConfirmed=false;delete qs.completed[3];persist();render();});
- radio(box,t('paramsCustom'),'custom',qs.paramsMode==='custom',value=>{qs.paramsMode=value;qs.keepConfirmed=false;delete qs.completed[3];persist();render();});
+ radio(box,t('paramsKeep'), 'keep',qs.paramsMode==='keep',value=>{if(qs.applyBusy)return;invalidateFrom(3);qs.paramsMode=value;qs.preview=null;qs.fileName='';qs.compatConfirmed=false;qs.keepConfirmed=false;render();});
+ radio(box,t('paramsCustom'),'custom',qs.paramsMode==='custom',value=>{if(qs.applyBusy)return;invalidateFrom(3);qs.paramsMode=value;qs.keepConfirmed=false;qs.compatConfirmed=false;render();});
  if(qs.paramsMode==='keep'){
   callout(box,t('paramsKeepWarn'),'warning');
   if(ready)checkbox(box,t('keepConfirm'),qs.keepConfirmed,value=>{qs.keepConfirmed=value;if(value&&qs.backupDownloaded&&ready){qs.completed[3]='manual';persist();}else delete qs.completed[3];render();});
  }else{
-  const fileInput=el('input','qs-input');fileInput.type='file';fileInput.accept='.param,.txt';fileInput.addEventListener('change',event=>onParamFile(event.target.files?.[0]));box.append(el('label','',t('file')),fileInput);
+  const fileInput=el('input','qs-input');fileInput.type='file';fileInput.accept='.param,.txt';fileInput.disabled=qs.applyBusy;fileInput.addEventListener('change',event=>onParamFile(event.target.files?.[0]));box.append(el('label','',t('file')),fileInput);
   appendText(box,'p',qs.fileName||t('fileName'),'qs-global-status');
   if(qs.preview){
    const summary=el('div','qs-kv');
