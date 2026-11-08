@@ -47,3 +47,14 @@
 .atlas-subscribe-form.has-standalone-donation{border-top:1px solid #586c42;padding-top:20px}
 .atlas-donation-panel [hidden]{display:none!important}
 @media(max-width:500px){.atlas-direct-donation:not([hidden]){padding:16px 13px}}
+
+/* Tally hosted Early Tester application; privacy and donations remain independent. */
+.atlas-tester-apply{display:grid;gap:12px;padding:21px 0 3px;border-top:1px solid #6a784c}
+.atlas-tester-kicker{font:700 11px/1.4 'IBM Plex Mono',monospace;letter-spacing:.13em;color:#becb72}
+.atlas-tester-apply h3{font:700 clamp(16px,2vw,21px)/1.4 'IBM Plex Mono',monospace;color:#e8de9b;margin:0}
+.atlas-tester-apply p{font:400 13px/1.75 'IBM Plex Mono',monospace;color:#bfc6a4;margin:0!important}
+.atlas-tester-link{display:flex;justify-content:center;align-items:center;text-align:center;min-height:52px;width:100%;letter-spacing:.03em}
+.atlas-tester-link:focus-visible{outline:3px solid #f2df86;outline-offset:3px}
+.atlas-tester-apply .atlas-tester-hint{color:#dfca7a}
+.atlas-tester-apply .donation-policy-link{justify-self:start;margin-top:2px}
+.atlas-tester-apply [hidden],.atlas-direct-donation [hidden]{display:none!important}

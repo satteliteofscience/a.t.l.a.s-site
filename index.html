@@ -127,23 +127,13 @@
                   <a class="donation-action-primary donation-direct-link" id="donationDirectLink" href="https://send.monobank.ua/jar/7jkKfdWREX" target="_blank" rel="noopener noreferrer"></a>
                   <p class="donation-direct-note" id="donationDirectNote"></p>
                 </div>
-                <form id="atlasSubscriberForm" class="atlas-subscribe-form" novalidate>
-                  <h3 id="donationFormHeading">Обновления A.T.L.A.S. на почту</h3>
-                  <p class="donation-form-explain" id="donationFormExplain">Укажите email и модель полётного контроллера. После подтверждения адреса вы сможете получать новости, изменения, приглашения на ранние испытания и подходящие HEX-сборки.</p>
-                  <label class="donation-form-field"><span id="donationEmailLabel">Электронная почта</span><input id="donationEmail" type="email" autocomplete="email" inputmode="email" maxlength="254" required placeholder="pilot@example.com"></label>
-                  <label class="donation-form-field"><span id="donationBoardLabel">Полётный контроллер</span><select id="donationBoard" required><option value="" id="donationBoardPlaceholder">Выберите плату</option><option value="matek-h743-wing-v3">Matek H743-WING V3</option><option value="cube-orange">Cube Orange (планируется)</option><option value="other">Другая плата / ожидание поддержки</option></select></label>
-                  <label class="donation-agree"><input id="donationMailConsent" type="checkbox" required><span id="donationConsentText">Согласен получать письма о прошивках и тестировании. Подписка добровольная; отписаться можно в любой момент.</span></label>
-                  <label class="donation-agree"><input id="donationEarlyInterest" type="checkbox"><span id="donationEarlyText">Хочу участвовать в раннем тестировании после одобрения разработчиком.</span></label>
-                  <div class="donation-form-buttons"><button type="submit" class="donation-action-primary" id="donationSubscribeButton">Подписаться</button><button type="button" class="donation-action-secondary" id="donationSkipSubscription">Перейти к IBAN без подписки</button></div>
-                  <p class="donation-form-status" id="donationFormStatus" role="status" aria-live="polite"></p>
-                  <a class="donation-policy-link" id="donationPrivacyLink" href="privacy.html">Как используются ваши данные</a>
-                </form>
-                <div id="donationPaymentStage" class="donation-payment-stage" hidden>
-                  <p class="donation-lead" id="donationLead">Выберите способ поддержки:</p>
-                  <div class="donation-actions" id="donationActions"></div>
-                  <div id="donationBank" class="donation-bank" hidden></div>
-                  <p class="donation-hint" id="donationHint"></p>
-                  <button class="donation-action-secondary donation-back" type="button" id="donationBackToForm">Вернуться к форме</button>
+                <div class="atlas-tester-apply" id="atlasTesterApplyPanel">
+                  <div class="atlas-tester-kicker" id="atlasTesterKicker">EARLY TESTER / APPLICATION</div>
+                  <h3 id="atlasTesterHeading">Программа раннего тестирования A.T.L.A.S.</h3>
+                  <p id="atlasTesterDescription">Оставьте заявку через Tally: email, полётный контроллер, GitHub и опыт ArduPlane. Участие бесплатно, а пожертвование не является условием допуска.</p>
+                  <a id="atlasTesterLink" class="donation-action-primary atlas-tester-link" href="https://tally.so/r/ArKQJl" target="_blank" rel="noopener noreferrer">Подать заявку тестировщика ↗</a>
+                  <p class="atlas-tester-hint" id="atlasTesterHint">Заявки рассматриваются вручную. Подтверждение участия и доступ к ранним прошивкам не предоставляются автоматически.</p>
+                  <a class="donation-policy-link" id="atlasTesterPrivacyLink" href="privacy.html">Как используются ваши данные</a>
                 </div>
               </div>
             </div>
@@ -151,11 +141,11 @@
           <div class="support-early">
             <div class="support-early-top"><span class="support-early-dot" aria-hidden="true"></span><span>EARLY TESTER PROGRAM</span></div>
             <h3>Список ранних тестировщиков</h3>
-            <p>Те, кто поддерживает развитие A.T.L.A.S. и хочет участвовать в тестировании, по своему согласию включаются в специальный список. Участников будут приглашать для проверки новых функций и возможностей до их выхода в общедоступной версии прошивки.</p>
+            <p id="atlasTesterInfo">Участие в программе раннего тестирования добровольное. Заполните заявку и укажите подходящий контроллер. Пожертвования не обязательны и не дают автоматического доступа к закрытым прошивкам.</p>
             <ol class="support-steps">
-              <li><span>01</span><div>Поддержать разработку добровольным пожертвованием.</div></li>
-              <li><span>02</span><div>Подтвердить желание участвовать в ранних испытаниях.</div></li>
-              <li><span>03</span><div>Получать приглашения на подходящие тесты по мере готовности функций.</div></li>
+              <li><span>01</span><div id="atlasTesterStep1">Заполнить заявку в Tally и выбрать модель полётного контроллера.</div></li>
+              <li><span>02</span><div id="atlasTesterStep2">Дождаться ручной проверки заявки, email и совместимости оборудования.</div></li>
+              <li><span>03</span><div id="atlasTesterStep3">После одобрения получить приглашение при наличии подходящего теста.</div></li>
             </ol>
             <p class="support-conditions">Приглашения зависят от готовности сборки, доступных мест и требований безопасности. Участие не означает гарантированного доступа к каждой тестовой версии. Получатели прошивки сохраняют права, предусмотренные GNU GPL.</p>
           </div>

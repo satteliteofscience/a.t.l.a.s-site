@@ -44,7 +44,7 @@ The existing `.github/workflows/firmware-manifest.yml` publishes firmware index 
 
 The public archive: https://github.com/satteliteofscience/a.t.l.a.s-site/releases
 
-## 4. Brevo automatic public-release campaigns
+## 4. Optional legacy Brevo campaigns — NOT connected to Tally
 
 After testing the forms and sender, configure GitHub repo **Settings → Secrets and variables → Actions**:
 

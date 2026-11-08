@@ -1,13 +1,12 @@
 {
-  "schema": 2,
-  "provider": "brevo-hosted",
-  "hosted_forms": {
-    "matek-h743-wing-v3": "",
-    "cube-orange": "",
-    "other": ""
-  },
-  "api_endpoint": "",
+  "schema": 3,
+  "provider": "tally-hosted",
+  "form_url": "https://tally.so/r/ArKQJl",
+  "status": "published",
+  "storage": "private_google_sheets",
+  "review": "manual",
   "privacy_url": "privacy.html",
-  "status": "pending_brevo_account_setup",
-  "note": "Create HTTPS hosted Brevo signup forms with double opt-in and explicit consent, then put the public form URLs here. Form URLs are not API keys. Never store user emails or Brevo API keys in this public repository."
+  "emails_confirmed_automatically": false,
+  "automated_newsletters": false,
+  "note": "Tally collects application data and sends form submissions to the owner's private Google Sheets. Approval, email verification, donations, access and notification emails are handled manually. Never publish subscriber data in GitHub."
 }
