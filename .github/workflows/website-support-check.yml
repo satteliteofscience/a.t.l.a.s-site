@@ -12,6 +12,14 @@ on:
       - 'faq.html'
       - 'changelog.html'
       - 'page-meta.js'
+      - 'app.js'
+      - 'configurator.js'
+      - 'dfu-ui.js'
+      - 'firmware-access.js'
+      - 'firmware-access.css'
+      - 'data/firmware-access.json'
+      - 'firmware-gateway/**'
+      - 'tools/check_firmware_access.cjs'
       - 'assets/github-social-preview.jpg'
       - 'tools/check_social_preview.cjs'
       - 'tools/check_monobank_support.cjs'
@@ -25,8 +33,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check JavaScript syntax
-        run: node --check support.js && node --check page-meta.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs
+        run: node --check support.js && node --check page-meta.js && node --check app.js && node --check configurator.js && node --check dfu-ui.js && node --check firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
       - name: Verify monobank/Tally URLs, labels, privacy, no legacy form
         run: node tools/check_monobank_support.cjs
       - name: Verify link preview Open Graph and Twitter metadata
         run: node tools/check_social_preview.cjs
+      - name: Verify staged private firmware access code and no hardcoded PINs
+        run: node tools/check_firmware_access.cjs
+      - name: Unit-test server-side release PIN and per-tester keys
+        run: node --test firmware-gateway/tests/*.test.js

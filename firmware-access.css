@@ -1,0 +1,17 @@
+/* PIN/key entry used only when the private server-side gateway is configured. */
+.atlas-firmware-access{box-sizing:border-box;width:min(500px,calc(100vw - 28px));max-height:90vh;padding:0;border:1px solid #b5ac61;border-radius:4px;background:linear-gradient(160deg,#15251a,#0b130d);color:#e5daa0;box-shadow:0 25px 85px #000a;font-family:'IBM Plex Mono',monospace}
+.atlas-firmware-access::backdrop{background:#020802d9;backdrop-filter:blur(6px)}
+.atlas-access-form{display:grid;gap:13px;padding:26px 24px}
+.atlas-access-kicker{margin:0;color:#a4bc67;letter-spacing:.2em;font-weight:700;font-size:11px}
+.atlas-access-title{margin:0;overflow-wrap:anywhere;font-size:clamp(16px,3vw,22px);color:#f1e19a}
+.atlas-access-kind,.atlas-access-note{margin:0;color:#adbba0;font-size:12px;line-height:1.65}
+.atlas-access-label{font-weight:700;font-size:13px}
+.atlas-access-pin{box-sizing:border-box;width:100%;height:50px;border:1px solid #9ea864;border-radius:2px;background:#09140e;color:#f0e4aa;letter-spacing:.13em;font:600 18px 'IBM Plex Mono',monospace;padding:9px 13px}
+.atlas-access-pin:focus-visible{outline:2px solid #dec968;outline-offset:2px}
+.atlas-access-status{min-height:1.4em;color:#e9c577;margin:0;font-size:12px}
+.atlas-access-actions{display:grid;grid-template-columns:1fr 1.35fr;gap:10px}
+.atlas-access-actions button{min-height:48px;border:1px solid #c2ad63;cursor:pointer;font:700 12px 'IBM Plex Mono',monospace}
+.atlas-access-cancel{background:#152216;color:#e2d5a1}
+.atlas-access-submit{background:#e0cb77;color:#152016}
+.atlas-access-submit[disabled]{opacity:.5;cursor:wait}
+@media(max-width:500px){.atlas-access-form{padding:22px 15px}.atlas-access-actions{grid-template-columns:1fr}}

@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "enabled": false,
+  "gateway_url": "",
+  "status": "pending_external_gateway_setup",
+  "note": "The public firmware is currently accessible without a PIN. Enable only once Cloudflare Worker, private R2 files, access code secrets and both download/DFU gate paths are verified."
+}

@@ -1,0 +1,19 @@
+name = "atlas-firmware-gateway"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# Bucket must remain PRIVATE: do not enable public access / r2.dev.
+[[r2_buckets]]
+binding = "FIRMWARE"
+bucket_name = "atlas-firmware-private"
+
+# Approximate throttling per client IP; use long randomly generated codes.
+[[unsafe.bindings]]
+name = "ACCESS_LIMITER"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 10, period = 60 }
+
+# Set ACCESS_CODES_JSON via Wrangler SECRET or Cloudflare dashboard;
+# DO NOT place real keys or hashes in this file.

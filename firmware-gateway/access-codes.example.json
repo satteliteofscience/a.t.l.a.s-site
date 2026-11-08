@@ -1,0 +1,15 @@
+{
+  "release": {
+    "enabled": true,
+    "pin_sha256": "REPLACE_WITH_SHA256_OF_A_LONG_SHARED_PIN"
+  },
+  "testers": [
+    {
+      "id": "test-user-001",
+      "enabled": true,
+      "pin_sha256": "REPLACE_WITH_SHA256_OF_A_UNIQUE_20_CHARACTER_KEY",
+      "build_ids": ["matek-h743-v3-test-2"],
+      "expires_at": "2027-12-31T23:59:59Z"
+    }
+  ]
+}

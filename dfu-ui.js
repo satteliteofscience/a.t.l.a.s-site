@@ -103,11 +103,18 @@
       const index=requestedIndex===null?0:Number(requestedIndex);
       const info=manifest.files[index];if(!info)throw Error('Firmware version not found');
       $('dfuReleaseSelect').value=String(index);
-      const fileURL=releaseURL(info);
       status(`Selected: ${info.label||info.filename}`);
-      const file=await fetch(fileURL,{cache:'no-store'});
-      if(!file.ok)throw Error(`HTTP ${file.status}: ${info.filename}`);
-      await loadHex(await file.blob(),{...info,source:'A.T.L.A.S. Release Archive'});
+      let blob;
+      if(window.AtlasFirmwareAccess?.isProtected(info)){
+        // The same PIN gate protects both website downloads and DFU load-from-site.
+        blob=await window.AtlasFirmwareAccess.requestBlob(info);
+      }else{
+        const fileURL=releaseURL(info);
+        const file=await fetch(fileURL,{cache:'no-store'});
+        if(!file.ok)throw Error(`HTTP ${file.status}: ${info.filename}`);
+        blob=await file.blob();
+      }
+      await loadHex(blob,{...info,source:'A.T.L.A.S. Release Archive'});
     }catch(error){image=null;fileInfo=null;meta();status(error.message||String(error),true);}finally{refreshControls();}
   }
   async function localFile(file){

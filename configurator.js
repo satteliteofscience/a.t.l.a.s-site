@@ -451,7 +451,39 @@ async function writeImported(){
  $('bulkConsent').checked=false;renderImportDiff();renderParams();renderBasic();toast(`${b.message} · ${b.done}/${b.total}`+ (b.failed.length?` · ${b.failed.slice(0,8).join(', ')}`:''),b.done!==b.total);
 }
 function renderBoards(){const grid=$('firmwareBoards');grid.replaceChildren();const boards=state.boards.length?state.boards.filter(b=>b.id!=='other-boards'):[{id:'cube-orange',name:'Orange Cube',status:'planned'},{id:'matek-h743-wing-v3',name:'Matek H743-WING V3',status:'planned'}];for(const b of boards){const btn=document.createElement('button');btn.className='cc-board-choice'+(state.selectedBoard===b.id?' selected':'');btn.type='button';const mark=document.createElement('span');mark.textContent=state.selectedBoard===b.id?'✓':'';const name=document.createElement('strong');name.textContent=b.name;const small=document.createElement('small');small.textContent=(b.status==='available'?'HEX':tr('pending').toUpperCase());btn.append(mark,name,small);btn.addEventListener('click',()=>{state.selectedBoard=b.id;renderBoards();});grid.append(btn);}const selected=boards.find(b=>b.id===state.selectedBoard);$('boardSelection').textContent=tr('boardWaiting')+(selected?.name||'—')+' / '+tr('compat');}
-function renderReleases(){const container=$('releaseList');container.replaceChildren();const boards=state.boards.filter(b=>b.id!=='other-boards');if(!boards.length)boards.push({name:'Orange Cube',downloads:[]},{name:'Matek H743-WING V3',downloads:[]});for(const board of boards){const box=document.createElement('div');box.className='cc-release-item';const title=document.createElement('strong');title.textContent=board.name;const info=document.createElement('small');const downloads=(board.downloads||[]).filter(d=>{try{const u=new URL(d.url,location.href);return u.protocol==='https:'||(u.protocol==='http:'&&['localhost','127.0.0.1'].includes(u.hostname));}catch{return false;}});info.textContent=downloads.length?`${downloads.length} ${tr('releases')}`:tr('notavailable');box.append(title,info);for(const d of downloads){const a=document.createElement('a');a.href=new URL(d.url,location.href).href;a.rel='noopener noreferrer';a.target='_blank';a.textContent=(d.label||d.filename||'Firmware')+' ↗';box.append(a);}container.append(box);}}
+function renderReleases(){
+ const container=$('releaseList');container.replaceChildren();
+ const boards=state.boards.filter(b=>b.id!=='other-boards');
+ if(!boards.length)boards.push({name:'Orange Cube',downloads:[]},{name:'Matek H743-WING V3',downloads:[]});
+ for(const board of boards){
+  const box=document.createElement('div');box.className='cc-release-item';
+  const title=document.createElement('strong');title.textContent=board.name;
+  const info=document.createElement('small');
+  const downloads=(board.downloads||[]).filter(d=>{
+   if(window.AtlasFirmwareAccess?.isProtected(d))return true;
+   try{const u=new URL(d.url,location.href);return u.protocol==='https:'||(u.protocol==='http:'&&['localhost','127.0.0.1'].includes(u.hostname));}
+   catch{return false;}
+  });
+  info.textContent=downloads.length?`${downloads.length} ${tr('releases')}`:tr('notavailable');box.append(title,info);
+  for(const d of downloads){
+   if(window.AtlasFirmwareAccess?.isProtected(d)){
+    const btn=document.createElement('button');
+    btn.className='cc-release-download';btn.type='button';btn.textContent=(d.label||d.filename||'Firmware')+' · PIN ↗';
+    btn.addEventListener('click',async()=>{
+     btn.disabled=true;
+     try{await window.AtlasFirmwareAccess.download(d);}
+     catch(err){if(err.message!=='Access cancelled')toast(err.message||'Firmware access failed',true);}
+     finally{btn.disabled=false;}
+    });
+    box.append(btn);
+   }else{
+    const a=document.createElement('a');a.href=new URL(d.url,location.href).href;
+    a.rel='noopener noreferrer';a.target='_blank';a.textContent=(d.label||d.filename||'Firmware')+' ↗';box.append(a);
+   }
+  }
+  container.append(box);
+ }
+}
 async function loadCatalog(){let info=null;try{const embedded=$('atlasEmbeddedData');if(embedded)info=JSON.parse(embedded.textContent);else{const response=await fetch('data/releases.json',{cache:'no-store'});if(response.ok)info=await response.json();}}catch(e){console.warn(e);}state.boards=info?.boards||[];renderBoards();renderReleases();}
 async function parseApj(file){if(!file)return;state.apj=null;state.apjFilename=file.name;try{if(file.size>32*1024*1024)throw Error('File too large');const obj=JSON.parse(await file.text());if(!Number.isSafeInteger(obj.board_id)||typeof obj.image!=='string'||!obj.image.length)throw Error(tr('metaBad'));state.apj=obj;
  const node=$('apjMetadata');node.replaceChildren();const pair=(k,v)=>{const dl=document.createElement('dl'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=k;dd.textContent=String(v);dl.append(dt,dd);node.append(dl);};pair(tr('filename'),file.name);pair(tr('boardid'),obj.board_id);pair(tr('size'),(obj.image_size===undefined?'?':`${(obj.image_size/1024).toFixed(1)} KiB`));pair(tr('format'),'ArduPilot APJ / JSON');pair('STATUS',tr('metaFound'));toast(`APJ board_id=${obj.board_id} · ${file.name}`);
