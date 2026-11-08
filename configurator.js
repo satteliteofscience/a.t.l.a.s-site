@@ -69,6 +69,7 @@ function navigate(tab){
  if(!['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))return;
  const previous=state.selectedTab;
  state.selectedTab=tab;
+ window.dispatchEvent(new CustomEvent('atlas:navigate',{detail:{tab}}));
  document.querySelectorAll('.cc-tab').forEach(el=>el.classList.toggle('active',el.dataset.panel===tab));
  document.querySelectorAll('.cc-nav').forEach(el=>{let active=el.dataset.tab===tab;el.classList.toggle('active',active);el.setAttribute('aria-current',active?'page':'false');});
  scheduleHorizon();
