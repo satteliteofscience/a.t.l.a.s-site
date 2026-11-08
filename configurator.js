@@ -536,7 +536,7 @@ function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEve
  $('apjDropzone').addEventListener('dragover',ev=>{ev.preventDefault();$('apjDropzone').classList.add('dragging');});$('apjDropzone').addEventListener('dragleave',()=>$('apjDropzone').classList.remove('dragging'));$('apjDropzone').addEventListener('drop',ev=>{ev.preventDefault();$('apjDropzone').classList.remove('dragging');parseApj(ev.dataTransfer?.files?.[0]);});
  document.querySelectorAll('[data-group]').forEach(btn=>btn.addEventListener('click',()=>{state.group=btn.dataset.group;document.querySelectorAll('[data-group]').forEach(n=>n.classList.toggle('active',n===btn));renderBasic();}));
  $('closeEdit').addEventListener('click',()=>$('editDialog').close());$('cancelEdit').addEventListener('click',()=>$('editDialog').close());$('editForm').addEventListener('submit',saveEdit);
- window.addEventListener('hashchange',()=>{const tab=location.hash.replace('#','');if(['dashboard','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))navigate(tab);});
+ window.addEventListener('hashchange',()=>{const tab=location.hash.replace('#','');if(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))navigate(tab);});
  const leavePage=()=>{cleanupForNavigation().catch(()=>{});};
  window.addEventListener('pagehide',leavePage,{capture:true});
  window.addEventListener('beforeunload',leavePage,{capture:true});
