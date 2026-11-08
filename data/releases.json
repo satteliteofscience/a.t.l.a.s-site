@@ -2,8 +2,8 @@
   "project": {
     "name": "A.T.L.A.S.",
     "version": "4.7.2",
-    "repository_url": "",
-    "issues_url": "",
+    "repository_url": "https://github.com/satteliteofscience/a.t.l.a.s-site",
+    "issues_url": "https://github.com/satteliteofscience/a.t.l.a.s-site/issues",
     "release_channel": "pre-release",
     "downloads_base": "Firmware/"
   },
@@ -39,6 +39,7 @@
           "timestamp": 1794072475,
           "release_id": "db18bb8cda580550",
           "source_url": "",
+          "source_verified": false,
           "url": "Firmware/Matek%20Wing%20H743-V3/REALESE%20ArduPlane%204.7.2%20-%20A.T.L.A.S%20EKF3%20-%20MATEK%20WING%20H743%20V3%20%28480%20Mhz%20Clock%29.hex"
         }
       ],
