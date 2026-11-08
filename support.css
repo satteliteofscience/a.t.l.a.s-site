@@ -32,3 +32,6 @@
 .donation-policy-link{font-size:12px;color:#c6cf82;text-decoration:underline;text-underline-offset:3px}
 .donation-payment-stage{padding-top:3px}.donation-back{margin-top:15px;width:100%}
 @media(max-width:600px){.donation-form-buttons{flex-direction:column}.donation-form-buttons button{width:100%}}
+
+/* Hide legacy email inputs when the form is delegated to Brevo. */
+.atlas-subscribe-form [hidden]{display:none!important}

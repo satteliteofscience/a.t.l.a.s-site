@@ -6,5 +6,6 @@
   "bank": "",
   "purpose": "Добровільна підтримка розробки A.T.L.A.S.",
   "currency": "UAH",
-  "note": "IBAN supplied by A.T.L.A.S. author; bank and recipient details must be verified in the sending app. This is a manual bank transfer, not automatic donation verification."
+  "note": "Set donation_url to your real public HTTPS LiqPay donation/checkout link. The site does not process payments; existing verified IBAN remains an optional manual fallback. Never paste a LiqPay private API key here.",
+  "donation_provider": "liqpay-hosted"
 }

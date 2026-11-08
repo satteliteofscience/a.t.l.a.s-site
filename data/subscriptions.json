@@ -1,7 +1,13 @@
 {
-  "schema": 1,
+  "schema": 2,
+  "provider": "brevo-hosted",
+  "hosted_forms": {
+    "matek-h743-wing-v3": "",
+    "cube-orange": "",
+    "other": ""
+  },
   "api_endpoint": "",
   "privacy_url": "privacy.html",
-  "status": "not_configured",
-  "note": "Set HTTPS API endpoint after deploying the private subscriber service; never put SMTP passwords in public files."
+  "status": "pending_brevo_account_setup",
+  "note": "Create HTTPS hosted Brevo signup forms with double opt-in and explicit consent, then put the public form URLs here. Form URLs are not API keys. Never store user emails or Brevo API keys in this public repository."
 }

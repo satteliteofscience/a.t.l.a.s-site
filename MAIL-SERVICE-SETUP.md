@@ -1,3 +1,7 @@
+# Optional legacy self-hosted email service
+
+**For GitHub Pages + Brevo hosted forms, a server is NOT required.** Use [PROVIDER-SETUP.md](PROVIDER-SETUP.md) instead. Everything below describes the alternative private SMTP/SQLite implementation; do not deploy both providers for the same signup flow without a coordinated migration.
+
 # Private email service installation
 
 This repository is static and cannot securely accept registrations or send email by itself. The backend is distributed **separately** as `ATLAS-Subscriber-Service-v0.7.0.zip`, **never** as a subfolder in public GitHub Pages. Do not place personal data, SQLite DB, SMTP passwords, access tokens or signing keys in the public repository.

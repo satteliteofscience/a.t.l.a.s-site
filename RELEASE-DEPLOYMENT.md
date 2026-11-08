@@ -38,3 +38,15 @@ Private work-in-progress source repositories should be stored on a separate doma
 ## Supported board / safeguards
 
 Only target `Matek H743-WING V3` is configured for automatic publishing. ArduPilot .HEX is validated for contiguous STM32H743 2MiB full-flash boundaries, Intel HEX checksums and SHA-256 before it is published. Other hardware needs a separate board-specific pipeline and validation; do NOT reuse the Matek firmware on another board. The WebUSB DFU path still requires hardware testing; rollback can always be performed using a compatible external flasher.
+
+## GitHub Releases + automated opt-in email (no own server)
+
+The Actions workflow validates and archives an incoming Intel HEX, commits the immutable archive, then publishes a **public GitHub Release only if a corresponding source archive was supplied and explicitly approved**. Before ingesting a new firmware, add `Firmware/incoming/matek-h743-wing-v3/release.json`:
+
+```json
+{"version":"1.1","label":"A.T.L.A.S. 1.1 for Matek H743-WING V3","source_url":"Firmware/Sources/atlas-1.1-source.zip","source_verified":true}
+```
+
+The source archive must already exist in `Firmware/Sources/` and correspond to this exact HEX; setting `source_verified` is the maintainer's assertion. An older HEX with no source archive stays in the site catalog but is **not promoted to GitHub Releases**. The workflow creates a GitHub release tag using the firmware SHA-256 prefix; repeated runs skip already-created tags.
+
+The same workflow optionally notifies the **confirmed Brevo list for that board only**, and only after a new public Release is created and `ATLAS_BREVO_SEND_ENABLED=true` plus the required Brevo variables and secret are configured. Refer to [PROVIDER-SETUP.md](PROVIDER-SETUP.md). Never publish early tester binaries or private contacts through this workflow.

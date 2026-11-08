@@ -83,7 +83,7 @@ def safe_relative_path(item):
     return target
 
 
-def record(path, *, version, title, published, source_path=''):
+def record(path, *, version, title, published, source_path='', source_verified=False):
     mn, mx, total = checked(path)
     sha = filehash(path)
     relative = path.relative_to(HERE).as_posix()
@@ -93,6 +93,7 @@ def record(path, *, version, title, published, source_path=''):
         'bytes': path.stat().st_size, 'image_bytes': total,
         'address_start': f'0x{mn:08X}', 'address_end_exclusive': f'0x{mx:08X}',
         'sha256': sha, 'timestamp': int(published), 'source_url': source_path,
+        'source_verified': bool(source_verified),
     }
 
 
@@ -118,6 +119,9 @@ def ingest_once(min_age=0):
     if settings and (not isinstance(settings, dict) or not isinstance(settings.get('version', ''), str)):
         raise ValueError('release.json must be an object with a string version')
     source_path = settings.get('source_url', '')
+    source_verified = settings.get('source_verified') is True
+    if (source_path and not source_verified) or (source_verified and not source_path):
+        raise ValueError('new public release requires source_url and source_verified: true')
     if source_path and (not isinstance(source_path, str) or not source_path.startswith('Firmware/Sources/')):
         raise ValueError('source_url must be a local Firmware/Sources/ path')
     if source_path:
@@ -156,7 +160,7 @@ def ingest_once(min_age=0):
                 staging.unlink()
         version = settings.get('version') or now.strftime('%Y.%m.%d-%H%M')
         title = settings.get('label') or f'A.T.L.A.S. {version} · {now.strftime("%Y-%m-%d %H:%M")} UTC'
-        entry = record(target, version=version, title=title, published=created, source_path=source_path)
+        entry = record(target, version=version, title=title, published=created, source_path=source_path, source_verified=source_verified)
         entries.append(entry)
         by_hash[digest] = entry
         path.unlink()
@@ -174,7 +178,7 @@ def ingest_once(min_age=0):
     safe_write(HISTORY_PATH, {'schema': 1, 'board_id': BOARD_ID, 'releases': entries})
     files = []
     for item in entries:
-        files.append({k: item.get(k) for k in ('filename', 'path', 'bytes', 'image_bytes', 'address_start', 'address_end_exclusive', 'sha256', 'timestamp', 'version', 'label', 'source_url')})
+        files.append({k: item.get(k) for k in ('filename', 'path', 'bytes', 'image_bytes', 'address_start', 'address_end_exclusive', 'sha256', 'timestamp', 'version', 'label', 'source_url', 'source_verified')})
     safe_write(MANIFEST, {
         'schema': 2, 'board_id': BOARD_ID, 'board_name': 'Matek H743-WING V3',
         'flash_type': 'STM32H743 internal 2 MiB', 'format': 'intel-hex',
@@ -182,8 +186,8 @@ def ingest_once(min_age=0):
         'latest_path': files[0]['path'] if files else None, 'files': files,
     })
     catalog = read_json(CATALOG, {'project': {}, 'boards': []})
-    catalog['project']['repository_url'] = ''
-    catalog['project']['issues_url'] = ''
+    catalog['project']['repository_url'] = 'https://github.com/satteliteofscience/a.t.l.a.s-site'
+    catalog['project']['issues_url'] = 'https://github.com/satteliteofscience/a.t.l.a.s-site/issues'
     catalog['project']['downloads_base'] = 'Firmware/'
     for board in catalog.get('boards', []):
         if board.get('id') != BOARD_ID:
@@ -198,7 +202,7 @@ def ingest_once(min_age=0):
                 'filename': item['filename'], 'label': item['label'],
                 'version': item['version'], 'sha256': item['sha256'],
                 'timestamp': item['timestamp'], 'release_id': item['id'],
-                'source_url': item.get('source_url', ''), 'url': url,
+                'source_url': item.get('source_url', ''), 'source_verified': item.get('source_verified', False), 'url': url,
             })
     safe_write(CATALOG, catalog)
     return updated

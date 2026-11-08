@@ -70,7 +70,8 @@ The repository cover under `assets/github-social-preview.jpg` may be uploaded in
 - [FAQ](faq.html) — modified flight modes and minimum NOAID sensor requirements.
 - [Changelog](changelog.html) — pre-release 1.0 and future releases.
 - [Release process](RELEASE-DEPLOYMENT.md) — incoming HEX, archive, rollback and manifests.
-- [Mail service setup](MAIL-SERVICE-SETUP.md) — double opt-in and release email workflow.
+- [No-server provider setup](PROVIDER-SETUP.md) — Brevo hosted forms, LiqPay, release notifications and private early testing.
+- [Legacy mail service setup](MAIL-SERVICE-SETUP.md) — optional self-hosted SMTP/SQLite alternative.
 - [Suggested commits](GITHUB-COMMITS.md) — ready-to-use commit titles and short descriptions.
 - [History](docs/LEGACY-README.md) — archived development documentation.
 
