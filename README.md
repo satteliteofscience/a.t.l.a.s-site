@@ -4,7 +4,7 @@
 
 # A.T.L.A.S. — Control Center
 
-**Independent ArduPlane research build · Browser-based configurator · Flight-controller tooling**
+**Independent ArduPlane 4.7.2 Release 1.0 · Browser-based configurator · Flight-controller tooling**
 
 ![Status](https://img.shields.io/badge/CHANNEL-RELEASE%201.0-86ac64?style=flat-square&labelColor=152010)
 ![Base](https://img.shields.io/badge/ARDUPLANE-4.7.2-b7c56b?style=flat-square&labelColor=152010)

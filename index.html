@@ -4,20 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#091008">
-  <meta name="description" content="A.T.L.A.S. — модификация ArduPlane 4.7.2 с EKF3 NOAID, настройкой полётных контроллеров, каталогом прошивок и документацией.">
+  <meta name="description" content="A.T.L.A.S. Release 1.0 — проверенная модификация ArduPlane 4.7.2 для Matek H743-WING V3: EKF3 NOAID, режимы без GPS, веб-конфигуратор и документация.">
   <link rel="canonical" href="https://satteliteofscience.github.io/a.t.l.a.s-site/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="A.T.L.A.S. Control Center">
   <meta property="og:locale" content="ru_RU">
   <meta property="og:url" content="https://satteliteofscience.github.io/a.t.l.a.s-site/">
-  <meta property="og:title" content="A.T.L.A.S. Control Center — ArduPlane 4.7.2 / EKF3 NOAID">
+  <meta property="og:title" content="A.T.L.A.S. Control Center — ArduPlane 4.7.2 Release 1.0">
   <meta property="og:description" content="A.T.L.A.S. Release 1.0 — проверенная модификация ArduPlane 4.7.2 с EKF3 NOAID, режимами без GPS, конфигуратором и сборкой для Matek H743-WING V3.">
   <meta property="og:image" content="https://satteliteofscience.github.io/a.t.l.a.s-site/assets/github-social-preview.jpg">
   <meta property="og:image:secure_url" content="https://satteliteofscience.github.io/a.t.l.a.s-site/assets/github-social-preview.jpg">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:alt" content="A.T.L.A.S. Control Center — tested ArduPlane 4.7.2 Release 1.0">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="A.T.L.A.S. Control Center — ArduPlane 4.7.2 / EKF3 NOAID">
+  <meta name="twitter:title" content="A.T.L.A.S. Control Center — ArduPlane 4.7.2 Release 1.0">
   <meta name="twitter:description" content="A.T.L.A.S. Release 1.0 — проверенная модификация ArduPlane 4.7.2 с EKF3 NOAID, режимами без GPS, конфигуратором и сборкой для Matek H743-WING V3.">
   <meta name="twitter:image" content="https://satteliteofscience.github.io/a.t.l.a.s-site/assets/github-social-preview.jpg">
   <meta name="twitter:image:alt" content="A.T.L.A.S. Control Center — ArduPlane EKF3 NOAID">
@@ -106,7 +106,7 @@
         <div class="features-grid">
           <article class="feature-card feature-primary"><div class="feature-top"><span class="feature-number">01</span><span class="tiny-badge">CORE</span></div><svg class="feature-visual" viewBox="0 0 320 138" aria-hidden="true"><g fill="none" stroke="#d8c15b"><path d="M0 77 35 77 48 59 67 95 94 33 114 92 140 73 167 73 181 53 196 88 215 68 246 68 258 41 273 88 288 75 320 75" stroke-width="2"/><path d="M0 103h320M0 34h320" opacity=".1" stroke-dasharray="3 5"/><circle cx="94" cy="33" r="4" fill="#d8c15b"/></g></svg><h3>EKF3 без GPS</h3><p>Доработанный EKF3 AID_NONE для оценки ориентации и скорости при отсутствии GPS. Основные сценарии проверены перед выпуском.</p><span class="card-trail">NOAID <span>↗</span></span></article>
           <article class="feature-card"><div class="feature-top"><span class="feature-number">02</span><span class="tiny-badge subdued">AUTOMATION</span></div><div class="feature-icon"><svg viewBox="0 0 32 32"><path d="M16 3v19M8 13l8-9 8 9M7 25h18M11 29h10"/></svg></div><h3>TAKEOFF без GPS</h3><p>Адаптированная логика старта, обнаружения полёта и переходов между режимами.</p><span class="card-trail">TAKEOFF <span>↗</span></span></article>
-          <article class="feature-card"><div class="feature-top"><span class="feature-number">03</span><span class="tiny-badge subdued">AUTO NAV</span></div><div class="feature-icon"><svg viewBox="0 0 32 32"><path d="M4 25h24M6 20l8 5 12-18M20 8l6-1-1 6"/></svg></div><h3>Автопосадка</h3><p>Реализованная логика автоматического захода и снижения без GPS. Точность локальной навигации зависит от датчиков, ветра и конфигурации самолёта.</p><span class="card-trail">AUTOLAND <span>↗</span></span></article>
+          <article class="feature-card"><div class="feature-top"><span class="feature-number">03</span><span class="tiny-badge subdued">AUTO NAV</span></div><div class="feature-icon"><svg viewBox="0 0 32 32"><path d="M4 25h24M6 20l8 5 12-18M20 8l6-1-1 6"/></svg></div><h3>Автопосадка</h3><p>Автоматический заход и снижение без GPS. Точность локальной навигации зависит от датчиков, ветра и конфигурации самолёта; перед применением проверь поддержку режима в текущей сборке.</p><span class="card-trail">AUTOLAND <span>↗</span></span></article>
           <article class="feature-card"><div class="feature-top"><span class="feature-number">04</span><span class="tiny-badge subdued">CONTROL</span></div><div class="feature-icon"><svg viewBox="0 0 32 32"><path d="M16 5 7 23l9-5 9 5zM16 18v9M8 27h16"/></svg></div><h3>Управление FBWA</h3><p>RUD_LIMIT_DEG согласует команды руля направления и дополнительного крена, сохраняя заданные ограничения.</p><span class="card-trail">RUDDER LIMIT <span>↗</span></span></article>
         </div>
       </section>
