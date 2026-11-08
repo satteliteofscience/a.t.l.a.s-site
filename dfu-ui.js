@@ -135,7 +135,8 @@
       await current.flash(image);
       status(tr('complete'));
       $('dfuProgressLabel').textContent='VERIFIED · 100%';
-    }catch(error){status(`DFU ${tr('stError')}: ${error.message} — Leave board in DFU; recover/reflash via STM32CubeProgrammer if needed.`,true);}finally{
+      window.dispatchEvent(new CustomEvent('atlas:dfu',{detail:{success:true,board:selectedBoard(),filename:expected,sha256:fileInfo?.sha256||null,verified:true}}));
+    }catch(error){status(`DFU ${tr('stError')}: ${error.message} — Leave board in DFU; recover/reflash via STM32CubeProgrammer if needed.`,true);window.dispatchEvent(new CustomEvent('atlas:dfu',{detail:{success:false,board:selectedBoard(),reason:error.message}}));}finally{
       window.removeEventListener('beforeunload',unload);busy=false;refreshControls();
     }
   }

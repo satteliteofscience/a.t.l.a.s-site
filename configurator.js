@@ -66,9 +66,10 @@ function setLang(next){if(!words[next])return;lang=next;try{localStorage.setItem
  updateConnectionUI();renderBasic();renderParams();renderBoards();renderReleases();updateTelemetryUI();renderImportDiff();renderCategoryNav();showProgress();window.dispatchEvent(new Event('atlas:language'));
 }
 function navigate(tab){
- if(!['dashboard','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))return;
+ if(!['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))return;
  const previous=state.selectedTab;
  state.selectedTab=tab;
+ window.dispatchEvent(new CustomEvent('atlas:navigate',{detail:{tab}}));
  document.querySelectorAll('.cc-tab').forEach(el=>el.classList.toggle('active',el.dataset.panel===tab));
  document.querySelectorAll('.cc-nav').forEach(el=>{let active=el.dataset.tab===tab;el.classList.toggle('active',active);el.setAttribute('aria-current',active?'page':'false');});
  scheduleHorizon();
@@ -109,6 +110,7 @@ function stopParamRepair(){if(state.paramRepairTimer){clearInterval(state.paramR
 function finishParamTransfer(complete){
  const x=state.paramTransfer;if(!x||!state.paramLoading)return;
  state.paramLoading=false;x.phase=complete?'complete':'partial';stopParamRepair();showProgress();
+ window.dispatchEvent(new CustomEvent('atlas:parameters',{detail:{complete:!!complete,count:x.seen.size,total:state.paramCount,phase:x.phase}}));
  toast(complete?`${tr('saved')} · ${x.seen.size}/${state.paramCount}`:`${pl('partial')} · ${x.seen.size}/${state.paramCount}`,!complete);
  // Rendering thousands of rows during the stream blocks the serial RX loop.
  state.tableLimit=150;
@@ -257,7 +259,9 @@ function startParamLoad(){if(state.bulk?.running||state.servoConfigBusy){toast(t
 }
 function canWrite(){return state.connected&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading;}
 window.AtlasCC = Object.freeze({
-  getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry}),
+  getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
+  canWrite:()=>canWrite(),
+  navigate:(tab)=>navigate(tab),
   diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
   canCalibrate:()=>state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait,
   command:(id,p=[])=>{if(!window.AtlasCC.canCalibrate())throw Error('USB / DISARM heartbeat required');return transmit(76,M.commandLong(state.sysid,state.compid,id,p));},
@@ -296,7 +300,7 @@ window.AtlasCC = Object.freeze({
       state.servoConfigBusy=false;renderBasic();renderParams();renderImportDiff();
     }
   },
-  requestParameters:()=>{if(state.connected&&!state.paramLoading)startParamLoad();},
+  requestParameters:()=>{if(state.connected&&!state.paramLoading)return startParamLoad();return false;},
   writeOSDParams:async (updates,onProgress=()=>{})=>{
     if(!canWrite())throw Error('Live USB, confirmed DISARMED, completed parameter read and idle writer required');
     const valid=/^OSD(?:[1-4]_[A-Z0-9_]+_(?:EN|X|Y)|[1-4]_ENABLE|TYPE|UNITS|CHAN|SW_METHOD)$/;
@@ -333,7 +337,7 @@ window.AtlasCC = Object.freeze({
     await transmit(76,M.commandLong(state.sysid,state.compid,183,[channel,pwm,0,0,0,0,0]));
     return {channel,pwm,submitted:true}; // COMMAND_ACK or SERVO_OUTPUT_RAW required for confirmation.
   },
-  writeAdvancedParams:async (updates,onProgress=()=>{})=>{
+  writeAdvancedParams:async (updates,onProgress=()=>{},shouldCancel=()=>false)=>{
     if(!canWrite())throw Error('Live USB + confirmed DISARMED + idle PARAM transfer required');
     const changes=[];
     for(const [name,value] of Object.entries(updates)){
@@ -347,6 +351,7 @@ window.AtlasCC = Object.freeze({
     state.servoConfigBusy=true;let done=0;
     try{
       for(const c of changes){
+        if(shouldCancel())throw Error('Cancelled after '+done+'/'+changes.length);
         if(!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>4000)throw Error('Connection/ARM state changed');
         onProgress({done,total:changes.length,name:c.name});
         await writeParameterWithAck(c.name,c.value,c.type);done++;
@@ -538,5 +543,5 @@ function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEve
  document.addEventListener('visibilitychange',scheduleHorizon);
  window.addEventListener('pageshow',ev=>{if(ev.persisted){state.pageLeaving=false;state.hudLoopActive=true;state.lastHeartbeat=0;updateConnectionUI();scheduleHorizon();}});
 }
-wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Release 1.0');state.hudLoopActive=true;scheduleHorizon();
+wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Release 1.0');state.hudLoopActive=true;scheduleHorizon();
 })();
