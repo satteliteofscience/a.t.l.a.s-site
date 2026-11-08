@@ -1,11 +1,12 @@
 {
-  "schema": 1,
-  "donation_url": "",
-  "iban": "UA683077700000026207320657349",
+  "schema": 2,
+  "donation_provider": "monobank-jar",
+  "donation_title": "A.T.L.A.S. — Підтримка розробки",
+  "donation_url": "https://send.monobank.ua/jar/7jkKfdWREX",
+  "iban": "",
   "recipient": "",
   "bank": "",
   "purpose": "Добровільна підтримка розробки A.T.L.A.S.",
   "currency": "UAH",
-  "note": "Set donation_url to your real public HTTPS LiqPay donation/checkout link. The site does not process payments; existing verified IBAN remains an optional manual fallback. Never paste a LiqPay private API key here.",
-  "donation_provider": "liqpay-hosted"
+  "note": "Public monobank Jar link for voluntary transfers (not merchant acquiring). Prior IBAN is hidden. monobank handles card data, payment methods and settlement; the website does not confirm transactions."
 }

@@ -1,0 +1,23 @@
+name: A.T.L.A.S. website support smoke tests
+on:
+  push:
+    paths:
+      - 'index.html'
+      - 'support.js'
+      - 'support.css'
+      - 'data/support.json'
+      - 'privacy.html'
+      - 'tools/check_monobank_support.cjs'
+      - '.github/workflows/website-support-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: node --check support.js && node --check tools/check_monobank_support.cjs
+      - name: Verify monobank Jar URL, labels, privacy and hidden IBAN
+        run: node tools/check_monobank_support.cjs

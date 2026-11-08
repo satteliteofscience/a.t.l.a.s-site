@@ -51,13 +51,9 @@ The site is static, but release indexing requires a GitHub Actions workflow or a
 
 ## Receive updates and donate
 
-The public site supports a **manual IBAN transfer**. The IBAN is public account information intentionally provided by the developer; **there is no card-payment processing and no automatic payment confirmation**.
+Visitors can support A.T.L.A.S. using the public **[monobank Jar](https://send.monobank.ua/jar/7jkKfdWREX)** named `A.T.L.A.S. — Підтримка розробки`. The link is configured in `data/support.json`; the earlier IBAN is intentionally hidden. Donations are **voluntary**, independent from newsletter registration and do not buy early-test access. The website never handles card details or verifies transfer settlement: visitors choose the amount and supported methods directly on monobank.
 
-The newsletter form requests an email address, chosen flight-controller model and optional early-testing interest. Subscription requires an independently deployed **private backend with SMTP and email confirmation**. This site never stores subscriber emails in public repository files.
-
-**[Private subscriber server package](MAIL-SERVICE-SETUP.md)** documents setup. Until that service is deployed and `data/subscriptions.json` has its real HTTPS API URL, the site cannot receive registrations or send firmware by email. Donation by IBAN remains available without subscription.
-
-Early-test access is opt-in and requires explicit developer approval. Donating alone does not prove an email address belongs to a donor.
+For email newsletters, the site supports separate **Brevo-hosted double opt-in forms** for Matek H743, Orange Cube and other boards. Until the project owner supplies the public hosted URLs in `data/subscriptions.json`, the site correctly reports that subscription is not configured. No subscriber addresses are stored in this public repository. See **[PROVIDER-SETUP.md](PROVIDER-SETUP.md)** for the no-server workflow. The optional private SMTP backend is documented separately in [MAIL-SERVICE-SETUP.md](MAIL-SERVICE-SETUP.md).
 
 ## Firmware releases and source compliance
 

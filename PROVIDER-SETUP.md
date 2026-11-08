@@ -1,8 +1,8 @@
 # A.T.L.A.S. — no-server provider setup (GitHub Pages)
 
-The website stays on **GitHub Pages**. Signup is delegated to **Brevo hosted pages**, voluntary card/Google Pay donations to a **provider-hosted LiqPay payment link**, public firmware files and immutable tags to **GitHub Releases**, and publication/newsletters to **GitHub Actions**. No self-hosted HTTP/SMTP server is required for these features, but external accounts must be configured by the owner.
+The website stays on **GitHub Pages**. Signup is delegated to **Brevo hosted pages**, voluntary transfers to a **public monobank Jar**, public firmware files and immutable tags to **GitHub Releases**, and publication/newsletters to **GitHub Actions**. No self-hosted HTTP/SMTP server is required for these features, but external accounts must be configured by the owner.
 
-> Current status: Brevo hosted URLs and the LiqPay hosted payment URL are intentionally blank. Nothing can register an email or accept LiqPay card payments until the owner supplies their actual public links. The existing IBAN fallback is independent.
+> Current status: monobank Jar support is enabled at https://send.monobank.ua/jar/7jkKfdWREX and the former IBAN is hidden. Brevo hosted signup URLs are still blank, so the website is not currently registering newsletter subscribers.
 
 ## 1. Brevo double opt-in signup
 
@@ -18,14 +18,20 @@ The website stays on **GitHub Pages**. Signup is delegated to **Brevo hosted pag
 
 Official guide: https://help.brevo.com/hc/en-us/articles/208771869-Create-a-sign-up-form-in-Brevo
 
-## 2. LiqPay / Google Pay / manual bank transfer
+## 2. monobank Jar — voluntary support without a business payment gateway
 
-1. In your own LiqPay merchant/charity account, create a **hosted payment/donation link** supported by the provider and ensure the beneficiary and page are correct. Test the payment journey with a small amount.
-2. Set `data/support.json` → `donation_url` to that **real public HTTPS URL**. The site will show a payment link plus the existing IBAN transfer option. Payment data is never sent to your website.
-3. Google Pay is shown only if **LiqPay offers it** for the payer's device, wallet, currency and payment settings. The website does not claim to execute or verify Google Pay itself.
-4. Never paste LiqPay `private_key`, merchant passwords, card numbers or signed checkout payload secrets in public HTML/JS/JSON. Do not infer donation status from a browser redirect.
+**Public fundraising link:** https://send.monobank.ua/jar/7jkKfdWREX  
+**Fundraising name:** `A.T.L.A.S. — Підтримка розробки`
 
-A hosted checkout link can be used without a custom server. If you later want signed payments and automatic order/payment reconciliation, that separate feature requires a trustworthy signing/backend service.
+- `data/support.json` now has `donation_provider: "monobank-jar"`, the validated HTTPS `donation_url`, and `iban: ""`.
+- The standalone donation button is shown **before** the optional Brevo signup and has translated labels in RU / UA / ENG. Visitors do not need to subscribe.
+- The script only accepts an external Jar payment link with the exact HTTPS host `send.monobank.ua` and a `/jar/<id>` path.
+- monobank collects payment information and presents any available card or wallet options. The website cannot know whether a transfer succeeded and does not claim that Google Pay or Apple Pay is guaranteed on every device.
+- The Jar is **voluntary support**, not a merchant checkout, sale of firmware or purchase of Early Tester approval.
+- The website cannot independently verify ownership of the Jar or receipt of funds. The project owner should check the fundraising name in monobank and run a small independent test transfer.
+- Personal fundraising proceeds may be taxable; do not presume a charitable exemption.
+
+The old public IBAN was removed from the configuration, payment controls and visible site text. If needed later, a merchant/registered-business checkout can be introduced without ever exposing signing keys in public HTML or JS.
 
 ## 3. GitHub Releases + firmware source obligation
 
