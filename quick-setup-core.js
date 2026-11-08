@@ -7,7 +7,8 @@
  'use strict';
  const THROTTLE_FUNCTIONS=Object.freeze([70,73,74]),DSHOT_TYPES=Object.freeze([4,5,6,7]),ONESHOT_TYPES=Object.freeze([1,2,3]),INTEGER_TYPES=Object.freeze([1,2,3,4,5,6]);
  const PROTECTED_NAMES=new Set(['FORMAT_VERSION','SYSID_SW_MREV']);
- const PARAM_RE=/^([A-Za-z][A-Za-z0-9_]{0,15})[\s,=]+([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)(?:[\s,;].*)?$/;
+ const TYPE_RANGES=Object.freeze({1:[0,255],2:[-128,127],3:[0,65535],4:[-32768,32767],5:[0,4294967295],6:[-2147483648,2147483647]});
+ const PARAM_RE=/^([A-Za-z][A-Za-z0-9_]{0,15})[\s,=]+([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)(?:\s*(?:#|\/\/|;).*)?$/;
  function mapOf(value){if(value instanceof Map)return value;if(Array.isArray(value))return new Map(value);return new Map(Object.entries(value||{}));}
  function parseParamText(source,liveParams,metadata={},context={}){
   const params=mapOf(liveParams),entries=new Map(),errors=[],warnings=[],duplicates=[];
@@ -27,8 +28,9 @@
    if(!Number.isFinite(value)){errors.push({line:index+1,name,reason:'number'});continue;}
    const current=params.get(name);if(!current){errors.push({line:index+1,name,reason:'unknown'});continue;}
    const type=Number(current.type);
-   if(![1,2,3,4,5,6,9,10].includes(type)){errors.push({line:index+1,name,reason:'type'});continue;}
-   if(INTEGER_TYPES.includes(type)&&!Number.isInteger(value)){errors.push({line:index+1,name,reason:'integer'});continue;}
+   if(![1,2,3,4,5,6,9].includes(type)){errors.push({line:index+1,name,reason:'type'});continue;}
+   if(INTEGER_TYPES.includes(type)&&!Number.isSafeInteger(value)){errors.push({line:index+1,name,reason:'integer'});continue;}
+   if(TYPE_RANGES[type]&&(value<TYPE_RANGES[type][0]||value>TYPE_RANGES[type][1])){errors.push({line:index+1,name,reason:'type-range',type,value});continue;}
    if(type===7||type===8){errors.push({line:index+1,name,reason:'int64-unsupported'});continue;}
    const definition=metadata?.[name]||{};
    if(definition.ReadOnly===true||definition.readOnly===true){errors.push({line:index+1,name,reason:'readonly'});continue;}

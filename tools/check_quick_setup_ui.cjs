@@ -17,6 +17,11 @@ assert.ok(dfu.includes("new CustomEvent('atlas:dfu'"),'DFU must notify Quick Set
 assert.match(wizard,/api\.writeAdvancedParams\(updates/,'custom parameter file must use existing acknowledged writer');
 assert.match(wizard,/api\.requestParameters\(\)/,'parameter verification must use live parameter readback');
 assert.match(wizard,/qs\.rebootSawDisconnect/,'custom parameter flow must require controller disconnect/reconnect');
+assert.match(wizard,/if\(!state\(\)\.paramLoading\)/,'readback must only pass after a fresh transfer actually starts');
+assert.match(wizard,/qs\.previewBoard!==s\.selectedBoard/,'profile preview must belong to the selected board');
+assert.match(wizard,/qs\.awaitingCalibration!==d\.kind/,'calibration events must belong to the active wizard session');
+assert.match(wizard,/safeLink\(result\.state\)/,'post-reboot readback requires a live DISARMED heartbeat');
+assert.match(core,/TYPE_RANGES/,'MAVLink integer type bounds must be enforced');
 assert.match(wizard,/core\.classifyEscProtocol/,'ESC protocol must be identified from controller parameters');
 assert.match(wizard,/escDshot/,'DShot no-calibration branch missing');
 assert.match(wizard,/escPwm/,'PWM manual calibration branch missing');
