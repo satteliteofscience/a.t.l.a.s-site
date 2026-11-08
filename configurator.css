@@ -117,3 +117,26 @@
 .dfu-release-picker select{min-width:220px;max-width:100%;flex:1 1 220px;border:1px solid #697847;border-radius:3px;background:#101b0d;color:#f0e1ab;padding:10px;font-family:inherit}
 .dfu-release-picker button{min-height:40px}
 @media(max-width:560px){.dfu-release-picker{display:grid;grid-template-columns:1fr}.dfu-release-picker select{width:100%}.dfu-release-picker button{width:100%}}
+
+
+/* A.T.L.A.S. configurator UX polish: calmer cards and progressive disclosure. */
+.cc-card{border-radius:6px;border-color:#3b4a31;box-shadow:none;background:linear-gradient(145deg,#182217,#131c12)}
+.cc-card-title{height:49px;padding:0 15px}
+.cc-button,.cc-nav,.cc-setting-card,.cc-hintbar,.cc-view-status{border-radius:4px}
+.cc-setting-card{min-height:142px;padding:15px;border-color:#3d4d32}
+.cc-section-title{margin-bottom:18px}
+.pt-advanced-tools{position:relative;margin-left:auto}
+.pt-advanced-tools>summary,.servo-bench-details>summary,.cal-diagnostics>summary{display:flex;align-items:center;gap:12px;list-style:none;cursor:pointer;color:#cbd39d;background:#182313;border:1px solid #435332;padding:10px 13px;font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.03em;min-height:40px}
+.pt-advanced-tools>summary::-webkit-details-marker,.servo-bench-details>summary::-webkit-details-marker,.cal-diagnostics>summary::-webkit-details-marker{display:none}
+.pt-advanced-tools>summary::after,.servo-bench-details>summary::after,.cal-diagnostics>summary::after{content:'+';margin-left:auto;color:#dfca68;font-size:15px}
+.pt-advanced-tools[open]>summary::after,.servo-bench-details[open]>summary::after,.cal-diagnostics[open]>summary::after{content:'−'}
+.pt-advanced-tools-body{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;margin-top:7px;border:1px solid #35472d;background:#10190e;min-width:min(460px,calc(100vw - 48px))}
+.servo-bench-details{margin:13px 0 16px;border:1px solid #435332;background:#141e12}
+.servo-bench-details>summary{padding:10px 13px}
+.servo-bench-panel{border:0;border-top:1px solid #3c4b30;background:transparent;margin:0;padding:14px}
+.cal-diagnostics{margin-top:12px;border:1px solid #39492e;background:#121b11}
+.cal-diagnostics>summary{border:0;background:transparent}
+.cal-diagnostics[open]>summary{border-bottom:1px solid #39492e}
+.cal-diagnostics .cal-rx-debug{padding:10px 12px}
+@media(max-width:780px){.pt-advanced-tools{margin-left:0}.pt-advanced-tools-body{min-width:0}.pt-advanced-tools-body>*{max-width:100%}}
+@media(max-width:560px){.cc-card-title{height:46px}.pt-advanced-tools{width:100%}.pt-advanced-tools>summary{width:100%;box-sizing:border-box}.pt-advanced-tools-body{display:grid;grid-template-columns:1fr}.pt-advanced-tools-body .cc-button,.pt-advanced-tools-body label{width:100%;box-sizing:border-box;justify-content:center}.servo-bench-details>summary,.cal-diagnostics>summary{min-height:44px}}

@@ -116,10 +116,12 @@
         <div class="pt-controls"><button type="button" class="cc-button ghost pt-tree-toggle" id="paramTreeToggle">Группы параметров</button>
           <label><input type="checkbox" id="paramModifiedOnly"><span id="paramModifiedLabel">Изменённые</span></label>
           <label><input type="checkbox" id="paramNoDefaultOnly"><span id="paramNoDefaultLabel">Без default</span></label>
-          <button class="cc-button ghost" id="paramMetadataOnline" type="button">Обновить pdef ArduPilot</button>
-          <label class="cc-button outline" for="paramMetadataFile"><span id="paramMetaUploadLabel">Загрузить pdef XML/JSON</span></label>
-          <input type="file" accept=".json,.xml,.pdef" hidden id="paramMetadataFile">
-          <span id="paramMetadataStatus" class="pt-meta-status">—</span>
+          <details class="pt-advanced-tools"><summary data-t="paramAdvanced">Дополнительно · метаданные</summary><div class="pt-advanced-tools-body">
+            <button class="cc-button ghost" id="paramMetadataOnline" type="button">Обновить pdef ArduPilot</button>
+            <label class="cc-button outline" for="paramMetadataFile"><span id="paramMetaUploadLabel">Загрузить pdef XML/JSON</span></label>
+            <input type="file" accept=".json,.xml,.pdef" hidden id="paramMetadataFile">
+            <span id="paramMetadataStatus" class="pt-meta-status">—</span>
+          </div></details>
         </div>
         <div class="pt-layout" id="paramTreeLayout"><aside class="pt-sidebar"><div class="pt-sidebar-head"><span id="ptTreeLabel">Дерево параметров</span></div><div class="pt-tree" id="paramTree" role="tree" aria-label="Дерево групп параметров"></div></aside>
           <div class="cc-card cc-table-card pt-data"><div class="cc-table-overflow"><table class="cc-param-table pt-param-table"><thead><tr><th data-pth="name">Name</th><th data-pth="value">Value</th><th data-pth="def">Default</th><th data-pth="units">Units</th><th data-pth="opts">Options</th><th data-pth="desc">Desc</th><th data-pth="fav">Fav</th></tr></thead><tbody id="paramsTable"></tbody></table></div><div class="cc-table-foot"><span id="paramsSummary">—</span><button class="cc-button ghost cc-more" type="button" id="moreParamsBtn" data-t="more">Показать ещё</button></div></div></div>
@@ -147,7 +149,7 @@
         </div>
         <article class="cc-card cal-wizard" aria-live="polite"><div class="cc-card-title"><span>▤</span><strong data-cal-t="wizard">Мастер калибровки</strong><small id="accelStage">IDLE</small></div>
           <div class="cal-wizard-inner"><div class="cal-pose-display"><div class="cal-pose-icon" id="accelPoseIcon">◇</div><div><span class="cal-mini" data-cal-t="requestedPose">Запрошенное положение</span><h2 id="accelPoseLabel">—</h2><p id="accelPoseHint" data-cal-t="waitRequest">Ожидается подключение и команда автопилота</p></div></div>
-          <div class="cal-pose-steps" id="accelSteps"></div><div class="cal-action-row"><button type="button" class="cc-button primary" id="accConfirmPosBtn" disabled data-cal-t="confirmPose">Положение установлено</button><span class="cal-status" id="accelStatus" role="status">IDLE</span><button type="button" class="cc-button ghost" id="accAbortBtn" hidden>Закрыть мастер</button></div><div class="cal-wait-diagnostic" id="accelDiagnostic" role="status" aria-live="polite">—</div><div class="cal-rx-debug"><span id="accelRxStats">MAVLINK RX —</span><button id="copyAccelDebug" class="cc-button ghost" type="button">Копировать диагностику</button></div></div>
+          <div class="cal-pose-steps" id="accelSteps"></div><div class="cal-action-row"><button type="button" class="cc-button primary" id="accConfirmPosBtn" disabled data-cal-t="confirmPose">Положение установлено</button><span class="cal-status" id="accelStatus" role="status">IDLE</span><button type="button" class="cc-button ghost" id="accAbortBtn" hidden>Закрыть мастер</button></div><div class="cal-wait-diagnostic" id="accelDiagnostic" role="status" aria-live="polite">—</div><details class="cal-diagnostics"><summary data-cal-t="diagAdvanced">Диагностика MAVLink</summary><div class="cal-rx-debug"><span id="accelRxStats">MAVLINK RX —</span><button id="copyAccelDebug" class="cc-button ghost" type="button">Копировать диагностику</button></div></details></div>
         </article>
         <p class="cc-under-panel" data-cal-t="calSafe">Калибровки запускаются только при подтверждённом DISARMED. DEMO показывает интерфейс, но не отправляет команды на контроллер.</p>
       </section>
@@ -337,7 +339,7 @@
         <label class="servo-live-toggle"><input id="servoLiveApply" type="checkbox"><span id="servoLiveApplyLabel">Применять реверс и пределы PWM сразу (PARAM_SET)</span></label><p id="servoLiveDisabledHint" class="servo-live-disabled-hint">⚠ Включи «Применять сразу», иначе переключение реверса изменяет только черновик. FUNCTION=70 не поддерживает ручную установку PWM через DO_SET_SERVO.</p>
         <p id="servoLiveApplyNote">Реверс применяется при переключении; MIN / TRIM / MAX — после изменения поля. Каждая запись проверяется по PARAM_VALUE.</p>
       </div>
-      <section class="servo-bench-panel" aria-labelledby="servoBenchTitle">
+      <details class="servo-bench-details"><summary data-cal-t="servoBenchAdvanced">Дополнительно: ручной PWM-тест</summary><section class="servo-bench-panel" aria-labelledby="servoBenchTitle">
         <div class="servo-bench-heading"><strong id="servoBenchTitle">PWM BENCH TEST / Ручной PWM</strong><span id="servoBenchFunction">—</span></div>
         <p id="servoBenchHelp">Прямая команда PWM доступна лишь для выхода FUNCTION=0/1 или RC Passthrough. Она не заменяет изменение SERVOx_MIN/MAX/REVERSED.</p>
         <label class="servo-bench-consent"><input id="servoBenchConsent" type="checkbox"><span id="servoBenchConsentLabel">Пропеллер снят; контроллер DISARMED; готов к физическому движению выхода.</span></label>
@@ -350,12 +352,12 @@
         </div>
         <div class="servo-bench-observed" id="servoBenchObserved">SERVO_OUTPUT_RAW: —</div>
         <p class="servo-bench-status" id="servoBenchStatus" role="status" aria-live="polite">Тест не активен. При потере связи принудительный PWM может сохраняться на контроллере — отключи питание ESC.</p>
-      </section>
+      </section></details>
       <p class="servo-warning" id="servoEditorWarning">Проверь правильность FUNCTION, MIN, TRIM, MAX и REVERSED. Изменения могут сразу влиять на активные выходы. Сними пропеллер.</p>
       <div id="servoEditorChanges" class="servo-change-list" aria-live="polite">—</div>
       <div id="servoEditorStatus" class="servo-editor-status" role="status" aria-live="polite">—</div>
       <div class="cc-modal-actions"><button type="button" class="cc-button ghost" id="servoEditorCancel">Отмена</button><button class="cc-button primary" id="servoEditorSave" type="submit">Записать изменения</button></div>
     </form>
   </dialog>
-  <script src="mavlink.js" defer></script><script src="param-tree.js" defer></script><script src="firmware-access.js" defer></script><script src="configurator.js" defer></script><script src="calibration.js" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script>
+  <script src="mavlink.js" defer></script><script src="param-tree.js" defer></script><script src="firmware-access.js" defer></script><script src="configurator.js" defer></script><script src="servo-config-core.js" defer></script><script src="calibration.js" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script>
 </body></html>

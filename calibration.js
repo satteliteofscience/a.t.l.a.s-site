@@ -5,11 +5,12 @@
  */
 (() => {
 'use strict';
-const api=window.AtlasCC, $=id=>document.getElementById(id);
+const api=window.AtlasCC,servoCore=window.AtlasServoCore,$=id=>document.getElementById(id);
+if(!servoCore)throw new Error('A.T.L.A.S. servo configuration core failed to load');
 const lex={
- ru:{accelIntro:'Калибровка акселерометра через MAVLink. Сними пропеллер и проверь AHRS_ORIENTATION перед калибровкой.',simpleTitle:'Простая калибровка',simpleInfo:'Поставь самолёт горизонтально и не двигай. Калибрует только смещения акселерометра, не полную геометрию.',startSimple:'Калибровать (1 положение)',sixTitle:'Полная 6-позиционная',sixInfo:'Автопилот запрашивает шесть положений по очереди. После каждого запроса установи самолёт и дождись неподвижности.',startSix:'Начать 6-позиционную',levelTitle:'Установить горизонт',levelInfo:'После калибровки акселерометра установи самолёт в положение горизонтального полёта. Коррекция уровня до 10°.',setLevel:'Установить уровень',wizard:'Мастер калибровки',requestedPose:'Запрошенное положение',waitRequest:'Ожидается команда автопилота',confirmPose:'Положение установлено',calSafe:'Все калибровки требуют живого USB/MAVLink и подтверждённого DISARMED. Демо ничего не записывает.',servoIntro:'Выходные PWM и настройка сервоприводов: FUNCTION, MIN, TRIM, MAX, REVERSED. Нажми «Настроить» на нужном канале. Ручной PWM-тест доступен только для поддерживаемых функций выхода.',servoChannels:'Выходные каналы / PWM',servoNote:'Выбери «Настроить» на нужном выходе, чтобы изменить FUNCTION, MIN, TRIM, MAX и REVERSED. Выходы могут быть активны даже при DISARM.',servoSetup:'Настроить',servoEditTitle:'Настройка сервовыхода',servoSave:'Записать изменения',servoCancel:'Отмена',servoReversed:'Реверс направления',servoSaving:'Запись',servoNoChanges:'Нет изменений',servoDone:'Подтверждено контроллером',servoWarning:'Перед записью сними пропеллер. Изменения могут немедленно повлиять на физические выходы.',servoInvalid:'Проверь целые значения и диапазон PWM 800–2200 µs; MIN ≤ TRIM ≤ MAX.',servoNoLink:'Подключи USB, дождись DISARMED и полной загрузки параметров.',batteryIntro:'Контроль напряжения, тока и параметров батареи. Калибровочные коэффициенты устанавливай по измерениям мультиметра.',batterySettings:'Параметры Battery Monitor',batteryNote:'Некоторые изменения BATT_MONITOR и датчиков вступают в силу только после перезагрузки.',compassIntro:'Магнитометр и его калибровка. Если в конфигурации без GPS компас выключен, включать его ради этой процедуры не требуется.',compassCal:'Калибровка магнитометра',compassHelp:'Медленно вращай аппарат вокруг трёх осей, пока полётник не сообщит об успехе. Нажми «Сохранить результат» после успешного отчёта.',compassStart:'Начать калибровку',compassAccept:'Сохранить результат',compassCancel:'Отмена',compassSettings:'Параметры компаса',compassNote:'Команда калибровки может быть отклонена, если компас не установлен, отключён или неисправен.',poses:['Горизонтально','Левый бок','Правый бок','Нос вниз','Нос вверх','На спине'],poseHelp:['Положи самолёт горизонтально, зафиксируй и не двигай.','Положи на левый бок и зафиксируй.','Положи на правый бок и зафиксируй.','Поверни носом вниз и зафиксируй.','Поверни носом вверх и зафиксируй.','Переверни на спину и зафиксируй.'],waiting:'Ожидание запроса от контроллера…',still:'Удерживай положение неподвижно, затем подтверди.',ack:'Команда принята полётником',done:'Успешно завершено по подтверждению полётника',failed:'Контроллер сообщил об ошибке',timeout:'Нет ответа от контроллера. Проверь сообщения и соединение.',need:'Подключи USB/MAVLink и дождись DISARMED, затем повтори.',demo:'DEMO / без реального подключения',sending:'Отправка MAVLink-команды…',next:'Ожидание следующего положения…',noServo:'НЕТ ТЕЛЕМЕТРИИ',edit:'Изменить',none:'Не загружено',calBusy:'Другая калибровка уже выполняется',notSaved:'Успешно, требуется подтвердить сохранение',cancelled:'Операция отменена',compassRunning:'Калибровка компаса выполняется',noParams:'Сначала загрузите параметры в основном разделе',batteryNow:'Данные от полётника',fromDemo:'ДЕМОНСТРАЦИЯ'},
- uk:{accelIntro:'Калібрування акселерометра через MAVLink. Зніми пропелер і перевір AHRS_ORIENTATION.',simpleTitle:'Просте калібрування',simpleInfo:'Розмісти літак горизонтально й нерухомо. Коригує зміщення акселерометра, а не повну геометрію.',startSimple:'Калібрувати (1 позиція)',sixTitle:'Повне 6-позиційне',sixInfo:'Автопілот запитує кожне положення. Розташуй літак і дочекайся нерухомості перед підтвердженням.',startSix:'Почати 6-позиційне',levelTitle:'Встановити горизонт',levelInfo:'Після калібрування встанови літак у положення горизонтального польоту. Корекція рівня до 10°.',setLevel:'Встановити рівень',wizard:'Майстер калібрування',requestedPose:'Запитане положення',waitRequest:'Очікування команди автопілота',confirmPose:'Положення встановлено',calSafe:'Калібрування можливе лише з USB/MAVLink та підтвердженим DISARMED. Демо нічого не записує.',servoIntro:'Вихідні PWM та налаштування сервоприводів: FUNCTION, MIN, TRIM, MAX, REVERSED. Натисни «Налаштувати» для потрібного каналу. Ручний PWM-тест доступний тільки для допустимих функцій виходу.',servoChannels:'Вихідні канали / PWM',servoNote:'Обери «Налаштувати» на виході, щоб змінити FUNCTION, MIN, TRIM, MAX та REVERSED. Виходи можуть бути активними й у DISARM.',servoSetup:'Налаштувати',servoEditTitle:'Налаштування сервовиходу',servoSave:'Записати зміни',servoCancel:'Скасувати',servoReversed:'Реверс напрямку',servoSaving:'Запис',servoNoChanges:'Немає змін',servoDone:'Підтверджено контролером',servoWarning:'Перед записом зніми пропелер. Зміни можуть негайно вплинути на фізичні виходи.',servoInvalid:'Перевір цілі значення та PWM 800–2200 µs; MIN ≤ TRIM ≤ MAX.',servoNoLink:'Під’єднай USB, дочекайся DISARMED та повного списку параметрів.',batteryIntro:'Контроль напруги, струму і параметрів батареї. Калібрувальні коефіцієнти перевіряй мультиметром.',batterySettings:'Параметри Battery Monitor',batteryNote:'Деякі зміни BATT_MONITOR набирають чинності лише після перезавантаження.',compassIntro:'Магнітометр і його калібрування. Якщо компас вимкнений, не вмикай його лише заради цієї процедури.',compassCal:'Калібрування магнітометра',compassHelp:'Повільно обертай апарат навколо всіх осей. Після успішного звіту натисни «Зберегти результат».',compassStart:'Почати калібрування',compassAccept:'Зберегти результат',compassCancel:'Скасувати',compassSettings:'Параметри компаса',compassNote:'Команду можуть відхилити, якщо компас відсутній або несправний.',poses:['Горизонтально','Лівий бік','Правий бік','Ніс донизу','Ніс догори','На спині'],poseHelp:['Поклади літак горизонтально та не рухай.','Поклади на лівий бік і зафіксуй.','Поклади на правий бік і зафіксуй.','Поверни носом донизу й зафіксуй.','Поверни носом догори й зафіксуй.','Переверни на спину й зафіксуй.'],waiting:'Очікування запиту від контролера…',still:'Тримай положення нерухомо, потім підтвердь.',ack:'Команду прийнято',done:'Успіх підтверджено контролером',failed:'Контролер повідомив про помилку',timeout:'Немає відповіді контролера. Перевір з’єднання.',need:'Під’єднай USB/MAVLink, дочекайся DISARMED.',demo:'DEMO / без реального з’єднання',sending:'Надсилання MAVLink…',next:'Очікування наступного положення…',noServo:'НЕМАЄ ТЕЛЕМЕТРІЇ',edit:'Змінити',none:'Не завантажено',calBusy:'Інше калібрування вже триває',notSaved:'Успішно, потрібно підтвердити збереження',cancelled:'Операцію скасовано',compassRunning:'Калібрування компаса триває',noParams:'Спочатку завантаж параметри',batteryNow:'Дані від контролера',fromDemo:'ДЕМОНСТРАЦІЯ'},
- en:{accelIntro:'Accelerometer calibration using MAVLink. Remove the propeller and verify AHRS_ORIENTATION before calibration.',simpleTitle:'Simple calibration',simpleInfo:'Place the aircraft level and keep it motionless. Calibrates offsets, not full six-axis geometry.',startSimple:'Calibrate (single pose)',sixTitle:'Full six-position',sixInfo:'The autopilot requests each position. Position the aircraft, hold still, then confirm.',startSix:'Start six-position',levelTitle:'Calibrate level',levelInfo:'After accel calibration, set the aircraft to its level-flight attitude. Trim correction is limited to 10°.',setLevel:'Set level',wizard:'Calibration wizard',requestedPose:'Requested position',waitRequest:'Waiting for autopilot command',confirmPose:'Position ready',calSafe:'All calibrations require a live USB/MAVLink connection and confirmed DISARMED state. DEMO never writes.',servoIntro:'Live PWM and servo configuration: FUNCTION, MIN, TRIM, MAX, REVERSED. Select Setup for the desired channel. Direct PWM is restricted to eligible servo functions.',servoChannels:'Output channels / PWM',servoNote:'Select Setup on any output to edit FUNCTION, MIN, TRIM, MAX and REVERSED. Outputs may remain active while DISARMED.',servoSetup:'Setup',servoEditTitle:'Servo output setup',servoSave:'Write changes',servoCancel:'Cancel',servoReversed:'Reverse direction',servoSaving:'Writing',servoNoChanges:'No changes',servoDone:'Confirmed by controller',servoWarning:'Remove the propeller. Changes can immediately affect physical outputs.',servoInvalid:'Enter integer PWM values between 800–2200 µs; MIN ≤ TRIM ≤ MAX.',servoNoLink:'Connect USB, wait for DISARMED and finish reading parameters.',batteryIntro:'Battery telemetry and monitor parameters. Calibrate sensor scaling against a multimeter.',batterySettings:'Battery Monitor parameters',batteryNote:'Some BATT_MONITOR settings require reboot to take effect.',compassIntro:'Magnetometer calibration. If compass is disabled in your NoGPS configuration, there is no need to enable it just for this page.',compassCal:'Magnetometer calibration',compassHelp:'Rotate the aircraft slowly around all axes. Once the autopilot reports success, accept the result.',compassStart:'Start calibration',compassAccept:'Accept and save',compassCancel:'Cancel',compassSettings:'Compass parameters',compassNote:'The autopilot may reject calibration when no enabled, healthy compass is present.',poses:['Level','Left side','Right side','Nose down','Nose up','Back / inverted'],poseHelp:['Place the aircraft level and keep it still.','Place on its left side and keep it still.','Place on its right side and keep it still.','Point the nose down and keep it still.','Point the nose up and keep it still.','Place inverted on its back and keep it still.'],waiting:'Waiting for autopilot position request…',still:'Keep the aircraft motionless, then confirm.',ack:'Command accepted by autopilot',done:'Successful completion confirmed by autopilot',failed:'Autopilot reported failure',timeout:'No response from autopilot. Check connection and system messages.',need:'Connect USB/MAVLink, wait for DISARMED, then retry.',demo:'DEMO / no hardware link',sending:'Sending MAVLink command…',next:'Waiting for next position…',noServo:'NO TELEMETRY',edit:'Edit',none:'Not loaded',calBusy:'Another calibration is in progress',notSaved:'Calibration succeeded; accept to save',cancelled:'Operation cancelled',compassRunning:'Compass calibration running',noParams:'Load parameters first',batteryNow:'Autopilot telemetry',fromDemo:'DEMO'}
+ ru:{accelIntro:'Калибровка акселерометра через MAVLink. Сними пропеллер и проверь AHRS_ORIENTATION перед калибровкой.',simpleTitle:'Простая калибровка',simpleInfo:'Поставь самолёт горизонтально и не двигай. Калибрует только смещения акселерометра, не полную геометрию.',startSimple:'Калибровать (1 положение)',sixTitle:'Полная 6-позиционная',sixInfo:'Автопилот запрашивает шесть положений по очереди. После каждого запроса установи самолёт и дождись неподвижности.',startSix:'Начать 6-позиционную',levelTitle:'Установить горизонт',levelInfo:'После калибровки акселерометра установи самолёт в положение горизонтального полёта. Коррекция уровня до 10°.',setLevel:'Установить уровень',wizard:'Мастер калибровки',requestedPose:'Запрошенное положение',waitRequest:'Ожидается команда автопилота',confirmPose:'Положение установлено',calSafe:'Все калибровки требуют живого USB/MAVLink и подтверждённого DISARMED. Демо ничего не записывает.',diagAdvanced:'Диагностика MAVLink',servoBenchAdvanced:'Дополнительно: ручной PWM-тест',servoIntro:'Выходные PWM и настройка сервоприводов: FUNCTION, MIN, TRIM, MAX, REVERSED. Нажми «Настроить» на нужном канале. Ручной PWM-тест доступен только для поддерживаемых функций выхода.',servoChannels:'Выходные каналы / PWM',servoNote:'Выбери «Настроить» на нужном выходе, чтобы изменить FUNCTION, MIN, TRIM, MAX и REVERSED. Выходы могут быть активны даже при DISARM.',servoSetup:'Настроить',servoEditTitle:'Настройка сервовыхода',servoSave:'Записать изменения',servoCancel:'Отмена',servoReversed:'Реверс направления',servoSaving:'Запись',servoNoChanges:'Нет изменений',servoDone:'Подтверждено контроллером',servoWarning:'Перед записью сними пропеллер. Изменения могут немедленно повлиять на физические выходы.',servoInvalid:'Проверь целые значения и диапазон PWM 800–2200 µs; MIN ≤ TRIM ≤ MAX.',servoNoLink:'Подключи USB, дождись DISARMED и полной загрузки параметров.',batteryIntro:'Контроль напряжения, тока и параметров батареи. Калибровочные коэффициенты устанавливай по измерениям мультиметра.',batterySettings:'Параметры Battery Monitor',batteryNote:'Некоторые изменения BATT_MONITOR и датчиков вступают в силу только после перезагрузки.',compassIntro:'Магнитометр и его калибровка. Если в конфигурации без GPS компас выключен, включать его ради этой процедуры не требуется.',compassCal:'Калибровка магнитометра',compassHelp:'Медленно вращай аппарат вокруг трёх осей, пока полётник не сообщит об успехе. Нажми «Сохранить результат» после успешного отчёта.',compassStart:'Начать калибровку',compassAccept:'Сохранить результат',compassCancel:'Отмена',compassSettings:'Параметры компаса',compassNote:'Команда калибровки может быть отклонена, если компас не установлен, отключён или неисправен.',poses:['Горизонтально','Левый бок','Правый бок','Нос вниз','Нос вверх','На спине'],poseHelp:['Положи самолёт горизонтально, зафиксируй и не двигай.','Положи на левый бок и зафиксируй.','Положи на правый бок и зафиксируй.','Поверни носом вниз и зафиксируй.','Поверни носом вверх и зафиксируй.','Переверни на спину и зафиксируй.'],waiting:'Ожидание запроса от контроллера…',still:'Удерживай положение неподвижно, затем подтверди.',ack:'Команда принята полётником',done:'Успешно завершено по подтверждению полётника',failed:'Контроллер сообщил об ошибке',timeout:'Нет ответа от контроллера. Проверь сообщения и соединение.',need:'Подключи USB/MAVLink и дождись DISARMED, затем повтори.',demo:'DEMO / без реального подключения',sending:'Отправка MAVLink-команды…',next:'Ожидание следующего положения…',noServo:'НЕТ ТЕЛЕМЕТРИИ',edit:'Изменить',none:'Не загружено',calBusy:'Другая калибровка уже выполняется',notSaved:'Успешно, требуется подтвердить сохранение',cancelled:'Операция отменена',compassRunning:'Калибровка компаса выполняется',noParams:'Сначала загрузите параметры в основном разделе',batteryNow:'Данные от полётника',fromDemo:'ДЕМОНСТРАЦИЯ'},
+ uk:{accelIntro:'Калібрування акселерометра через MAVLink. Зніми пропелер і перевір AHRS_ORIENTATION.',simpleTitle:'Просте калібрування',simpleInfo:'Розмісти літак горизонтально й нерухомо. Коригує зміщення акселерометра, а не повну геометрію.',startSimple:'Калібрувати (1 позиція)',sixTitle:'Повне 6-позиційне',sixInfo:'Автопілот запитує кожне положення. Розташуй літак і дочекайся нерухомості перед підтвердженням.',startSix:'Почати 6-позиційне',levelTitle:'Встановити горизонт',levelInfo:'Після калібрування встанови літак у положення горизонтального польоту. Корекція рівня до 10°.',setLevel:'Встановити рівень',wizard:'Майстер калібрування',requestedPose:'Запитане положення',waitRequest:'Очікування команди автопілота',confirmPose:'Положення встановлено',calSafe:'Калібрування можливе лише з USB/MAVLink та підтвердженим DISARMED. Демо нічого не записує.',diagAdvanced:'Діагностика MAVLink',servoBenchAdvanced:'Додатково: ручний PWM-тест',servoIntro:'Вихідні PWM та налаштування сервоприводів: FUNCTION, MIN, TRIM, MAX, REVERSED. Натисни «Налаштувати» для потрібного каналу. Ручний PWM-тест доступний тільки для допустимих функцій виходу.',servoChannels:'Вихідні канали / PWM',servoNote:'Обери «Налаштувати» на виході, щоб змінити FUNCTION, MIN, TRIM, MAX та REVERSED. Виходи можуть бути активними й у DISARM.',servoSetup:'Налаштувати',servoEditTitle:'Налаштування сервовиходу',servoSave:'Записати зміни',servoCancel:'Скасувати',servoReversed:'Реверс напрямку',servoSaving:'Запис',servoNoChanges:'Немає змін',servoDone:'Підтверджено контролером',servoWarning:'Перед записом зніми пропелер. Зміни можуть негайно вплинути на фізичні виходи.',servoInvalid:'Перевір цілі значення та PWM 800–2200 µs; MIN ≤ TRIM ≤ MAX.',servoNoLink:'Під’єднай USB, дочекайся DISARMED та повного списку параметрів.',batteryIntro:'Контроль напруги, струму і параметрів батареї. Калібрувальні коефіцієнти перевіряй мультиметром.',batterySettings:'Параметри Battery Monitor',batteryNote:'Деякі зміни BATT_MONITOR набирають чинності лише після перезавантаження.',compassIntro:'Магнітометр і його калібрування. Якщо компас вимкнений, не вмикай його лише заради цієї процедури.',compassCal:'Калібрування магнітометра',compassHelp:'Повільно обертай апарат навколо всіх осей. Після успішного звіту натисни «Зберегти результат».',compassStart:'Почати калібрування',compassAccept:'Зберегти результат',compassCancel:'Скасувати',compassSettings:'Параметри компаса',compassNote:'Команду можуть відхилити, якщо компас відсутній або несправний.',poses:['Горизонтально','Лівий бік','Правий бік','Ніс донизу','Ніс догори','На спині'],poseHelp:['Поклади літак горизонтально та не рухай.','Поклади на лівий бік і зафіксуй.','Поклади на правий бік і зафіксуй.','Поверни носом донизу й зафіксуй.','Поверни носом догори й зафіксуй.','Переверни на спину й зафіксуй.'],waiting:'Очікування запиту від контролера…',still:'Тримай положення нерухомо, потім підтвердь.',ack:'Команду прийнято',done:'Успіх підтверджено контролером',failed:'Контролер повідомив про помилку',timeout:'Немає відповіді контролера. Перевір з’єднання.',need:'Під’єднай USB/MAVLink, дочекайся DISARMED.',demo:'DEMO / без реального з’єднання',sending:'Надсилання MAVLink…',next:'Очікування наступного положення…',noServo:'НЕМАЄ ТЕЛЕМЕТРІЇ',edit:'Змінити',none:'Не завантажено',calBusy:'Інше калібрування вже триває',notSaved:'Успішно, потрібно підтвердити збереження',cancelled:'Операцію скасовано',compassRunning:'Калібрування компаса триває',noParams:'Спочатку завантаж параметри',batteryNow:'Дані від контролера',fromDemo:'ДЕМОНСТРАЦІЯ'},
+ en:{accelIntro:'Accelerometer calibration using MAVLink. Remove the propeller and verify AHRS_ORIENTATION before calibration.',simpleTitle:'Simple calibration',simpleInfo:'Place the aircraft level and keep it motionless. Calibrates offsets, not full six-axis geometry.',startSimple:'Calibrate (single pose)',sixTitle:'Full six-position',sixInfo:'The autopilot requests each position. Position the aircraft, hold still, then confirm.',startSix:'Start six-position',levelTitle:'Calibrate level',levelInfo:'After accel calibration, set the aircraft to its level-flight attitude. Trim correction is limited to 10°.',setLevel:'Set level',wizard:'Calibration wizard',requestedPose:'Requested position',waitRequest:'Waiting for autopilot command',confirmPose:'Position ready',calSafe:'All calibrations require a live USB/MAVLink connection and confirmed DISARMED state. DEMO never writes.',diagAdvanced:'MAVLink diagnostics',servoBenchAdvanced:'Advanced: manual PWM test',servoIntro:'Live PWM and servo configuration: FUNCTION, MIN, TRIM, MAX, REVERSED. Select Setup for the desired channel. Direct PWM is restricted to eligible servo functions.',servoChannels:'Output channels / PWM',servoNote:'Select Setup on any output to edit FUNCTION, MIN, TRIM, MAX and REVERSED. Outputs may remain active while DISARMED.',servoSetup:'Setup',servoEditTitle:'Servo output setup',servoSave:'Write changes',servoCancel:'Cancel',servoReversed:'Reverse direction',servoSaving:'Writing',servoNoChanges:'No changes',servoDone:'Confirmed by controller',servoWarning:'Remove the propeller. Changes can immediately affect physical outputs.',servoInvalid:'Enter integer PWM values between 800–2200 µs; MIN ≤ TRIM ≤ MAX.',servoNoLink:'Connect USB, wait for DISARMED and finish reading parameters.',batteryIntro:'Battery telemetry and monitor parameters. Calibrate sensor scaling against a multimeter.',batterySettings:'Battery Monitor parameters',batteryNote:'Some BATT_MONITOR settings require reboot to take effect.',compassIntro:'Magnetometer calibration. If compass is disabled in your NoGPS configuration, there is no need to enable it just for this page.',compassCal:'Magnetometer calibration',compassHelp:'Rotate the aircraft slowly around all axes. Once the autopilot reports success, accept the result.',compassStart:'Start calibration',compassAccept:'Accept and save',compassCancel:'Cancel',compassSettings:'Compass parameters',compassNote:'The autopilot may reject calibration when no enabled, healthy compass is present.',poses:['Level','Left side','Right side','Nose down','Nose up','Back / inverted'],poseHelp:['Place the aircraft level and keep it still.','Place on its left side and keep it still.','Place on its right side and keep it still.','Point the nose down and keep it still.','Point the nose up and keep it still.','Place inverted on its back and keep it still.'],waiting:'Waiting for autopilot position request…',still:'Keep the aircraft motionless, then confirm.',ack:'Command accepted by autopilot',done:'Successful completion confirmed by autopilot',failed:'Autopilot reported failure',timeout:'No response from autopilot. Check connection and system messages.',need:'Connect USB/MAVLink, wait for DISARMED, then retry.',demo:'DEMO / no hardware link',sending:'Sending MAVLink command…',next:'Waiting for next position…',noServo:'NO TELEMETRY',edit:'Edit',none:'Not loaded',calBusy:'Another calibration is in progress',notSaved:'Calibration succeeded; accept to save',cancelled:'Operation cancelled',compassRunning:'Compass calibration running',noParams:'Load parameters first',batteryNow:'Autopilot telemetry',fromDemo:'DEMO'}
 };
 let language='ru';const tt=k=>(lex[language]||lex.ru)[k]||k;
 const accel={kind:null,status:'idle',requested:null,lastPos:null,completed:new Set(),timer:null,started:0,lastAck:null,lastMessage:'',firstRequest:false};
@@ -77,7 +78,8 @@ const servoRealtimeWords={
 };
 const rt=k=>(servoRealtimeWords[language]||servoRealtimeWords.ru)[k];
 const directAllowed=fn=>Number.isInteger(fn)&&(fn===0||fn===1||(fn>=51&&fn<=66)||(fn>=140&&fn<=155));
-let servoLiveBusy=false,servoLiveQueue=Promise.resolve();
+let servoLiveBusy=false,servoSavePending=false;
+const enqueueServoWrite=servoCore.createSerialQueue();
 let benchActive=false,benchDeadline=0,benchPending=null,benchBusy=false,benchTimer=null,benchLastSent=1000,benchRequested=1000,benchAckTimer=null;
 function isLiveEditor(){return servoEditing!==null&&$('servoLiveApply').checked&&safe();}
 function updateRealtimeUi(){
@@ -89,7 +91,7 @@ function updateRealtimeUi(){
  $('servoBenchFunction').textContent=`FUNCTION=${values.FUNCTION??'—'}${directAllowed(values.FUNCTION)?' / DO_SET_SERVO':' / BLOCKED'}`;
  $('servoBenchHelp').textContent=directAllowed(values.FUNCTION)?rt('help'):rt('unsupported');
  $('servoBenchStart').title=directAllowed(values.FUNCTION)?'':(language==='ru'?'FUNCTION='+values.FUNCTION+': ручной PWM недоступен. Реверс и MIN/MAX меняются через PARAM_SET.':'FUNCTION='+values.FUNCTION+': direct PWM disabled; use PARAM_SET');
- $('servoLiveApplyLabel').textContent=rt('on');$('servoLiveApplyNote').textContent=rt('note');
+ $('servoLiveApplyLabel').textContent=rt('on');$('servoLiveApplyNote').textContent=rt('note');$('servoLiveApply').disabled=servoSavePending||servoIsSaving;
  if($('servoLiveDisabledHint')){$('servoLiveDisabledHint').hidden=$('servoLiveApply').checked;$('servoLiveDisabledHint').textContent=(language==='uk'?'Зміни ще НЕ надсилаються. Увімкни «Застосовувати відразу». Для THROTTLE ручний PWM через DO_SET_SERVO заблокований.':language==='en'?'Changes are NOT being sent. Enable “Apply immediately”. Direct DO_SET_SERVO PWM is blocked for THROTTLE.':'Изменения пока НЕ отправляются на контроллер. Включи «Применять сразу». Для газа (FUNCTION=70) прямой PWM-тест заблокирован.');}
  $('servoBenchTitle').textContent=rt('bench');$('servoBenchConsentLabel').textContent=rt('consent');
  $('servoBenchValueLabel').textContent=rt('direct');$('servoBenchStart').textContent=rt('start');$('servoBenchStop').textContent=rt('stop');
@@ -115,9 +117,9 @@ async function realtimeParamChange(field){
  }finally{servoLiveBusy=false;servoIsSaving=false;updateServoEditor();renderServo();updateRealtimeUi();}
 }
 function queueRealtime(field){
- if(!isLiveEditor())return;
- // Preserve event order; no second PARAM_SET until the first is acknowledged.
- servoLiveQueue=servoLiveQueue.then(()=>realtimeParamChange(field)).catch(e=>emit(e.message,true));
+ if(!isLiveEditor()||servoSavePending)return;
+ // Both immediate writes and the Apply button share one serial PARAM_SET queue.
+ enqueueServoWrite(()=>realtimeParamChange(field)).catch(e=>emit(e.message,true));
 }
 function benchCanSend(){const v=servoValues(servoEditing||0);return benchActive&&servoEditing!==null&&safe()&&$('servoBenchConsent').checked&&directAllowed(v.FUNCTION)&&!servoIsSaving&&!servoLiveBusy;}
 function benchStopTimer(){if(benchTimer){clearTimeout(benchTimer);benchTimer=null;}}
@@ -162,7 +164,7 @@ function stopBench(reason='manual'){
    .catch(e=>{$('servoBenchStatus').textContent='⚠ STOP: '+e.message+' — '+rt('idle');});
  }else $('servoBenchStatus').textContent=rt('idle');
 }
-function servoEditorClosed(){if(benchActive)stopBench('closed');for(const t of Object.values(servoLiveDebounce))clearTimeout(t);servoEditing=null;servoIsSaving=false;benchStopTimer();}
+function servoEditorClosed(){if(benchActive)stopBench('closed');for(const t of Object.values(servoLiveDebounce))clearTimeout(t);servoEditing=null;servoIsSaving=false;servoSavePending=false;benchStopTimer();}
 $('servoLiveApply').addEventListener('change',()=>{if(benchActive)stopBench('mode');updateRealtimeUi();});
 $('servoBenchConsent').addEventListener('change',()=>{if(benchActive&&!$('servoBenchConsent').checked)stopBench('consent');updateRealtimeUi();});
 $('servoBenchSlider').addEventListener('input',()=>{$('servoBenchReadout').textContent=`${$('servoBenchSlider').value} µs`;if(benchActive)queueBenchSend(Number($('servoBenchSlider').value));});
@@ -178,39 +180,48 @@ function servoChanges(){if(servoEditing===null)return [];
  const current=servoValues(servoEditing);
  return servoFields.filter(f=>Number.isFinite(current[f])&&current[f]!==Number(f==='REVERSED'?$('servoEditReverse').checked:$('servoEdit'+f.charAt(0)+f.slice(1).toLowerCase()).value));
 }
-function validateServoEditor(){
- const channel=servoEditing;if(!channel)return {error:tt('servoNoLink')};
- const p=currentState().params;
- const fields={FUNCTION:$('servoEditFunction'),MIN:$('servoEditMin'),TRIM:$('servoEditTrim'),MAX:$('servoEditMax')};
- const values={};
- for(const [field,input] of Object.entries(fields)){
-  const name=`SERVO${channel}_${field}`;
-  if(!p.has(name)){if(input.value.trim()!=='')return {error:name+' unavailable'};continue;}
-  const v=Number(input.value);
-  if(!input.value.trim()||!Number.isInteger(v)||v<(field==='FUNCTION'?0:800)||v>(field==='FUNCTION'?1000:2200))return {error:tt('servoInvalid')};
-  values[field]=v;
- }
- const revName=`SERVO${channel}_REVERSED`;
- if(p.has(revName))values.REVERSED=$('servoEditReverse').checked?1:0;
- const min=values.MIN??p.get(`SERVO${channel}_MIN`)?.value;
- const trim=values.TRIM??p.get(`SERVO${channel}_TRIM`)?.value;
- const max=values.MAX??p.get(`SERVO${channel}_MAX`)?.value;
- if([min,trim,max].every(Number.isFinite)&&!(min<=trim&&trim<=max))return {error:tt('servoInvalid')};
- const changes=Object.entries(values).filter(([f,v])=>p.get(`SERVO${channel}_${f}`)?.value!==v);
- return {values,changes};
+function captureServoDraft(){
+ return {
+  FUNCTION:$('servoEditFunction').value,
+  MIN:$('servoEditMin').value,
+  TRIM:$('servoEditTrim').value,
+  MAX:$('servoEditMax').value,
+  REVERSED:$('servoEditReverse').checked
+ };
 }
-function updateServoEditor(){if(!servoEditing)return;
- const check=validateServoEditor();const changes=check.changes||[];
+function validateServoDraft(channel,draft){
+ if(!Number.isInteger(channel)||channel<1||channel>16)return {error:tt('servoNoLink')};
+ const result=servoCore.validateDraft(channel,draft,currentState().params);
+ if(result.error==='missing')return {error:result.name+' unavailable'};
+ if(result.error)return {error:tt('servoInvalid')};
+ return result;
+}
+function validateServoEditor(){
+ if(servoEditing===null)return {error:tt('servoNoLink')};
+ return validateServoDraft(servoEditing,captureServoDraft());
+}
+function updateServoEditor(){
+ if(servoEditing===null)return;
+ const check=validateServoEditor(),changes=check.changes||[],values=servoValues(servoEditing);
+ const writerLocked=servoSavePending||(servoIsSaving&&!servoLiveBusy);
  $('servoEditorChanges').replaceChildren();
  if(check.error)$('servoEditorChanges').textContent=check.error;
  else if(!changes.length)$('servoEditorChanges').textContent=tt('servoNoChanges');
- else for(const [field,newValue] of changes){const el=document.createElement('div');el.textContent=`SERVO${servoEditing}_${field}: ${servoValues(servoEditing)[field]} → ${newValue}`;$('servoEditorChanges').append(el);}
- $('servoEditorSave').disabled=servoIsSaving||servoLiveBusy||benchActive||!safe()||!!check.error||!changes.length||!('writeServoConfig' in api);
+ else for(const [field,newValue] of changes){const el=document.createElement('div');el.textContent=`SERVO${servoEditing}_${field}: ${values[field]} → ${newValue}`;$('servoEditorChanges').append(el);}
+ for(const field of ['FUNCTION','MIN','TRIM','MAX']){
+  const input=$('servoEdit'+field.charAt(0)+field.slice(1).toLowerCase());
+  input.disabled=writerLocked||!Number.isFinite(values[field]);
+ }
+ $('servoEditReverse').disabled=writerLocked||!Number.isFinite(values.REVERSED);
+ $('servoLiveApply').disabled=servoSavePending||servoIsSaving;
+ $('servoEditorSave').disabled=writerLocked||benchActive||!safe()||!!check.error||!changes.length||!('writeServoConfig' in api);
+ $('servoEditorCancel').disabled=servoSavePending||servoIsSaving;
+ $('servoEditorClose').disabled=servoSavePending||servoIsSaving;
 }
 function openServoEditor(n){if(servoIsSaving||benchActive)return;
  const s=currentState(),values=servoValues(n);
  if(!s.connected||s.demo||!safe()){emit(tt('servoNoLink'),true);return;}
- servoEditing=n;benchActive=false;$('servoLiveApply').checked=false;$('servoBenchConsent').checked=false;$('servoBenchSlider').value='1000';$('servoBenchStatus').textContent=rt('idle');
+ servoEditing=n;servoSavePending=false;benchActive=false;$('servoLiveApply').checked=false;$('servoBenchConsent').checked=false;$('servoBenchSlider').value='1000';$('servoBenchStatus').textContent=rt('idle');
  $('servoDialogTitle').textContent=`${tt('servoEditTitle')} · SERVO ${n}`;
  $('servoEditorInfo').textContent=`SERVO${n}_FUNCTION = ${values.FUNCTION??'—'}${servoFunctions[values.FUNCTION]?' / '+servoFunctions[values.FUNCTION]:''}`;
  for(const f of ['FUNCTION','MIN','TRIM','MAX']){const inp=$('servoEdit'+f.charAt(0)+f.slice(1).toLowerCase());inp.value=Number.isFinite(values[f])?String(values[f]):'';inp.disabled=!Number.isFinite(values[f]);}
@@ -219,18 +230,44 @@ function openServoEditor(n){if(servoIsSaving||benchActive)return;
  $('servoReverseLabel').textContent=tt('servoReversed');$('servoEditorSave').textContent=tt('servoSave');$('servoEditorCancel').textContent=tt('servoCancel');
  $('servoDialog').showModal();updateServoEditor();updateRealtimeUi();
 }
-function closeServoEditor(){if(servoIsSaving)return;if(benchActive)stopBench('closed');$('servoDialog').close();servoEditorClosed();}
-async function saveServoEditor(ev){ev.preventDefault();if(servoIsSaving||servoEditing===null||benchActive)return;
- const check=validateServoEditor();if(check.error||!check.changes?.length||!safe()){updateServoEditor();return;}
- servoIsSaving=true;$('servoEditorSave').disabled=true;$('servoEditorCancel').disabled=true;$('servoEditorClose').disabled=true;
- const channel=servoEditing;
+function closeServoEditor(){if(servoIsSaving||servoSavePending)return;if(benchActive)stopBench('closed');$('servoDialog').close();servoEditorClosed();}
+async function saveServoEditor(ev){
+ ev.preventDefault();
+ // A live REVERSED write may already be in flight. Queue the final form snapshot
+ // behind it instead of dropping Apply or racing a second PARAM_SET transaction.
+ if(servoSavePending||servoEditing===null||benchActive)return;
+ const channel=servoEditing,draft=captureServoDraft(),initial=validateServoDraft(channel,draft);
+ if(initial.error){updateServoEditor();return;}
+ if(!initial.changes.length){updateServoEditor();return;}
+ for(const timer of Object.values(servoLiveDebounce))clearTimeout(timer);
+ servoSavePending=true;
+ $('servoEditorCancel').disabled=true;$('servoEditorClose').disabled=true;
+ updateServoEditor();updateRealtimeUi();
  try{
-  const result=await api.writeServoConfig(channel,Object.fromEntries(check.changes),(p)=>{$('servoEditorStatus').textContent=`${tt('servoSaving')}: ${p.done}/${p.total} · ${p.current||'OK'}`;});
-  $('servoEditorStatus').textContent=`✓ ${tt('servoDone')} · ${result.done}/${result.total}`;
-  emit(`SERVO ${channel}: ${result.done}/${result.total} PARAM_SET acknowledged`);
-  if(result.done===result.total){$('servoDialog').close();servoEditorClosed();}
- }catch(error){$('servoEditorStatus').textContent=`⚠ ${error.message}`;emit(`SERVO ${channel}: ${error.message}`,true);}
- finally{servoIsSaving=false;$('servoEditorCancel').disabled=false;$('servoEditorClose').disabled=false;updateServoEditor();renderServo();updateRealtimeUi();}
+  await enqueueServoWrite(async()=>{
+   if(servoEditing!==channel)throw Error('Servo editor was closed');
+   if(!safe())throw Error(tt('servoNoLink'));
+   const check=validateServoDraft(channel,draft);
+   if(check.error)throw Error(check.error);
+   if(!check.changes.length)return {done:0,total:0};
+   servoIsSaving=true;updateServoEditor();updateRealtimeUi();
+   return api.writeServoConfig(channel,Object.fromEntries(check.changes),(p)=>{
+    $('servoEditorStatus').textContent=`${tt('servoSaving')}: ${p.done}/${p.total} · ${p.current||'OK'}`;
+   });
+  });
+  const confirmed=validateServoDraft(channel,draft);
+  if(confirmed.error||confirmed.changes.length)throw Error('Controller did not confirm every requested servo parameter');
+  $('servoEditorStatus').textContent=`✓ ${tt('servoDone')} · ${initial.changes.length}/${initial.changes.length}`;
+  emit(`SERVO ${channel}: ${initial.changes.length} requested change(s) confirmed by PARAM_VALUE`);
+  $('servoDialog').close();servoEditorClosed();
+ }catch(error){
+  $('servoEditorStatus').textContent=`⚠ ${error.message}`;
+  emit(`SERVO ${channel}: ${error.message}`,true);
+ }finally{
+  servoIsSaving=false;servoSavePending=false;
+  $('servoEditorCancel').disabled=false;$('servoEditorClose').disabled=false;
+  updateServoEditor();renderServo();updateRealtimeUi();
+ }
 }
 function renderServo(){const s=currentState();const demo=s.demo;status('servoStatusBadge',demo?'DEMO / SIM':(s.connected&&live.servoTime&&now()-live.servoTime<6000)?'MAVLINK / LIVE':tt('noServo'));const wrap=$('servoGrid');wrap.replaceChildren();for(let n=1;n<=16;n++){
  const pwm=demo?Math.round(1500+250*Math.sin(now()/1300+n*.5)):live.servos[n-1];const p=s.params;
