@@ -13,7 +13,7 @@ assert.match(cfg,/writeAdvancedParams:async \(updates,onProgress=\(\)=>\{\},shou
 assert.match(cfg,/if\(shouldCancel\(\)\)throw Error\('Cancelled after '/,'cancellation must stop after current PARAM_VALUE acknowledgment');
 assert.match(cal,/kind:completedKind==='six'\?'six'/,'accelerometer calibration must emit verified events');
 assert.match(cal,/kind:'compass',status:failed\?'failed':ok\?\(mag\.autosaved\?'done':'awaiting-save'\)/,'compass completion must wait for saved report');
-assert.match(dfu,/new CustomEvent\\('atlas:dfu'/,'DFU must notify Quick Setup after verified flash');
+assert.ok(dfu.includes("new CustomEvent('atlas:dfu'"),'DFU must notify Quick Setup after verified flash');
 assert.match(wizard,/api\.writeAdvancedParams\(updates/,'custom parameter file must use existing acknowledged writer');
 assert.match(wizard,/api\.requestParameters\(\)/,'parameter verification must use live parameter readback');
 assert.match(wizard,/qs\.rebootSawDisconnect/,'custom parameter flow must require controller disconnect/reconnect');
