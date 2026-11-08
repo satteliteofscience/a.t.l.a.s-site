@@ -1,0 +1,34 @@
+/* A.T.L.A.S. donation spoiler: hover/focus interference + click-to-reveal, touch-friendly. */
+.atlas-donation{margin-top:28px;max-width:590px;isolation:isolate;position:relative}
+.atlas-donation-trigger{display:flex;position:relative;width:100%;min-height:84px;align-items:center;flex-direction:column;justify-content:center;overflow:hidden;gap:7px;padding:17px 20px;background:linear-gradient(120deg,#121c10,#1e2c18,#141b0e);border:1px solid #98954c;color:#e8df9a;cursor:pointer;letter-spacing:.1em;box-shadow:inset 0 0 0 1px #b1ae4122,0 15px 35px #0005}
+.donation-trigger-title{font:700 clamp(14px,2vw,19px)/1.35 'IBM Plex Mono',monospace;position:relative;z-index:2}
+.donation-trigger-secondary{font:500 10px/1.35 'IBM Plex Mono',monospace;opacity:.72;position:relative;z-index:2}
+.atlas-donation-glitch{inset:0;position:absolute;background:repeating-linear-gradient(0deg,transparent 0 4px,#c1c66c20 5px 7px,transparent 8px 11px),linear-gradient(90deg,transparent,#b3c96016,transparent);opacity:0;pointer-events:none;z-index:1}
+.atlas-donation-trigger:hover .atlas-donation-glitch,.atlas-donation-trigger:focus-visible .atlas-donation-glitch,.atlas-donation.is-revealed .atlas-donation-glitch{opacity:.9;animation:atlas-static .23s steps(3,end) infinite}
+.atlas-donation-trigger:hover .donation-trigger-title,.atlas-donation-trigger:focus-visible .donation-trigger-title{text-shadow:-2px 0 #a9ca55,2px 0 #987036;animation:atlas-jitter .18s steps(2,end) 4}
+.atlas-donation-trigger:hover,.atlas-donation.is-revealed .atlas-donation-trigger{border-color:#d5ca71;box-shadow:0 0 26px #a5bd4d44,inset 0 0 32px #a5bd4d12}
+@keyframes atlas-static{0%{transform:translate(-4%,0)}40%{transform:translate(3%,3px)}75%{transform:translate(0,-4px)}100%{transform:translate(4%,1px)}}
+@keyframes atlas-jitter{0%{transform:translateX(-2px)}50%{transform:translateX(2px)}100%{transform:none}}
+.atlas-donation-panel:not([hidden]){display:block;border:1px solid #8c9455;border-top:0;padding:20px;background:linear-gradient(180deg,#172319,#0d160d);animation:atlas-donation-open .19s ease-out}
+@keyframes atlas-donation-open{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.atlas-donation-panel p{margin:0 0 15px!important}.donation-actions{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 15px}
+.donation-action-primary,.donation-action-secondary{display:inline-flex;justify-content:center;align-items:center;min-height:46px;padding:10px 14px;border:1px solid #d4c26b;text-decoration:none;font:700 12px/1.4 'IBM Plex Mono',monospace;cursor:pointer}
+.donation-action-primary{background:#dec76b;color:#171d0d}.donation-action-secondary{background:#182618;color:#ebdfa1}
+.donation-bank{padding:15px;border:1px solid #687942;margin:12px 0;overflow-wrap:anywhere}.donation-bank-row{display:grid;grid-template-columns:minmax(0,100px) 1fr;gap:12px;margin-bottom:10px}.donation-bank-row span{color:#a9b38b;font:500 12px 'IBM Plex Mono',monospace}.donation-bank-row strong{font:600 12px 'IBM Plex Mono',monospace;color:#eee0a6}
+.donation-hint{font-size:12px!important;line-height:1.6!important;color:#abae8e!important;margin:10px 0 0!important}
+@media(max-width:500px){.donation-bank-row{grid-template-columns:1fr;gap:3px}.donation-actions>a,.donation-actions>button{width:100%}.atlas-donation-trigger{min-height:88px}}
+@media(prefers-reduced-motion:reduce){.atlas-donation-glitch,.donation-trigger-title{animation:none!important}}
+
+/* Email registration is deliberately separate from the voluntary transfer. */
+.atlas-subscribe-form{display:grid;gap:13px;margin-bottom:16px}
+.atlas-subscribe-form h3{margin:0;color:#eee2a0;font-size:16px}
+.atlas-subscribe-form .donation-form-explain{margin:0!important;color:#b9bea0;font-size:13px;line-height:1.65}
+.donation-form-field{display:grid;gap:7px;color:#e9dea7;font-size:12px;min-width:0}
+.donation-form-field input,.donation-form-field select{display:block;width:100%;min-width:0;background:#0b140c;color:#f2e4ac;border:1px solid #7d8c4c;padding:11px;font:inherit;min-height:44px;border-radius:2px}
+.donation-agree{display:flex;align-items:flex-start;gap:9px;color:#c4c7a3;font-size:12px;line-height:1.65}
+.donation-agree input{width:18px;height:18px;margin:2px 0 0;accent-color:#c0cb71;flex:0 0 18px}
+.donation-form-buttons{display:flex;gap:10px;flex-wrap:wrap}.donation-form-buttons button{flex:1 1 185px}
+.donation-form-status{margin:0!important;color:#d9c375!important;font-size:12px!important;line-height:1.55!important}
+.donation-policy-link{font-size:12px;color:#c6cf82;text-decoration:underline;text-underline-offset:3px}
+.donation-payment-stage{padding-top:3px}.donation-back{margin-top:15px;width:100%}
+@media(max-width:600px){.donation-form-buttons{flex-direction:column}.donation-form-buttons button{width:100%}}

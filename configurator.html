@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1209">
+  <meta name="description" content="A.T.L.A.S. Control Center — веб-конфигуратор ArduPlane: авиагоризонт, настройки, параметры, проверка APJ.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="configurator.css"><link rel="stylesheet" href="advanced.css"><link rel="stylesheet" href="osd-editor.css">
+  <title>A.T.L.A.S. — Control Center</title>
+</head>
+<body class="console-body">
+  <div class="cc-backdrop" aria-hidden="true"></div>
+  <header class="cc-topbar">
+    <a class="cc-brand" href="index.html" title="A.T.L.A.S. Home"><img src="assets/mark.svg" alt=""><span><strong>A.T.L.A.S.</strong><small>CONTROL CENTER <b>0.7.0 / PRE-RELEASE</b></small></span></a>
+    <nav class="cc-toplinks" aria-label="Навигация"><a href="index.html" data-t="home">← На сайт</a><span class="cc-top-divider">/</span><span data-t="workspace">Конфигуратор</span></nav>
+    <div class="cc-righthead"><span class="cc-connection-pill" id="connectionPill"><i></i><span id="connectionLabel" data-t="offline">НЕ ПОДКЛЮЧЕН</span></span>
+      <div class="cc-language" aria-label="Language"><button data-language="uk">UA</button><button data-language="en">ENG</button><button data-language="ru">RU</button></div>
+    </div>
+  </header>
+  <main class="cc-workspace">
+    <aside class="cc-sidebar">
+      <div class="cc-side-group"><p data-t="workspace">Конфигуратор</p>
+        <button class="cc-nav active" type="button" data-tab="dashboard"><span class="cc-icon">◈</span><span data-t="dashboard">Полётные данные</span><i>01</i></button>
+        <button class="cc-nav" type="button" data-tab="basic"><span class="cc-icon">≡</span><span data-t="basic">Базовая настройка</span><i>02</i></button>
+        <button class="cc-nav" type="button" data-tab="params"><span class="cc-icon">⌘</span><span data-t="params">Список параметров</span><i>03</i></button>
+        <button class="cc-nav" type="button" data-tab="tuning"><span class="cc-icon">▥</span><span data-x="tuning">Basic Tuning</span><i>10</i></button>
+        <button class="cc-nav" type="button" data-tab="mavftp"><span class="cc-icon">⌂</span><span data-x="mavftp">MAVFTP</span><i>11</i></button>
+      </div>
+      <div class="cc-side-group cc-calibration-menu"><p data-t="calgroup">Калибровка полётного контроллера</p>
+        <button class="cc-nav" type="button" data-tab="accelerometer"><span class="cc-icon">⊞</span><span data-t="accelerometer">Акселерометр</span><i>05</i></button>
+        <button class="cc-nav" type="button" data-tab="servos"><span class="cc-icon">↔</span><span data-t="servoTitle">Выходы сервоприводов</span><i>06</i></button>
+        <button class="cc-nav" type="button" data-tab="battery"><span class="cc-icon">▣</span><span data-t="batteryTitle">Монитор батареи</span><i>07</i></button>
+        <button class="cc-nav" type="button" data-tab="compass"><span class="cc-icon">⌖</span><span data-t="compassTitle">Компас</span><i>08</i></button>
+        <button class="cc-nav" type="button" data-tab="modes"><span class="cc-icon">▥</span><span data-x="modes">Flight Modes</span><i>12</i></button>
+        <button class="cc-nav" type="button" data-tab="radio"><span class="cc-icon">⌁</span><span data-x="radio">Radio Calibration</span><i>13</i></button>
+        <button class="cc-nav" type="button" data-tab="joystick"><span class="cc-icon">✣</span><span data-x="joystick">Joystick</span><i>14</i></button>
+      </div>
+      <div class="cc-side-group cc-osd-menu"><p data-osd-t="videoGroup">ВИДЕО / ИНДИКАЦИЯ</p>
+        <button class="cc-nav" type="button" data-tab="osd"><span class="cc-icon">▤</span><span data-osd-t="osdTitle">Настройка OSD</span><i>09</i></button>
+        <button class="cc-nav" type="button" data-tab="gimbal"><span class="cc-icon">◉</span><span data-x="gimbal">Camera Gimbal</span><i>15</i></button>
+        <button class="cc-nav" type="button" data-tab="parachute"><span class="cc-icon">⛱</span><span data-x="parachute">Parachute</span><i>16</i></button>
+      </div>
+      <div class="cc-side-group"><p data-t="maintenance">Обслуживание полётного контроллера</p>
+        <button class="cc-nav" type="button" data-tab="firmware"><span class="cc-icon">⬡</span><span data-t="firmware">Прошивка</span><i>04</i></button>
+        <a class="cc-nav cc-link-nav" href="faq.html"><span class="cc-icon">?</span><span data-t="faq">Ответы на вопросы</span><i>↗</i></a>
+        <a class="cc-nav cc-link-nav" href="changelog.html"><span class="cc-icon">≋</span><span data-t="changelog">Список изменений</span><i>↗</i></a>
+        <a class="cc-nav cc-link-nav" href="index.html#support"><span class="cc-icon">♡</span><span data-t="atlasSupport">Поддержать проект</span><i>↗</i></a>
+      </div>
+      <div class="cc-sidebar-foot"><div class="cc-led"></div><span data-t="experimental">PRE-RELEASE / DEVELOPMENT</span><small>Oleksandr × AI CODEX</small></div>
+    </aside>
+
+    <div class="cc-main">
+      <section class="cc-toolbar" aria-label="Подключение">
+        <div class="cc-toolbar-copy"><strong data-t="linktitle">СОЕДИНЕНИЕ С КОНТРОЛЛЕРОМ</strong><small id="linkSubtitle" data-t="choose">Выбери демонстрацию или подключи контроллер через USB</small></div>
+        <div class="cc-toolbar-actions">
+          <label class="cc-baud-label" for="baud">BAUD <select id="baud"><option value="115200" selected>115200</option><option value="57600">57600</option><option value="921600">921600</option><option value="230400">230400</option></select></label>
+          <button type="button" id="demoBtn" class="cc-button ghost"><span>◇</span> <span data-t="demo">Демо</span></button>
+          <button type="button" id="connectBtn" class="cc-button primary"><span>⌁</span> <span id="connectBtnText" data-t="connect">Подключить USB</span></button>
+        </div>
+      </section>
+      <div class="cc-hintbar"><span class="cc-hint-icon">!</span><span data-t="safety">Экспериментальный веб-инструмент. Настройка только на земле, со снятым пропеллером. Режим DEMO никогда не записывает параметры в плату.</span></div>
+
+      <!-- FLIGHT DATA -->
+      <section class="cc-tab active" data-panel="dashboard" aria-labelledby="flightDataTitle">
+        <div class="cc-section-title"><div><p class="cc-overline">01 / FLIGHT DATA</p><h1 id="flightDataTitle" data-t="dashboard">Полётные данные</h1></div><span class="cc-view-status" id="flightSource">NO DATA</span></div>
+        <div class="cc-dashboard-grid">
+          <article class="cc-card cc-attitude-card">
+            <div class="cc-card-title"><span>◈</span><strong data-t="attitude">Искусственный горизонт</strong><small id="hudSource">NO TELEMETRY</small></div>
+            <div class="cc-aviation-frame"><canvas id="attitudeCanvas" width="720" height="490" aria-label="Искусственный горизонт по данным ATTITUDE"></canvas><span class="cc-hud-watermark" id="hudWatermark">WAITING FOR FC</span></div>
+            <div class="cc-attitude-readouts"><div><small>ROLL / DEG</small><strong id="rollReadout">--.-°</strong></div><div><small>PITCH / DEG</small><strong id="pitchReadout">--.-°</strong></div><div><small>YAW / DEG</small><strong id="yawReadout">---.-°</strong></div><div><small>AIRSPEED</small><strong id="speedReadout">--- <em>km/h</em></strong></div></div>
+          </article>
+          <div class="cc-dashboard-right">
+            <article class="cc-card cc-status-panel"><div class="cc-card-title"><span>⌁</span><strong data-t="status">Состояние аппарата</strong><small>MAVLINK</small></div>
+              <div class="cc-facts"><div><span data-t="vehicle">Контроллер</span><b id="vehicleModel">—</b></div><div><span data-t="arming">ARM / DISARM</span><b id="armedState">—</b></div><div><span data-t="flightmode">Режим</span><b id="flightMode">—</b></div><div><span data-t="voltage">Напряжение</span><b id="voltageReadout">—</b></div><div><span data-t="altitude">Высота</span><b id="altReadout">—</b></div><div><span data-t="parameters">Параметры</span><b id="paramCount">0 / ?</b></div></div>
+            </article>
+            <article class="cc-card cc-messages-panel"><div class="cc-card-title"><span>▤</span><strong data-t="messages">Сообщения системы</strong><small id="logCounter">0 EVENTS</small></div><div class="cc-events" id="events" aria-live="polite"></div></article>
+          </div>
+        </div>
+        <p class="cc-under-panel" data-t="hudhelp">Демонстрация использует искусственные данные. При USB-подключении горизонт отображает реальные MAVLink ATTITUDE, а скорость — VFR_HUD.</p>
+      </section>
+
+      <!-- BASICS -->
+      <section class="cc-tab" data-panel="basic" aria-labelledby="basicTitle">
+        <div class="cc-section-title"><div><p class="cc-overline">02 / SETUP</p><h1 id="basicTitle" data-t="basic">Базовая настройка</h1></div><button class="cc-button ghost" id="readBasicsBtn" type="button" data-t="refresh">Обновить параметры</button></div>
+        <p class="cc-section-desc" data-t="basicInfo">Параметры считываются с подключённого контроллера. Изменение разрешено только при DISARM; каждую запись необходимо подтвердить. В деморежиме редактирование отключено.</p>
+        <div class="cc-category-tabs" id="categoryTabs"><button class="active" data-group="all" data-t="all">Все</button><button data-group="control" data-t="controls">Управление</button><button data-group="speed" data-t="speed">Скорость и тяга</button><button data-group="safety" data-t="security">Защита</button><button data-group="atlas" data-t="atlas">A.T.L.A.S.</button></div>
+        <div class="cc-basic-grid" id="basicGrid"></div>
+      </section>
+
+      <!-- PARAMETERS -->
+      <section class="cc-tab" data-panel="params" aria-labelledby="parametersTitle">
+        <div class="cc-section-title"><div><p class="cc-overline">03 / PARAMETER LIST</p><h1 id="parametersTitle" data-t="params">Список параметров</h1></div><div class="cc-section-actions"><button class="cc-button ghost" id="refreshParamsBtn" type="button" data-t="load">Загрузить параметры</button><button class="cc-button ghost" id="exportParamsBtn" type="button" data-t="export">Экспорт .param</button></div></div>
+        <div class="cc-param-tools"><div class="cc-input-search"><span>⌕</span><input id="paramSearch" type="search" data-ph="search" placeholder="Поиск по названию параметра..."></div><label for="importParamFile" class="cc-button outline"><span>↥</span><span data-t="import">Импорт .param</span></label><input id="importParamFile" type="file" accept=".param,.txt" hidden></div>
+        <div class="cc-param-progress"><div class="cc-progress-track"><i id="paramProgressFill"></i></div><span id="paramProgressLabel">0 / ?</span></div><p id="paramLoadNote" class="cc-param-load-note" role="status" aria-live="polite">—</p>
+        <div class="pt-controls"><button type="button" class="cc-button ghost pt-tree-toggle" id="paramTreeToggle">Группы параметров</button>
+          <label><input type="checkbox" id="paramModifiedOnly"><span id="paramModifiedLabel">Изменённые</span></label>
+          <label><input type="checkbox" id="paramNoDefaultOnly"><span id="paramNoDefaultLabel">Без default</span></label>
+          <button class="cc-button ghost" id="paramMetadataOnline" type="button">Обновить pdef ArduPilot</button>
+          <label class="cc-button outline" for="paramMetadataFile"><span id="paramMetaUploadLabel">Загрузить pdef XML/JSON</span></label>
+          <input type="file" accept=".json,.xml,.pdef" hidden id="paramMetadataFile">
+          <span id="paramMetadataStatus" class="pt-meta-status">—</span>
+        </div>
+        <div class="pt-layout" id="paramTreeLayout"><aside class="pt-sidebar"><div class="pt-sidebar-head"><span id="ptTreeLabel">Дерево параметров</span></div><div class="pt-tree" id="paramTree" role="tree" aria-label="Дерево групп параметров"></div></aside>
+          <div class="cc-card cc-table-card pt-data"><div class="cc-table-overflow"><table class="cc-param-table pt-param-table"><thead><tr><th data-pth="name">Name</th><th data-pth="value">Value</th><th data-pth="def">Default</th><th data-pth="units">Units</th><th data-pth="opts">Options</th><th data-pth="desc">Desc</th><th data-pth="fav">Fav</th></tr></thead><tbody id="paramsTable"></tbody></table></div><div class="cc-table-foot"><span id="paramsSummary">—</span><button class="cc-button ghost cc-more" type="button" id="moreParamsBtn" data-t="more">Показать ещё</button></div></div></div>
+        <div class="cc-import-view" id="importDiff" hidden><div class="cc-card-title"><strong data-t="importdiff">Сравнение с импортированным файлом</strong><small id="importDiffCount">0</small></div><div id="importDiffRows"></div><p data-t="batchNote">Записываются отличающиеся параметры, которые присутствуют на контроллере. Параметры без совпадения пропускаются. Требуется DISARMED.</p><label class="cc-bulk-consent"><input type="checkbox" id="bulkConsent"><span data-t="confirmBatch">Я проверил изменения и сохранил резервную копию параметров</span></label><div class="cc-bulk-actions"><button id="bulkWriteBtn" class="cc-button primary" type="button" disabled data-t="writeImported">Записать отличия в контроллер</button><button id="bulkCancelBtn" class="cc-button ghost" type="button" hidden data-t="cancelBatch">Остановить запись</button></div><div id="bulkProgress" role="status" aria-live="polite"></div></div>
+        <p class="cc-under-panel" data-t="paramnotice">Параметры с пометкой A.T.L.A.S. могут отсутствовать в стандартном ArduPlane. Часть настроек вступает в силу только после перезагрузки.</p>
+      </section>
+
+      <!-- FLIGHT CONTROLLER CALIBRATION: all hardware writes require live DISARMED heartbeat. -->
+      <section class="cc-tab" data-panel="accelerometer" aria-labelledby="accelTitle">
+        <div class="cc-section-title"><div><p class="cc-overline">05 / FLIGHT CONTROLLER CALIBRATION</p><h1 id="accelTitle" data-t="accelerometer">Акселерометр</h1></div><span class="cc-view-status caution" id="accelLiveBadge">USB / DISARM REQUIRED</span></div>
+        <p class="cc-section-desc" data-cal-t="accelIntro">Калибровка акселерометра ArduPlane через MAVLink. Отключи моторы и сними пропеллер. Сначала проверь ориентацию контроллера AHRS_ORIENTATION.</p>
+        <div class="cal-layout">
+          <article class="cc-card cal-card"><div class="cc-card-title"><span>◎</span><strong data-cal-t="simpleTitle">Простая калибровка</strong><small>MAV_CMD 241 · P5=4</small></div>
+            <div class="cal-content"><p data-cal-t="simpleInfo">Положи самолёт горизонтально и неподвижно. Калибрует смещения акселерометра, но не полную геометрию по шести осям.</p>
+              <button type="button" id="accSimpleBtn" class="cc-button primary" data-cal-t="startSimple">Калибровать (1 положение)</button></div>
+          </article>
+          <article class="cc-card cal-card"><div class="cc-card-title"><span>⎔</span><strong data-cal-t="sixTitle">Полная 6-позиционная</strong><small>MAV_CMD 241 · P5=1</small></div>
+            <div class="cal-content"><p data-cal-t="sixInfo">Автопилот сам запрашивает положение. Установи аппарат в нужную позицию, дождись неподвижности и нажми подтверждение.</p>
+              <button type="button" id="accSixBtn" class="cc-button primary" data-cal-t="startSix">Начать 6-позиционную</button></div>
+          </article>
+          <article class="cc-card cal-card"><div class="cc-card-title"><span>━</span><strong data-cal-t="levelTitle">Установить горизонт</strong><small>MAV_CMD 241 · P5=2</small></div>
+            <div class="cal-content"><p data-cal-t="levelInfo">После калибровки акселерометра установи самолёт в положение горизонтального полёта и откалибруй уровень. Коррекция ограничена.</p>
+              <button type="button" id="accLevelBtn" class="cc-button primary" data-cal-t="setLevel">Установить уровень</button></div>
+          </article>
+        </div>
+        <article class="cc-card cal-wizard" aria-live="polite"><div class="cc-card-title"><span>▤</span><strong data-cal-t="wizard">Мастер калибровки</strong><small id="accelStage">IDLE</small></div>
+          <div class="cal-wizard-inner"><div class="cal-pose-display"><div class="cal-pose-icon" id="accelPoseIcon">◇</div><div><span class="cal-mini" data-cal-t="requestedPose">Запрошенное положение</span><h2 id="accelPoseLabel">—</h2><p id="accelPoseHint" data-cal-t="waitRequest">Ожидается подключение и команда автопилота</p></div></div>
+          <div class="cal-pose-steps" id="accelSteps"></div><div class="cal-action-row"><button type="button" class="cc-button primary" id="accConfirmPosBtn" disabled data-cal-t="confirmPose">Положение установлено</button><span class="cal-status" id="accelStatus" role="status">IDLE</span><button type="button" class="cc-button ghost" id="accAbortBtn" hidden>Закрыть мастер</button></div><div class="cal-wait-diagnostic" id="accelDiagnostic" role="status" aria-live="polite">—</div><div class="cal-rx-debug"><span id="accelRxStats">MAVLINK RX —</span><button id="copyAccelDebug" class="cc-button ghost" type="button">Копировать диагностику</button></div></div>
+        </article>
+        <p class="cc-under-panel" data-cal-t="calSafe">Калибровки запускаются только при подтверждённом DISARMED. DEMO показывает интерфейс, но не отправляет команды на контроллер.</p>
+      </section>
+
+      <!-- SERVO OUTPUT: parameter setup with confirmed PARAM_SET echoes. No motor/servo tests. -->
+      <section class="cc-tab" data-panel="servos" aria-labelledby="servoTitle">
+        <div class="cc-section-title"><div><p class="cc-overline">06 / OUTPUT MONITOR</p><h1 id="servoTitle" data-t="servoTitle">Выходы сервоприводов</h1></div><span class="cc-view-status" id="servoStatusBadge">NO MAVLINK</span></div>
+        <p class="cc-section-desc" data-cal-t="servoIntro">Текущие PWM-выходы и настройка каналов: FUNCTION, MIN, TRIM, MAX и REVERSED. Для редактирования выбери канал; принудительных тестов двигателя здесь нет.</p>
+        <div class="cc-card"><div class="cc-card-title"><span>↔</span><strong data-cal-t="servoChannels">Выходные каналы / PWM</strong><small>MAVLINK · 5 Hz</small></div><div class="servo-grid" id="servoGrid"></div></div>
+        <p class="cc-under-panel" data-cal-t="servoNote">В списке показаны последние значения PWM; сами настройки FUNCTION, MIN, TRIM, MAX и REVERSED можно менять только после подтверждения записи.</p>
+      </section>
+
+      <!-- BATTERY MONITOR -->
+      <section class="cc-tab" data-panel="battery" aria-labelledby="batteryTitle">
+        <div class="cc-section-title"><div><p class="cc-overline">07 / POWER SYSTEM</p><h1 id="batteryTitle" data-t="batteryTitle">Монитор батареи</h1></div><span class="cc-view-status" id="batteryBadge">NO MAVLINK</span></div>
+        <p class="cc-section-desc" data-cal-t="batteryIntro">Показания питания и параметры датчика. Коэффициенты напряжения и тока устанавливай по измерениям мультиметра, а не наугад.</p>
+        <div class="battery-stats"><article><span>VOLTAGE</span><b id="batteryVoltage">—</b></article><article><span>CURRENT</span><b id="batteryCurrent">—</b></article><article><span>REMAINING</span><b id="batteryPercent">—</b></article><article><span>CONSUMED</span><b id="batteryConsumed">—</b></article></div>
+        <div class="cc-card cal-settings"><div class="cc-card-title"><span>⚡</span><strong data-cal-t="batterySettings">Параметры Battery Monitor</strong><small>BATT_ / BATT2_</small></div><div class="cal-param-grid" id="batteryParamGrid"></div></div>
+        <p class="cc-under-panel" data-cal-t="batteryNote">Изменения некоторых типов батарейных мониторов вступают в силу после перезагрузки. Чтение телеметрии не требует ARM.</p>
+      </section>
+
+      <!-- COMPASS -->
+      <section class="cc-tab" data-panel="compass" aria-labelledby="compassTitle">
+        <div class="cc-section-title"><div><p class="cc-overline">08 / MAGNETOMETER</p><h1 id="compassTitle" data-t="compassTitle">Компас</h1></div><span class="cc-view-status caution" id="compassBadge">DISARM REQUIRED</span></div>
+        <p class="cc-section-desc" data-cal-t="compassIntro">Настройка компаса и калибровка вращением аппарата. На самолётах без GPS компас может быть выключен — в этом случае запускай калибровку только если он действительно установлен и используется.</p>
+        <div class="cc-card cal-card"><div class="cc-card-title"><span>⌖</span><strong data-cal-t="compassCal">Калибровка магнитометра</strong><small>MAV_CMD 42424–42426</small></div>
+          <div class="cal-content"><p data-cal-t="compassHelp">После запуска медленно поворачивай самолёт вокруг всех трёх осей. Прогресс и итог передаются самим автопилотом. Сохранение выполняется отдельной командой.</p>
+          <div class="cal-action-row"><button class="cc-button primary" id="compassStartBtn" data-cal-t="compassStart">Начать калибровку</button><button class="cc-button ghost" id="compassAcceptBtn" data-cal-t="compassAccept" disabled>Сохранить результат</button><button class="cc-button outline" id="compassCancelBtn" data-cal-t="compassCancel" disabled>Отмена</button></div>
+          <div class="cal-progress-label"><span id="compassProgressText">NO DATA</span><b id="compassProgressValue">0%</b></div><div class="cal-progress-track"><i id="compassProgressBar"></i></div><p id="compassStatus" class="cal-status" role="status">IDLE</p></div></div>
+        <div class="cc-card cal-settings"><div class="cc-card-title"><span>⌘</span><strong data-cal-t="compassSettings">Параметры компаса</strong><small>COMPASS_*</small></div><div class="cal-param-grid" id="compassParamGrid"></div></div>
+        <p class="cc-under-panel" data-cal-t="compassNote">Не включай компас принудительно только ради этого раздела. При отключённом датчике калибровка может быть отклонена автопилотом.</p>
+      </section>
+
+      <!-- OSD LAYOUT / MISSION PLANNER-STYLE EDITOR -->
+      <section class="cc-tab" data-panel="osd" aria-labelledby="osdTitle">
+        <div class="cc-section-title"><div><p class="cc-overline">09 / ON-SCREEN DISPLAY</p><h1 id="osdTitle" data-osd-t="osdTitle">Настройка полётного OSD</h1></div><span class="cc-view-status" id="osdConnectionStatus">NO DATA</span></div>
+        <p class="cc-section-desc" data-osd-t="intro">Редактор OSD по принципу Mission Planner: включай элементы, перемещай по экрану, затем сохраняй координаты через MAVLink. Показывает только параметры, реально обнаруженные на полётнике.</p>
+        <div class="cc-card osd-main-card">
+          <div class="cc-card-title"><span>▤</span><strong data-osd-t="layout">РАЗМЕЩЕНИЕ ЭЛЕМЕНТОВ</strong><small>OSDn_*_EN / _X / _Y</small></div>
+          <div class="osd-toolbar">
+            <label><span data-osd-t="screen">Экран</span><select id="osdScreen"><option value="1">OSD 1</option><option value="2">OSD 2</option><option value="3">OSD 3</option><option value="4">OSD 4</option></select></label>
+            <label><span data-osd-t="layoutMode">Формат</span><select id="osdFormat"><option value="pal">PAL · 30×16</option><option value="ntsc">NTSC · 30×13</option><option value="hd">HD · Preview 50×18</option></select></label>
+            <button id="osdRefresh" class="cc-button ghost" type="button" data-osd-t="refresh">Считать параметры</button>
+            <button id="osdResetDraft" class="cc-button outline" type="button" data-osd-t="undo">Отменить изменения</button>
+          </div>
+          <div class="osd-editor-grid">
+            <div class="osd-screen-frame">
+              <div class="osd-screen-label"><span>A.T.L.A.S. / OSD <b id="osdScreenCaption">1</b></span><span id="osdResolution">30 × 16</span></div>
+              <div id="osdCanvas" class="osd-canvas" role="group" aria-label="OSD layout preview with draggable items"><div class="osd-empty" id="osdEmpty">—</div></div>
+              <p class="osd-preview-note" data-osd-t="previewNote">Предпросмотр приблизительный: реальные шрифты, размещение и HD-сетка зависят от OSD и видеосистемы.</p>
+            </div>
+            <div class="osd-tools-pane">
+              <div class="osd-item-list-head"><strong data-osd-t="items">Элементы экрана</strong><span id="osdItemCount">0</span></div>
+              <div class="osd-item-list" id="osdItemList"></div>
+              <div class="osd-edit-control">
+                <strong id="osdSelectedTitle" data-osd-t="chooseItem">Выбери элемент</strong>
+                <label class="osd-check"><input type="checkbox" id="osdSelectedEnabled" disabled><span data-osd-t="showItem">Показывать элемент</span></label>
+                <div class="osd-coordinate"><label>X <input id="osdPositionX" type="number" step="1" min="0" max="29" disabled></label><label>Y <input id="osdPositionY" type="number" step="1" min="0" max="15" disabled></label></div>
+              </div>
+            </div>
+          </div>
+          <div class="osd-save-row">
+            <label class="osd-check"><input type="checkbox" id="osdConfirm"/><span data-osd-t="confirm">Полётник DISARMED, пропеллер снят, изменения проверены</span></label>
+            <button type="button" id="osdSave" class="cc-button primary" disabled data-osd-t="save">Записать OSD</button>
+          </div>
+          <div class="osd-status" id="osdStatus" role="status" aria-live="polite">—</div>
+        </div>
+        <div class="cc-card osd-global-card"><div class="cc-card-title"><span>⚙</span><strong data-osd-t="globalTitle">Глобальные параметры OSD</strong><small>OSD_TYPE / OSD_UNITS / OSD_CHAN / OSD_SW_METHOD</small></div><div class="osd-global-grid" id="osdGlobalGrid"></div></div>
+        <p class="cc-under-panel" data-osd-t="missingNote">Если OSD_TYPE выключен и параметры OSDn_* отсутствуют, включи поддерживаемый тип OSD в параметрах, перезагрузи контроллер и повторно считай список. Сайт не активирует OSD автоматически.</p>
+      </section>
+
+
+      <!-- 0.4.7 ADVANCED TUNING -->
+      <section class="cc-tab" data-panel="tuning" aria-label="Basic Tuning">
+        <div class="cc-section-title"><div><p class="cc-overline">10 / ADVANCED SETUP</p><h1 data-x="tuning">Basic Tuning</h1></div><button class="cc-button ghost" id="tuningRead" type="button" data-x="refresh">Обновить</button></div>
+        <p class="cc-section-desc" data-x="tuningIntro">Параметры PID / L1 / TECS / тяги из полётного контроллера. Изменения применяются только после подтверждения.</p>
+        <div id="atlasTuningGrid" class="ac-tiles"></div>
+        <div class="ac-save"><label><input type="checkbox" id="tuningConsent"><span data-x="confirmWrites">Контроллер DISARMED, винт снят, значения проверены</span></label><button class="cc-button primary" type="button" id="tuningSave" data-x="saveChanges">Записать изменения</button></div>
+        <div class="ac-status" id="tuningStatus" aria-live="polite">—</div>
+      </section>
+      <!-- MAVFTP - READ ONLY -->
+      <section class="cc-tab" data-panel="mavftp" aria-label="MAVFTP">
+        <div class="cc-section-title"><div><p class="cc-overline">11 / FILE TRANSFER</p><h1>MAVFTP</h1></div><span class="cc-view-status" data-x="ftpReadOnly">Только чтение</span></div>
+        <p class="cc-section-desc" data-x="ftpInfo">Просмотр и скачивание файлов с автопилота по MAVLink FTP. Удаление и запись файлов отключены.</p>
+        <div class="ac-file-bar"><input type="text" id="ftpPath" spellcheck="false" value="/" aria-label="MAVFTP path"><button class="cc-button ghost" id="ftpUp" type="button" data-x="up">Вверх</button><button class="cc-button primary" id="ftpBrowse" type="button" data-x="browse">Открыть каталог</button></div>
+        <div class="ac-file-layout"><div class="ac-file-places"><strong>ROOT</strong><button data-ftppath="/">/</button><button data-ftppath="@SYS">@SYS</button><button data-ftppath="/APM">/APM</button></div><div class="ac-file-main"><table class="ac-table"><thead><tr><th data-x="name">Имя</th><th data-x="type">Тип</th><th data-x="size">Размер</th><th></th></tr></thead><tbody id="ftpRows"><tr><td colspan="4" data-x="ftpEmpty">Подключи USB и открой каталог</td></tr></tbody></table></div></div>
+        <div class="ac-status" id="ftpStatus" role="status">—</div>
+      </section>
+      <!-- FLIGHT MODES -->
+      <section class="cc-tab" data-panel="modes" aria-label="Flight Modes">
+        <div class="cc-section-title"><div><p class="cc-overline">12 / FLIGHT MODES</p><h1 data-x="modes">Flight Modes</h1></div><button class="cc-button ghost" id="modesRead" type="button" data-x="refresh">Обновить</button></div>
+        <div class="cc-card"><div class="cc-card-title"><span>▥</span><strong data-x="modesConfig">Шесть положений переключателя</strong><small>FLTMODE1–6 / FLTMODE_CH</small></div><div class="ac-modes"><div id="modeRows"></div><aside class="ac-mode-help"><p><strong>FLTMODE_CH:</strong> <span id="modeChannel">—</span></p><p><strong data-x="livePwm">Вход PWM:</strong> <span id="modePwm">—</span></p><p><strong data-x="activePos">Активное положение:</strong> <span id="modeActive">—</span></p><div class="ac-pwm-ranges"><span>1 · ≤ 1230</span><span>2 · 1231–1360</span><span>3 · 1361–1490</span><span>4 · 1491–1620</span><span>5 · 1621–1749</span><span>6 · ≥ 1750</span></div></aside></div></div>
+        <div class="ac-save"><label><input type="checkbox" id="modesConsent"><span data-x="confirmWrites">Контроллер DISARMED, винт снят, значения проверены</span></label><button class="cc-button primary" type="button" id="modesSave" data-x="saveModes">Сохранить режимы</button></div>
+        <div class="ac-status" id="modesStatus" aria-live="polite">—</div>
+      </section>
+      <!-- RADIO CALIBRATION -->
+      <section class="cc-tab" data-panel="radio" aria-label="Radio Calibration">
+        <div class="cc-section-title"><div><p class="cc-overline">13 / RC CALIBRATION</p><h1 data-x="radio">Radio Calibration</h1></div><span class="cc-view-status" id="radioBadge">RC_CHANNELS</span></div>
+        <p class="cc-section-desc" data-x="radioIntro">Живые PWM входов и калибровка MIN/TRIM/MAX. Отключи питание двигателя, включи аппаратуру и проверь направления стиков.</p>
+        <div class="ac-rc-actions"><button class="cc-button primary" type="button" id="radioStart" data-x="startCal">Начать сбор диапазонов</button><button class="cc-button ghost" type="button" id="radioStop" data-x="stopCal">Остановить сбор</button><button class="cc-button outline" type="button" id="radioRefresh" data-x="refresh">Обновить</button></div>
+        <div id="radioRows" class="ac-rc-grid"></div>
+        <div class="ac-save"><label><input id="radioConsent" type="checkbox"><span data-x="confirmWrites">Контроллер DISARMED, винт снят, значения проверены</span></label><button class="cc-button primary" type="button" id="radioSave" data-x="saveRC">Записать RCx_MIN/TRIM/MAX</button></div>
+        <div class="ac-status" id="radioStatus" aria-live="polite">—</div>
+      </section>
+      <!-- JOYSTICK ONLY PREVIEW -->
+      <section class="cc-tab" data-panel="joystick" aria-label="Joystick">
+        <div class="cc-section-title"><div><p class="cc-overline">14 / CONTROLLER INPUT</p><h1>Joystick</h1></div><span class="cc-view-status" data-x="inputPreview">Предпросмотр ввода</span></div>
+        <p class="cc-section-desc" data-x="joystickIntro">Отображение подключённого USB-геймпада (Gamepad API), настройка назначений осей локально. Команды на полётник не передаются.</p>
+        <div class="cc-card"><div class="cc-card-title"><span>✣</span><strong id="joyDevice">NO GAMEPAD</strong><small>GAMEPAD API</small></div><div id="joyAxes" class="ac-joy-axes"></div><div id="joyButtons" class="ac-joy-buttons"></div><div class="ac-joy-mapping"><label>ROLL <select id="joyRoll"></select></label><label>PITCH <select id="joyPitch"></select></label><label>YAW <select id="joyYaw"></select></label><label>THROTTLE <select id="joyThrottle"></select></label></div></div>
+        <div class="ac-status" id="joyStatus" aria-live="polite">—</div>
+      </section>
+      <!-- CAMERA GIMBAL -->
+      <section class="cc-tab" data-panel="gimbal" aria-label="Camera Gimbal">
+        <div class="cc-section-title"><div><p class="cc-overline">15 / CAMERA MOUNT</p><h1 data-x="gimbal">Camera Gimbal</h1></div><button class="cc-button ghost" id="gimbalRead" type="button" data-x="refresh">Обновить</button></div>
+        <p class="cc-section-desc" data-x="gimbalIntro">Настройки камеры из MNT1_* и CAM1_*. Изменение MNT1_TYPE обычно требует перезагрузки.</p>
+        <div id="gimbalGrid" class="ac-tiles"></div><div class="ac-save"><label><input type="checkbox" id="gimbalConsent"><span data-x="confirmWrites">Контроллер DISARMED, винт снят, значения проверены</span></label><button class="cc-button primary" type="button" id="gimbalSave" data-x="saveChanges">Записать изменения</button></div><div class="ac-status" id="gimbalStatus">—</div>
+      </section>
+      <!-- PARACHUTE -->
+      <section class="cc-tab" data-panel="parachute" aria-label="Parachute">
+        <div class="cc-section-title"><div><p class="cc-overline">16 / PARACHUTE SETTINGS</p><h1 data-x="parachute">Parachute</h1></div><span class="cc-view-status caution" data-x="configOnly">Только настройки</span></div>
+        <p class="cc-section-desc" data-x="chuteIntro">Настройки CHUTE_*. Сайт не отправляет команду раскрытия парашюта. Сначала проверь механику и назначение выхода.</p>
+        <div id="chuteGrid" class="ac-tiles"></div><div class="ac-save"><label><input type="checkbox" id="chuteConsent"><span data-x="confirmWrites">Контроллер DISARMED, винт снят, значения проверены</span></label><button class="cc-button primary" type="button" id="chuteSave" data-x="saveChanges">Записать изменения</button></div><div class="ac-status" id="chuteStatus">—</div>
+      </section>
+
+      <!-- FIRMWARE -->
+      <section class="cc-tab" data-panel="firmware" aria-labelledby="firmwareTitle">
+        <div class="cc-section-title"><div><p class="cc-overline">04 / FIRMWARE FLASHER</p><h1 id="firmwareTitle" data-t="firmware">Прошивка контроллера</h1></div><span class="cc-view-status caution" data-t="preview">ПРЕДПРОСМОТР</span></div>
+        <div class="cc-steps"><div class="cc-step active"><i>01</i><span data-t="stepboard">Выбор платы</span></div><span>→</span><div class="cc-step"><i>02</i><span data-t="stepfile">Файл прошивки</span></div><span>→</span><div class="cc-step muted"><i>03</i><span data-t="stepflash">Установка</span></div></div>
+        <div class="cc-flash-grid"><article class="cc-card"><div class="cc-card-title"><span>⬡</span><strong data-t="selectcontroller">Полётный контроллер</strong></div>
+           <div id="firmwareBoards" class="cc-board-choices"></div><div class="cc-flash-warning"><span>!</span><p data-t="boardwarn">Выбирайте точную аппаратную ревизию. Название в каталоге само по себе не подтверждает совместимость бинарного файла.</p></div>
+           <div class="cc-board-caption" id="boardSelection">—</div>
+         </article>
+         <article class="cc-card"><div class="cc-card-title"><span>▧</span><strong data-t="apj">Проверка .APJ</strong><small>OFFLINE</small></div>
+           <label class="cc-dropzone" id="apjDropzone" for="apjInput"><span class="cc-drop-icon">⬇</span><strong data-t="dropfile">Перетащите файл .apj</strong><small data-t="browse">или нажмите для выбора файла</small></label><input id="apjInput" type="file" accept=".apj,.json" hidden>
+           <div id="apjMetadata" class="cc-apj-metadata"></div>
+           <div class="cc-flash-warning"><span>!</span><p data-t="flashdisclaimer">Непосредственная запись прошивки из браузера пока отключена. Для безопасной установки нужны проверка bootloader board ID, CRC, протокола загрузчика и восстановление после обрыва.</p></div>
+           <button type="button" class="cc-button cc-full disabled" disabled data-t="install">Записать прошивку (пока недоступно)</button>
+           <div class="cc-external-flash"><a href="https://ardupilot.org/planner/docs/common-install-firmware.html" target="_blank" rel="noopener noreferrer" data-t="mission">Инструкция Mission Planner ↗</a><a href="https://arduconfigurator.com/" target="_blank" rel="noopener noreferrer">ArduConfigurator ↗</a></div>
+         </article></div>
+
+        <!-- Hardware DFU / ST ROM bootloader section, independent of MAVLink serial. -->
+        <section class="cc-card dfu-panel" id="dfuPanel" aria-labelledby="dfuTitle">
+          <div class="cc-card-title"><span>⚡</span><strong id="dfuTitle" data-dfu-t="title">STM32 DFU · ПОЛНАЯ ЗАПИСЬ HEX</strong><small>STM32H743 · PRE-RELEASE</small></div>
+          <div class="dfu-grid">
+            <div class="dfu-column">
+              <h3 data-dfu-t="mode">DFU-подключение (не MAVLink)</h3><p class="dfu-enter-tip" data-dfu-t="howdfu">Удерживай кнопку BOOT на USB-переходнике Matek и подключи USB к ПК, затем нажми «Подключить DFU». Закрой Mission Planner и другие программы, использующие этот USB-порт.</p>
+              <div class="dfu-actions"><button id="dfuConnectBtn" class="cc-button ghost" type="button" data-dfu-t="detect">Подключить DFU</button><span class="dfu-chip" id="dfuDetected">DFU не подключён</span></div>
+              <div class="dfu-actions"><button id="dfuLatestBtn" class="cc-button primary" type="button" data-dfu-t="getLatest">Загрузить последний .hex</button><label class="cc-button outline" for="dfuLocalInput" data-dfu-t="chooseLocal">Выбрать локальный .hex</label><input id="dfuLocalInput" type="file" accept=".hex" hidden></div>
+              <div class="dfu-actions dfu-release-picker" aria-label="Архив прошивок"><label for="dfuReleaseSelect" id="dfuReleaseSelectLabel">Версия для установки / отката</label><select id="dfuReleaseSelect" disabled><option value="">Загрузить каталог...</option></select><button id="dfuLoadReleaseBtn" class="cc-button ghost" type="button" disabled>Загрузить выбранную</button></div>
+              <div class="dfu-file-meta" id="dfuFileMeta" aria-live="polite">Файл не загружен</div>
+              <div class="dfu-progress-wrap"><div class="dfu-progress-track"><i id="dfuProgress"></i></div><span id="dfuProgressLabel">DFU · 0%</span></div>
+              <p class="dfu-status" id="dfuStatus" role="status" aria-live="polite">Загрузка прошивки — только по команде пользователя</p>
+            </div>
+            <div class="dfu-column dfu-check-column">
+              <div class="dfu-danger" data-dfu-t="warning">ВНИМАНИЕ: полный Mass Erase 2 MiB (до 0xFF), затем запись и побайтовая проверка. При обрыве питания понадобится восстановление через DFU/STM32CubeProgrammer. Проверено только на уровне кода, не на физической плате.</div>
+              <label class="dfu-check"><input id="dfuConfirmBoard" type="checkbox"><span data-dfu-t="model">Я проверил маркировку платы: это Matek H743-WING V3 (STM32H743). USB DFU не подтверждает модель платы.</span></label>
+              <label class="dfu-check"><input id="dfuConfirmBackup" type="checkbox"><span data-dfu-t="backup">Я сохранил параметры и знаю, что стирание удалит загрузчик и все данные Flash.</span></label>
+              <label class="dfu-type-label" for="dfuConfirmText" data-dfu-t="confirm">Для подтверждения введи ERASE</label><input class="dfu-type" id="dfuConfirmText" type="text" autocomplete="off" spellcheck="false" placeholder="ERASE">
+              <div id="dfuGateStatus" class="dfu-gate-status" role="status" aria-live="polite">Проверка условий прошивки…</div>
+              <button id="dfuFlashBtn" class="cc-button primary dfu-flash-btn" type="button" disabled data-dfu-t="flash">СТЕРЕТЬ И ЗАПИСАТЬ HEX</button>
+              <p class="dfu-smallprint" data-dfu-t="nohardware">Никаких операций ERASE/WRITE без нажатия кнопки не выполняется.</p>
+            </div>
+          </div>
+          <div class="dfu-log-panel"><span>DFU TRANSACTION LOG / ST AN3156</span><div id="dfuLog" class="dfu-log" aria-live="polite"></div></div>
+        </section>
+
+        <div class="cc-release-section"><div class="cc-card-title"><span>▤</span><strong data-t="releases">Сборки A.T.L.A.S.</strong><small>data/releases.json</small></div><div id="releaseList" class="cc-release-list"></div></div>
+      </section>
+
+      <footer class="cc-footer"><span>A.T.L.A.S. PRE-RELEASE · DEVELOPED BY OLEKSANDR & AI CODEX</span><span data-t="footer">НЕ ОФИЦИАЛЬНЫЙ ПРОДУКТ ARDUPILOT</span></footer>
+    </div>
+  </main>
+  <dialog id="editDialog" class="cc-modal"><form method="dialog" id="editForm"><div class="cc-modal-head"><span>PARAMETER EDITOR</span><button type="button" id="closeEdit" aria-label="Close">✕</button></div><h2 id="editName">PARAM</h2><p id="editOriginal">—</p><label for="editValue" data-t="newvalue">Новое значение</label><input id="editValue" type="number" step="any" required><p id="editWarning" class="cc-edit-warning" data-t="editwarning">Изменение конфигурации влияет на поведение автопилота. Перед записью снимите пропеллер и проверьте значение.</p><div class="cc-modal-actions"><button type="button" class="cc-button ghost" id="cancelEdit" data-t="cancel">Отмена</button><button class="cc-button primary" type="submit" data-t="save">Подтвердить запись</button></div></form></dialog>
+  <dialog id="servoDialog" class="cc-modal servo-editor-dialog" aria-labelledby="servoDialogTitle">
+    <form id="servoEditorForm" novalidate>
+      <div class="cc-modal-head"><span id="servoDialogTitle">SERVO OUTPUT / CHANNEL</span><button type="button" id="servoEditorClose" aria-label="Close">✕</button></div>
+      <p id="servoEditorInfo" class="servo-editor-info"></p>
+      <div class="servo-editor-fields">
+        <label><span id="servoFunctionLabel">Функция / Function</span><input id="servoEditFunction" type="number" min="0" max="1000" step="1" list="servoFunctionChoices" inputmode="numeric"></label>
+        <datalist id="servoFunctionChoices"><option value="0" label="Disabled"></option><option value="4" label="Aileron"></option><option value="19" label="Elevator"></option><option value="21" label="Rudder"></option><option value="70" label="Throttle"></option><option value="79" label="VTail Left"></option><option value="80" label="VTail Right"></option></datalist>
+        <label><span id="servoMinLabel">MIN · µs</span><input id="servoEditMin" type="number" min="800" max="2200" step="1" inputmode="numeric"></label>
+        <label><span id="servoTrimLabel">TRIM · µs</span><input id="servoEditTrim" type="number" min="800" max="2200" step="1" inputmode="numeric"></label>
+        <label><span id="servoMaxLabel">MAX · µs</span><input id="servoEditMax" type="number" min="800" max="2200" step="1" inputmode="numeric"></label>
+      </div>
+      <label class="servo-reverse-field"><input type="checkbox" id="servoEditReverse"><span id="servoReverseLabel">Реверс направления / REVERSED</span></label>
+      <div class="servo-live-settings">
+        <label class="servo-live-toggle"><input id="servoLiveApply" type="checkbox"><span id="servoLiveApplyLabel">Применять реверс и пределы PWM сразу (PARAM_SET)</span></label><p id="servoLiveDisabledHint" class="servo-live-disabled-hint">⚠ Включи «Применять сразу», иначе переключение реверса изменяет только черновик. FUNCTION=70 не поддерживает ручную установку PWM через DO_SET_SERVO.</p>
+        <p id="servoLiveApplyNote">Реверс применяется при переключении; MIN / TRIM / MAX — после изменения поля. Каждая запись проверяется по PARAM_VALUE.</p>
+      </div>
+      <section class="servo-bench-panel" aria-labelledby="servoBenchTitle">
+        <div class="servo-bench-heading"><strong id="servoBenchTitle">PWM BENCH TEST / Ручной PWM</strong><span id="servoBenchFunction">—</span></div>
+        <p id="servoBenchHelp">Прямая команда PWM доступна лишь для выхода FUNCTION=0/1 или RC Passthrough. Она не заменяет изменение SERVOx_MIN/MAX/REVERSED.</p>
+        <label class="servo-bench-consent"><input id="servoBenchConsent" type="checkbox"><span id="servoBenchConsentLabel">Пропеллер снят; контроллер DISARMED; готов к физическому движению выхода.</span></label>
+        <div class="servo-bench-controls">
+          <label><span id="servoBenchValueLabel">Задать PWM</span> <output id="servoBenchReadout">1000 µs</output><input id="servoBenchSlider" type="range" min="1000" max="2000" step="10" value="1000" disabled></label>
+          <div class="servo-bench-actions">
+            <button type="button" id="servoBenchStart" class="cc-button primary" disabled>НАЧАТЬ ТЕСТ</button>
+            <button type="button" id="servoBenchStop" class="cc-button ghost" disabled>ОСТАНОВИТЬ / 1000 µs</button>
+          </div>
+        </div>
+        <div class="servo-bench-observed" id="servoBenchObserved">SERVO_OUTPUT_RAW: —</div>
+        <p class="servo-bench-status" id="servoBenchStatus" role="status" aria-live="polite">Тест не активен. При потере связи принудительный PWM может сохраняться на контроллере — отключи питание ESC.</p>
+      </section>
+      <p class="servo-warning" id="servoEditorWarning">Проверь правильность FUNCTION, MIN, TRIM, MAX и REVERSED. Изменения могут сразу влиять на активные выходы. Сними пропеллер.</p>
+      <div id="servoEditorChanges" class="servo-change-list" aria-live="polite">—</div>
+      <div id="servoEditorStatus" class="servo-editor-status" role="status" aria-live="polite">—</div>
+      <div class="cc-modal-actions"><button type="button" class="cc-button ghost" id="servoEditorCancel">Отмена</button><button class="cc-button primary" id="servoEditorSave" type="submit">Записать изменения</button></div>
+    </form>
+  </dialog>
+  <script src="mavlink.js" defer></script><script src="param-tree.js" defer></script><script src="configurator.js" defer></script><script src="calibration.js" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script>
+</body></html>

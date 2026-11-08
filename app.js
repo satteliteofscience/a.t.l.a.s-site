@@ -1,7 +1,16 @@
 (() => {
   'use strict';
   const el = (id) => document.getElementById(id);
-  const state = { data: null, query: '', filter: 'all' };
+  const tr = (key) => window.AtlasI18n?.t(key) ?? key;
+  function localText(key) {
+    const data = {
+      ru: {history:'Архив и откат к предыдущим версиям',source:'Исходный код',sourceNotice:'Перед публичной публикацией HEX предоставьте соответствующий исходный код этой сборки по GNU GPLv3.'},
+      uk: {history:'Архів і повернення до попередніх версій',source:'Вихідний код',sourceNotice:'Перед публічним розповсюдженням HEX надайте відповідний вихідний код цієї збірки згідно з GNU GPLv3.'},
+      en: {history:'Release history and rollback',source:'Source code',sourceNotice:'Provide the corresponding source code for this build under GNU GPLv3 before publicly distributing the HEX.'}
+    };
+    return (data[window.AtlasI18n?.lang] || data.ru)[key];
+  }
+  const state = { data: null, catalogSignature: '', query: '', filter: 'all' };
   const icon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 1v3m6-3v3M9 20v3m6-3v3M1 9h3m-3 6h3m16-6h3m-3 6h3M9 9h6v6H9z"/></svg>';
   const $ = (tag, className, content) => {
     const node = document.createElement(tag);
@@ -10,7 +19,7 @@
     return node;
   };
   const safeUrl = (value) => {
-    try { const u = new URL(value); return u.protocol === 'https:' ? u.href : null; }
+    try { const u = new URL(value, document.baseURI); return u.protocol === 'https:' || (u.protocol === 'http:' && ['localhost','127.0.0.1'].includes(u.hostname)) ? u.href : null; }
     catch { return null; }
   };
   const downloadItems = (board) => Array.isArray(board.downloads)
@@ -24,37 +33,62 @@
     const downloadable = downloadItems(board);
     const available = downloadable.length > 0 && board.status === 'available';
     const status = $('span', `board-status ${available ? 'available' : board.status === 'planned' ? 'planned' : 'unverified'}`,
-      available ? '● ОПУБЛИКОВАНО' : board.status === 'planned' ? '◷ ПОДГОТОВКА' : 'НЕ ПРОВЕРЕНО');
+      tr(available ? '● ОПУБЛИКОВАНО' : board.status === 'planned' ? '◷ ПОДГОТОВКА' : 'НЕ ПРОВЕРЕНО'));
     top.append(chip, status);
     card.append(top);
-    card.append($('div', 'family', board.family || 'Flight controller'));
-    card.append($('h3', '', board.name || 'Неизвестная плата'));
-    card.append($('p', 'desc', board.description || 'Описание отсутствует.'));
+    card.append($('div', 'family', board[`family_${window.AtlasI18n?.lang}`] || board.family || tr('Flight controller')));
+    card.append($('h3', '', board[`name_${window.AtlasI18n?.lang}`] || board.name || tr('Неизвестная плата')));
+    card.append($('p', 'desc', board[`description_${window.AtlasI18n?.lang}`] || tr(board.description || 'Описание отсутствует.')));
     const meta = $('div', 'board-meta');
-    const version = $('span'); version.append('База ', $('b', '', board.version || '—'));
-    const target = $('span'); target.append('Target: ', $('b', '', board.target || '—'));
+    const version = $('span'); version.append(tr('База '), $('b', '', board.version || '—'));
+    const target = $('span'); target.append('Target: ', $('b', '', board[`target_${window.AtlasI18n?.lang}`] || tr(board.target || '—')));
     meta.append(version, target); card.append(meta);
     const actions = $('div', 'board-actions');
     if (available) {
-      downloadable.forEach((item) => {
-        const a = $('a', 'download-btn'); a.href = safeUrl(item.url); a.target = '_blank'; a.rel = 'noopener noreferrer';
-        const label = $('span', '', item.filename);
-        const hint = $('small', '', 'СКАЧАТЬ ↗');
-        a.append(label, hint); actions.append(a);
-        if (/^[0-9a-f]{64}$/i.test(item.sha256 || '')) {
-          const check = $('div', 'checksum-row'); check.append($('span', '', 'SHA-256: ' + item.sha256.slice(0, 12) + '…'));
-          const copy = $('button', 'checksum-btn', 'Копировать SHA-256');
-          copy.type = 'button'; copy.addEventListener('click', async () => {
-            try { await navigator.clipboard.writeText(item.sha256); copy.textContent = 'Скопировано ✓'; }
-            catch { copy.textContent = 'Невозможно скопировать'; }
-          });
-          check.append(copy); actions.append(check);
+      const buildEntry = (item, historical = false) => {
+        const wrap = $('div', historical ? 'version-history-row' : 'version-current');
+        const link = $('a', 'download-btn');
+        link.href = safeUrl(item.url); link.target = '_blank'; link.rel = 'noopener noreferrer';
+        const name = $('span', '', item.label || item.version || item.filename);
+        const hint = $('small', '', historical ? tr('СКАЧАТЬ ↗') : `LATEST · ${tr('СКАЧАТЬ ↗')}`);
+        link.append(name, hint); wrap.append(link);
+        const details = $('div', 'version-meta');
+        if (item.timestamp) {
+          const date = new Date(Number(item.timestamp) * 1000);
+          if (Number.isFinite(date.getTime())) details.append($('span', '', date.toLocaleDateString(window.AtlasI18n?.lang || 'ru')));
         }
-      });
+        if (/^[0-9a-f]{64}$/i.test(item.sha256 || '')) {
+          const short = $('code', '', `SHA-256: ${item.sha256.slice(0, 16)}…`);
+          const copy = $('button', 'checksum-btn', tr('Копировать SHA-256'));
+          copy.type = 'button'; copy.addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(item.sha256); copy.textContent = tr('Скопировано ✓'); }
+            catch { copy.textContent = tr('Невозможно скопировать'); }
+          });
+          details.append(short, copy);
+        }
+        if (item.source_url && safeUrl(item.source_url)) {
+          const source = $('a', 'version-source-link', localText('source'));
+          source.href = safeUrl(item.source_url); source.rel = 'noopener noreferrer'; source.target = '_blank';
+          details.append(source);
+        }
+        wrap.append(details);
+        return wrap;
+      };
+      actions.append(buildEntry(downloadable[0]));
+      if (downloadable.length > 1) {
+        const history = $('details', 'version-history');
+        const summary = $('summary', '', `${localText('history')} (${downloadable.length - 1})`);
+        history.append(summary);
+        downloadable.slice(1).forEach(item => history.append(buildEntry(item, true)));
+        actions.append(history);
+      }
+      if (!downloadable.every(item => item.source_url && safeUrl(item.source_url))) {
+        actions.append($('p', 'version-gpl-note', localText('sourceNotice')));
+      }
     } else {
       actions.append($('div', 'download-placeholder', board.status === 'unverified'
-        ? 'Нет подтверждённых сборок для этой платформы'
-        : 'Сборка пока не опубликована'));
+        ? tr('Нет подтверждённых сборок для этой платформы')
+        : tr('Сборка пока не опубликована')));
     }
     card.append(actions);
     return card;
@@ -75,25 +109,13 @@
     if (!filtered.length) grid.append($('div', 'empty-state', ''));
     if (!filtered.length) {
       const empty = grid.firstChild;
-      empty.append($('strong', '', 'Ничего не найдено'), $('span', '', 'Измените поисковый запрос или фильтр.'));
+      empty.append($('strong', '', tr('Ничего не найдено')), $('span', '', tr('Измените поисковый запрос или фильтр.')));
     }
     const active = boards.filter(b => b.status === 'available' && downloadItems(b).length > 0).length;
-    el('downloadStatus').textContent = `Показано ${filtered.length} из ${boards.length} платформ · Опубликованных сборок: ${active}`;
+    el('downloadStatus').textContent = `${tr('Показано')} ${filtered.length} ${tr('из')} ${boards.length} ${tr('платформ')} · ${tr('Опубликованных сборок')}: ${active}`;
   }
 
-  function bindRepo(data) {
-    const repo = safeUrl(data.project?.repository_url);
-    const issues = safeUrl(data.project?.issues_url);
-    if (repo) {
-      const nav = el('githubNav'); nav.href = repo; nav.target = '_blank'; nav.rel = 'noopener noreferrer';
-      nav.classList.remove('link-disabled'); nav.removeAttribute('aria-disabled'); nav.removeAttribute('title');
-      const link = el('sourceLink'); link.href = repo; link.classList.remove('is-hidden');
-      el('repoPending').classList.add('is-hidden');
-    }
-    if (issues) {
-      const link = el('issuesLink'); link.href = issues; link.target = '_blank'; link.rel = 'noopener noreferrer';
-      link.innerHTML = 'Запросить поддержку <span aria-hidden="true">↗</span>';
-    }
+  function bindPublicCatalog(data) {
     const available = (data.boards || []).filter(b => b.status === 'available' && downloadItems(b).length > 0);
     if (available.length > 0) el('releaseIndicator').textContent = 'RELEASES AVAILABLE';
   }
@@ -103,18 +125,21 @@
       const embedded = el('atlasEmbeddedData');
       if (embedded) {
         const data = JSON.parse(embedded.textContent);
-        state.data = data; bindRepo(data); renderBoards(); return;
+        state.data = data; bindPublicCatalog(data); renderBoards(); return;
       }
       const response = await fetch('data/releases.json', { cache: 'no-store' });
       if (!response.ok) throw new Error('HTTP ' + response.status);
       const data = await response.json();
       if (!data || !Array.isArray(data.boards)) throw new Error('Неверный формат JSON');
-      state.data = data; bindRepo(data); renderBoards();
+      const signature=JSON.stringify(data.boards);
+      if(signature===state.catalogSignature)return; // preserve open archive panels on routine polling
+      state.catalogSignature=signature;
+      state.data = data; bindPublicCatalog(data); renderBoards();
     } catch (error) {
-      el('downloadStatus').textContent = 'Не удалось прочитать каталог сборок.';
+      el('downloadStatus').textContent = tr('Не удалось прочитать каталог сборок.');
       const grid = el('boardGrid'); grid.replaceChildren();
       const placeholder = $('div', 'empty-state');
-      placeholder.append($('strong', '', 'Каталог пока недоступен'), $('span', '', 'Запустите сайт через HTTP-сервер или проверьте файл data/releases.json.'));
+      placeholder.append($('strong', '', tr('Каталог пока недоступен')), $('span', '', tr('Запустите сайт через HTTP-сервер или проверьте файл data/releases.json.')));
       grid.append(placeholder);
       console.error('A.T.L.A.S. releases catalog:', error);
     }
@@ -134,12 +159,18 @@
   menu.addEventListener('click', () => {
     const isOpen = menu.getAttribute('aria-expanded') === 'true';
     menu.setAttribute('aria-expanded', String(!isOpen));
-    menu.setAttribute('aria-label', isOpen ? 'Открыть меню' : 'Закрыть меню');
+    menu.setAttribute('aria-label', tr(isOpen ? 'Открыть меню' : 'Закрыть меню'));
     el('mobileNav').hidden = isOpen;
   });
   document.querySelectorAll('#mobileNav a').forEach(link => link.addEventListener('click', () => {
-    el('mobileNav').hidden = true; menu.setAttribute('aria-expanded', 'false'); menu.setAttribute('aria-label', 'Открыть меню');
+    el('mobileNav').hidden = true; menu.setAttribute('aria-expanded', 'false'); menu.setAttribute('aria-label', tr('Открыть меню'));
   }));
+  window.addEventListener('atlas:languagechange', () => {
+    renderBoards();
+    if (state.data) bindPublicCatalog(state.data);
+  });
   el('copyrightYear').textContent = new Date().getFullYear();
   loadData();
+  // Pick up newly published releases without requiring a hard reload.
+  setInterval(()=>{if(document.visibilityState==='visible')loadData();},60000);
 })();

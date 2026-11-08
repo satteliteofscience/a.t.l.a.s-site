@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "donation_url": "",
+  "iban": "UA683077700000026207320657349",
+  "recipient": "",
+  "bank": "",
+  "purpose": "Добровільна підтримка розробки A.T.L.A.S.",
+  "currency": "UAH",
+  "note": "IBAN supplied by A.T.L.A.S. author; bank and recipient details must be verified in the sending app. This is a manual bank transfer, not automatic donation verification."
+}

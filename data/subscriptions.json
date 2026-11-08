@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "api_endpoint": "",
+  "privacy_url": "privacy.html",
+  "status": "not_configured",
+  "note": "Set HTTPS API endpoint after deploying the private subscriber service; never put SMTP passwords in public files."
+}

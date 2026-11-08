@@ -1,0 +1,38 @@
+/* A.T.L.A.S. 0.4.7 extensions — same olive/amber palette as Control Center */
+.ac-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:16px 0 20px}
+.ac-card{background:linear-gradient(155deg,#172514,#101b0d);border:1px solid #586b36;padding:15px;min-width:0}
+.ac-card h3{margin:0 0 15px;color:#e4cf6a;font:700 15px 'IBM Plex Mono',monospace;letter-spacing:.02em}
+.ac-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(126px,148px);gap:12px;align-items:center;border-top:1px solid #3e4d2a;padding:10px 0}
+.ac-field label{font:500 12px/1.5 'IBM Plex Sans',sans-serif;color:#cad39b}
+.ac-field small{display:block;font:10px 'IBM Plex Mono',monospace;color:#97a77a;margin-top:5px;overflow-wrap:anywhere}
+.ac-spinner{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;min-width:0}
+.ac-spinner button{background:#2c391f;color:#e5d177;border:1px solid #687b42;cursor:pointer;font-size:20px;min-height:36px}
+.ac-spinner input{font:700 12px 'IBM Plex Mono',monospace;min-width:0;width:100%;border:1px solid #687b42;border-left:0;border-right:0;background:#0c150b;color:#f5dc7d;text-align:center;padding:7px 4px;appearance:textfield;-moz-appearance:textfield}
+.ac-spinner input::-webkit-outer-spin-button,.ac-spinner input::-webkit-inner-spin-button{appearance:none;margin:0}
+.ac-spinner button:hover{background:#566b32}.ac-spinner input:disabled,.ac-spinner button:disabled{opacity:.4;cursor:not-allowed}
+.ac-field.ac-dirty{border-left:3px solid #d8be56;padding-left:7px}.ac-field.ac-unavailable{opacity:.55}.ac-missing{color:#8d9f73;font:11px 'IBM Plex Mono',monospace}
+.ac-save{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;background:#1d2918;border:1px solid #65773d;padding:15px;margin-top:16px}
+.ac-save label{display:flex;align-items:center;gap:10px;color:#e3d7a5;font-size:13px;flex:1;min-width:230px}
+.ac-save input[type=checkbox]{accent-color:#d6c15b;width:18px;height:18px;flex-shrink:0}
+.ac-status{border-left:3px solid #9a9e54;padding:13px;margin:16px 0;background:#172111;color:#d4c58c;overflow-wrap:anywhere;font:12px/1.7 'IBM Plex Mono',monospace}
+.ac-modes{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:22px;padding:16px}
+.ac-mode-row{display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;align-items:center;margin:0 0 9px;border:1px solid #43562e;padding:10px}
+.ac-mode-row.ac-active{border-color:#d8c35f;background:#26351d}
+.ac-mode-row label{color:#c6ce99;font:700 12px 'IBM Plex Mono',monospace}
+.ac-mode-row select{background:#121e10;border:1px solid #6d7d43;color:#ead575;width:100%;padding:11px;font:700 13px 'IBM Plex Mono',monospace}
+.ac-mode-help{border-left:1px solid #596b38;padding:4px 0 4px 18px;font:12px 'IBM Plex Mono',monospace;color:#d5d5a2}
+.ac-pwm-ranges{display:flex;flex-direction:column;gap:8px;font-size:11px;color:#b6bc83}.ac-pwm-ranges span{padding:6px;border:1px solid #465b2f}
+.ac-rc-actions,.ac-file-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}.ac-file-bar input{flex:1;min-width:160px;padding:12px;background:#101a0e;border:1px solid #647844;color:#e3d088;font:13px 'IBM Plex Mono',monospace}
+.ac-rc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.ac-rc-card{padding:12px;border:1px solid #56673d;background:#121f0e;min-width:0}
+.ac-rc-card header{display:flex;justify-content:space-between;font:700 12px 'IBM Plex Mono',monospace;color:#e4d073}
+.ac-rc-card strong{display:block;margin:12px 0;font:700 19px 'IBM Plex Mono',monospace;color:#f2dd84}
+.ac-rc-track{height:11px;background:#334527;border:1px solid #60753b;position:relative;overflow:hidden}.ac-rc-track i{position:absolute;left:0;top:0;bottom:0;background:#d3bc5b;width:0%}
+.ac-rc-range{margin-top:8px;color:#a8b587;font:10px 'IBM Plex Mono',monospace}
+.ac-file-layout{display:grid;grid-template-columns:180px minmax(0,1fr);gap:12px}.ac-file-places,.ac-file-main{border:1px solid #536434;background:#121c0f;padding:12px;min-width:0}
+.ac-file-places{display:flex;flex-direction:column;gap:8px}.ac-file-places strong{color:#e0ce78;margin-bottom:10px}.ac-file-places button{color:#c4d197;text-align:left;border:1px solid #40572f;background:#182710;padding:9px;cursor:pointer}
+.ac-table{width:100%;border-collapse:collapse;font:12px 'IBM Plex Mono',monospace;color:#d9d2a2}.ac-table th,.ac-table td{padding:11px;border:1px solid #4c5b34;text-align:left;overflow-wrap:anywhere}.ac-table th{color:#efda7a;background:#2a3821}.ac-table tbody tr:hover{background:#29371c}.ac-link{border:0;background:transparent;color:#e6cb66;cursor:pointer;text-decoration:underline;text-align:left}.ac-joy-axes{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px}.ac-joy-axis{border:1px solid #526739;padding:12px}.ac-joy-axis span{display:block;font:11px 'IBM Plex Mono',monospace}.ac-joy-bar{height:12px;border:1px solid #627945;background:#26381f;margin:15px 0 0}.ac-joy-bar i{display:block;height:100%;background:#d9c15b;width:50%}.ac-joy-buttons{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 15px}.ac-joy-buttons span{padding:5px 8px;border:1px solid #556d38;color:#adb98b;font:11px 'IBM Plex Mono',monospace}.ac-joy-buttons span.pressed{background:#8d9d3d;color:#111}
+.ac-joy-mapping{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:14px}.ac-joy-mapping label{color:#cbd6a3;font:11px 'IBM Plex Mono',monospace}.ac-joy-mapping select{display:block;margin-top:9px;width:100%;padding:10px;background:#111b0d;color:#e4d17b;border:1px solid #5e753d}
+@media(max-width:1150px){.ac-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.ac-rc-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.ac-tiles,.ac-modes,.ac-file-layout{grid-template-columns:1fr}.ac-mode-help{border-left:0;border-top:1px solid #596b38;padding:16px 0}.ac-rc-grid,.ac-joy-axes,.ac-joy-mapping{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.ac-rc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ac-mode-row{grid-template-columns:1fr;gap:7px}.ac-field{grid-template-columns:1fr;gap:6px}.ac-joy-axes,.ac-joy-mapping{grid-template-columns:1fr}}

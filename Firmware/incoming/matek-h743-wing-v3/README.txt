@@ -1,0 +1,1 @@
+Drop next Intel HEX with any name (even the same name as before) into this folder. When the release manager runs, it renames and archives the binary and deletes the incoming copy. Optional release.json metadata: {"version":"1.01","label":"A.T.L.A.S. Pre-Release 1.01","source_url":"Firmware/Sources/ATLAS-source-1.01.tar.gz"}.

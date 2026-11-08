@@ -1,0 +1,20 @@
+[Unit]
+Description=A.T.L.A.S. immutable firmware release indexer (public site only)
+After=local-fs.target
+
+[Service]
+Type=simple
+User=atlas-public
+Group=atlas-public
+WorkingDirectory=/srv/atlas-public
+ExecStart=/usr/bin/python3 /srv/atlas-public/tools/release_manager.py --watch --interval 5
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/srv/atlas-public/Firmware /srv/atlas-public/data
+PrivateTmp=true
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

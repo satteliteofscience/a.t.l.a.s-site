@@ -4,28 +4,48 @@
     "version": "4.7.2",
     "repository_url": "",
     "issues_url": "",
-    "release_channel": "experimental"
+    "release_channel": "pre-release",
+    "downloads_base": "Firmware/"
   },
   "boards": [
     {
-      "id": "matek-h743-wing-v2",
-      "name": "Matek H743-WING V2",
-      "family": "Matek Systems / H743",
-      "description": "Целевая аппаратная платформа. Совместимость и прошивку конкретной ревизии необходимо подтвердить до публикации.",
+      "id": "cube-orange",
+      "name": "Orange Cube",
+      "family": "CubePilot / Cube Orange",
+      "description": "Контроллер Orange Cube. Совместимость сборки, аппаратную ревизию и target необходимо проверить перед публикацией.",
       "status": "planned",
       "target": "Уточняется для релиза",
       "version": "4.7.2",
-      "downloads": []
+      "downloads": [],
+      "description_uk": "Контролер Orange Cube. Сумісність збірки, апаратну ревізію та target потрібно перевірити перед публікацією.",
+      "description_en": "Orange Cube controller. Build compatibility, hardware revision, and target must be verified before publication.",
+      "target_uk": "Уточнюється для релізу",
+      "target_en": "Pending for release"
     },
     {
       "id": "matek-h743-wing-v3",
       "name": "Matek H743-WING V3",
       "family": "Matek Systems / H743",
-      "description": "Целевая аппаратная платформа. Сборка ещё не добавлена в публичный каталог.",
-      "status": "planned",
-      "target": "Уточняется для релиза",
-      "version": "4.7.2",
-      "downloads": []
+      "description": "Публичная HEX-сборка A.T.L.A.S. 4.7.2 с полной Flash-записью через STM32 ROM DFU. Аппаратная совместимость и веб-прошивальщик пока не проверены на реальном контроллере.",
+      "status": "available",
+      "target": "Matek H743-WING V3 — STM32H743",
+      "version": "1.0",
+      "downloads": [
+        {
+          "filename": "REALESE ArduPlane 4.7.2 - A.T.L.A.S EKF3 - MATEK WING H743 V3 (480 Mhz Clock).hex",
+          "label": "A.T.L.A.S. Pre-Release 1.0 · ArduPlane 4.7.2",
+          "version": "1.0",
+          "sha256": "db18bb8cda5805508a4834ee40388c8f493ceaa4498a3c778d37c600b24bcda9",
+          "timestamp": 1794072475,
+          "release_id": "db18bb8cda580550",
+          "source_url": "",
+          "url": "Firmware/Matek%20Wing%20H743-V3/REALESE%20ArduPlane%204.7.2%20-%20A.T.L.A.S%20EKF3%20-%20MATEK%20WING%20H743%20V3%20%28480%20Mhz%20Clock%29.hex"
+        }
+      ],
+      "description_uk": "Публічна HEX-збірка A.T.L.A.S. 4.7.2 для повного запису Flash через STM32 ROM DFU. Сумісність та вебпрошивач поки не перевірені на реальній платі.",
+      "description_en": "Public A.T.L.A.S. 4.7.2 Intel HEX image for STM32 ROM DFU full-flash programming. Hardware compatibility and web flashing remain unverified on a physical board.",
+      "target_uk": "Matek H743-WING V3 — STM32H743",
+      "target_en": "Matek H743-WING V3 — STM32H743"
     },
     {
       "id": "other-boards",
@@ -35,7 +55,15 @@
       "status": "unverified",
       "target": "Нет подтверждённых сборок",
       "version": "—",
-      "downloads": []
+      "downloads": [],
+      "name_uk": "Інші контролери",
+      "name_en": "Other controllers",
+      "family_uk": "Додаткові платформи",
+      "family_en": "Additional platforms",
+      "description_uk": "Підтримку поки не заявлено. Для кожної нової плати потрібні окрема збірка та перевірка.",
+      "description_en": "Support has not been announced. Each new board requires its own build and verification.",
+      "target_uk": "Немає перевірених збірок",
+      "target_en": "No verified builds"
     }
   ]
 }

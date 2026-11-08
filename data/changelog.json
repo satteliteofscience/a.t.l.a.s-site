@@ -1,0 +1,248 @@
+{
+  "project": "A.T.L.A.S.",
+  "base": "ArduPlane 4.7.2",
+  "channel": "Pre-Release",
+  "verified_diff": false,
+  "items": [
+    {
+      "id": "ATL-001",
+      "category": "ekf",
+      "evidence": "history",
+      "title": {
+        "ru": "EKF3 NOAID — оценка ориентации без GPS",
+        "uk": "EKF3 NOAID — оцінка орієнтації без GPS",
+        "en": "EKF3 NOAID — GPS-denied attitude estimation"
+      },
+      "description": {
+        "ru": "Изменения ветки EKF3 для AID_NONE без спутниковой навигации: работа с воздушной скоростью, управление корректировкой состояния и подавление ложных оценок скорости до начала полёта.",
+        "uk": "Зміни EKF3 для AID_NONE без супутникової навігації: використання повітряної швидкості, корекція стану та захист від хибної оцінки швидкості до зльоту.",
+        "en": "EKF3 AID_NONE development for GPS-denied flight: airspeed-assisted estimation, state update handling and protection against spurious velocity before launch."
+      }
+    },
+    {
+      "id": "ATL-002",
+      "category": "ekf",
+      "evidence": "history",
+      "title": {
+        "ru": "Псевдоскорость и Пито после определения запуска",
+        "uk": "Псевдошвидкість і Піто після визначення зльоту",
+        "en": "Pseudo-velocity and pitot launch gating"
+      },
+      "description": {
+        "ru": "По истории испытаний синтез горизонтальной скорости из TAS и ориентации активируется после реального старта; продувка Пито на земле не должна создавать нарастающий GSPD.",
+        "uk": "За історією випробувань оцінка горизонтальної швидкості за TAS та орієнтацією активується після справжнього запуску; продування Піто на землі не повинно спричиняти накопичення GSPD.",
+        "en": "Development tests describe gating TAS-derived horizontal velocity until actual launch so pitot airflow on the ground does not accumulate fictitious ground speed."
+      }
+    },
+    {
+      "id": "ATL-003",
+      "category": "ekf",
+      "evidence": "history",
+      "title": {
+        "ru": "Численная устойчивость EKF3",
+        "uk": "Чисельна стійкість EKF3",
+        "en": "EKF3 numerical stability"
+      },
+      "description": {
+        "ru": "Обсуждались обновление ковариации в форме Джозефа, корректировка шума наблюдений в манёврах и особенности замораживания акселерометрического смещения при NOAID. Точные флаги и параметры требуют сверки с релизной сборкой.",
+        "uk": "Обговорювалися форма Джозефа для оновлення коваріації, адаптація шуму спостережень у маневрах та обмеження зміщення акселерометра в NOAID. Потрібна звірка з кодом релізу.",
+        "en": "Work included a Joseph-form covariance update, maneuver-dependent observation noise and NOAID accelerometer-bias handling. Exact build behavior requires final source comparison."
+      }
+    },
+    {
+      "id": "ATL-004",
+      "category": "flight",
+      "evidence": "excerpt",
+      "title": {
+        "ru": "TAKEOFF без GPS и HOME",
+        "uk": "TAKEOFF без GPS та HOME",
+        "en": "TAKEOFF without GPS or HOME"
+      },
+      "description": {
+        "ru": "В сохранённом mode_takeoff.cpp версии 4.7.1 есть отдельная ветка запуска с барометрической высотой, удержанием курса по AHRS и переходом в CIRCLE после набора высоты. Вхождение именно этой реализации в 4.7.2 ещё не сверено.",
+        "uk": "Збережений mode_takeoff.cpp версії 4.7.1 містить гілку запуску за барометричною висотою, утримання курсу AHRS і перехід у CIRCLE після набору. Потрібно звірити з 4.7.2.",
+        "en": "A retained 4.7.1 mode_takeoff.cpp excerpt implements barometric climb, AHRS heading hold and transition to CIRCLE after the target altitude. Inclusion in the 4.7.2 release is not diff-verified."
+      }
+    },
+    {
+      "id": "ATL-005",
+      "category": "flight",
+      "evidence": "excerpt",
+      "title": {
+        "ru": "Разблокировка газа при повторном TAKEOFF",
+        "uk": "Розблокування газу при повторному TAKEOFF",
+        "en": "Throttle suppression re-entry handling"
+      },
+      "description": {
+        "ru": "В сохранённом servos.cpp движение может подтверждаться EAS от Пито (порог 5 м/с) вместе с признаками полёта, высоты и тангажа. Это не отключает защиту газа безусловно.",
+        "uk": "У збереженому servos.cpp рух може підтверджуватися EAS від Піто (поріг 5 м/с) разом з ознаками польоту, висоти й тангажу. Захист газу залишається умовним.",
+        "en": "The retained servos.cpp uses pitot EAS (5 m/s in the excerpt) along with flight, altitude and pitch checks to release throttle suppression after re-entering TAKEOFF. This is not unconditional throttle enabling."
+      }
+    },
+    {
+      "id": "ATL-006",
+      "category": "flight",
+      "evidence": "excerpt",
+      "title": {
+        "ru": "Изменения CRUISE без GPS",
+        "uk": "Зміни CRUISE без GPS",
+        "en": "GPS-denied CRUISE changes"
+      },
+      "description": {
+        "ru": "В сохранённом mode_cruise_v7.cpp описаны захват курса и высоты по AHRS/барометру, ручной перехват элеронами и рулём высоты, а также ограничения по приближению к скорости сваливания.",
+        "uk": "У збереженому mode_cruise_v7.cpp описано фіксацію курсу й висоти через AHRS/барометр, ручне втручання елеронами й кермом висоти та обмеження біля швидкості звалювання.",
+        "en": "The retained mode_cruise_v7.cpp captures heading and altitude, supports temporary pilot roll/pitch override and adds airspeed-based pitch protection near stall."
+      }
+    },
+    {
+      "id": "ATL-007",
+      "category": "flight",
+      "evidence": "experimental",
+      "title": {
+        "ru": "Экспериментальная автопосадка без GPS",
+        "uk": "Експериментальна автопосадка без GPS",
+        "en": "Experimental GPS-denied AUTOLAND"
+      },
+      "description": {
+        "ru": "В истории A.T.L.A.S. есть отдельные правки автопосадки без GPS. Поскольку абсолютной координаты без внешнего источника нет, точность захода и безопасная посадка требуют проверки алгоритма, датчиков и SITL/лётных испытаний.",
+        "uk": "Історія A.T.L.A.S. містить зміни автопосадки без GPS. Без зовнішньої абсолютної позиції точність заходу й безпечна посадка потребують перевірки алгоритму, сенсорів та випробувань.",
+        "en": "Project history includes GPS-denied AUTOLAND work. Without an external absolute position reference, approach accuracy and landing safety remain dependent on sensor availability and dedicated testing."
+      }
+    },
+    {
+      "id": "ATL-008",
+      "category": "safety",
+      "evidence": "history",
+      "title": {
+        "ru": "Failsafe: переходы между режимами",
+        "uk": "Failsafe: переходи між режимами",
+        "en": "Failsafe mode transitions"
+      },
+      "description": {
+        "ru": "По истории разработки дорабатывалась последовательность потери связи, включая TAKEOFF → CIRCLE → RTL. Условия применения и поведение при отсутствии HOME необходимо сверить по реальному коду.",
+        "uk": "За історією розробки змінювався сценарій втрати зв’язку, зокрема TAKEOFF → CIRCLE → RTL. Умови спрацьовування та поведінка без HOME потребують перевірки.",
+        "en": "Development history mentions a TAKEOFF → CIRCLE → RTL long-failsafe sequence. Trigger conditions and behavior without a valid HOME still require source validation."
+      }
+    },
+    {
+      "id": "ATL-009",
+      "category": "control",
+      "evidence": "snippet",
+      "title": {
+        "ru": "FBWA: RUD_LIMIT_DEG и дополнительный крен",
+        "uk": "FBWA: RUD_LIMIT_DEG і додатковий крен",
+        "en": "FBWA rudder-bank blending — RUD_LIMIT_DEG"
+      },
+      "description": {
+        "ru": "В сохранённом mode_fbwa.cpp рудер по направлению крена может добавлять команду крена через RUD_LIMIT_DEG с ограничением запаса до 85°. Старая настройка RUD_RLL_ADD в актуальной логике не используется.",
+        "uk": "У збереженому mode_fbwa.cpp кермо напрямку, подане в бік крену, може додавати команду крену через RUD_LIMIT_DEG із запасом до 85°. Попередній RUD_RLL_ADD не використовується.",
+        "en": "The retained mode_fbwa.cpp adds a bounded commanded-bank contribution from same-direction rudder input through RUD_LIMIT_DEG, with headroom capped at 85°. Earlier RUD_RLL_ADD is no longer the current setting."
+      }
+    },
+    {
+      "id": "ATL-010",
+      "category": "control",
+      "evidence": "history",
+      "title": {
+        "ru": "FBWA: адаптивное ограничение руля направления",
+        "uk": "FBWA: адаптивне обмеження керма напрямку",
+        "en": "FBWA aerodynamic rudder limiting"
+      },
+      "description": {
+        "ru": "Согласно обсуждавшейся реализации limit_manual_rudder, влияние ручного руля направления смягчается вблизи допустимого крена с учётом крена, скорости вращения и воздушной скорости. Текущие коэффициенты требуют дифф-сверки.",
+        "uk": "Згідно з описаною реалізацією limit_manual_rudder, ручне кермо напрямку обмежується поблизу допустимого крену з урахуванням кутової швидкості та повітряної швидкості. Поточні коефіцієнти треба звірити.",
+        "en": "The discussed limit_manual_rudder implementation fades manual rudder near the permitted bank envelope using roll, roll rate and airspeed. Current coefficients require release-source verification."
+      }
+    },
+    {
+      "id": "ATL-011",
+      "category": "safety",
+      "evidence": "history",
+      "title": {
+        "ru": "Дополнительная проверка RC3 перед ARM",
+        "uk": "Додаткова перевірка RC3 перед ARM",
+        "en": "Additional RC3 pre-arm safety"
+      },
+      "description": {
+        "ru": "История проекта описывает запрет армирования при небезопасном положении газа на RC3. Конкретные пороги и охват путей армирования не подтверждены в текущей сборке.",
+        "uk": "Історія проєкту описує заборону ARM за небезпечного положення газу RC3. Точні пороги та всі шляхи ARM у поточній збірці не підтверджено.",
+        "en": "Project history describes preventing arming with unsafe throttle input on RC3. Exact thresholds and all arming paths are not verified in the current release."
+      }
+    },
+    {
+      "id": "ATL-012",
+      "category": "hardware",
+      "evidence": "history",
+      "title": {
+        "ru": "Звуковые уведомления A.T.L.A.S.",
+        "uk": "Звукові сповіщення A.T.L.A.S.",
+        "en": "A.T.L.A.S. audio notifications"
+      },
+      "description": {
+        "ru": "Обсуждалась собственная звуковая индикация загрузки, начала и завершения калибровок и системных событий. Набор сигналов и поддерживаемое оборудование требуют проверки.",
+        "uk": "Обговорювалися власні звукові сигнали запуску, початку та завершення калібрувань і системних подій. Перелік звуків та підтримуване обладнання треба перевірити.",
+        "en": "Custom startup, calibration and system-event audio cues appear in development history. The current tone list and supported hardware need confirmation."
+      }
+    },
+    {
+      "id": "ATL-013",
+      "category": "hardware",
+      "evidence": "history",
+      "title": {
+        "ru": "BLHeli32 / ESC и телеметрия",
+        "uk": "BLHeli32 / ESC і телеметрія",
+        "en": "BLHeli32 / ESC and telemetry"
+      },
+      "description": {
+        "ru": "По истории работы изменялись разбор потока BLHeli32, обработка CRC и взаимодействие с ESC. Это не означает универсальную поддержку любого регулятора; телеметрия и управление — разные механизмы.",
+        "uk": "За історією роботи змінювалися розбір потоку BLHeli32, CRC та взаємодія з ESC. Це не гарантує сумісності з будь-яким регулятором; телеметрія та керування — окремі механізми.",
+        "en": "Work covered BLHeli32 stream parsing, CRC handling and ESC integration. This does not imply compatibility with every ESC; control and telemetry are separate paths."
+      }
+    },
+    {
+      "id": "ATL-014",
+      "category": "hardware",
+      "evidence": "experimental",
+      "title": {
+        "ru": "RC/VTX: управление видеопередатчиком",
+        "uk": "RC/VTX: керування відеопередавачем",
+        "en": "RC/VTX video transmitter controls"
+      },
+      "description": {
+        "ru": "В предыдущих ветках обсуждалось переключение каналов VTX через RC/Lua и изменения VideoTX. Включение этой функции в последнюю 4.7.2 HEX пока не подтверждено.",
+        "uk": "У попередніх гілках обговорювалося перемикання каналів VTX через RC/Lua та зміни VideoTX. Наявність у поточному 4.7.2 HEX не підтверджено.",
+        "en": "Earlier branches included VTX channel switching via RC/Lua and VideoTX work. Its presence in the current 4.7.2 HEX remains unverified."
+      }
+    },
+    {
+      "id": "ATL-015",
+      "category": "hardware",
+      "evidence": "excerpt",
+      "title": {
+        "ru": "Диагностика CPU / RAM / частоты цикла",
+        "uk": "Діагностика CPU / RAM / частоти циклу",
+        "en": "CPU / RAM / loop-rate diagnostics"
+      },
+      "description": {
+        "ru": "В сохранённом Plane.cpp версии 4.7.1 присутствовала периодическая строка о частоте MCU, частоте основного цикла, загрузке процессора и свободной RAM. Индикация частоты сама по себе не разгоняет процессор.",
+        "uk": "У збереженому Plane.cpp версії 4.7.1 було періодичне повідомлення про частоту MCU, частоту циклу, навантаження CPU та вільну RAM. Відображення частоти не означає розгін.",
+        "en": "The retained 4.7.1 Plane.cpp emitted periodic MCU-clock, main-loop-rate, CPU-load and free-RAM diagnostics. Reporting a clock value does not itself overclock the MCU."
+      }
+    },
+    {
+      "id": "ATL-016",
+      "category": "hardware",
+      "evidence": "history",
+      "title": {
+        "ru": "Сборки под Matek H743-WING V3",
+        "uk": "Збірки для Matek H743-WING V3",
+        "en": "Matek H743-WING V3 builds"
+      },
+      "description": {
+        "ru": "На сайте опубликован Intel HEX для STM32H743 с пометкой 480 MHz. Совместимость определяется фактическим hwdef/target и проверкой платы; название файла не является доказательством всех изменений прошивки.",
+        "uk": "На сайті опубліковано Intel HEX для STM32H743 із позначкою 480 MHz. Сумісність залежить від hwdef/target та перевірки плати, а назва файла не доводить наявність усіх змін.",
+        "en": "The site includes an STM32H743 Intel HEX labeled 480 MHz. Compatibility depends on hwdef/target and board validation; the file name alone does not prove the presence of every proposed firmware change."
+      }
+    }
+  ]
+}

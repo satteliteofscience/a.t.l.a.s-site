@@ -1,0 +1,1083 @@
+{
+ "source": "A.T.L.A.S. Parameters.cpp source comments (partial metadata only; not an official full Plane pdef)",
+ "parameters": {
+  "FORMAT_VERSION": {
+   "DisplayName": "Eeprom format version number",
+   "Description": "This value is incremented when changes are made to the eeprom format",
+   "Default": "0"
+  },
+  "AUTOTUNE_LEVEL": {
+   "DisplayName": "Autotune level",
+   "Description": "Level of aggressiveness of pitch and roll PID gains. Lower values result in a 'softer' tune. Level 6 recommended for most planes. A value of 0 means to keep the current values of RMAX and TCONST for the controllers, tuning only the PID values",
+   "Range": {
+    "low": "0",
+    "high": "10"
+   },
+   "Increment": "1",
+   "Default": "5"
+  },
+  "AUTOTUNE_OPTIONS": {
+   "DisplayName": "Autotune options bitmask",
+   "Description": "Fixed Wing Autotune specific options. Useful on QuadPlanes with higher INS_GYRO_FILTER settings to prevent these filter values from being set too aggressively during Fixed Wing Autotune.",
+   "Default": "0"
+  },
+  "GCS_PID_MASK": {
+   "DisplayName": "GCS PID tuning mask",
+   "Description": "bitmask of PIDs to send MAVLink PID_TUNING messages for",
+   "Default": "0"
+  },
+  "KFF_RDDRMIX": {
+   "DisplayName": "Rudder Mix",
+   "Description": "Amount of rudder to add during aileron movement. Increase if nose initially yaws away from roll. Reduces adverse yaw.",
+   "Range": {
+    "low": "0",
+    "high": "1"
+   },
+   "Increment": "0.01"
+  },
+  "KFF_THR2PTCH": {
+   "DisplayName": "Throttle to Pitch Mix",
+   "Description": "Pitch up to add in proportion to throttle. 100% throttle will add this number of degrees to the pitch target.",
+   "Range": {
+    "low": "-5",
+    "high": "5"
+   },
+   "Increment": "0.01",
+   "Default": "0"
+  },
+  "STAB_PITCH_DOWN": {
+   "DisplayName": "Low throttle pitch down trim",
+   "Description": "Degrees of down pitch added when throttle is below TRIM_THROTTLE in FBWA and AUTOTUNE modes. Scales linearly so full value is added when THR_MIN is reached. Helps to keep airspeed higher in glides or landing approaches and prevents accidental stalls. 2 degrees recommended for most planes.",
+   "Units": "deg",
+   "Range": {
+    "low": "0",
+    "high": "15"
+   },
+   "Increment": "0.1",
+   "Default": "2.0"
+  },
+  "ALT_SLOPE_MIN": {
+   "DisplayName": "Altitude slope minimum",
+   "Description": "This controls the minimum altitude change for a waypoint before an altitude slope will be used instead of an immediate altitude change. The default value is 15 meters, which helps to smooth out waypoint missions where small altitude changes happen near waypoints. If you don't want altitude slopes to be used in missions then you can set this to zero, which will disable altitude slope calculations. Otherwise you can set it to a minimum number of meters of altitude error to the destination waypoint before an altitude slope will be used to change altitude.",
+   "Units": "m",
+   "Range": {
+    "low": "0",
+    "high": "1000"
+   },
+   "Increment": "1",
+   "Default": "15"
+  },
+  "ALT_SLOPE_MAXHGT": {
+   "DisplayName": "Altitude slope maximum height",
+   "Description": "This controls the height above the altitude slope the plane may be before rebuilding it. This is useful for smoothing out an auto-takeoff.",
+   "Units": "m",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1",
+   "Default": "5.0"
+  },
+  "STICK_MIXING": {
+   "DisplayName": "Stick Mixing",
+   "Description": "When enabled, this adds user stick input to the control surfaces in auto modes, allowing the user to have some degree of flight control without changing modes. There are 3 types of stick mixing available. If you set STICK_MIXING to 1 or 4 then it will use \"fly by wire\" mixing. 4 will provide roll and yaw control, while 1 also provides FBW-A style pitch control. If you set STICK_MIXING to 3 then it will apply to the yaw while in quadplane modes only, such as while doing an automatic VTOL takeoff or landing. WARNING: FBW-A pitch control does not offer flight envelope protections. Prolonged pitch inputs in mode 1 can result in a stall or overspeed condition, and should be avoided.",
+   "Values": {
+    "0": "Disabled",
+    "1": "FBW style",
+    "3": "VTOL Yaw only",
+    "4": "FBW style (no pitch)"
+   }
+  },
+  "TKOFF_THR_MINSPD": {
+   "DisplayName": "Takeoff throttle min speed",
+   "Description": "Minimum GPS ground speed in m/s used by the speed check that un-suppresses throttle in auto-takeoff. This can be be used for catapult launches where you want the motor to engage only after the plane leaves the catapult, but it is preferable to use the TKOFF_THR_MINACC and TKOFF_THR_DELAY parameters for catapult launches due to the errors associated with GPS measurements. For hand launches with a pusher prop it is strongly advised that this parameter be set to a value no less than 4 m/s to provide additional protection against premature motor start. Note that the GPS velocity will lag the real velocity by about 0.5 seconds. The ground speed check is delayed by the TKOFF_THR_DELAY parameter.",
+   "Units": "m/s",
+   "Range": {
+    "low": "0",
+    "high": "30"
+   },
+   "Increment": "0.1",
+   "Default": "0"
+  },
+  "TKOFF_THR_MINACC": {
+   "DisplayName": "Takeoff throttle min acceleration",
+   "Description": "Minimum forward acceleration in m/s/s before arming the ground speed check in auto-takeoff. This is meant to be used for hand launches. Setting this value to 0 disables the acceleration test which means the ground speed check will always be armed which could allow GPS velocity jumps to start the engine. For hand launches and bungee launches this should be set to around 15. Also see TKOFF_ACCEL_CNT parameter for control of full \"shake to arm\".",
+   "Units": "m/s/s",
+   "Range": {
+    "low": "0",
+    "high": "30"
+   },
+   "Increment": "0.1",
+   "Default": "10"
+  },
+  "TKOFF_THR_DELAY": {
+   "DisplayName": "Takeoff throttle delay",
+   "Description": "This parameter sets the time delay (in 1/10ths of a second) that the ground speed check is delayed after the forward acceleration check controlled by TKOFF_THR_MINACC has passed. For hand launches with pusher propellers it is essential that this is set to a value of no less than 2 (0.2 seconds) to ensure that the aircraft is safely clear of the throwers arm before the motor can start. For bungee launches a larger value can be used (such as 30) to give time for the bungee to release from the aircraft before the motor is started.",
+   "Units": "ds",
+   "Range": {
+    "low": "0",
+    "high": "127"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "TKOFF_THR_MAX_T": {
+   "DisplayName": "Takeoff throttle maximum time",
+   "Description": "This sets the time that maximum throttle will be forced during a fixed wing takeoff.",
+   "Units": "s",
+   "Range": {
+    "low": "0",
+    "high": "10"
+   },
+   "Increment": "0.5",
+   "Default": "10"
+  },
+  "TKOFF_THR_MIN": {
+   "DisplayName": "Takeoff minimum throttle",
+   "Description": "The minimum throttle to use in takeoffs in AUTO and TAKEOFF flight modes, when TKOFF_OPTIONS bit 0 is set. Also, the minimum throttle to use in a quadpane forward transition. This can be useful to ensure faster takeoffs or transitions on aircraft where the normal throttle control leads to a slow takeoff or transition. It is used when it is larger than THR_MIN, otherwise THR_MIN is used instead.",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "TKOFF_THR_IDLE": {
+   "DisplayName": "Takeoff idle throttle",
+   "Description": "The idle throttle to hold after arming and before a takeoff. Applicable in TAKEOFF and AUTO modes.",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1",
+   "Default": "30"
+  },
+  "TKOFF_OPTIONS": {
+   "DisplayName": "Takeoff options",
+   "Description": "This selects the mode of the takeoff in AUTO and TAKEOFF flight modes.",
+   "Default": "0"
+  },
+  "TKOFF_TDRAG_ELEV": {
+   "DisplayName": "Takeoff tail dragger elevator",
+   "Description": "This parameter sets the amount of elevator to apply during the initial stage of a takeoff. It is used to hold the tail wheel of a taildragger on the ground during the initial takeoff stage to give maximum steering. This option should be combined with the TKOFF_TDRAG_SPD1 option and the GROUND_STEER_ALT option along with tuning of the ground steering controller. A value of zero means to bypass the initial \"tail hold\" stage of takeoff. Set to zero for hand and catapult launch. For tail-draggers you should normally set this to 100, meaning full up elevator during the initial stage of takeoff. For most tricycle undercarriage aircraft a value of zero will work well, but for some tricycle aircraft a small negative value (say around -20 to -30) will apply down elevator which will hold the nose wheel firmly on the ground during initial acceleration. Only use a negative value if you find that the nosewheel doesn't grip well during takeoff. Too much down elevator on a tricycle undercarriage may cause instability in steering as the plane pivots around the nosewheel. Add down elevator 10 percent at a time.",
+   "Units": "%",
+   "Range": {
+    "low": "-100",
+    "high": "100"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "TKOFF_TDRAG_SPD1": {
+   "DisplayName": "Takeoff tail dragger speed1",
+   "Description": "This parameter sets the airspeed at which to stop holding the tail down and transition to rudder control of steering on the ground. When TKOFF_TDRAG_SPD1 is reached the pitch of the aircraft will be held level until TKOFF_ROTATE_SPD is reached, at which point the takeoff pitch specified in the mission will be used to \"rotate\" the pitch for takeoff climb. Set TKOFF_TDRAG_SPD1 to zero to go straight to rotation. This should be set to zero for hand launch and catapult launch. It should also be set to zero for tricycle undercarriages unless you are using the method above to gently hold the nose wheel down. For tail dragger aircraft it should be set just below the stall speed.",
+   "Units": "m/s",
+   "Range": {
+    "low": "0",
+    "high": "30"
+   },
+   "Increment": "0.1",
+   "Default": "0"
+  },
+  "TKOFF_ROTATE_SPD": {
+   "DisplayName": "Takeoff rotate speed",
+   "Description": "This parameter sets the airspeed at which the aircraft will \"rotate\", setting climb pitch specified in the mission. If TKOFF_ROTATE_SPD is zero then the climb pitch will be used as soon as takeoff is started. For hand launch and catapult launches a TKOFF_ROTATE_SPD of zero should be set. For all ground launches TKOFF_ROTATE_SPD should be set above the stall speed, usually by about 10 to 30 percent. During the run, use TKOFF_GND_PITCH to keep the aircraft on the runway while below this airspeed.",
+   "Units": "m/s",
+   "Range": {
+    "low": "0",
+    "high": "30"
+   },
+   "Increment": "0.1",
+   "Default": "0"
+  },
+  "TKOFF_THR_SLEW": {
+   "DisplayName": "Takeoff throttle slew rate",
+   "Description": "This parameter sets the slew rate for the throttle during auto takeoff. When this is zero the THR_SLEWRATE parameter is used during takeoff. For rolling takeoffs it can be a good idea to set a lower slewrate for takeoff to give a slower acceleration which can improve ground steering control. The value is a percentage throttle change per second, so a value of 20 means to advance the throttle over 5 seconds on takeoff. Values below 20 are not recommended as they may cause the plane to try to climb out with too little throttle. A value of -1 means no limit on slew rate in takeoff.",
+   "Units": "%/s",
+   "Range": {
+    "low": "-1",
+    "high": "127"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "TKOFF_PLIM_SEC": {
+   "DisplayName": "Takeoff pitch limit reduction",
+   "Description": "This parameter reduces the pitch minimum limit of an auto-takeoff just a few seconds before it reaches the target altitude. This reduces overshoot by allowing the flight controller to start leveling off a few seconds before reaching the target height. When set to zero, the mission pitch min is enforced all the way to and through the target altitude, otherwise the pitch min slowly reduces to zero in the final segment. This is the pitch_min, not the demand. The flight controller should still be commanding to gain altitude to finish the takeoff but with this param it is not forcing it higher than it wants to be.",
+   "Units": "s",
+   "Range": {
+    "low": "0",
+    "high": "10"
+   },
+   "Increment": "0.5",
+   "Default": "2"
+  },
+  "TKOFF_FLAP_PCNT": {
+   "DisplayName": "Takeoff flap percentage",
+   "Description": "The amount of flaps (as a percentage) to apply in automatic takeoff",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "LEVEL_ROLL_LIMIT": {
+   "DisplayName": "Level flight roll limit",
+   "Description": "This controls the maximum bank angle in degrees during flight modes where level flight is desired, such as in the final stages of landing, and during auto takeoff. This should be a small angle (such as 5 degrees) to prevent a wing hitting the runway during takeoff or landing. Setting this to zero will completely disable heading hold on auto takeoff while below 5 meters and during the flare portion of a final landing approach.",
+   "Units": "deg",
+   "Range": {
+    "low": "0",
+    "high": "45"
+   },
+   "Increment": "1",
+   "Default": "5"
+  },
+  "USE_REV_THRUST": {
+   "DisplayName": "Bitmask for when to allow negative reverse thrust",
+   "Description": "This controls when to use reverse thrust. If set to a non-zero value then the bits correspond to flight stages where reverse thrust may be used. The most commonly used value for USE_REV_THRUST is 2, which means AUTO_LAND only. That enables reverse thrust in the landing stage of AUTO mode. Another common choice is 1, which means to use reverse thrust in all auto flight stages. Reverse thrust is always used in MANUAL mode if enabled with THR_MIN < 0. In non-autothrottle controlled modes, if reverse thrust is not used, then THR_MIN is effectively set to 0 for that mode."
+  },
+  "ALT_OFFSET": {
+   "DisplayName": "Altitude offset",
+   "Description": "This is added to the target altitude in automatic flight. It can be used to add a global altitude offset to a mission",
+   "Units": "m",
+   "Range": {
+    "low": "-32767",
+    "high": "32767"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "WP_RADIUS": {
+   "DisplayName": "Waypoint Radius",
+   "Description": "Defines the maximum distance from a waypoint that when crossed indicates the waypoint may be complete. To avoid the aircraft looping around the waypoint in case it misses by more than the WP_RADIUS an additional check is made to see if the aircraft has crossed a \"finish line\" passing through the waypoint and perpendicular to the flight path from the previous waypoint. If that finish line is crossed then the waypoint is considered complete. Note that the navigation controller may decide to turn later than WP_RADIUS before a waypoint, based on how sharp the turn is and the speed of the aircraft. It is safe to set WP_RADIUS much larger than the usual turn radius of your aircraft and the navigation controller will work out when to turn. If you set WP_RADIUS too small then you will tend to overshoot the turns.",
+   "Units": "m",
+   "Range": {
+    "low": "1",
+    "high": "32767"
+   },
+   "Increment": "1"
+  },
+  "WP_MAX_RADIUS": {
+   "DisplayName": "Waypoint Maximum Radius",
+   "Description": "Sets the maximum distance to a waypoint for the waypoint to be considered complete. This overrides the \"cross the finish line\" logic that is normally used to consider a waypoint complete. For normal AUTO behaviour this parameter should be set to zero. Using a non-zero value is only recommended when it is critical that the aircraft does approach within the given radius, and should loop around until it has done so. This can cause the aircraft to loop forever if its turn radius is greater than the maximum radius set.",
+   "Units": "m",
+   "Range": {
+    "low": "0",
+    "high": "32767"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "WP_LOITER_RAD": {
+   "DisplayName": "Waypoint Loiter Radius",
+   "Description": "Defines the distance from the waypoint center, the plane will maintain during a loiter. If you set this value to a negative number then the default loiter direction will be counter-clockwise instead of clockwise. If this value is too close to zero, the achieved loiter radius will be determined by ROLL_LIMIT_DEG.",
+   "Units": "m",
+   "Range": {
+    "low": "-32767",
+    "high": "32767"
+   },
+   "Increment": "1"
+  },
+  "RTL_RADIUS": {
+   "DisplayName": "RTL loiter radius",
+   "Description": "Defines the radius of the loiter circle when in RTL mode. If this is zero then WP_LOITER_RAD is used. If the radius is negative then a counter-clockwise is used. If positive then a clockwise loiter is used. For quadplanes with Q_RTL_MODE set to 1 (Enabled), this value is used to set the minimum radius at which the plane will transition from fixed-wing to VTOL mode for landing.",
+   "Units": "m",
+   "Range": {
+    "low": "-32767",
+    "high": "32767"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "STALL_PREVENTION": {
+   "DisplayName": "Enable stall prevention",
+   "Description": "Enables roll limits at low airspeed in roll limiting flight modes. Roll limits based on aerodynamic load factor in turns and scale on AIRSPEED_MIN that must be set correctly. Without airspeed sensor, uses synthetic airspeed from wind speed estimate that may both be inaccurate.",
+   "Values": {
+    "0": "Disabled",
+    "1": "Enabled"
+   },
+   "Default": "1"
+  },
+  "AIRSPEED_CRUISE": {
+   "DisplayName": "Target cruise airspeed",
+   "Description": "Target cruise airspeed in m/s in automatic throttle modes. Value is as an indicated (calibrated/apparent) airspeed.",
+   "Units": "m/s"
+  },
+  "AIRSPEED_MIN": {
+   "DisplayName": "Minimum Airspeed",
+   "Description": "Minimum airspeed demanded in automatic throttle modes. Should be set to 20% higher than level flight stall speed.",
+   "Units": "m/s",
+   "Range": {
+    "low": "5",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "AIRSPEED_MAX": {
+   "DisplayName": "Maximum Airspeed",
+   "Description": "Maximum airspeed demanded in automatic throttle modes. Should be set slightly less than level flight speed at THR_MAX and also at least 50% above AIRSPEED_MIN to allow for accurate TECS altitude control.",
+   "Units": "m/s",
+   "Range": {
+    "low": "5",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "AIRSPEED_STALL": {
+   "DisplayName": "Stall airspeed",
+   "Description": "If stall prevention is enabled this speed is used to calculate the minimum airspeed while banking. It is also used during landing final as the minimum airspeed that can be demanded by the TECS, which allows using TECS_LAND_ARSPD or LAND_PF_ARSPD to achieve landings slower than AIRSPEED_MIN. If this is set to 0 then the stall speed is assumed to be the minimum airspeed speed. Typically set slightly higher then true stall speed.",
+   "Units": "m/s",
+   "Range": {
+    "low": "5",
+    "high": "75"
+   },
+   "Default": "0"
+  },
+  "FBWB_ELEV_REV": {
+   "DisplayName": "Fly By Wire elevator reverse",
+   "Description": "Reverse sense of elevator in FBWB and CRUISE modes. When set to 0 up elevator (pulling back on the stick) means to raise altitude. When set to 1, up elevator means to lower altitude.",
+   "Values": {
+    "0": "Disabled",
+    "1": "Enabled"
+   },
+   "Default": "0"
+  },
+  "TERRAIN_FOLLOW": {
+   "DisplayName": "Use terrain following",
+   "Description": "This enables terrain following for CRUISE mode, FBWB mode, RTL and for rally points. To use this option you also need to set TERRAIN_ENABLE to 1, which enables terrain data fetching from the GCS, and you need to have a GCS that supports sending terrain data to the aircraft. When terrain following is enabled then CRUISE and FBWB mode will hold height above terrain rather than height above home. In RTL the return to launch altitude will be considered to be a height above the terrain. Rally point altitudes will be taken as height above the terrain. This option does not affect mission items, which have a per-waypoint flag for whether they are height above home or height above the terrain. To use terrain following missions you need a ground station which can set the waypoint type to be a terrain height waypoint when creating the mission.",
+   "Default": "0"
+  },
+  "TERRAIN_LOOKAHD": {
+   "DisplayName": "Terrain lookahead",
+   "Description": "This controls how far ahead the terrain following code looks to ensure it stays above upcoming terrain. A value of zero means no lookahead, so the controller will track only the terrain directly below the aircraft. The lookahead will never extend beyond the next waypoint when in AUTO mode.",
+   "Units": "m",
+   "Range": {
+    "low": "0",
+    "high": "10000"
+   },
+   "Default": "2000"
+  },
+  "FBWB_CLIMB_RATE": {
+   "DisplayName": "Fly By Wire B altitude change rate",
+   "Description": "This sets the rate in m/s at which FBWB and CRUISE modes will change its target altitude for full elevator deflection. Note that the actual climb rate of the aircraft can be lower than this, depending on your airspeed and throttle control settings. If you have this parameter set to the default value of 2.0, then holding the elevator at maximum deflection for 10 seconds would change the target altitude by 20 meters.",
+   "Units": "m/s",
+   "Range": {
+    "low": "1",
+    "high": "10"
+   },
+   "Increment": "0.1",
+   "Default": "2.0"
+  },
+  "THR_MIN": {
+   "DisplayName": "Minimum Throttle",
+   "Description": "Minimum throttle percentage used in all modes except manual, provided THR_PASS_STAB is not set. Negative values allow reverse thrust if hardware supports it.",
+   "Units": "%",
+   "Range": {
+    "low": "-100",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "THR_MAX": {
+   "DisplayName": "Maximum Throttle",
+   "Description": "Maximum throttle percentage used in all modes except manual, provided THR_PASS_STAB is not set.",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "TKOFF_THR_MAX": {
+   "DisplayName": "Maximum Throttle for takeoff",
+   "Description": "The maximum throttle setting during automatic takeoff. If this is zero then THR_MAX is used for takeoff as well.",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "THR_SLEWRATE": {
+   "DisplayName": "Throttle slew rate",
+   "Description": "Maximum change in throttle percentage per second. Lower limit  based on 1 microsend of servo increase per loop. Divide SCHED_LOOP_RATE by approximately 10 to determine minimum achievable value.",
+   "Units": "%/s",
+   "Range": {
+    "low": "0",
+    "high": "127"
+   },
+   "Increment": "1",
+   "Default": "100"
+  },
+  "FLAP_SLEWRATE": {
+   "DisplayName": "Flap slew rate",
+   "Description": "maximum percentage change in flap output per second. A setting of 25 means to not change the flap by more than 25% of the full flap range in one second. A value of 0 means no rate limiting.",
+   "Units": "%/s",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1",
+   "Default": "75"
+  },
+  "THR_SUPP_MAN": {
+   "DisplayName": "Throttle suppress manual passthru",
+   "Description": "When throttle is suppressed in auto mode it is normally forced to zero. If you enable this option, then while suppressed it will be manual throttle. This is useful on petrol engines to hold the idle throttle manually while waiting for takeoff",
+   "Values": {
+    "0": "Disabled",
+    "1": "Enabled"
+   },
+   "Default": "0"
+  },
+  "THR_PASS_STAB": {
+   "DisplayName": "Throttle passthru in stabilize",
+   "Description": "If this is set then when in STABILIZE, FBWA or ACRO modes the throttle is a direct passthru from the transmitter. This means the THR_MIN and THR_MAX settings are not used in these modes. This is useful for petrol engines where you setup a throttle cut switch that suppresses the throttle below the normal minimum.",
+   "Values": {
+    "0": "Disabled",
+    "1": "Enabled"
+   },
+   "Default": "0"
+  },
+  "THR_FAILSAFE": {
+   "DisplayName": "Throttle and RC Failsafe Enable",
+   "Description": "0 disables the failsafe. 1 enables failsafe on loss of RC input. This is detected either by throttle values below THR_FS_VALUE, loss of receiver valid pulses/data, or by the FS bit in receivers that provide it, like SBUS. A programmable failsafe action will occur and RC inputs, if present, will be ignored. A value of 2 means that the RC inputs won't be used when RC failsafe is detected by any of the above methods, but it won't trigger an RC failsafe action.",
+   "Values": {
+    "0": "Disabled",
+    "1": "Enabled",
+    "2": "EnabledNoFailsafe"
+   }
+  },
+  "THR_FS_VALUE": {
+   "DisplayName": "Throttle Failsafe Value",
+   "Description": "The PWM level on the throttle input channel below which throttle failsafe triggers. Note that this should be well below the normal minimum for your throttle channel.",
+   "Range": {
+    "low": "925",
+    "high": "2200"
+   },
+   "Increment": "1",
+   "Default": "950"
+  },
+  "TRIM_THROTTLE": {
+   "DisplayName": "Throttle cruise percentage",
+   "Description": "Target percentage of throttle to apply for flight in automatic throttle modes and throttle percentage that maintains AIRSPEED_CRUISE. Caution: low battery voltages at the end of flights may require higher throttle to maintain airspeed.",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "THROTTLE_NUDGE": {
+   "DisplayName": "Throttle nudge enable",
+   "Description": "When enabled, this uses the throttle input in auto-throttle modes to 'nudge' the throttle or airspeed to higher or lower values. When you have an airspeed sensor the nudge affects the target airspeed, so that throttle inputs above 50% will increase the target airspeed from AIRSPEED_CRUISE up to a maximum of AIRSPEED_MAX. When no airspeed sensor is enabled the throttle nudge will push up the target throttle for throttle inputs above 50%.",
+   "Values": {
+    "0": "Disabled",
+    "1": "Enabled"
+   },
+   "Default": "1"
+  },
+  "FS_SHORT_ACTN": {
+   "DisplayName": "Short failsafe action",
+   "Description": "The action to take on a short failsafe event. A short failsafe event can be triggered instantly by loss of RC control or by throttle value (see THR_FS_VALUE). If in CIRCLE or RTL mode this parameter is ignored. A short failsafe event in stabilization and manual modes will cause a change to CIRCLE mode if FS_SHORT_ACTN is 0 or 1, a change to FBWA mode with zero throttle if FS_SHORT_ACTN is 2, and a change to FBWB mode if FS_SHORT_ACTN is 4. In all other modes (AUTO, GUIDED and LOITER) a short failsafe event will cause no mode change if FS_SHORT_ACTN is set to 0, will cause a change to CIRCLE mode if set to 1, will change to FBWA mode with zero throttle if set to 2, or will change to FBWB if set to 4. Please see the documentation for FS_LONG_ACTN for the behaviour after FS_LONG_TIMEOUT seconds of failsafe. This parameter only applies to failsafes during fixed wing modes. Quadplane modes will switch to QLAND unless Q_OPTIONS bit 5(QRTL) or 20(RTL) are set.",
+   "Values": {
+    "0": "CIRCLE/no change(if already in AUTO|GUIDED|LOITER)",
+    "1": "CIRCLE",
+    "2": "FBWA at zero throttle",
+    "3": "Disable",
+    "4": "FBWB"
+   }
+  },
+  "FS_LONG_ACTN": {
+   "DisplayName": "Long failsafe action",
+   "Description": "The action to take on a long (FS_LONG_TIMEOUT seconds) failsafe event. If the aircraft was in a stabilization or manual mode when failsafe started and a long failsafe occurs then it will change to RTL mode if FS_LONG_ACTN is 0 or 1, and will change to FBWA if FS_LONG_ACTN is set to 2. If the aircraft was in an auto mode (such as AUTO or GUIDED) when the failsafe started then it will continue in the auto mode if FS_LONG_ACTN is set to 0, will change to RTL mode if FS_LONG_ACTN is set to 1 and will change to FBWA mode if FS_LONG_ACTN is set to 2. If FS_LONG_ACTN is set to 3, the parachute will be deployed (make sure the chute is configured and enabled). If FS_LONG_ACTN is set to 4 the aircraft will switch to mode AUTO with the current waypoint if it is not already in mode AUTO, unless it is in the middle of a landing sequence. If FS_LONG_ACTN is set to 5, will switch to AUTOLAND mode if possible, otherwise RTL mode. This parameter only applies to failsafes during fixed wing modes. Quadplane modes will switch to QLAND unless Q_OPTIONS bit 5 (QRTL) or 20(RTL) are set.",
+   "Values": {
+    "0": "Continue",
+    "1": "ReturnToLaunch",
+    "2": "Glide",
+    "3": "Deploy Parachute",
+    "4": "Auto",
+    "5": "AUTOLAND"
+   }
+  },
+  "FS_LONG_TIMEOUT": {
+   "DisplayName": "Long failsafe timeout",
+   "Description": "The time in seconds that a failsafe condition has to persist before a long failsafe event will occur. This defaults to 5 seconds.",
+   "Units": "s",
+   "Range": {
+    "low": "1",
+    "high": "300"
+   },
+   "Increment": "0.5",
+   "Default": "5"
+  },
+  "FS_GCS_ENABL": {
+   "DisplayName": "GCS failsafe enable",
+   "Description": "Enable ground control station telemetry failsafe. Failsafe will trigger after FS_LONG_TIMEOUT seconds of no MAVLink heartbeat messages. There are three possible enabled settings. Setting FS_GCS_ENABL to 1 means that GCS failsafe will be triggered when the aircraft has not received a MAVLink HEARTBEAT message. Note that heartbeat tracking only becomes active after having received the first heartbeat from the MAV_GCS_SYSID primary GCS system. Setting FS_GCS_ENABL to 2 means that GCS failsafe will be triggered on either a loss of HEARTBEAT messages, or a RADIO_STATUS message from a MAVLink enabled telemetry adio indicating that the primary ground station is not receiving status updates from the aircraft, which is indicated by the RADIO_STATUS.remrssi field being zero (this may happen if you have a one way link due to asymmetric noise on the ground station and aircraft radios).Setting FS_GCS_ENABL to 3 means that GCS failsafe will be triggered by Heartbeat(like option one), but only in AUTO mode. WARNING: Enabling this option opens up the possibility of your plane going into failsafe mode and running the motor on the ground it it loses contact with your ground station. If this option is enabled on an electric plane then you should enable ARMING_REQUIRED.",
+   "Values": {
+    "0": "Disabled",
+    "1": "Heartbeat",
+    "2": "HeartbeatAndREMRSSI",
+    "3": "HeartbeatAndAUTO"
+   }
+  },
+  "FLTMODE_CH": {
+   "DisplayName": "Flightmode channel",
+   "Description": "RC Channel to use for flight mode control",
+   "Values": {
+    "0": "Disabled",
+    "1": "Channel 1",
+    "2": "Channel 2",
+    "3": "Channel 3",
+    "4": "Channel 4",
+    "5": "Channel 5",
+    "6": "Channel 6",
+    "7": "Channel 7",
+    "8": "Channel 8",
+    "9": "Channel 9",
+    "10": "Channel 10",
+    "11": "Channel 11",
+    "12": "Channel 12",
+    "13": "Channel 13",
+    "14": "Channel 14",
+    "15": "Channel 15",
+    "16": "Channel 16"
+   }
+  },
+  "FLTMODE1": {
+   "DisplayName": "FlightMode1",
+   "Description": "Flight mode for switch position 1 (910 to 1230 and above 2049)",
+   "Values": {
+    "0": "Manual",
+    "1": "CIRCLE",
+    "2": "STABILIZE",
+    "3": "TRAINING",
+    "4": "ACRO",
+    "5": "FBWA",
+    "6": "FBWB",
+    "7": "CRUISE",
+    "8": "AUTOTUNE",
+    "10": "Auto",
+    "11": "RTL",
+    "12": "Loiter",
+    "13": "TAKEOFF",
+    "14": "AVOID_ADSB",
+    "15": "Guided",
+    "17": "QSTABILIZE",
+    "18": "QHOVER",
+    "19": "QLOITER",
+    "20": "QLAND",
+    "21": "QRTL",
+    "22": "QAUTOTUNE",
+    "23": "QACRO",
+    "24": "THERMAL",
+    "25": "Loiter to QLand",
+    "26": "AUTOLAND"
+   }
+  },
+  "FLTMODE2": {
+   "DisplayName": "FlightMode2",
+   "Description": "Flight mode for switch position 2 (1231 to 1360)"
+  },
+  "FLTMODE3": {
+   "DisplayName": "FlightMode3",
+   "Description": "Flight mode for switch position 3 (1361 to 1490)"
+  },
+  "FLTMODE4": {
+   "DisplayName": "FlightMode4",
+   "Description": "Flight mode for switch position 4 (1491 to 1620)"
+  },
+  "FLTMODE5": {
+   "DisplayName": "FlightMode5",
+   "Description": "Flight mode for switch position 5 (1621 to 1749)"
+  },
+  "FLTMODE6": {
+   "DisplayName": "FlightMode6",
+   "Description": "Flight mode for switch position 6 (1750 to 2049)"
+  },
+  "INITIAL_MODE": {
+   "DisplayName": "Initial flight mode",
+   "Description": "This selects the mode to start in on boot. This is useful for when you want to start in AUTO mode on boot without a receiver."
+  },
+  "ROLL_LIMIT_DEG": {
+   "DisplayName": "Maximum Bank Angle",
+   "Description": "Maximum bank angle commanded in modes with stabilized limits. Increase this value for sharper turns, but decrease to prevent accelerated stalls.",
+   "Units": "deg",
+   "Range": {
+    "low": "0",
+    "high": "90"
+   },
+   "Increment": "1"
+  },
+  "PTCH_LIM_MAX_DEG": {
+   "DisplayName": "Maximum Pitch Angle",
+   "Description": "Maximum pitch up angle commanded in modes with stabilized limits.",
+   "Units": "deg",
+   "Range": {
+    "low": "0",
+    "high": "90"
+   },
+   "Increment": "1"
+  },
+  "PTCH_LIM_MIN_DEG": {
+   "DisplayName": "Minimum Pitch Angle",
+   "Description": "Maximum pitch down angle commanded in modes with stabilized limits",
+   "Units": "deg",
+   "Range": {
+    "low": "-90",
+    "high": "0"
+   },
+   "Increment": "1"
+  },
+  "ACRO_ROLL_RATE": {
+   "DisplayName": "ACRO mode roll rate",
+   "Description": "The maximum roll rate at full stick deflection in ACRO mode",
+   "Units": "deg/s",
+   "Range": {
+    "low": "10",
+    "high": "500"
+   },
+   "Increment": "1",
+   "Default": "180"
+  },
+  "ACRO_PITCH_RATE": {
+   "DisplayName": "ACRO mode pitch rate",
+   "Description": "The maximum pitch rate at full stick deflection in ACRO mode",
+   "Units": "deg/s",
+   "Range": {
+    "low": "10",
+    "high": "500"
+   },
+   "Increment": "1",
+   "Default": "180"
+  },
+  "ACRO_YAW_RATE": {
+   "DisplayName": "ACRO mode yaw rate",
+   "Description": "The maximum yaw rate at full stick deflection in ACRO mode. If this is zero then rudder is directly controlled by rudder stick input. This option is only available if you also set YAW_RATE_ENABLE to 1.",
+   "Units": "deg/s",
+   "Range": {
+    "low": "0",
+    "high": "500"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "ACRO_LOCKING": {
+   "DisplayName": "ACRO mode attitude locking",
+   "Description": "Enable attitude locking when sticks are released. If set to 2 then quaternion based locking is used if the yaw rate controller is enabled. Quaternion based locking will hold any attitude",
+   "Values": {
+    "0": "Disabled",
+    "1": "Enabled",
+    "2": "Quaternion"
+   },
+   "Default": "0"
+  },
+  "GROUND_STEER_ALT": {
+   "DisplayName": "Ground steer altitude",
+   "Description": "Altitude at which to use the ground steering controller on the rudder. If non-zero then the STEER2SRV controller will be used to control the rudder for altitudes within this limit of the home altitude.",
+   "Units": "m",
+   "Range": {
+    "low": "-100",
+    "high": "100"
+   },
+   "Increment": "0.1",
+   "Default": "0"
+  },
+  "GROUND_STEER_DPS": {
+   "DisplayName": "Ground steer rate",
+   "Description": "Ground steering rate in degrees per second for full rudder stick deflection",
+   "Units": "deg/s",
+   "Range": {
+    "low": "10",
+    "high": "360"
+   },
+   "Increment": "1",
+   "Default": "90"
+  },
+  "MIXING_GAIN": {
+   "DisplayName": "Mixing Gain",
+   "Description": "The gain for the Vtail and elevon output mixers. The default is 0.5, which ensures that the mixer doesn't saturate, allowing both input channels to go to extremes while retaining control over the output. Hardware mixers often have a 1.0 gain, which gives more servo throw, but can saturate. If you don't have enough throw on your servos with VTAIL_OUTPUT or ELEVON_OUTPUT enabled then you can raise the gain using MIXING_GAIN. The mixer allows outputs in the range 900 to 2100 microseconds.",
+   "Range": {
+    "low": "0.5",
+    "high": "1.2"
+   },
+   "Default": "0.5"
+  },
+  "RUDDER_ONLY": {
+   "DisplayName": "Rudder only aircraft",
+   "Description": "Enable rudder only mode. The rudder will control attitude in attitude controlled modes (such as FBWA). You should setup your transmitter to send roll stick inputs to the RCMAP_YAW channel (normally channel 4). The rudder servo should be attached to the RCMAP_YAW channel as well. Note that automatic ground steering will be disabled for rudder only aircraft. You should also set KFF_RDDRMIX to 1.0. You will also need to setup the YAW2SRV_DAMP yaw damping appropriately for your aircraft. A value of 0.5 for YAW2SRV_DAMP is a good starting point.",
+   "Values": {
+    "0": "Disabled",
+    "1": "Enabled"
+   },
+   "Default": "0"
+  },
+  "MIXING_OFFSET": {
+   "DisplayName": "Mixing Offset",
+   "Description": "The offset for the Vtail and elevon output mixers, as a percentage. This can be used in combination with MIXING_GAIN to configure how the control surfaces respond to input. The response to aileron or elevator input can be increased by setting this parameter to a positive or negative value. A common usage is to enter a positive value to increase the aileron response of the elevons of a flying wing. The default value of zero will leave the aileron-input response equal to the elevator-input response.",
+   "Units": "d%",
+   "Range": {
+    "low": "-1000",
+    "high": "1000"
+   },
+   "Default": "0"
+  },
+  "DSPOILR_RUD_RATE": {
+   "DisplayName": "Differential spoilers rudder rate",
+   "Description": "Sets the amount of deflection that the rudder output will apply to the differential spoilers, as a percentage. The default value of 100 results in full rudder applying full deflection. A value of 0 will result in the differential spoilers exactly following the elevons (no rudder effect).",
+   "Units": "%",
+   "Range": {
+    "low": "-100",
+    "high": "100"
+   }
+  },
+  "LOG_BITMASK": {
+   "DisplayName": "Log bitmask",
+   "Description": "Bitmap of what on-board log types to enable. This value is made up of the sum of each of the log types you want to be saved. It is usually best just to enable all basic log types by setting this to 65535."
+  },
+  "SCALING_SPEED": {
+   "DisplayName": "speed used for speed scaling calculations",
+   "Description": "Airspeed in m/s to use when calculating surface speed scaling. Note that changing this value will affect all PID values",
+   "Units": "m/s",
+   "Range": {
+    "low": "0",
+    "high": "50"
+   },
+   "Increment": "0.1"
+  },
+  "MIN_GROUNDSPEED": {
+   "DisplayName": "Minimum ground speed",
+   "Description": "Minimum ground speed when under airspeed control",
+   "Units": "m/s"
+  },
+  "PTCH_TRIM_DEG": {
+   "DisplayName": "Pitch angle offset",
+   "Description": "Offset in degrees used for in-flight pitch trimming for level flight. Correct ground leveling is an alternative to changing this parameter.",
+   "Units": "deg",
+   "Range": {
+    "low": "-45",
+    "high": "45"
+   },
+   "Default": "0.0"
+  },
+  "RTL_ALTITUDE": {
+   "DisplayName": "RTL altitude",
+   "Description": "Target altitude above home for RTL mode. Maintains current altitude if set to -1. Rally point altitudes are used if plane does not return to home.",
+   "Units": "m"
+  },
+  "CRUISE_ALT_FLOOR": {
+   "DisplayName": "Minimum altitude for FBWB and CRUISE mode",
+   "Description": "This is the minimum altitude in meters (above home) that FBWB and CRUISE modes will allow. If you attempt to descend below this altitude then the plane will level off. It will also force a climb to this altitude if below in these modes. A value of zero means no limit.",
+   "Units": "m"
+  },
+  "FLAP_1_PERCNT": {
+   "DisplayName": "Flap 1 percentage",
+   "Description": "The percentage change in flap position when FLAP_1_SPEED is reached. Use zero to disable flaps",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "FLAP_1_SPEED": {
+   "DisplayName": "Flap 1 speed",
+   "Description": "The speed in meters per second at which to engage FLAP_1_PERCENT of flaps. Note that FLAP_1_SPEED should be greater than or equal to FLAP_2_SPEED",
+   "Units": "m/s",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "FLAP_2_PERCNT": {
+   "DisplayName": "Flap 2 percentage",
+   "Description": "The percentage change in flap position when FLAP_2_SPEED is reached. Use zero to disable flaps",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "FLAP_2_SPEED": {
+   "DisplayName": "Flap 2 speed",
+   "Description": "The speed in meters per second at which to engage FLAP_2_PERCENT of flaps. Note that FLAP_1_SPEED should be greater than or equal to FLAP_2_SPEED",
+   "Units": "m/s",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "OVERRIDE_CHAN": {
+   "DisplayName": "IO override channel",
+   "Description": "If set to a non-zero value then this is an RC input channel number to use for giving IO manual control in case the main FMU microcontroller on a board with a IO co-processor fails. When this RC input channel goes above 1750 the FMU microcontroller will no longer be involved in controlling the servos and instead the IO microcontroller will directly control the servos. Note that IO manual control will be automatically activated if the FMU crashes for any reason. This parameter allows you to test for correct manual behaviour without actually crashing the FMU. This parameter is can be set to a non-zero value either for ground testing purposes or for giving the effect of an external override control board. Note that you may set OVERRIDE_CHAN to the same channel as FLTMODE_CH to get IO based override when in flight mode 6. Note that when override is triggered due to a FMU crash the 6 auxiliary output channels on the FMU will no longer be updated, so all the flight controls you need must be assigned to the first 8 channels on boards with an IOMCU.",
+   "Range": {
+    "low": "0",
+    "high": "16"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "RTL_AUTOLAND": {
+   "DisplayName": "RTL auto land",
+   "Description": "Automatically begin landing sequence after arriving at RTL location. This requires the addition of a DO_LAND_START mission item, which acts as a marker for the start of a landing sequence. The closest landing sequence will be chosen to the current location For a value of 1 a rally point will be used instead of HOME if in range (see rally point documentation).If this is set to 0 and there is a DO_LAND_START or DO_RETURN_PATH_START mission item then you will get an arming check failure. You can set to a value of 3 to avoid the arming check failure and use the DO_LAND_START for go-around (see wiki for aborting autolandings) without it changing RTL behaviour.",
+   "Values": {
+    "0": "Disable",
+    "1": "Fly HOME then land via DO_LAND_START mission item",
+    "2": "Go directly to landing sequence via DO_LAND_START mission item",
+    "3": "OnlyForGoAround",
+    "4": "Go directly to landing sequence via DO_RETURN_PATH_START mission item"
+   }
+  },
+  "CRASH_ACC_THRESH": {
+   "DisplayName": "Crash Deceleration Threshold",
+   "Description": "X-Axis deceleration threshold to notify the crash detector that there was a possible impact which helps disarm the motor quickly after a crash. This value should be much higher than normal negative x-axis forces during normal flight, check flight log files to determine the average IMU.x values for your aircraft and motor type. Higher value means less sensitive (triggers on higher impact). For electric planes that don't vibrate much during fight a value of 25 is good (that's about 2.5G). For petrol/nitro planes you'll want a higher value. Set to 0 to disable the collision detector.",
+   "Units": "m/s/s",
+   "Range": {
+    "low": "10",
+    "high": "127"
+   },
+   "Increment": "1",
+   "Default": "0"
+  },
+  "CRASH_DETECT": {
+   "DisplayName": "Crash Detection",
+   "Description": "Automatically detect a crash during AUTO flight and perform the bitmask selected action(s). Disarm will turn off motor for safety and to help against burning out ESC and motor. Set to 0 to disable crash detection.",
+   "Default": "0"
+  },
+  "RNGFND_LANDING": {
+   "DisplayName": "Enable use of rangefinder",
+   "Description": "Sets the use of a rangefinder for automatic landing and other use cases. When enabled for landing and takeoff the rangefinder will be used both on the landing approach and for final flare as well as as VTOL landing and for takeoffs and throttle suppression when close to the ground. When enabled for assist the rangefinder will be used for VTOL assistance. When enabled for climb the rangefinder will be used for the initial climb in QRTL and AUTO. Set to 0 to disable use of the rangefinder.",
+   "Default": "0"
+  },
+  "RUDD_DT_GAIN": {
+   "DisplayName": "rudder differential thrust gain",
+   "Description": "gain control from rudder to differential thrust",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "MANUAL_RCMASK": {
+   "DisplayName": "Manual R/C pass-through mask",
+   "Description": "Mask of R/C channels to pass directly to corresponding output channel when in MANUAL mode. When in any mode except MANUAL the channels selected with this option behave normally. This parameter is designed to allow for complex mixing strategies to be used for MANUAL flight using transmitter based mixing. Note that when this option is used you need to be very careful with pre-flight checks to ensure that the output is correct both in MANUAL and non-MANUAL modes."
+  },
+  "HOME_RESET_ALT": {
+   "DisplayName": "Home reset altitude threshold",
+   "Description": "When the aircraft is within this altitude of the home waypoint, while disarmed it will automatically update the home position. Set to 0 to continuously reset it.",
+   "Units": "m",
+   "Range": {
+    "low": "-1",
+    "high": "127"
+   },
+   "Values": {
+    "-1": "Never reset",
+    "0": "Always reset"
+   }
+  },
+  "FLIGHT_OPTIONS": {
+   "DisplayName": "Flight mode options",
+   "Description": "Flight mode specific options"
+  },
+  "TKOFF_ACCEL_CNT": {
+   "DisplayName": "Takeoff throttle acceleration count",
+   "Description": "This is the number of acceleration events to require for arming with TKOFF_THR_MINACC. The default is 1, which means a single forward acceleration above TKOFF_THR_MINACC will arm. By setting this higher than 1 you can require more forward/backward movements to arm.",
+   "Range": {
+    "low": "1",
+    "high": "10"
+   }
+  },
+  "DSPOILER_CROW_W1": {
+   "DisplayName": "Differential spoiler crow flaps outer weight",
+   "Description": "This is amount of deflection applied to the two outer surfaces for differential spoilers for flaps to give crow flaps. It is a number from 0 to 100. At zero no crow flaps are applied. A recommended starting value is 25.",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "DSPOILER_CROW_W2": {
+   "DisplayName": "Differential spoiler crow flaps inner weight",
+   "Description": "This is amount of deflection applied to the two inner surfaces for differential spoilers for flaps to give crow flaps. It is a number from 0 to 100. At zero no crow flaps are applied. A recommended starting value is 45.",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "TKOFF_TIMEOUT": {
+   "DisplayName": "Takeoff timeout",
+   "Description": "This is the timeout for an automatic takeoff. If this is non-zero and the aircraft does not reach a ground speed of at least 4 m/s within this number of seconds then the takeoff is aborted and the vehicle disarmed. If the value is zero then no timeout applies.",
+   "Units": "s",
+   "Range": {
+    "low": "0",
+    "high": "120"
+   },
+   "Increment": "1"
+  },
+  "DSPOILER_OPTS": {
+   "DisplayName": "Differential spoiler and crow flaps options",
+   "Description": "Differential spoiler and crow flaps options.  Progressive crow flaps only first (0-50% flap in) then crow flaps (50 - 100% flap in)."
+  },
+  "DSPOILER_AILMTCH": {
+   "DisplayName": "Differential spoiler aileron matching",
+   "Description": "This scales down the inner flaps so less than full downwards range can be used for differential spoiler and full span ailerons, 100 is use full range, upwards travel is unaffected",
+   "Units": "%",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "FWD_BAT_VOLT_MAX": {
+   "DisplayName": "Forward throttle battery voltage compensation maximum voltage",
+   "Description": "Forward throttle battery voltage compensation maximum voltage (voltage above this will have no additional scaling effect on thrust). Recommend 4.2 * cell count, 0 = Disabled. Recommend THR_MAX is set to no more than 100 x FWD_BAT_VOLT_MIN / FWD_BAT_VOLT_MAX, THR_MIN is set to no less than -100 x FWD_BAT_VOLT_MIN / FWD_BAT_VOLT_MAX and climb descent rate limits are set accordingly.",
+   "Units": "V",
+   "Range": {
+    "low": "6",
+    "high": "35"
+   },
+   "Increment": "0.1"
+  },
+  "FWD_BAT_VOLT_MIN": {
+   "DisplayName": "Forward throttle battery voltage compensation minimum voltage",
+   "Description": "Forward throttle battery voltage compensation minimum voltage (voltage below this will have no additional scaling effect on thrust).  Recommend 3.5 * cell count, 0 = Disabled. Recommend THR_MAX is set to no more than 100 x FWD_BAT_VOLT_MIN / FWD_BAT_VOLT_MAX, THR_MIN is set to no less than -100 x FWD_BAT_VOLT_MIN / FWD_BAT_VOLT_MAX and climb descent rate limits are set accordingly.",
+   "Units": "V",
+   "Range": {
+    "low": "6",
+    "high": "35"
+   },
+   "Increment": "0.1"
+  },
+  "FWD_BAT_IDX": {
+   "DisplayName": "Forward throttle battery compensation index",
+   "Description": "Which battery monitor should be used for doing compensation for the forward throttle",
+   "Range": {
+    "low": "0",
+    "high": "15"
+   },
+   "Values": {
+    "0": "First battery",
+    "1": "Second battery"
+   }
+  },
+  "FS_EKF_THRESH": {
+   "DisplayName": "EKF failsafe variance threshold",
+   "Description": "Allows setting the maximum acceptable compass and velocity variance used to check navigation health in VTOL modes",
+   "Range": {
+    "low": "0.6",
+    "high": "1.0"
+   },
+   "Values": {
+    "0.6": "Strict",
+    "0.8": "Default",
+    "1.0": "Relaxed"
+   }
+  },
+  "RTL_CLIMB_MIN": {
+   "DisplayName": "RTL minimum climb",
+   "Description": "The vehicle will climb this many m during the initial climb portion of the RTL. During this time the roll will be limited to LEVEL_ROLL_LIMIT degrees.",
+   "Units": "m",
+   "Range": {
+    "low": "0",
+    "high": "30"
+   },
+   "Increment": "1"
+  },
+  "MAN_EXPO_ROLL": {
+   "DisplayName": "Manual control expo for roll",
+   "Description": "Percentage exponential for roll input in MANUAL, ACRO and TRAINING modes",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "MAN_EXPO_PITCH": {
+   "DisplayName": "Manual input expo for pitch",
+   "Description": "Percentage exponential for pitch input in MANUAL, ACRO and TRAINING modes",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "MAN_EXPO_RUDDER": {
+   "DisplayName": "Manual input expo for rudder",
+   "Description": "Percentage exponential for rudder input in MANUAL, ACRO and TRAINING modes",
+   "Range": {
+    "low": "0",
+    "high": "100"
+   },
+   "Increment": "1"
+  },
+  "ONESHOT_MASK": {
+   "DisplayName": "Oneshot output mask",
+   "Description": "Mask of output channels to use oneshot on"
+  },
+  "AUTOTUNE_AXES": {
+   "DisplayName": "Autotune axis bitmask",
+   "Description": "1-byte bitmap of axes to autotune"
+  },
+  "RNGFND_LND_ORNT": {
+   "DisplayName": "rangefinder landing orientation",
+   "Description": "The orientation of rangefinder to use for landing detection. Should be set to Down for normal downward facing rangefinder and Back for rearward facing rangefinder for quadplane tailsitters. Custom orientation can be used with Custom1 or Custom2. The orientation must match at least one of the available rangefinders.",
+   "Values": {
+    "4": "Back",
+    "25": "Down",
+    "101": "Custom1",
+    "102": "Custom2"
+   }
+  },
+  "FWD_BAT_THR_CUT": {
+   "DisplayName": "Forward throttle cutoff battery voltage",
+   "Description": "The estimated battery resting voltage below which the throttle is cut in auto-throttle modes. Measured on the battery used for forward throttle compensation (FWD_BAT_IDX). If set to zero, the throttle will not be cut due to low voltage, allowing the motor(s) to continue running until the battery is depleted. This should be set to the minimum operating voltage of you motor(s) or to a voltage level where minimal thrust is produced, to conserve the remaining battery power for the electronics and actuators.",
+   "Units": "V",
+   "Range": {
+    "low": "0",
+    "high": "35"
+   },
+   "Increment": "0.1"
+  },
+  "CLIMB_SLOPE_HGT": {
+   "DisplayName": "Climb slope minimum height",
+   "Description": "Sets the minimum height above home at which the aircraft will apply a climb slope between waypoints. Below it, the aircraft will ascend immediately, and will only resume the requested trajectory upon reaching this height. This prevents unsafe behavior such as attempting to slowly gain altitude near obstacles. The default value ensures safe operations in most environments, but it can be adjusted based on specific terrain or operational needs.",
+   "Units": "m",
+   "Range": {
+    "low": "0",
+    "high": "50"
+   },
+   "Increment": "1"
+  },
+  "GUIDED_TIMEOUT": {
+   "DisplayName": "Timeout for external guided command.",
+   "Description": "If external guided command was not received by this timeout, the vehicle will revert to regular GUIDED mode.",
+   "Units": "s",
+   "Range": {
+    "low": "0",
+    "high": "10"
+   },
+   "Increment": "0.5"
+  },
+  "RUD_RLL_ADD": {
+   "DisplayName": "FBWA manual rudder bank allowance",
+   "Description": "FBWA manual rudder limiter. Zero disables it. Adds this many degrees to the current roll limit, capped at 85 degrees and by stall prevention. Progressively reduces manual rudder into the bank using roll angle and roll rate. Opposite rudder and automatic coordination are retained. Requires conventional rudder-to-roll response.",
+   "Units": "deg",
+   "Range": {
+    "low": "0",
+    "high": "45"
+   },
+   "Increment": "1"
+  }
+ }
+}

@@ -1,0 +1,24 @@
+{
+  "schema": 2,
+  "board_id": "matek-h743-wing-v3",
+  "board_name": "Matek H743-WING V3",
+  "flash_type": "STM32H743 internal 2 MiB",
+  "format": "intel-hex",
+  "latest": "REALESE ArduPlane 4.7.2 - A.T.L.A.S EKF3 - MATEK WING H743 V3 (480 Mhz Clock).hex",
+  "latest_path": "Firmware/Matek Wing H743-V3/REALESE ArduPlane 4.7.2 - A.T.L.A.S EKF3 - MATEK WING H743 V3 (480 Mhz Clock).hex",
+  "files": [
+    {
+      "filename": "REALESE ArduPlane 4.7.2 - A.T.L.A.S EKF3 - MATEK WING H743 V3 (480 Mhz Clock).hex",
+      "path": "Firmware/Matek Wing H743-V3/REALESE ArduPlane 4.7.2 - A.T.L.A.S EKF3 - MATEK WING H743 V3 (480 Mhz Clock).hex",
+      "bytes": 4654592,
+      "image_bytes": 1692420,
+      "address_start": "0x08000000",
+      "address_end_exclusive": "0x0819D304",
+      "sha256": "db18bb8cda5805508a4834ee40388c8f493ceaa4498a3c778d37c600b24bcda9",
+      "timestamp": 1794072475,
+      "version": "1.0",
+      "label": "A.T.L.A.S. Pre-Release 1.0 · ArduPlane 4.7.2",
+      "source_url": ""
+    }
+  ]
+}

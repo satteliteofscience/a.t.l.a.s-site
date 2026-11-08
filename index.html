@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#091008">
   <meta name="description" content="A.T.L.A.S. — экспериментальная ветка ArduPlane: EKF3 без GPS, расширенная логика полёта и управление. Сборки для конкретных полётных контроллеров, инструкции и исходный код.">
-  <meta property="og:title" content="A.T.L.A.S. — ArduPlane Experimental">
+  <meta property="og:title" content="A.T.L.A.S. — ArduPlane Pre-Release">
   <meta property="og:description" content="Открытый проект экспериментальной прошивки для самолётных автопилотов. Выберите платформу и проверьте доступные сборки.">
   <meta property="og:type" content="website">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="support.css">
   <title>A.T.L.A.S. — Experimental ArduPlane</title>
-</head>
+<style>.nav-console-link{color:#dec96e!important}.nav-console-link:hover{color:#fff0a2!important}</style></head>
 <body>
   <div class="page-noise" aria-hidden="true"></div>
   <div class="site-shell">
@@ -24,92 +24,140 @@
         <a href="#overview">О проекте</a>
         <a href="#features">Возможности</a>
         <a href="#downloads">Сборки</a>
-        <a href="#guide">Установка</a>
+        <a href="#guide">Установка</a><a class="nav-faq-link" href="faq.html">Ответы на вопросы</a><a class="nav-change-link" href="changelog.html">Список изменений</a><a class="nav-console-link" href="configurator.html">Конфигуратор ↗</a><a class="nav-support-link" href="#support">Поддержать проект</a>
       </nav>
       <div class="header-actions">
-        <a id="githubNav" class="github-nav link-disabled" href="#project" aria-disabled="true" title="Ссылка появится после подключения репозитория">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .85a11.15 11.15 0 0 0-3.53 21.73c.56.1.77-.24.77-.54v-2.07c-3.14.68-3.8-1.33-3.8-1.33-.51-1.3-1.26-1.64-1.26-1.64-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 .1 1.68.59 2.09.88.1-.73.39-1.22.72-1.5-2.51-.29-5.15-1.26-5.15-5.57 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.99 0 0 .94-.3 3.07 1.15a10.7 10.7 0 0 1 5.59 0c2.13-1.44 3.07-1.15 3.07-1.15.61 1.56.23 2.71.11 3 .72.79 1.15 1.79 1.15 3.02 0 4.32-2.64 5.28-5.16 5.56.4.35.76 1.04.76 2.11v3.12c0 .3.2.65.77.54A11.15 11.15 0 0 0 12 .85Z"/></svg>
-          <span>GitHub</span>
-        </a>
+        <div class="locale-switch" role="group" aria-label="Выбор языка" id="languageSwitcher">
+          <button type="button" class="locale-button" data-lang="uk" aria-pressed="false" title="Українська"><span class="lang-code">UA</span></button>
+          <button type="button" class="locale-button" data-lang="en" aria-pressed="false" title="English"><span class="lang-code">ENG</span></button>
+          <button type="button" class="locale-button" data-lang="ru" aria-pressed="true" title="Русский"><span class="lang-code">RU</span></button>
+        </div>
+        <a class="github-nav atlas-website-link" href="#downloads" id="websiteReleases"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 9h16M9 4v16" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>Релизы</span></a>
         <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Открыть меню"><span></span><span></span><span></span></button>
       </div>
     </header>
     <nav class="mobile-nav" id="mobileNav" hidden aria-label="Мобильное меню">
-      <a href="#overview">О проекте</a><a href="#features">Возможности</a><a href="#downloads">Сборки</a><a href="#guide">Установка</a>
+      <a href="#overview">О проекте</a><a href="#features">Возможности</a><a href="#downloads">Сборки</a><a href="#guide">Установка</a><a class="nav-faq-link" href="faq.html">Ответы на вопросы</a><a class="nav-change-link" href="changelog.html">Список изменений</a><a class="nav-console-link" href="configurator.html">Конфигуратор ↗</a><a class="nav-support-link" href="#support">Поддержать проект</a>
     </nav>
     <main>
       <section class="hero" aria-labelledby="heroTitle">
         <div class="hero-copy">
-          <div class="eyebrow"><span class="pulse-dot"></span><span>OPEN SOURCE · EXPERIMENTAL FLIGHT FIRMWARE</span></div>
+          <div class="eyebrow"><span class="pulse-dot"></span><span>COMMUNITY DEVELOPMENT · PRE-RELEASE FLIGHT FIRMWARE</span></div>
           <div class="version-strip"><span class="inline-label">ARDUPLANE BASE</span><span class="mono">4.7.2</span><span class="vertical-rule"></span><span id="releaseIndicator" class="release-indicator">PRE-RELEASE</span></div>
-          <h1 class="block-blueprint-title hero-pixel" id="heroTitle"><img src="assets/headline-hero.png" alt="ПОЛЁТ. БЕЗ ГРАНИЦ ПРИВЫЧНОГО."></h1>
+          <h1 class="block-blueprint-title hero-pixel" id="heroTitle"><img data-headline="hero" src="assets/headline-hero.png" alt="ПОЛЁТ. БЕЗ ГРАНИЦ ПРИВЫЧНОГО."></h1>
           <p class="hero-description">A.T.L.A.S. — экспериментальная ветка ArduPlane с собственными алгоритмами ориентации, управления и автоматизации полёта. Создана для исследований, испытаний и сообщества разработчиков.</p>
           <div class="hero-cta">
             <a class="btn btn-primary" href="#downloads"><span>Выбрать прошивку</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
-            <a class="btn btn-secondary" href="#overview">Изучить проект <span aria-hidden="true">↗</span></a>
+            <a class="btn btn-secondary" href="configurator.html">Конфигуратор <span aria-hidden="true">↗</span></a>
           </div>
           <div class="hero-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Zm0 6v5m0 3h.01"/></svg><span>Экспериментальное ПО. Не используйте в реальном полёте без самостоятельной проверки.</span></div>
         </div>
-        <div class="hero-display" aria-label="Декоративная схема телеметрии авиагоризонта">
+        <div class="hero-display" aria-label="Интерактивная симуляция самолёта на авиагоризонте">
           <div class="scope-outer">
             <div class="scope-topline"><span><i class="online-dot"></i> FLIGHT ATTITUDE / SIM</span><span class="scope-dots">● ● ●</span></div>
-            <div class="scope-main">
+            <div class="scope-main flight-playground" id="flightPlayground" tabindex="0" role="application" aria-label="Интерактивная демонстрация самолёта A.T.L.A.S.: перемещайте мышь для управления креном и тангажом, удерживайте левую кнопку мыши для ускорения, либо используйте стрелки и пробел">
               <div class="radar-glow"></div>
               <div class="scope-grid"></div>
               <div class="scope-circle circle-one"></div><div class="scope-circle circle-two"></div><div class="scope-circle circle-three"></div>
+              <canvas id="flightCanvas" class="flight-canvas" aria-hidden="true"></canvas>
               <div class="hud-cross horizontal"></div><div class="hud-cross vertical"></div>
-              <svg class="aircraft-graphic" viewBox="0 0 400 320" role="img" aria-label="Контур самолёта и линия горизонта">
-                <defs><linearGradient id="wingGradient" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f2da72"/><stop offset="1" stop-color="#718e39"/></linearGradient></defs>
-                <path class="horizon-track" d="M34 189 Q200 157 366 189" fill="none" stroke="#98a64e" stroke-width="1.2" stroke-dasharray="5 8" opacity=".5"/>
-                <path d="M200 48 200 274" fill="none" stroke="#839343" stroke-width="1" stroke-dasharray="4 10" opacity=".35"/>
-                <path d="M55 183h95l28 8h44l28-8h95" fill="none" stroke="#c4c095" stroke-width="2" stroke-linecap="round" opacity=".75"/>
-                <path d="M200 62l9 13-9 13-9-13z" fill="none" stroke="#d8c15b" opacity=".8"/>
-                <g transform="translate(200 167) rotate(-5)">
-                  <path d="M0-56 13-5 139 23 150 37 12 24 10 68 36 81 36 89 0 80-36 89-36 81-10 68-12 24-150 37-139 23-13-5z" fill="url(#wingGradient)" fill-opacity=".16" stroke="url(#wingGradient)" stroke-width="2.2" stroke-linejoin="round"/>
-                  <path d="M0-56V80M-139 23 139 23" stroke="#f2da72" opacity=".38" stroke-width="1"/>
-                  <path d="M0-15V9M-12-3h24" stroke="#f7e78f" stroke-width="2.2"/>
-                </g>
-                <g fill="#bdb78d" font-size="10" font-family="monospace"><text x="33" y="181">-10</text><text x="343" y="181">+10</text><text x="202" y="42">000</text><text x="204" y="285">180</text></g>
-              </svg>
-              <div class="hud-label label-left"><span>ROLL</span><b>+00.8°</b></div>
-              <div class="hud-label label-right"><span>PITCH</span><b>−00.3°</b></div>
-              <div class="hud-bottom-read"><span>EKF3 / NOAID</span><span>TRUE · SIM</span></div>
+              <div class="flight-readout top-left"><span>ROLL / DEG</span><strong id="simRoll">+00.0°</strong></div>
+              <div class="flight-readout top-right"><span>PITCH / DEG</span><strong id="simPitch">+00.0°</strong></div>
+              <div class="flight-readout bottom-left"><span>YAW / HDG</span><strong id="simYaw">000.0°</strong></div>
+              <div class="flight-readout bottom-right"><span>AIRSPEED</span><strong><span id="simSpeed">148</span><small> km/h</small></strong></div>
+              <div class="flight-focus-reticle" aria-hidden="true"><span></span></div>
+              <div class="speed-rail" aria-hidden="true"><span id="speedRailFill"></span></div>
+              <div class="sim-center-mark" aria-hidden="true">◈ <span id="simMotionState">HOVER TO CONTROL</span></div>
+              <div class="boost-label" id="boostLabel">THROTTLE <b id="simThrottle">40%</b><i></i></div>
+              <div class="hud-bottom-read"><span>EKF3 / NOAID</span><span>INTERACTIVE · SIM</span></div>
+              <div class="flight-demo-disclaimer">ДЕМО · НЕ ЖИВАЯ ТЕЛЕМЕТРИЯ</div>
             </div>
             <div class="scope-bottom"><div><small>ESTIMATION</small><b>EKF3</b></div><div><small>REFERENCE</small><b>SIM</b></div><div><small>SYSTEM</small><b>ATLAS</b></div></div>
           </div>
-          <p class="scope-caption"><span class="mini-cross">+</span> Интерфейс визуализации — иллюстрация, не текущая телеметрия</p>
+          <div class="scope-caption flight-instructions"><span class="mini-cross">+</span><span><strong>Наведи мышь</strong> — крен / тангаж &nbsp;·&nbsp; <strong>Удерживай ЛКМ</strong> — ускорение<br><span class="flight-keyboard-note">Можно использовать клавиши ↑ ↓ ← → и пробел.</span></span></div>
         </div>
       </section>
       <section class="metrics" id="overview" aria-label="Ключевые характеристики">
         <div><small>ОСНОВА</small><strong>ArduPlane <span>4.7.2</span></strong></div>
         <div><small>ОРИЕНТАЦИЯ</small><strong>EKF3 <span>NoGPS / NOAID</span></strong></div>
         <div><small>ПОДХОД</small><strong>Open <span>development</span></strong></div>
-        <div><small>СТАТУС</small><strong><span class="warning-text">Experimental</span></strong></div>
+        <div><small>СТАТУС</small><strong><span class="warning-text">Pre-Release</span></strong></div>
       </section>
       <section class="section features-section" id="features">
-        <div class="section-header"><div><p class="kicker">01 / FLIGHT INTELLIGENCE</p><h2 class="block-blueprint-title"><img src="assets/headline-features.png" alt="Больше, чем обычная прошивка."></h2></div><p class="section-intro">Исследовательские возможности, созданные на базе ArduPlane. Каждый алгоритм развивается и проходит отдельные испытания.</p></div>
+        <div class="section-header"><div><p class="kicker">01 / FLIGHT INTELLIGENCE</p><h2 class="block-blueprint-title"><img data-headline="features" src="assets/headline-features.png" alt="Больше, чем обычная прошивка."></h2></div><p class="section-intro">Исследовательские возможности, созданные на базе ArduPlane. Каждый алгоритм развивается и проходит отдельные испытания.</p></div>
         <div class="features-grid">
           <article class="feature-card feature-primary"><div class="feature-top"><span class="feature-number">01</span><span class="tiny-badge">CORE</span></div><svg class="feature-visual" viewBox="0 0 320 138" aria-hidden="true"><g fill="none" stroke="#d8c15b"><path d="M0 77 35 77 48 59 67 95 94 33 114 92 140 73 167 73 181 53 196 88 215 68 246 68 258 41 273 88 288 75 320 75" stroke-width="2"/><path d="M0 103h320M0 34h320" opacity=".1" stroke-dasharray="3 5"/><circle cx="94" cy="33" r="4" fill="#d8c15b"/></g></svg><h3>EKF3 без GPS</h3><p>Экспериментальные изменения оценки ориентации и скорости при отсутствии спутниковой навигации.</p><span class="card-trail">NOAID <span>↗</span></span></article>
           <article class="feature-card"><div class="feature-top"><span class="feature-number">02</span><span class="tiny-badge subdued">AUTOMATION</span></div><div class="feature-icon"><svg viewBox="0 0 32 32"><path d="M16 3v19M8 13l8-9 8 9M7 25h18M11 29h10"/></svg></div><h3>TAKEOFF без GPS</h3><p>Адаптированная логика старта, обнаружения полёта и переходов между режимами.</p><span class="card-trail">TAKEOFF <span>↗</span></span></article>
-          <article class="feature-card"><div class="feature-top"><span class="feature-number">03</span><span class="tiny-badge subdued">EXPERIMENTAL</span></div><div class="feature-icon"><svg viewBox="0 0 32 32"><path d="M4 25h24M6 20l8 5 12-18M20 8l6-1-1 6"/></svg></div><h3>Автопосадка</h3><p>Разрабатываемые сценарии посадки без GPS. Требуют самостоятельной проверки на совместимость и отказоустойчивость.</p><span class="card-trail">AUTOLAND <span>↗</span></span></article>
+          <article class="feature-card"><div class="feature-top"><span class="feature-number">03</span><span class="tiny-badge subdued">PRE-RELEASE</span></div><div class="feature-icon"><svg viewBox="0 0 32 32"><path d="M4 25h24M6 20l8 5 12-18M20 8l6-1-1 6"/></svg></div><h3>Автопосадка</h3><p>Разрабатываемые сценарии посадки без GPS. Требуют самостоятельной проверки на совместимость и отказоустойчивость.</p><span class="card-trail">AUTOLAND <span>↗</span></span></article>
           <article class="feature-card"><div class="feature-top"><span class="feature-number">04</span><span class="tiny-badge subdued">CONTROL</span></div><div class="feature-icon"><svg viewBox="0 0 32 32"><path d="M16 5 7 23l9-5 9 5zM16 18v9M8 27h16"/></svg></div><h3>Управление FBWA</h3><p>Экспериментальный RUD_LIMIT_DEG: согласование ручного рудера и дополнительного крена.</p><span class="card-trail">RUDDER LIMIT <span>↗</span></span></article>
         </div>
       </section>
       <section class="section downloads-section" id="downloads">
-        <div class="section-header"><div><p class="kicker">02 / FIRMWARE DISTRIBUTION</p><h2 class="block-blueprint-title"><img src="assets/headline-downloads.png" alt="Выбери свою платформу."></h2></div><p class="section-intro">Здесь отображаются только реальные сборки, привязанные к конкретной плате. Пока файл не опубликован и не проверен, кнопка скачивания неактивна.</p></div>
+        <div class="section-header"><div><p class="kicker">02 / FIRMWARE DISTRIBUTION</p><h2 class="block-blueprint-title"><img data-headline="downloads" src="assets/headline-downloads.png" alt="Выбери свою платформу."></h2></div><p class="section-intro">Здесь отображаются только реальные сборки, привязанные к конкретной плате. Пока файл не опубликован и не проверен, кнопка скачивания неактивна.</p></div>
         <div class="download-controls"><label class="search-field" for="boardSearch"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="boardSearch" type="search" placeholder="Найти полётный контроллер..." autocomplete="off"></label><div class="filter-chips" role="group" aria-label="Фильтр по статусу"><button type="button" class="filter-chip is-active" data-filter="all" aria-pressed="true">Все платы</button><button type="button" class="filter-chip" data-filter="available" aria-pressed="false">Есть сборка</button><button type="button" class="filter-chip" data-filter="planned" aria-pressed="false">В подготовке</button></div></div>
         <div class="download-status" id="downloadStatus" role="status" aria-live="polite">Загружаем список платформ…</div>
         <div class="board-grid" id="boardGrid" aria-live="polite"></div>
         <div class="downloads-foot"><div class="foot-icon">i</div><p>Не видишь своей платы? Не прошивай сборку для другой аппаратной ревизии. Совместимость зависит от target/hwdef, загрузчика и распиновки.</p><a id="issuesLink" href="#guide" class="text-link">Как запросить поддержку <span>↗</span></a></div>
       </section>
-      <section class="section installation-section" id="guide"><div class="section-header"><div><p class="kicker">03 / DEPLOYMENT GUIDE</p><h2 class="block-blueprint-title"><img src="assets/headline-guide.png" alt="От выбора платы до первого старта."></h2></div><p class="section-intro">Не пропускай проверку аппаратной ревизии и резервное копирование параметров. Прошивка управляет реальными исполнительными механизмами.</p></div>
+      <section class="section installation-section" id="guide"><div class="section-header"><div><p class="kicker">03 / DEPLOYMENT GUIDE</p><h2 class="block-blueprint-title"><img data-headline="guide" src="assets/headline-guide.png" alt="От выбора платы до первого старта."></h2></div><p class="section-intro">Не пропускай проверку аппаратной ревизии и резервное копирование параметров. Прошивка управляет реальными исполнительными механизмами.</p></div>
         <div class="steps-grid"><article class="step-card"><span>01 / IDENTIFY</span><h3>Уточни плату</h3><p>Найди точную модель и ревизию полётного контроллера. Название должно совпадать со сборкой.</p></article><article class="step-card"><span>02 / BACKUP</span><h3>Сохрани параметры</h3><p>Экспортируй параметры и проверь инструкции по совместимости. Не переноси вслепую конфигурацию из другой версии.</p></article><article class="step-card"><span>03 / FLASH</span><h3>Установи прошивку</h3><p>Используй совместимый загрузчик и режим установки прошивки в Mission Planner. Проводить настройку — без пропеллера.</p></article><article class="step-card"><span>04 / VERIFY</span><h3>Протестируй</h3><p>Проверь датчики, рули, направления, failsafe и режимы в SITL и на земле прежде, чем рассматривать полёт.</p></article></div>
       </section>
-      <section class="safety-block" id="safety"><div class="safety-mark"><svg viewBox="0 0 34 34"><path d="M17 3 31 28H3L17 3ZM17 12v8m0 4h.01"/></svg></div><div><p class="kicker">IMPORTANT / SAFETY NOTICE</p><h2 class="block-blueprint-title"><img src="assets/headline-safety.png" alt="Экспериментальная прошивка. Ответственная эксплуатация."></h2><p>A.T.L.A.S. не является подтверждённой заменой штатного ArduPlane для любых самолётов. Функции без GPS зависят от датчиков, модели полёта и калибровок. Наличие сборки для платы не означает проверенную безопасность конкретного самолёта.</p></div></section>
-      <section class="section project-section" id="project"><div class="project-panel"><div><p class="kicker">04 / OPEN DEVELOPMENT</p><h2 class="block-blueprint-title"><img src="assets/headline-project.png" alt="Исходники открыты для сообщества."></h2><p>Релизы, изменения, отчёты о проблемах и обсуждения проекта будут доступны в репозитории. Документация развивается вместе с прошивкой.</p><div class="dev-credit"><span>РАЗРАБОТКА</span><b>Александр</b><i>+</i><b>AI CODEX</b></div><p class="project-credit-note">Lead developer: Александр · AI copilot: CODEX</p><div class="project-actions"><a class="btn btn-primary is-hidden" id="sourceLink" href="#project" target="_blank" rel="noopener noreferrer">Перейти в репозиторий ↗</a><span class="repo-pending" id="repoPending">Ссылка на репозиторий появится после публикации</span></div></div><div class="terminal-card" aria-label="Статус проекта"><div class="terminal-top"><span><i></i><i></i><i></i></span><span>atlas — status</span></div><div class="terminal-body"><p><b>$</b> atlas info</p><p><span>PROJECT</span> A.T.L.A.S.</p><p><span>BASE</span> ArduPlane 4.7.2</p><p><span>LICENSE</span> GPL-3.0-or-later *</p><p><span>CHANNEL</span> experimental</p><p><span>LEAD</span> Александр</p><p><span>AI</span> CODEX</p><p class="cursorline">_<i></i></p></div></div></div><p class="license-note">* Сохраняйте лицензии и уведомления исходных компонентов ArduPilot. Файлы сайта не содержат исходников ArduPilot.</p></section>
+      <section class="safety-block" id="safety"><div class="safety-mark"><svg viewBox="0 0 34 34"><path d="M17 3 31 28H3L17 3ZM17 12v8m0 4h.01"/></svg></div><div><p class="kicker">IMPORTANT / SAFETY NOTICE</p><h2 class="block-blueprint-title"><img data-headline="safety" src="assets/headline-safety.png" alt="Экспериментальная прошивка. Ответственная эксплуатация."></h2><p>A.T.L.A.S. не является подтверждённой заменой штатного ArduPlane для любых самолётов. Функции без GPS зависят от датчиков, модели полёта и калибровок. Наличие сборки для платы не означает проверенную безопасность конкретного самолёта.</p></div></section>
+      <section class="section support-section" id="support" aria-labelledby="supportTitle">
+        <div class="support-panel">
+          <div class="support-intro">
+            <p class="kicker">05 / SUPPORT A.T.L.A.S.</p>
+            <h2 id="supportTitle">Поддержать разработчиков A.T.L.A.S.</h2>
+            <p class="support-lead">A.T.L.A.S. развивается благодаря работе авторов и поддержке сообщества. Добровольные пожертвования помогают продолжать разработку, проводить испытания и выпускать новые версии прошивки.</p>
+            <div class="support-principles">
+              <div><span class="support-symbol" aria-hidden="true">◇</span><span>Добровольная поддержка проекта</span></div>
+              <div><span class="support-symbol" aria-hidden="true">◎</span><span>Разработка и испытания новых возможностей</span></div>
+              <div><span class="support-symbol" aria-hidden="true">↗</span><span>Подготовка публичных обновлений</span></div>
+            </div>
+            <div class="atlas-donation" id="atlasDonation">
+              <button class="atlas-donation-trigger" id="donationReveal" type="button" aria-expanded="false" aria-controls="donationPanel"><span class="atlas-donation-glitch" aria-hidden="true"></span><span class="donation-trigger-title" id="donationTriggerTitle">ПОДДЕРЖАТЬ ПРОЕКТ</span><span class="donation-trigger-secondary" id="donationTriggerSecondary">/// ДОБРОВОЛЬНЫЙ ДОНАТ ///</span></button>
+              <div class="atlas-donation-panel" id="donationPanel" hidden>
+                <form id="atlasSubscriberForm" class="atlas-subscribe-form" novalidate>
+                  <h3 id="donationFormHeading">Обновления A.T.L.A.S. на почту</h3>
+                  <p class="donation-form-explain" id="donationFormExplain">Укажите email и модель полётного контроллера. После подтверждения адреса вы сможете получать новости, изменения, приглашения на ранние испытания и подходящие HEX-сборки.</p>
+                  <label class="donation-form-field"><span id="donationEmailLabel">Электронная почта</span><input id="donationEmail" type="email" autocomplete="email" inputmode="email" maxlength="254" required placeholder="pilot@example.com"></label>
+                  <label class="donation-form-field"><span id="donationBoardLabel">Полётный контроллер</span><select id="donationBoard" required><option value="" id="donationBoardPlaceholder">Выберите плату</option><option value="matek-h743-wing-v3">Matek H743-WING V3</option><option value="cube-orange">Cube Orange (планируется)</option><option value="other">Другая плата / ожидание поддержки</option></select></label>
+                  <label class="donation-agree"><input id="donationMailConsent" type="checkbox" required><span id="donationConsentText">Согласен получать письма о прошивках и тестировании. Подписка добровольная; отписаться можно в любой момент.</span></label>
+                  <label class="donation-agree"><input id="donationEarlyInterest" type="checkbox"><span id="donationEarlyText">Хочу участвовать в раннем тестировании после одобрения разработчиком.</span></label>
+                  <div class="donation-form-buttons"><button type="submit" class="donation-action-primary" id="donationSubscribeButton">Подписаться</button><button type="button" class="donation-action-secondary" id="donationSkipSubscription">Перейти к IBAN без подписки</button></div>
+                  <p class="donation-form-status" id="donationFormStatus" role="status" aria-live="polite"></p>
+                  <a class="donation-policy-link" id="donationPrivacyLink" href="privacy.html">Как используются ваши данные</a>
+                </form>
+                <div id="donationPaymentStage" class="donation-payment-stage" hidden>
+                  <p class="donation-lead" id="donationLead">Выберите способ поддержки:</p>
+                  <div class="donation-actions" id="donationActions"></div>
+                  <div id="donationBank" class="donation-bank" hidden></div>
+                  <p class="donation-hint" id="donationHint"></p>
+                  <button class="donation-action-secondary donation-back" type="button" id="donationBackToForm">Вернуться к форме</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="support-early">
+            <div class="support-early-top"><span class="support-early-dot" aria-hidden="true"></span><span>EARLY TESTER PROGRAM</span></div>
+            <h3>Список ранних тестировщиков</h3>
+            <p>Те, кто поддерживает развитие A.T.L.A.S. и хочет участвовать в тестировании, по своему согласию включаются в специальный список. Участников будут приглашать для проверки новых функций и возможностей до их выхода в общедоступной версии прошивки.</p>
+            <ol class="support-steps">
+              <li><span>01</span><div>Поддержать разработку добровольным пожертвованием.</div></li>
+              <li><span>02</span><div>Подтвердить желание участвовать в ранних испытаниях.</div></li>
+              <li><span>03</span><div>Получать приглашения на подходящие тесты по мере готовности функций.</div></li>
+            </ol>
+            <p class="support-conditions">Приглашения зависят от готовности сборки, доступных мест и требований безопасности. Участие не означает гарантированного доступа к каждой тестовой версии. Получатели прошивки сохраняют права, предусмотренные GNU GPL.</p>
+          </div>
+        </div>
+      </section>
+      <section class="section project-section" id="project"><div class="project-panel"><div><p class="kicker">04 / OPEN DEVELOPMENT</p><h2 class="project-placeholder-title">Публичные сборки на сайте.</h2><p>Актуальные и архивные прошивки доступны в каталоге этого сайта. Исходный репозиторий разработчика не публикуется; для распространяемых сборок соответствующие исходники должны быть доступны отдельно согласно GNU GPL.</p><div class="dev-credit"><span>РАЗРАБОТКА</span><b>Oleksandr</b><i>+</i><b>AI CODEX</b></div><p class="project-credit-note">Lead developer: Oleksandr · AI copilot: CODEX</p><div class="project-actions"><a class="btn btn-primary" href="#downloads">Каталог прошивок ↗</a><span class="repo-pending">Загрузка, история версий и откат — здесь, на сайте A.T.L.A.S.</span></div></div><div class="terminal-card" aria-label="Статус проекта"><div class="terminal-top"><span><i></i><i></i><i></i></span><span>atlas — status</span></div><div class="terminal-body"><p><b>$</b> atlas info</p><p><span>PROJECT</span> A.T.L.A.S.</p><p><span>BASE</span> ArduPlane 4.7.2</p><p><span>LICENSE</span> GPL-3.0-or-later *</p><p><span>CHANNEL</span> pre-release</p><p><span>LEAD</span> Oleksandr</p><p><span>AI</span> CODEX</p><p class="cursorline">_<i></i></p></div></div></div><p class="license-note">* GNU GPLv3: при публичной раздаче HEX необходимо обеспечить соответствующие исходники именно этой версии сборки. Закрытый служебный репозиторий не заменяет доступ к исходникам для получателей прошивки.</p></section>
     </main>
-    <footer class="site-footer"><a class="footer-brand" href="#top"><img src="assets/mark.svg" alt="" width="32" height="32"><span>A.T.L.A.S.</span></a><p>Experimental ArduPlane project by Александр &amp; AI CODEX. Not an official ArduPilot release.</p><span>© <span id="copyrightYear"></span> A.T.L.A.S. / Александр + AI CODEX</span></footer>
+    <footer class="site-footer"><a class="footer-brand" href="#top"><img src="assets/mark.svg" alt="" width="32" height="32"><span>A.T.L.A.S.</span></a><p>Pre-Release ArduPlane project by Oleksandr &amp; AI CODEX. Not an official ArduPilot release.</p><span>© <span id="copyrightYear"></span> A.T.L.A.S. / Oleksandr + AI CODEX</span></footer>
   </div>
+  <script src="i18n.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="support.js" defer></script>
+  <script src="flight-demo.js" defer></script>
 </body>
 </html>
