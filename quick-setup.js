@@ -66,7 +66,7 @@ const saved=(()=>{try{return JSON.parse(localStorage.getItem('atlas.quicksetup.v
 const qs={
  step:0,completed:{},safety:[false,false,false,false,false],firmwareSource:null,firmwareError:'',
  paramsMode:'keep',fileName:'',preview:null,metadata:{},metadataReady:false,backupDownloaded:false,compatConfirmed:false,keepConfirmed:false,applyBusy:false,cancelApply:false,paramsMessage:'',paramsApplied:false,
- accelError:'',levelError:'',rebootBaseline:0,rebootSawDisconnect:false,rebootReading:false,escConfirmed:false,compassAwaitingSave:false,compassError:'',finalChecks:[false,false,false,false,false,false,false,false],
+ accelError:'',levelError:'',rebootBaseline:0,rebootSawDisconnect:false,rebootReady:false,rebootReading:false,firmwareBoard:null,escConfirmed:false,compassAwaitingSave:false,compassError:'',finalChecks:[false,false,false,false,false,false,false,false],
  resumeFrom:saved&&Number.isInteger(saved.step)?saved.step:0
 };
 function lang(){return window.AtlasLanguage?.()||'ru';}
@@ -86,6 +86,7 @@ function state(){return api.getState();}
 function paramReady(s){return !!s.connected&&s.paramComplete===true&&s.params instanceof Map&&s.params.size>0;}
 function safeLink(s){return !!s.connected&&s.armed===false&&Date.now()-s.lastHeartbeat<4000&&!s.demo;}
 function persist(){try{localStorage.setItem('atlas.quicksetup.v1',JSON.stringify({step:qs.step,paramsMode:qs.paramsMode,updated:Date.now()}));}catch{}}
+function translateStatic(){document.querySelectorAll('[data-qs-t]').forEach(node=>{const key=node.dataset.qsT;if(t(key)!==key)node.textContent=t(key);});}
 function complete(step,status='done'){qs.completed[step]=status;persist();render();}
 function setStep(index){if(index<0||index>=stepKeys.length)return;qs.step=index;if(index===6&&qs.paramsApplied&&!qs.rebootBaseline)qs.rebootBaseline=state().lastHeartbeat||Date.now();persist();render();}
 function canNext(){
@@ -130,19 +131,19 @@ function renderIntro(box){
   const notice=el('div','qs-resume',t('resume')+' '+qs.resumeFrom+' / '+stepKeys.length+'. '+t('resumeBody'));box.append(notice);
   button(box,t('reset'),()=>{qs.resumeFrom=0;qs.step=0;qs.completed={};qs.paramsMode='keep';persist();render();});
  }
- button(box,t('start'),()=>{if(!qs.completed[0])complete(0,'manual');});
+ button(box,t('start'),()=>{qs.resumeFrom=0;if(!qs.completed[0])complete(0,'manual');else render();});
 }
 function renderSafety(box){
  addHeading(box,t('safetyTitle'),t('safetyBody'));
  const group=el('div','qs-field-list');
- t('safetyChecks').forEach((label,index)=>checkbox(group,label,qs.safety[index],value=>{qs.safety[index]=value;render();}));
+ t('safetyChecks').forEach((label,index)=>checkbox(group,label,qs.safety[index],value=>{qs.safety[index]=value;if(qs.safety.every(Boolean))qs.completed[1]='manual';else delete qs.completed[1];persist();render();}));
  box.append(group);
- if(qs.safety.every(Boolean))complete(1,'manual');
 }
 function selectedBoard(){const s=state();return s.selectedBoard||'unknown';}
 function boardLabel(id){return id==='matek-h743-wing-v3'?'Matek H743-WING V3':id==='cube-orange'?'Orange Cube':id;}
 function renderFirmware(box){
  const board=selectedBoard(),matek=board==='matek-h743-wing-v3';
+ if(qs.firmwareBoard&&qs.firmwareBoard!==board){qs.firmwareSource=null;qs.firmwareError='';delete qs.completed[2];}
  addHeading(box,t('firmwareTitle'),t('firmwareBody'));
  const kv=el('div','qs-kv');const item=el('div');item.append(el('small','',t('board')),el('strong','',boardLabel(board)));kv.append(item);box.append(kv);
  if(matek)callout(box,t('firmwareDfuWait'),'warning');else callout(box,t('firmwareExternal'),'warning');
@@ -152,7 +153,7 @@ function renderFirmware(box){
  button(actions,t('openFirmware'),()=>api.navigate('firmware'),'cc-button ghost');
  box.append(actions);
  checkbox(box,t('firmwareManual'),qs.firmwareSource==='manual',checked=>{
-  if(checked){qs.firmwareSource='manual';complete(2,'manual');}
+  if(checked){qs.firmwareSource='manual';qs.firmwareBoard=board;complete(2,'manual');}
   else{qs.firmwareSource=null;delete qs.completed[2];render();}
  });
  if(qs.firmwareSource==='dfu'||qs.firmwareSource==='manual')callout(box,qs.firmwareSource==='dfu'?t('firmwareSuccess'):t('firmwareReady'),'success');
@@ -170,7 +171,7 @@ function downloadBackup(){
  [...s.params.entries()].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([name,p])=>lines.push(name+' '+Number(p.value)));
  const blob=new Blob([lines.join('\n')+'\n'],{type:'text/plain'}),url=URL.createObjectURL(blob),a=el('a');
  a.href=url;a.download='ATLAS-backup-'+new Date().toISOString().slice(0,10)+'.param';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
- qs.backupDownloaded=true;qs.paramsMessage=t('backupDone');render();
+ qs.backupDownloaded=true;qs.paramsMessage=t('backupDone');if(qs.paramsMode==='keep'&&qs.keepConfirmed&&paramReady(state()))qs.completed[3]='manual';persist();render();
 }
 async function waitForParams(timeout=90000){
  return new Promise(resolve=>{
@@ -237,7 +238,7 @@ function renderParams(box){
  radio(box,t('paramsCustom'),'custom',qs.paramsMode==='custom',value=>{qs.paramsMode=value;qs.keepConfirmed=false;delete qs.completed[3];persist();render();});
  if(qs.paramsMode==='keep'){
   callout(box,t('paramsKeepWarn'),'warning');
-  if(ready)checkbox(box,t('keepConfirm'),qs.keepConfirmed,value=>{qs.keepConfirmed=value;if(value&&qs.backupDownloaded)complete(3,'manual');else{delete qs.completed[3];render();}});
+  if(ready)checkbox(box,t('keepConfirm'),qs.keepConfirmed,value=>{qs.keepConfirmed=value;if(value&&qs.backupDownloaded&&ready){qs.completed[3]='manual';persist();}else delete qs.completed[3];render();});
  }else{
   const fileInput=el('input','qs-input');fileInput.type='file';fileInput.accept='.param,.txt';fileInput.addEventListener('change',event=>onParamFile(event.target.files?.[0]));box.append(el('label','',t('file')),fileInput);
   appendText(box,'p',qs.fileName||t('fileName'),'qs-global-status');
@@ -256,7 +257,6 @@ function renderParams(box){
    box.append(applyRow);
   }
  }
- if(qs.paramsMode==='keep'&&ready&&qs.backupDownloaded&&qs.keepConfirmed&&!qs.completed[3])complete(3,'manual');
  if(!ready&&s.paramPhase==='partial')callout(box,t('readPartial'),'warning');
 }
 function startCalibration(kind){
@@ -284,7 +284,7 @@ function renderReboot(box){
  if(!qs.paramsApplied){callout(box,t('rebootNotNeeded'),'success');if(!qs.completed[6])qs.completed[6]='skipped';return;}
  callout(box,t('rebootBody'),'warning');callout(box,t('rebootNeed'),'warning');
  const s=state();
- if(qs.rebootSawDisconnect&&s.connected&&Date.now()-s.lastHeartbeat<4000){
+ if(qs.rebootReady&&s.connected&&Date.now()-s.lastHeartbeat<4000){
   appendText(box,'p',t('rebootStatus'),'qs-global-status');
   button(box,t('rebootRead'),async()=>{
    if(qs.rebootReading)return;qs.rebootReading=true;render();
@@ -336,11 +336,12 @@ function renderFinal(box){
  t('finalChecks').forEach((label,index)=>checkbox(list,label,qs.finalChecks[index],value=>{qs.finalChecks[index]=value;render();}));
  box.append(list);
  if(qs.finalChecks.every(Boolean)){
-  if(!qs.completed[9])qs.completed[9]='manual';
+  if(!qs.completed[9]){qs.completed[9]='manual';persist();}
   callout(box,t('finalComplete'),'warning');
  }else callout(box,t('notComplete'),'warning');
 }
 function render(){
+ translateStatic();
  const box=$('qsContent');if(!box)return;box.replaceChildren();
  const titles=[t('introTitle'),t('safetyTitle'),t('firmwareTitle'),t('paramsTitle'),t('accelTitle'),t('levelTitle'),t('rebootTitle'),t('escTitle'),t('compassTitle'),t('finalTitle')];
  appendText(box,'div',String(qs.step+1).padStart(2,'0')+' / '+String(stepKeys.length).padStart(2,'0'),'cc-overline');
@@ -386,7 +387,7 @@ setInterval(()=>{
  if(qs.step===6&&qs.paramsApplied){
   const s=state();
   if(!s.connected||Date.now()-s.lastHeartbeat>6000)qs.rebootSawDisconnect=true;
-  if(qs.rebootSawDisconnect&&s.connected&&s.lastHeartbeat>qs.rebootBaseline&&Date.now()-s.lastHeartbeat<4000){setGlobal(t('rebootDone'));render();}
+  if(qs.rebootSawDisconnect&&s.connected&&s.lastHeartbeat>qs.rebootBaseline&&Date.now()-s.lastHeartbeat<4000&&!qs.rebootReady){qs.rebootReady=true;setGlobal(t('rebootDone'));render();}
  }
  if(qs.step===3||qs.step===4||qs.step===5||qs.step===7||qs.step===8)renderHeader();
 },1000);
