@@ -41,6 +41,7 @@
   <main class="cc-workspace">
     <aside class="cc-sidebar">
       <div class="cc-side-group"><p data-t="workspace">Конфигуратор</p>
+        <button class="cc-nav cc-nav-quick" type="button" data-tab="quicksetup"><span class="cc-icon">✦</span><span data-qs-t="nav">Прошивка и настройка в один клик</span><i>00</i></button>
         <button class="cc-nav active" type="button" data-tab="dashboard"><span class="cc-icon">◈</span><span data-t="dashboard">Полётные данные</span><i>01</i></button>
         <button class="cc-nav" type="button" data-tab="basic"><span class="cc-icon">≡</span><span data-t="basic">Базовая настройка</span><i>02</i></button>
         <button class="cc-nav" type="button" data-tab="params"><span class="cc-icon">⌘</span><span data-t="params">Список параметров</span><i>03</i></button>
@@ -98,6 +99,28 @@
           </div>
         </div>
         <p class="cc-under-panel" data-t="hudhelp">Демонстрация использует искусственные данные. При USB-подключении горизонт отображает реальные MAVLink ATTITUDE, а скорость — VFR_HUD.</p>
+      </section>
+
+      <!-- QUICK SETUP -->
+      <section class="cc-tab qs-tab" data-panel="quicksetup" aria-labelledby="qsTitle">
+        <div class="cc-section-title"><div><p class="cc-overline">00 / GUIDED WORKFLOW</p><h1 id="qsTitle" data-qs-t="title">Прошивка и настройка в один клик</h1></div><span class="cc-view-status caution" id="qsConnectionBadge">USB / MAVLINK</span></div>
+        <p class="cc-section-desc" data-qs-t="intro">Пошаговый мастер для уже собранного самолёта с проверенным набором параметров и существующим оборудованием. Это не мастер сборки нового самолёта и не замена полной настройке.</p>
+        <div class="qs-scope-note"><strong data-qs-t="scopeTitle">ВАЖНО · ОБЛАСТЬ ПРИМЕНЕНИЯ</strong><span data-qs-t="scopeBody">Используй Quick Setup только с известной конфигурацией самолёта, проверенным .param-файлом и тем же типом оборудования. Для нового планера, новых сервоприводов, ESC, компаса или нестандартной разводки перейди в полноценный конфигуратор.</span><a href="#basic" data-qs-t="fullConfigurator">Открыть полный конфигуратор →</a></div>
+        <div id="qsResumeNotice" class="qs-resume" role="status" hidden></div>
+        <div class="qs-progress-head"><span id="qsProgressLabel">ЭТАП 1 / 10</span><span id="qsProgressState">НЕ НАЧАТО</span></div>
+        <div class="qs-progress-track"><i id="qsProgressFill"></i></div>
+        <div class="qs-layout">
+          <ol id="qsStepList" class="qs-step-list" aria-label="Этапы быстрой настройки"></ol>
+          <div class="qs-main">
+            <article id="qsContent" class="cc-card qs-content" aria-live="polite"></article>
+            <div class="qs-actions">
+              <button type="button" class="cc-button ghost" id="qsBackBtn" data-qs-t="back">Назад</button>
+              <button type="button" class="cc-button primary" id="qsNextBtn" data-qs-t="next" disabled>Далее</button>
+              <button type="button" class="cc-button outline" id="qsExitBtn" data-qs-t="exit">Выйти из мастера</button>
+            </div>
+            <p id="qsGlobalStatus" class="qs-global-status" role="status" aria-live="polite">—</p>
+          </div>
+        </div>
       </section>
 
       <!-- BASICS -->
@@ -360,5 +383,5 @@
       <div class="cc-modal-actions"><button type="button" class="cc-button ghost" id="servoEditorCancel">Отмена</button><button class="cc-button primary" id="servoEditorSave" type="submit">Записать изменения</button></div>
     </form>
   </dialog>
-  <script src="mavlink.js" defer></script><script src="param-tree.js" defer></script><script src="firmware-access.js" defer></script><script src="configurator.js" defer></script><script src="servo-config-core.js" defer></script><script src="calibration.js" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script>
+  <script src="mavlink.js" defer></script><script src="param-tree.js" defer></script><script src="firmware-access.js" defer></script><script src="configurator.js" defer></script><script src="servo-config-core.js" defer></script><script src="calibration.js" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script><script src="quick-setup-core.js" defer></script><script src="quick-setup.js" defer></script>
 </body></html>
