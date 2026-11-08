@@ -543,5 +543,5 @@ function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEve
  document.addEventListener('visibilitychange',scheduleHorizon);
  window.addEventListener('pageshow',ev=>{if(ev.persisted){state.pageLeaving=false;state.hudLoopActive=true;state.lastHeartbeat=0;updateConnectionUI();scheduleHorizon();}});
 }
-wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Release 1.0');state.hudLoopActive=true;scheduleHorizon();
+wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Release 1.0');state.hudLoopActive=true;scheduleHorizon();
 })();
