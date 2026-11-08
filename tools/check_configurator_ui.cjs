@@ -8,7 +8,7 @@ const toggleAt=calibration.indexOf("$('servoLiveApply').addEventListener('change
 const toggleEnd=calibration.indexOf("$('servoBenchConsent')",toggleAt);
 assert.ok(toggleAt>=0&&toggleEnd>toggleAt,'Apply Immediately change handler must exist');
 const toggle=calibration.slice(toggleAt,toggleEnd);
-assert.match(toggle,/if\(\$('servoLiveApply'\)\.checked\)queueRealtime\('ALL'\)/,'turning Apply Immediately on must flush all pending edits');
+assert.ok(toggle.includes("if($('servoLiveApply').checked)queueRealtime('ALL')"),'turning Apply Immediately on must flush all pending edits');
 assert.match(calibration,/servoCore\.selectLiveChanges\(validation,field\)/,'full-draft flush must use the shared live field selector');
 assert.match(calibration,/for\(const key of Object\.keys\(servoLiveDebounce\)\)/,'flush must cancel pending debounce callbacks');
 
