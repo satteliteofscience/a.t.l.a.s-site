@@ -75,6 +75,14 @@ function testConfiguratorUsesOneQueue(){
  assert.match(source,/await enqueueServoWrite\(async\(\)=>/);
  assert.match(source,/servoSavePending/);
  assert.doesNotMatch(source,/servoLiveQueue/);
+ const saveStart=source.indexOf('async function saveServoEditor(ev)');
+ const saveEnd=source.indexOf('function renderServo()',saveStart);
+ const saveHandler=source.slice(saveStart,saveEnd);
+ assert.ok(saveStart>=0&&saveEnd>saveStart,'servo Apply handler must be present');
+ assert.match(saveHandler,/if\(servoSavePending\|\|servoEditing===null\|\|benchActive\)return/);
+ assert.doesNotMatch(saveHandler,/if\(servoIsSaving\|\|/,'Apply must not be discarded while an immediate reverse write is in flight');
+ const writer=fs.readFileSync('configurator.js','utf8');
+ assert.match(writer,/for\(const field of \['FUNCTION','MIN','TRIM','MAX','REVERSED'\]\)/,'servo parameters must use deterministic write order');
  const html=fs.readFileSync('configurator.html','utf8');
  assert.match(html,/<script src="servo-config-core\.js" defer><\/script><script src="calibration\.js" defer>/);
  assert.match(html,/<details class="servo-bench-details">/);
