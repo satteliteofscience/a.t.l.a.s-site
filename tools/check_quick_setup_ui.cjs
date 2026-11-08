@@ -27,5 +27,12 @@ assert.match(wizard,/not flight clearance|не допуск к полёту|не
 assert.match(wizard,/Для проверенной конфигурации/,'RU scope text missing');
 assert.match(wizard,/Для перевіреної конфігурації/,'UA scope text missing');
 assert.match(wizard,/For a verified configuration/,'EN scope text missing');
+
+assert.ok(wizard.includes("button(box,t('start'),()=>{if(!qs.completed[0])return;"),'wizard Start must require the scope confirmation');
+assert.ok(wizard.includes("function invalidateFrom(step)"),'profile changes must invalidate downstream completion');
+assert.ok(wizard.includes("invalidateFrom(3);qs.compatConfirmed=false;qs.keepConfirmed=false;qs.preview=null;"),'a new profile must invalidate stale imported values');
+assert.ok(wizard.includes("qs.rebootUserConfirmed&&qs.rebootSawDisconnect"),'reboot must require user confirmation and verified reconnection');
+assert.ok(wizard.includes("checkbox(box,t('rebootAck')"),'manual power cycle confirmation must be visible');
+assert.ok(wizard.includes("delete qs.completed[9];persist();"),'final completion must be revoked when checklist is unchecked');
 assert.match(css,/@media\(max-width:560px\)\{\.qs-step-list/,'mobile wizard layout missing');
 console.log('PASS: Quick Setup navigation, API gates, DFU/calibration events, parameter ACK/readback, ESC protocol branches, safety limits, localization and responsive UI.');
