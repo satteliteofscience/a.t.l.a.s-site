@@ -179,7 +179,7 @@ async function waitForParams(timeout=90000){
    const s=state();
    if(paramReady(s)){clearInterval(timer);resolve({ok:true,state:s});}
    else if(!s.connected){clearInterval(timer);resolve({ok:false,reason:'disconnected'});}
-   else if(!s.paramLoading&&s.paramPhase==='partial'){clearInterval(timer);resolve({ok:false,reason:'partial'});}
+   else if(!s.paramLoading&&(s.paramPhase==='partial'||s.paramPhase==='noReply')){clearInterval(timer);resolve({ok:false,reason:s.paramPhase});}
    else if(Date.now()-start>timeout){clearInterval(timer);resolve({ok:false,reason:'timeout'});}
   },500);
  });
@@ -189,7 +189,7 @@ async function loadParams(){
  qs.paramsMessage=t('readWaiting');render();
  api.requestParameters();
  const result=await waitForParams();
- qs.paramsMessage=result.ok?t('readComplete'):result.reason==='partial'?t('readPartial'):t('readNoLink');
+ qs.paramsMessage=result.ok?t('readComplete'):result.reason==='partial'||result.reason==='noReply'?t('readPartial'):t('readNoLink');
  render();
 }
 function paramErrorText(error){
@@ -373,7 +373,7 @@ $('qsContent').addEventListener('click',event=>{
 document.querySelector('[data-qs-t="fullConfigurator"]')?.addEventListener('click',event=>{event.preventDefault();api.navigate('basic');});
 window.addEventListener('atlas:dfu',event=>{
  const d=event.detail||{};
- if(d.success&&d.verified&&d.board===selectedBoard()){qs.firmwareSource='dfu';qs.firmwareError='';complete(2,'done');setGlobal(t('firmwareSuccess'));}
+ if(d.success&&d.verified&&d.board===selectedBoard()){qs.firmwareSource='dfu';qs.firmwareBoard=d.board;qs.firmwareError='';complete(2,'done');setGlobal(t('firmwareSuccess'));}
  else if(!d.success){qs.firmwareError=d.reason||t('firmwareFailure');render();}
  else{qs.firmwareError=t('firmwareFailure');render();}
 });
