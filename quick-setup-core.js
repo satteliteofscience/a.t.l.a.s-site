@@ -18,6 +18,7 @@
    if(!Number.isFinite(value)){errors.push({line:index+1,name,reason:'number'});continue;}
    const current=params.get(name);if(!current){errors.push({line:index+1,name,reason:'unknown'});continue;}
    const type=Number(current.type);
+   if(![1,2,3,4,5,6,9,10].includes(type)){errors.push({line:index+1,name,reason:'type'});continue;}
    if(INTEGER_TYPES.includes(type)&&!Number.isInteger(value)){errors.push({line:index+1,name,reason:'integer'});continue;}
    if(type===7||type===8){errors.push({line:index+1,name,reason:'int64-unsupported'});continue;}
    const definition=metadata?.[name]||{};
