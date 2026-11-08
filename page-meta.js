@@ -43,6 +43,9 @@
     getMeta('meta[name="description"]','meta',{name:'description'}).content=selected.description;
     getMeta('meta[property="og:title"]','meta',{property:'og:title'}).content=selected.title;
     getMeta('meta[property="og:description"]','meta',{property:'og:description'}).content=selected.description;
+    // Browser-only localization: link preview crawlers read the static HTML above.
+    getMeta('meta[name="twitter:title"]','meta',{name:'twitter:title'}).content=selected.title;
+    getMeta('meta[name="twitter:description"]','meta',{name:'twitter:description'}).content=selected.description;
     getMeta('meta[property="og:locale"]','meta',{property:'og:locale'}).content=({ru:'ru_RU',uk:'uk_UA',en:'en_US'})[lang];
   }
   new MutationObserver(mutations=>{if(mutations.some(m=>m.attributeName==='lang')) update();})

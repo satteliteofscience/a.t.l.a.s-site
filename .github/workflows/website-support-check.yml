@@ -8,6 +8,12 @@ on:
       - 'data/support.json'
       - 'data/subscriptions.json'
       - 'privacy.html'
+      - 'configurator.html'
+      - 'faq.html'
+      - 'changelog.html'
+      - 'page-meta.js'
+      - 'assets/github-social-preview.jpg'
+      - 'tools/check_social_preview.cjs'
       - 'tools/check_monobank_support.cjs'
       - '.github/workflows/website-support-check.yml'
   workflow_dispatch:
@@ -19,6 +25,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check JavaScript syntax
-        run: node --check support.js && node --check tools/check_monobank_support.cjs
+        run: node --check support.js && node --check page-meta.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs
       - name: Verify monobank/Tally URLs, labels, privacy, no legacy form
         run: node tools/check_monobank_support.cjs
+      - name: Verify link preview Open Graph and Twitter metadata
+        run: node tools/check_social_preview.cjs
