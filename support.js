@@ -96,18 +96,24 @@
    put('donationDirectNote',t.jarMissing);
   }
   const form=application.provider==='tally-hosted'?valid(application.form_url,'tally.so',/^\/r\/[A-Za-z0-9]+\/?$/):null;
-  put('atlasTesterHeading',t.testerTitle);
-  put('atlasTesterDescription',t.testerDescription);
   put('atlasTesterHint',form?t.testerHint:t.testerMissing);
   put('atlasTesterPrivacyLink',t.privacy);
   put('atlasTesterInfo',t.programInfo);
   put('atlasTesterStep1',t.step1);put('atlasTesterStep2',t.step2);put('atlasTesterStep3',t.step3);
   const applyLink=$('atlasTesterLink');applyLink.hidden=!form;
-  if(form){applyLink.href=form;applyLink.textContent=t.testerButton;}
+  if(form){applyLink.href=form;put('atlasTesterLinkLabel',t.testerButton);}
   else applyLink.removeAttribute('href');
  }
  function show(open){panel.hidden=!open;host.classList.toggle('is-revealed',open);trigger.setAttribute('aria-expanded',String(open));}
  trigger.addEventListener('click',()=>{pinned=!pinned;show(pinned);});
+ // Brief glitch pulse also on touch and keyboard activation; the real link still opens Tally.
+ const testerCTA=$('atlasTesterLink');
+ let glitchTimeout;
+ testerCTA.addEventListener('click',()=>{
+  testerCTA.classList.add('is-glitching');
+  clearTimeout(glitchTimeout);
+  glitchTimeout=setTimeout(()=>testerCTA.classList.remove('is-glitching'),650);
+ });
  host.addEventListener('pointerenter',ev=>{if(ev.pointerType!=='touch')show(true);});
  host.addEventListener('pointerleave',ev=>{if(ev.pointerType!=='touch'&&!pinned)show(false);});
  host.addEventListener('focusin',()=>show(true));

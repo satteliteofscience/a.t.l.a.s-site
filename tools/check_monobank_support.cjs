@@ -21,7 +21,7 @@ for(const [value,host,pattern] of [
  const url=new URL(value);
  assert.equal(url.protocol,'https:');assert.equal(url.hostname,host);assert.match(url.pathname,pattern);
 }
-for(const id of ['atlasDonation','atlasDonateShortcut','atlasQuickDonate','atlasQuickDonateNote','donationReveal','donationPanel','atlasDirectDonation','donationDirectLink','atlasTesterApplyPanel','atlasTesterLink','atlasTesterPrivacyLink','atlasTesterInfo','atlasTesterStep1','atlasTesterStep2','atlasTesterStep3']){
+for(const id of ['atlasDonation','atlasDonateShortcut','atlasQuickDonate','atlasQuickDonateNote','donationReveal','donationPanel','atlasDirectDonation','donationDirectLink','atlasTesterLink','atlasTesterLinkLabel','atlasTesterPrivacyLink','atlasTesterInfo','atlasTesterStep1','atlasTesterStep2','atlasTesterStep3']){
  assert.ok(html.includes('id="'+id+'"'),'missing element '+id);
 }
 assert.match(html,/<a[^>]*id="donationDirectLink"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
@@ -29,6 +29,17 @@ assert.match(html,/<a[^>]*id="atlasQuickDonate"[^>]*href="https:\/\/send\.monoba
 assert.ok(js.includes("quickPanel.hidden=!jar"),'quick donate must use validated monobank URL');
 assert.match(html,/<a[^>]*id="atlasTesterLink"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
 assert.ok(!html.includes('id="atlasSubscriberForm"'),'legacy email form must be removed');
+const earlyCard=html.indexOf('class="support-early"');
+const tallyButton=html.indexOf('id="atlasTesterLink"');
+assert.ok(earlyCard>=0 && tallyButton>earlyCard,'Tally CTA must live inside the Early Tester program card');
+assert.ok(!html.includes('id="atlasTesterApplyPanel"'),'duplicate signup pane must be removed from donation panel');
+assert.ok(html.includes('class="atlas-donation-glitch" aria-hidden="true"></span>'),'glitch overlay must be present');
+assert.ok(js.includes("put('atlasTesterLinkLabel',t.testerButton)"),'language switching must retain the glitch layer');
+assert.ok(js.includes("testerCTA.addEventListener('click'"),'click glitch pulse must be wired up');
+const style=fs.readFileSync('support.css','utf8');
+assert.ok(style.includes('.atlas-tester-cta:hover .atlas-donation-glitch'),'hover glitch effect missing');
+assert.ok(style.includes('.atlas-tester-cta:active .atlas-donation-glitch'),'pressed glitch effect missing');
+assert.ok(style.includes('prefers-reduced-motion:reduce'),'reduced-motion support missing');
 assert.ok(js.includes("valid(support.donation_url,'send.monobank.ua'"));
 assert.ok(js.includes('donationBlock.hidden=!jar'), 'Jar container must become visible when a valid donation URL is configured');
 assert.ok(js.includes('donationLink.hidden=!jar'), 'Jar payment button must be visible when a valid donation URL is configured');

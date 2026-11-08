@@ -67,3 +67,19 @@
 .atlas-donate-shortcut-link:hover{filter:brightness(1.1)}
 .atlas-donate-shortcut-link:focus-visible{outline:3px solid #f2df86;outline-offset:3px}
 .atlas-donate-shortcut-note{margin:0!important;color:#c1c9a6;font:400 11px/1.55 'IBM Plex Mono',monospace}
+
+
+/* Early Tester CTA is in its own program card, rather than the donations popover. */
+.atlas-tester-cta-wrap{display:grid;gap:13px;margin:24px 0 22px}
+.atlas-tester-cta{display:flex;position:relative;isolation:isolate;align-items:center;justify-content:center;overflow:hidden;min-height:68px;width:100%;padding:16px 22px;border:1px solid #d1c66e;border-radius:3px;background:linear-gradient(115deg,#152319,#27341d,#152015);box-shadow:inset 0 0 0 1px #d9d58523,0 12px 28px #0005;color:#f0e3a6;text-align:center;text-decoration:none;cursor:pointer;touch-action:manipulation;transition:border-color .15s ease,box-shadow .15s ease}
+.atlas-tester-cta-label{position:relative;z-index:2;display:block;font:700 clamp(13px,1.75vw,17px)/1.45 'IBM Plex Mono',monospace;letter-spacing:.045em}
+.atlas-tester-cta .atlas-donation-glitch{z-index:1;inset:-5%;background:repeating-linear-gradient(0deg,transparent 0 3px,#d6d77e2a 4px 5px,transparent 6px 9px),repeating-linear-gradient(90deg,transparent 0 19px,#9cb8551e 20px 22px,transparent 24px 31px),linear-gradient(110deg,transparent 10%,#f2e28b3a 47%,transparent 62%);mix-blend-mode:screen}
+.atlas-tester-cta:hover,.atlas-tester-cta:focus-visible,.atlas-tester-cta:active,.atlas-tester-cta.is-glitching{border-color:#f5d67d;box-shadow:0 0 29px #b2c65555,inset 0 0 26px #bfce6230}
+.atlas-tester-cta:hover .atlas-donation-glitch,.atlas-tester-cta:focus-visible .atlas-donation-glitch,.atlas-tester-cta:active .atlas-donation-glitch,.atlas-tester-cta.is-glitching .atlas-donation-glitch{opacity:.95;animation:atlas-static .17s steps(3,end) infinite}
+.atlas-tester-cta:hover .atlas-tester-cta-label,.atlas-tester-cta:focus-visible .atlas-tester-cta-label,.atlas-tester-cta:active .atlas-tester-cta-label,.atlas-tester-cta.is-glitching .atlas-tester-cta-label{text-shadow:-3px 0 #acc55d,3px 0 #9a773c;animation:atlas-jitter .12s steps(2,end) 5}
+.atlas-tester-cta:focus-visible{outline:3px solid #f2df86;outline-offset:4px}
+.atlas-tester-cta-wrap .atlas-tester-cta-hint{margin:0!important;color:#d8cb83;font:400 12px/1.7 'IBM Plex Mono',monospace}
+.atlas-tester-cta-privacy{justify-self:start}
+.atlas-tester-cta[hidden]{display:none!important}
+@media(max-width:550px){.atlas-tester-cta{min-height:64px;padding:13px}.atlas-tester-cta-label{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.atlas-tester-cta,.atlas-tester-cta .atlas-donation-glitch,.atlas-tester-cta-label{animation:none!important;transition:none!important}}
