@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+<title id="title">A.T.L.A.S. Control Center</title><desc id="desc">Avionics-inspired olive and amber cover with schematic airplane and flight instruments</desc>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#101b12"/><stop offset="1" stop-color="#050c08"/></linearGradient>
+<pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#66813c" stroke-opacity=".16"/></pattern>
+<linearGradient id="glow"><stop stop-color="#f6db73"/><stop offset="1" stop-color="#b5be57"/></linearGradient>
+</defs>
+<rect width="1280" height="640" fill="url(#bg)"/><rect width="1280" height="640" fill="url(#g)"/>
+<path d="M34 124V34H155M1125 34H1246V124M34 510v96h126M1125 606h121v-96" fill="none" stroke="#c9ac43" stroke-width="4"/>
+<path d="M34 215H665l70-60h510M35 532h497l52-46h663" fill="none" stroke="#657d3e" stroke-width="2"/>
+<g opacity=".5" stroke="#c2b957" fill="none"><circle cx="1010" cy="320" r="247" stroke-width="2"/><circle cx="1010" cy="320" r="170"/><circle cx="1010" cy="320" r="100"/><path d="M736 320h545M1010 46v544"/><path d="M755 230l84-15m360 197 75 23M962 66v41M1093 67l-22 45"/></g>
+<g stroke="#d2bd59" stroke-width="4" fill="#15231a" transform="translate(1002 320) rotate(-18)">
+<path d="M-380 0L-80-45 55-132 180-136 120-27 286 0 120 27 180 136 55 132-80 45Z" fill-opacity=".85"/>
+<path d="M-140 0L0-19 140-16 254 0 140 16 0 19Z" fill="#51663d" fill-opacity=".7"/>
+<path d="M245-52v104" stroke="#e4cc68" stroke-width="12" opacity=".7"/>
+<path d="M-55 0h188M-110-28l-120 28 120 28M66-110l37 76m-37 144 37-76" stroke-width="2" opacity=".68"/>
+</g>
+<g font-family="Arial,Helvetica,sans-serif" fill="#e5cd6d">
+<text x="82" y="252" font-size="24" letter-spacing="8" fill="#a8b875">INDEPENDENT FLIGHT RESEARCH</text>
+<text x="79" y="369" font-size="110" font-weight="800" letter-spacing="4">A.T.L.A.S.</text>
+<text x="85" y="426" font-size="37" letter-spacing="11" fill="#e8e1a8">CONTROL CENTER</text>
+<text x="86" y="483" font-size="20" letter-spacing="5" fill="#a8be83">ARDUPLANE 4.7.2  /  EKF3  /  NOAID</text>
+<text x="80" y="573" font-size="16" letter-spacing="4" fill="#9da97b">MAVLINK  ·  FIRMWARE  ·  DOCUMENTATION</text>
+</g>
+</svg>
