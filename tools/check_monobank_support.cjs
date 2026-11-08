@@ -21,17 +21,19 @@ for(const [value,host,pattern] of [
  const url=new URL(value);
  assert.equal(url.protocol,'https:');assert.equal(url.hostname,host);assert.match(url.pathname,pattern);
 }
-for(const id of ['atlasDonation','donationReveal','donationPanel','atlasDirectDonation','donationDirectLink','atlasTesterApplyPanel','atlasTesterLink','atlasTesterPrivacyLink','atlasTesterInfo','atlasTesterStep1','atlasTesterStep2','atlasTesterStep3']){
+for(const id of ['atlasDonation','atlasDonateShortcut','atlasQuickDonate','atlasQuickDonateNote','donationReveal','donationPanel','atlasDirectDonation','donationDirectLink','atlasTesterApplyPanel','atlasTesterLink','atlasTesterPrivacyLink','atlasTesterInfo','atlasTesterStep1','atlasTesterStep2','atlasTesterStep3']){
  assert.ok(html.includes('id="'+id+'"'),'missing element '+id);
 }
 assert.match(html,/<a[^>]*id="donationDirectLink"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+assert.match(html,/<a[^>]*id="atlasQuickDonate"[^>]*href="https:\/\/send\.monobank\.ua\/jar\/7jkKfdWREX"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+assert.ok(js.includes("quickPanel.hidden=!jar"),'quick donate must use validated monobank URL');
 assert.match(html,/<a[^>]*id="atlasTesterLink"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
 assert.ok(!html.includes('id="atlasSubscriberForm"'),'legacy email form must be removed');
 assert.ok(js.includes("valid(support.donation_url,'send.monobank.ua'"));
 assert.ok(js.includes('donationBlock.hidden=!jar'), 'Jar container must become visible when a valid donation URL is configured');
 assert.ok(js.includes('donationLink.hidden=!jar'), 'Jar payment button must be visible when a valid donation URL is configured');
 assert.ok(js.includes("valid(application.form_url,'tally.so'"));
-for(const fragment of ['Поддержать через monobank Банку','Підтримати через monobank Банку','Support via monobank Jar','Подать заявку тестировщика','Подати заявку тестувальника','Apply to test early firmware']){
+for(const fragment of ['Поддержать через monobank Банку','Підтримати через monobank Банку','Support via monobank Jar','💚 Поддержать через monobank','💚 Підтримати через monobank','💚 Donate via monobank','Подать заявку тестировщика','Подати заявку тестувальника','Apply to test early firmware']){
  assert.ok(js.includes(fragment),'missing translated label: '+fragment);
 }
 assert.ok(privacy.includes('Tally')&&privacy.includes('Google Sheets'));

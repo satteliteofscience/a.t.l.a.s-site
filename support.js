@@ -12,6 +12,8 @@
    jarPay:'Поддержать через monobank Банку ↗',
    jarNote:'Сумма и способы перевода выбираются на monobank. Сайт не видит карту и не проверяет поступление средств.',
    jarMissing:'Ссылка на Банку временно недоступна.',
+   quickDonate:'💚 Поддержать через monobank ↗',
+   quickDonateNote:'Добровольное пожертвование. Не требуется для участия в раннем тестировании.',
    testerTitle:'Программа раннего тестирования A.T.L.A.S.',
    testerDescription:'Оставьте заявку через Tally: email, модель контроллера, GitHub и опыт ArduPlane. Участие добровольное. Донат не обязателен и не гарантирует доступ.',
    testerButton:'Подать заявку тестировщика ↗',
@@ -29,6 +31,8 @@
    jarPay:'Підтримати через monobank Банку ↗',
    jarNote:'Суму та способи переказу обирають на monobank. Сайт не отримує дані картки й не перевіряє зарахування.',
    jarMissing:'Посилання на Банку тимчасово недоступне.',
+   quickDonate:'💚 Підтримати через monobank ↗',
+   quickDonateNote:'Добровільна пожертва. Не потрібна для участі в ранньому тестуванні.',
    testerTitle:'Програма раннього тестування A.T.L.A.S.',
    testerDescription:'Подайте заявку через Tally: email, модель контролера, GitHub та досвід ArduPlane. Участь добровільна. Донат не є обов’язковим і не гарантує доступ.',
    testerButton:'Подати заявку тестувальника ↗',
@@ -46,6 +50,8 @@
    jarPay:'Support via monobank Jar ↗',
    jarNote:'Select your amount and transfer method on monobank. This site never receives card details or verifies a transfer.',
    jarMissing:'The donation link is temporarily unavailable.',
+   quickDonate:'💚 Donate via monobank ↗',
+   quickDonateNote:'Voluntary support. Not required to apply for early testing.',
    testerTitle:'A.T.L.A.S. Early Tester Program',
    testerDescription:'Apply via Tally with your email, flight controller, GitHub username and ArduPlane experience. Applying is voluntary; donations are not required and do not guarantee access.',
    testerButton:'Apply to test early firmware ↗',
@@ -75,10 +81,20 @@
   const jar=support.donation_provider==='monobank-jar'?valid(support.donation_url,'send.monobank.ua',/^\/jar\/[A-Za-z0-9_-]+\/?$/):null;
   const donationBlock=$('atlasDirectDonation');
   const donationLink=$('donationDirectLink');
+  const quickLink=$('atlasQuickDonate');
+  const quickNote=$('atlasQuickDonateNote');
+  const quickPanel=$('atlasDonateShortcut');
   donationBlock.hidden=!jar;
   donationLink.hidden=!jar;
-  if(jar){donationLink.href=jar;donationLink.textContent=t.jarPay;}
-  else {donationLink.removeAttribute('href');put('donationDirectNote',t.jarMissing);}
+  quickPanel.hidden=!jar;
+  if(jar){
+   donationLink.href=jar;donationLink.textContent=t.jarPay;
+   quickLink.href=jar;quickLink.textContent=t.quickDonate;
+   quickNote.textContent=t.quickDonateNote;
+  }else{
+   donationLink.removeAttribute('href');quickLink.removeAttribute('href');
+   put('donationDirectNote',t.jarMissing);
+  }
   const form=application.provider==='tally-hosted'?valid(application.form_url,'tally.so',/^\/r\/[A-Za-z0-9]+\/?$/):null;
   put('atlasTesterHeading',t.testerTitle);
   put('atlasTesterDescription',t.testerDescription);

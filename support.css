@@ -58,3 +58,12 @@
 .atlas-tester-apply .atlas-tester-hint{color:#dfca7a}
 .atlas-tester-apply .donation-policy-link{justify-self:start;margin-top:2px}
 .atlas-tester-apply [hidden],.atlas-direct-donation [hidden]{display:none!important}
+
+/* A prominent Jar CTA stays visible without opening the additional info panel. */
+.atlas-donate-shortcut{display:grid;gap:8px;margin:22px 0 12px;max-width:590px}
+.atlas-donate-shortcut:not([hidden]){display:grid}
+.atlas-donate-shortcut[hidden]{display:none!important}
+.atlas-donate-shortcut-link{display:flex;width:100%;min-height:56px;font-size:clamp(12px,1.5vw,14px);letter-spacing:.035em;text-align:center;border-radius:3px;box-shadow:0 7px 18px #0003}
+.atlas-donate-shortcut-link:hover{filter:brightness(1.1)}
+.atlas-donate-shortcut-link:focus-visible{outline:3px solid #f2df86;outline-offset:3px}
+.atlas-donate-shortcut-note{margin:0!important;color:#c1c9a6;font:400 11px/1.55 'IBM Plex Mono',monospace}
