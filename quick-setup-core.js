@@ -6,11 +6,11 @@
 })(typeof window!=='undefined'?window:globalThis,function(){
  'use strict';
  const THROTTLE_FUNCTIONS=Object.freeze([70,73,74]),DSHOT_TYPES=Object.freeze([4,5,6,7]),ONESHOT_TYPES=Object.freeze([1,2,3]),INTEGER_TYPES=Object.freeze([1,2,3,4,5,6]);
- const PARAM_RE=/^([A-Za-z][A-Za-z0-9_]{0,15})[\\s,=]+([+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[Ee][+-]?\\d+)?)(?:[\\s,;].*)?$/;
+ const PARAM_RE=/^([A-Za-z][A-Za-z0-9_]{0,15})[\s,=]+([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)(?:[\s,;].*)?$/;
  function mapOf(value){if(value instanceof Map)return value;if(Array.isArray(value))return new Map(value);return new Map(Object.entries(value||{}));}
  function parseParamText(source,liveParams,metadata={}){
   const params=mapOf(liveParams),entries=new Map(),errors=[],warnings=[],duplicates=[];
-  const lines=String(source||'').split(/\\r?\\n/);
+  const lines=String(source||'').split(/\r?\n/);
   for(let index=0;index<lines.length;index++){
    const line=lines[index].trim();if(!line||line.startsWith('#')||line.startsWith('//'))continue;
    const match=line.match(PARAM_RE);if(!match){errors.push({line:index+1,reason:'format',text:line});continue;}
