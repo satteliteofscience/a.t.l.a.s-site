@@ -73,7 +73,9 @@
   put('donationDirectTitle',String(support.donation_title||'A.T.L.A.S. — Підтримка розробки').slice(0,140));
   put('donationDirectIntro',t.jarDescription);put('donationDirectNote',t.jarNote);
   const jar=support.donation_provider==='monobank-jar'?valid(support.donation_url,'send.monobank.ua',/^\/jar\/[A-Za-z0-9_-]+\/?$/):null;
+  const donationBlock=$('atlasDirectDonation');
   const donationLink=$('donationDirectLink');
+  donationBlock.hidden=!jar;
   donationLink.hidden=!jar;
   if(jar){donationLink.href=jar;donationLink.textContent=t.jarPay;}
   else {donationLink.removeAttribute('href');put('donationDirectNote',t.jarMissing);}

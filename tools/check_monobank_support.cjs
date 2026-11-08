@@ -28,6 +28,8 @@ assert.match(html,/<a[^>]*id="donationDirectLink"[^>]*target="_blank"[^>]*rel="n
 assert.match(html,/<a[^>]*id="atlasTesterLink"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
 assert.ok(!html.includes('id="atlasSubscriberForm"'),'legacy email form must be removed');
 assert.ok(js.includes("valid(support.donation_url,'send.monobank.ua'"));
+assert.ok(js.includes('donationBlock.hidden=!jar'), 'Jar container must become visible when a valid donation URL is configured');
+assert.ok(js.includes('donationLink.hidden=!jar'), 'Jar payment button must be visible when a valid donation URL is configured');
 assert.ok(js.includes("valid(application.form_url,'tally.so'"));
 for(const fragment of ['Поддержать через monobank Банку','Підтримати через monobank Банку','Support via monobank Jar','Подать заявку тестировщика','Подати заявку тестувальника','Apply to test early firmware']){
  assert.ok(js.includes(fragment),'missing translated label: '+fragment);
