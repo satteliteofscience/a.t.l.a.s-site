@@ -140,3 +140,7 @@
 .cal-diagnostics .cal-rx-debug{padding:10px 12px}
 @media(max-width:780px){.pt-advanced-tools{margin-left:0}.pt-advanced-tools-body{min-width:0}.pt-advanced-tools-body>*{max-width:100%}}
 @media(max-width:560px){.cc-card-title{height:46px}.pt-advanced-tools{width:100%}.pt-advanced-tools>summary{width:100%;box-sizing:border-box}.pt-advanced-tools-body{display:grid;grid-template-columns:1fr}.pt-advanced-tools-body .cc-button,.pt-advanced-tools-body label{width:100%;box-sizing:border-box;justify-content:center}.servo-bench-details>summary,.cal-diagnostics>summary{min-height:44px}}
+
+
+/* Post-flash USB enumeration note: board-specific observation, not a universal DFU rule. */
+.dfu-postflash-note{margin:9px 0 0;padding:10px 12px;border:1px solid #59683b;background:#192312;color:#d7d9a4;font:11px/1.65 'IBM Plex Mono',monospace;overflow-wrap:anywhere}

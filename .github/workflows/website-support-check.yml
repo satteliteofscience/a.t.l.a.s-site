@@ -14,6 +14,7 @@ on:
       - 'servo-config-core.js'
       - 'configurator.css'
       - 'tools/check_servo_config.cjs'
+      - 'tools/check_configurator_ui.cjs'
       - 'support.js'
       - 'support.css'
       - 'styles.css'
@@ -76,6 +77,8 @@ jobs:
         run: node tools/check_release_ready.cjs
       - name: Verify servo reverse persistence and serialized writes
         run: node tools/check_servo_config.cjs
+      - name: Verify configurator apply transition, support anchor and post-flash note
+        run: node tools/check_configurator_ui.cjs
       - name: Verify old public release scripts cannot run
         run: |
           python3 -m py_compile tools/release_manager.py tools/update_firmware_manifest.py tools/publish_github_releases.py
