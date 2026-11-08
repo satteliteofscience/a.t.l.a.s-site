@@ -31,9 +31,9 @@ function emit(text,bad=false){api.log('CAL: '+text,bad);}
 function guard(){if(!safe()){emit(tt('need'),true);return false;}if(accel.kind||mag.running){emit(tt('calBusy'),true);return false;}return true;}
 function clearAccelTimer(){if(accel.timer)clearTimeout(accel.timer);accel.timer=null;}
 function armAccelTimer(){clearAccelTimer();const duration=accel.kind==='six'&&!accel.firstRequest?60000:accel.kind==='six'?240000:90000;accel.timer=setTimeout(()=>{if(accel.kind){accel.status='timeout';accel.kind=null;accel.requested=null;status('accelStatus',tt('timeout'));status('accelDiagnostic',dd('expired'));renderAccel();emit(dd('expired'),true);}},duration);}
-function markAccelResult(ok,info){clearAccelTimer();accel.kind=null;accel.requested=null;accel.status=ok?'done':'failed';status('accelStatus',info||tt(ok?'done':'failed'));emit(info||tt(ok?'done':'failed'),!ok);renderAccel();}
+function markAccelResult(ok,info){const completedKind=accel.kind;clearAccelTimer();accel.kind=null;accel.requested=null;accel.status=ok?'done':'failed';status('accelStatus',info||tt(ok?'done':'failed'));emit(info||tt(ok?'done':'failed'),!ok);renderAccel();window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:completedKind==='six'?'six':completedKind==='level'?'level':'accelerometer',status:ok?'done':'failed',verified:!!ok,info:info||''}}));}
 async function startAccel(kind,p5){if(!guard())return;
- accel.kind=kind;accel.status='waiting';accel.requested=null;accel.lastPos=null;accel.lastConfirmation=0;accel.completed.clear();accel.started=now();accel.firstRequest=false;accel.lastAck=null;accel.lastMessage='';renderAccel();status('accelStatus',dd('startStatus'));status('accelDiagnostic',kind==='six'?dd('init'):tt('sending'));armAccelTimer();
+ accel.kind=kind;accel.status='waiting';window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:kind==='six'?'six':kind==='level'?'level':'accelerometer',status:'started',verified:false}}));accel.requested=null;accel.lastPos=null;accel.lastConfirmation=0;accel.completed.clear();accel.started=now();accel.firstRequest=false;accel.lastAck=null;accel.lastMessage='';renderAccel();status('accelStatus',dd('startStatus'));status('accelDiagnostic',kind==='six'?dd('init'):tt('sending'));armAccelTimer();
  try{await api.command(241,[0,0,0,0,p5,0,0]);status('accelStatus',dd('startStatus'));emit(`COMMAND_LONG 241 param5=${p5} sent; waiting for ACK/position`);}catch(e){markAccelResult(false,e.message);}}
 async function confirmPosition(){if(accel.kind!=='six'||!Number.isInteger(accel.requested)||!safe()){emit(tt('need'),true);return;}const pos=accel.requested;accel.requested=null;accel.lastPos=pos;accel.lastConfirmation=now();accel.status='capturing';renderAccel();status('accelStatus',tt('next'));armAccelTimer();
  try{await api.command(42429,[pos,0,0,0,0,0,0]);emit(`ACCELCAL_VEHICLE_POS ${pos} confirmed`);}catch(e){markAccelResult(false,e.message);}}
@@ -46,9 +46,9 @@ function handleAccelPosition(p){const pos=Math.round(p.params[0]);if(!accel.kind
  accel.requested=pos;accel.status='pose';armAccelTimer();renderAccel();status('accelStatus',tt('still'));emit(`Autopilot requests position ${pos}`);
 }
 function handleAck(d){if(d.command===241&&accel.kind){accel.lastAck=d.result;emit(`COMMAND_ACK 241 result=${d.result}`);status('accelDiagnostic',`${dd('ackStatus')}: MAV_RESULT=${d.result}`);if(d.result===0||d.result===5){if(accel.kind==='six'){if(accel.requested===null && accel.status!=='capturing'){accel.status='waiting';renderAccel();status('accelStatus',tt('waiting'));}}else if(d.result===0)markAccelResult(true);else {accel.status='waiting';renderAccel();}}else markAccelResult(false,`${tt('failed')} · MAV_RESULT=${d.result}`);}
- if(d.command===42424&&mag.running){if(d.result!==0&&d.result!==5){mag.running=false;mag.complete=false;status('compassStatus',`${tt('failed')} · MAV_RESULT=${d.result}`);renderCompass();}}
+ if(d.command===42424&&mag.running){if(d.result!==0&&d.result!==5){mag.running=false;mag.complete=false;status('compassStatus',`${tt('failed')} · MAV_RESULT=${d.result}`);window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:'compass',status:'failed',verified:false,reason:'MAV_RESULT='+d.result}}));renderCompass();}}
  if(d.command===42425){if(d.result===0){mag.saving=true;status('compassStatus',tt('waiting'));}else{mag.saving=false;status('compassStatus',`${tt('failed')} · MAV_RESULT=${d.result}`);}renderCompass();}
- if(d.command===42426){mag.running=false;mag.complete=false;status('compassStatus',tt('cancelled'));renderCompass();}
+ if(d.command===42426){mag.running=false;mag.complete=false;status('compassStatus',tt('cancelled'));window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:'compass',status:'cancelled',verified:false}}));renderCompass();}
 }
 function renderAccel(){const s=currentState();
  const rx=api.diagnosticStats?.();if(rx&&$('accelRxStats'))$('accelRxStats').textContent=`RX OK ${rx.valid} · CRC FAIL ${rx.invalid} · COMMAND_LONG ${rx.commands} · POS(42429) ${rx.positionRequests} · ACK ${rx.acknowledgements} · TEXT ${rx.textMessages} · FC ${rx.sysid??'?'}:${rx.compid??'?'}`;
@@ -303,7 +303,7 @@ function renderCompass(){const s=currentState();const can=safe()&&!accel.kind;co
  $('compassAcceptBtn').disabled=!can||!reportDone||mag.autosaved||mag.saving;
  $('compassCancelBtn').disabled=!can||!mag.running;
  $('compassProgressBar').style.width=mag.pct+'%';status('compassProgressValue',Math.round(mag.pct)+'%');status('compassProgressText',mag.running?tt('compassRunning'):mag.complete?(mag.autosaved?tt('done'):tt('notSaved')):mag.lastResult||'NO DATA');status('compassBadge',s.demo?tt('demo'):safe()?'USB / DISARMED':'DISARM REQUIRED');}
-async function startMag(){if(!guard())return;mag.running=true;mag.complete=false;mag.autosaved=false;mag.saving=false;mag.pct=0;mag.reported.clear();mag.results.clear();mag.lastResult=null;status('compassStatus',tt('sending'));renderCompass();
+async function startMag(){if(!guard())return;mag.running=true;mag.complete=false;mag.autosaved=false;mag.saving=false;mag.pct=0;mag.reported.clear();mag.results.clear();mag.lastResult=null;window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:'compass',status:'started',verified:false}}));status('compassStatus',tt('sending'));renderCompass();
  try{await api.command(42424,[0,0,0,0,0,0,0]);emit('MAV_CMD_DO_START_MAG_CAL requested');}catch(e){mag.running=false;status('compassStatus',e.message);renderCompass();}}
 async function acceptMag(){if(!safe()||!mag.complete||mag.autosaved)return;try{await api.command(42425,[0,0,0,0,0,0,0]);status('compassStatus',tt('sending'));}catch(e){status('compassStatus',e.message);}}
 async function cancelMag(){if(!safe()||!mag.running)return;try{await api.command(42426,[0,0,0,0,0,0,0]);status('compassStatus',tt('sending'));}catch(e){status('compassStatus',e.message);}}
@@ -318,6 +318,7 @@ function magReport(d){if(!mag.running&&!mag.complete)return;
  mag.lastResult=`#${d.compassId} · cal_status ${d.status} · fitness ${d.fitness.toFixed(2)}`;
  status('compassStatus',failed?`${tt('failed')} · ${mag.lastResult}`:ok?(mag.autosaved?tt('done'):tt('notSaved')):tt('compassRunning'));
  if(!mag.running||failed)emit('MAG_CAL_REPORT '+mag.lastResult,failed);
+ window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:'compass',status:failed?'failed':ok?(mag.autosaved?'done':'awaiting-save'):'progress',verified:!!(ok&&mag.autosaved),autosaved:mag.autosaved,fitness:d.fitness,compassId:d.compassId}}));
  renderCompass();}
 
 function onMessage(evt){const d=evt.detail,s=currentState();if(s.sysid===null||d.sourceSysid!==s.sysid||!s.connected)return;
@@ -334,7 +335,7 @@ function onMessage(evt){const d=evt.detail,s=currentState();if(s.sysid===null||d
  else if(d.type==='mag_report')magReport(d);
  else if(d.type==='param'&&!paramRenderQueued){paramRenderQueued=true;setTimeout(()=>{paramRenderQueued=false;if(document.querySelector('[data-panel="battery"].active'))drawParams('batteryParamGrid',monitored);if(document.querySelector('[data-panel="compass"].active'))drawParams('compassParamGrid',magnets);},400);}
 }
-function onState(){if(benchActive&&!safe())stopBench('connection');if(!currentState().connected){lastStreamRequest=0;if(accel.kind)markAccelResult(false,tt('need'));mag.running=false;mag.complete=false;mag.saving=false;live.servos.fill(null);live.servoTime=0;live.current=null;live.remaining=null;live.consumed=null;live.batteryTime=0;}renderAll();if(servoEditing!==null)updateRealtimeUi();}
+function onState(){if(benchActive&&!safe())stopBench('connection');if(!currentState().connected){lastStreamRequest=0;if(accel.kind)markAccelResult(false,tt('need'));if(mag.running)window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:'compass',status:'failed',verified:false,reason:'MAVLink disconnected'}}));mag.running=false;mag.complete=false;mag.saving=false;live.servos.fill(null);live.servoTime=0;live.current=null;live.remaining=null;live.consumed=null;live.batteryTime=0;}renderAll();if(servoEditing!==null)updateRealtimeUi();}
 let lastStreamRequest=0;
 async function requestTelemetry(){const s=currentState();if(!s.connected||s.sysid===null||lastStreamRequest===s.sysid)return;lastStreamRequest=s.sysid;
  for(const [id,interval] of [[36,200000],[147,1000000],[191,500000],[192,500000]]){try{await api.requestMessage(id,interval);}catch(e){emit('MAVLink stream '+id+': '+e.message,true);}}
