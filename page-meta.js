@@ -4,9 +4,9 @@
   'use strict';
   const pages = {
     'index.html': {
-      ru: {title:'A.T.L.A.S. — экспериментальная прошивка ArduPlane и конфигуратор', description:'A.T.L.A.S. — модификация ArduPlane 4.7.2 с EKF3 NOAID, настройкой полётных контроллеров, каталогом прошивок и документацией.'},
-      uk: {title:'A.T.L.A.S. — експериментальна прошивка ArduPlane та конфігуратор', description:'A.T.L.A.S. — модифікація ArduPlane 4.7.2 з EKF3 NOAID, налаштуванням польотних контролерів, каталогом прошивок і документацією.'},
-      en: {title:'A.T.L.A.S. — Experimental ArduPlane Firmware & Configurator', description:'A.T.L.A.S. is a modified ArduPlane 4.7.2 project featuring EKF3 NOAID, flight-controller configuration, a firmware catalog and documentation.'}
+      ru: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 и конфигуратор', description:'Проверенная сборка A.T.L.A.S. Release 1.0 для Matek H743-WING V3: EKF3 NOAID, режимы без GPS, веб-конфигуратор и документация.'},
+      uk: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 та конфігуратор', description:'Перевірена збірка A.T.L.A.S. Release 1.0 для Matek H743-WING V3: EKF3 NOAID, режими без GPS, вебконфігуратор і документація.'},
+      en: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 & Configurator', description:'Tested A.T.L.A.S. Release 1.0 build for Matek H743-WING V3, with EKF3 NOAID, GPS-denied modes, a browser configurator and documentation.'}
     },
     'configurator.html': {
       ru: {title:'A.T.L.A.S. — Конфигуратор полётного контроллера', description:'A.T.L.A.S. Control Center: MAVLink, параметры ArduPlane, калибровка датчиков, настройка сервоприводов, OSD и прошивки.'},

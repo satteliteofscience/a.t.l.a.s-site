@@ -1,7 +1,7 @@
 {
   "project": "A.T.L.A.S.",
   "base": "ArduPlane 4.7.2",
-  "channel": "Pre-Release",
+  "channel": "Release 1.0",
   "verified_diff": false,
   "items": [
     {
