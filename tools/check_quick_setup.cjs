@@ -36,6 +36,16 @@ function escParams({mask=0,otype=0,channels=[3],can=false}={}){
  assert.deepEqual(profile.changes,[['THR_MAX',95]]);
  assert.ok(profile.warnings.filter(x=>x.reason==='protected-skipped').length===2);
 })();
+(function testUnsafeParamValuesAreRejected(){
+ const live=params([['THR_MAX',100,6],['SERVO3_MIN',1000,3],['SERVO3_TRIM',1500,4],['BAT_AMP_PERVLT',2.5,9],['FLOAT64_EXPERIMENT',1,10]]);
+ for(const line of ['THR_MAX 90 unexpected','SERVO3_MIN -1','SERVO3_MIN 65536','SERVO3_TRIM 32768','THR_MAX 2147483648','FLOAT64_EXPERIMENT 1.3']){
+  const result=core.parseParamText(line+'\n',live,{});
+  assert.equal(result.valid,false,'accepted '+line);
+ }
+ const okay=core.parseParamText('THR_MAX 90 # inline comment\nBAT_AMP_PERVLT 1.25 ; supported comment\n',live,{});
+ assert.equal(okay.valid,true);
+ assert.equal(okay.changes.length,2);
+})();
 (function testEscClassification(){
  assert.equal(core.classifyEscProtocol(escParams({mask:1<<2,otype:6,channels:[3]}),'matek-h743-wing-v3').kind,'dshot');
  assert.equal(core.classifyEscProtocol(escParams({mask:0,otype:6,channels:[3]}),'matek-h743-wing-v3').kind,'pwm');
