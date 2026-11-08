@@ -40,7 +40,7 @@
   if(!maskParam||!typeParam)return {kind:'unknown',channels,reason:'SERVO_BLH_MASK or SERVO_BLH_OTYPE is not available in the parameter list.'};
   const canKeys=[...params.keys()].filter(name=>/^CAN_.*(?:DRIVER|PROTOCOL)$/.test(name));
   if(canKeys.some(name=>Number(params.get(name)?.value)>0))return {kind:'unknown',channels,reason:'CAN is configured; the physical ESC path cannot be inferred safely from this parameter subset.'};
-  const mask=Number(maskParam.value)>>>0,otype=Number(typeParam.value),selected=channels.filter(channel=>(mask&(1<<(channel-1)))!==0);
+  const rawMask=Number(maskParam.value),otype=Number(typeParam.value);if(!Number.isFinite(rawMask)||!Number.isInteger(rawMask)||!Number.isFinite(otype)||!Number.isInteger(otype))return {kind:'unknown',channels,reason:'ESC protocol mask/type values are invalid.'};const mask=rawMask>>>0,selected=channels.filter(channel=>(mask&(1<<(channel-1)))!==0);
   if(selected.length){
    if(DSHOT_TYPES.includes(otype)){
     if(selected.length!==channels.length)return {kind:'mixed',channels,dshotChannels:selected,reason:'Some throttle outputs are DShot and others are not.'};
