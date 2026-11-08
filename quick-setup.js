@@ -143,7 +143,7 @@ function selectedBoard(){const s=state();return s.selectedBoard||'unknown';}
 function boardLabel(id){return id==='matek-h743-wing-v3'?'Matek H743-WING V3':id==='cube-orange'?'Orange Cube':id;}
 function renderFirmware(box){
  const board=selectedBoard(),matek=board==='matek-h743-wing-v3';
- if(qs.firmwareBoard&&qs.firmwareBoard!==board){qs.firmwareSource=null;qs.firmwareError='';delete qs.completed[2];}
+ if(qs.firmwareBoard&&qs.firmwareBoard!==board){qs.firmwareSource=null;qs.firmwareBoard=null;qs.firmwareError='';for(let i=2;i<10;i++)delete qs.completed[i];qs.preview=null;qs.paramsApplied=false;qs.backupDownloaded=false;qs.compatConfirmed=false;qs.rebootReady=false;qs.rebootSawDisconnect=false;}
  addHeading(box,t('firmwareTitle'),t('firmwareBody'));
  const kv=el('div','qs-kv');const item=el('div');item.append(el('small','',t('board')),el('strong','',boardLabel(board)));kv.append(item);box.append(kv);
  if(matek)callout(box,t('firmwareDfuWait'),'warning');else callout(box,t('firmwareExternal'),'warning');
@@ -193,7 +193,7 @@ async function loadParams(){
  render();
 }
 function paramErrorText(error){
- const keys={unknown:'paramUnknown',duplicate:'paramDuplicate',range:'paramRange',format:'paramFormat',integer:'paramInteger',readonly:'paramReadonly','int64-unsupported':'paramInt64'};
+ const keys={unknown:'paramUnknown',duplicate:'paramDuplicate',range:'paramRange',format:'paramFormat',integer:'paramInteger',readonly:'paramReadonly','int64-unsupported':'paramInt64',type:'paramType'};
  return t(keys[error.reason]||'paramInvalid')+(error.name?' · '+error.name:'')+(error.line?' · line '+error.line:'');
 }
 async function onParamFile(file){
@@ -275,7 +275,7 @@ function renderAccel(box){
 function renderLevel(box){
  addHeading(box,t('levelTitle'),t('levelBody'));
  if(qs.levelError)callout(box,qs.levelError,'danger');
- callout(box,t('accelNeedLink'),api.canCalibrate()?'success':'warning');
+ callout(box,api.canCalibrate()?t('disarmed'):t('accelNeedLink'),api.canCalibrate()?'success':'warning');
  button(box,t('startLevel'),()=>startCalibration('level'),'cc-button primary').disabled=!api.canCalibrate();
  if(qs.completed[5])callout(box,t('levelDone'),'success');
 }
@@ -331,7 +331,7 @@ function renderCompass(box){
  }
 }
 function renderFinal(box){
- addHeading(box,t('doneTitle'),t('finalBody'));
+ addHeading(box,qs.finalChecks.every(Boolean)?t('doneTitle'):t('finalTitle'),t('finalBody'));
  const list=el('div','qs-field-list');
  t('finalChecks').forEach((label,index)=>checkbox(list,label,qs.finalChecks[index],value=>{qs.finalChecks[index]=value;render();}));
  box.append(list);
@@ -389,9 +389,10 @@ setInterval(()=>{
   if(!s.connected||Date.now()-s.lastHeartbeat>6000)qs.rebootSawDisconnect=true;
   if(qs.rebootSawDisconnect&&s.connected&&s.lastHeartbeat>qs.rebootBaseline&&Date.now()-s.lastHeartbeat<4000&&!qs.rebootReady){qs.rebootReady=true;setGlobal(t('rebootDone'));render();}
  }
- if(qs.step===3||qs.step===4||qs.step===5||qs.step===7||qs.step===8)renderHeader();
+ renderHeader();
 },1000);
 window.addEventListener('atlas:language',render);
+window.addEventListener('atlas:navigate',event=>{if(event.detail?.tab==='quicksetup')render();});
 window.addEventListener('atlas:parameters',render);
 document.querySelectorAll('[data-language]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(render,0)));
 render();
