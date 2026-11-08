@@ -3,8 +3,7 @@
 (() => {
  'use strict';
  const $=id=>document.getElementById(id);
- const host=$('atlasDonation');if(!host)return;
- const trigger=$('donationReveal'),panel=$('donationPanel');
+ const shortcut=$('atlasDonateShortcut');if(!shortcut)return;
  const copy={
   ru:{
    reveal:'ПОДДЕРЖАТЬ ПРОЕКТ',subtitle:'/// ДОБРОВОЛЬНАЯ ПОДДЕРЖКА ///',
@@ -12,7 +11,7 @@
    jarPay:'Поддержать через monobank Банку ↗',
    jarNote:'Сумма и способы перевода выбираются на monobank. Сайт не видит карту и не проверяет поступление средств.',
    jarMissing:'Ссылка на Банку временно недоступна.',
-   quickDonate:'💚 Поддержать через monobank ↗',
+   quickDonate:'ПОДДЕРЖАТЬ ЧЕРЕЗ MONOBANK ↗',
    quickDonateNote:'Добровольное пожертвование. Не требуется для участия в раннем тестировании.',
    testerTitle:'Программа раннего тестирования A.T.L.A.S.',
    testerDescription:'Оставьте заявку через Tally: email, модель контроллера, GitHub и опыт ArduPlane. Участие добровольное. Донат не обязателен и не гарантирует доступ.',
@@ -31,7 +30,7 @@
    jarPay:'Підтримати через monobank Банку ↗',
    jarNote:'Суму та способи переказу обирають на monobank. Сайт не отримує дані картки й не перевіряє зарахування.',
    jarMissing:'Посилання на Банку тимчасово недоступне.',
-   quickDonate:'💚 Підтримати через monobank ↗',
+   quickDonate:'ПІДТРИМАТИ ЧЕРЕЗ MONOBANK ↗',
    quickDonateNote:'Добровільна пожертва. Не потрібна для участі в ранньому тестуванні.',
    testerTitle:'Програма раннього тестування A.T.L.A.S.',
    testerDescription:'Подайте заявку через Tally: email, модель контролера, GitHub та досвід ArduPlane. Участь добровільна. Донат не є обов’язковим і не гарантує доступ.',
@@ -50,7 +49,7 @@
    jarPay:'Support via monobank Jar ↗',
    jarNote:'Select your amount and transfer method on monobank. This site never receives card details or verifies a transfer.',
    jarMissing:'The donation link is temporarily unavailable.',
-   quickDonate:'💚 Donate via monobank ↗',
+   quickDonate:'SUPPORT VIA MONOBANK ↗',
    quickDonateNote:'Voluntary support. Not required to apply for early testing.',
    testerTitle:'A.T.L.A.S. Early Tester Program',
    testerDescription:'Apply via Tally with your email, flight controller, GitHub username and ArduPlane experience. Applying is voluntary; donations are not required and do not guarantee access.',
@@ -64,7 +63,7 @@
    step3:'If approved, receive an invitation when a suitable test is available.'
   }
  };
- let support={},application={},pinned=false;
+ let support={},application={};
  const valid=(s,hostname,pathRegex)=>{
   try{
    const u=new URL(s);
@@ -75,25 +74,16 @@
  function put(id,value){const e=$(id);if(e)e.textContent=value;}
  function render(){
   const t=current();
-  put('donationTriggerTitle',t.reveal);put('donationTriggerSecondary',t.subtitle);
-  put('donationDirectTitle',String(support.donation_title||'A.T.L.A.S. — Підтримка розробки').slice(0,140));
-  put('donationDirectIntro',t.jarDescription);put('donationDirectNote',t.jarNote);
   const jar=support.donation_provider==='monobank-jar'?valid(support.donation_url,'send.monobank.ua',/^\/jar\/[A-Za-z0-9_-]+\/?$/):null;
-  const donationBlock=$('atlasDirectDonation');
-  const donationLink=$('donationDirectLink');
   const quickLink=$('atlasQuickDonate');
-  const quickNote=$('atlasQuickDonateNote');
-  const quickPanel=$('atlasDonateShortcut');
-  donationBlock.hidden=!jar;
-  donationLink.hidden=!jar;
-  quickPanel.hidden=!jar;
+  shortcut.hidden=!jar;
   if(jar){
-   donationLink.href=jar;donationLink.textContent=t.jarPay;
-   quickLink.href=jar;quickLink.textContent=t.quickDonate;
-   quickNote.textContent=t.quickDonateNote;
+   quickLink.href=jar;
+   put('atlasQuickDonateLabel',t.quickDonate);
+   put('atlasQuickDonateSubtitle',t.subtitle);
+   put('atlasQuickDonateNote',t.quickDonateNote);
   }else{
-   donationLink.removeAttribute('href');quickLink.removeAttribute('href');
-   put('donationDirectNote',t.jarMissing);
+   quickLink.removeAttribute('href');
   }
   const form=application.provider==='tally-hosted'?valid(application.form_url,'tally.so',/^\/r\/[A-Za-z0-9]+\/?$/):null;
   put('atlasTesterHint',form?t.testerHint:t.testerMissing);
@@ -104,20 +94,13 @@
   if(form){applyLink.href=form;put('atlasTesterLinkLabel',t.testerButton);}
   else applyLink.removeAttribute('href');
  }
- function show(open){panel.hidden=!open;host.classList.toggle('is-revealed',open);trigger.setAttribute('aria-expanded',String(open));}
- trigger.addEventListener('click',()=>{pinned=!pinned;show(pinned);});
- // Brief glitch pulse also on touch and keyboard activation; the real link still opens Tally.
- const testerCTA=$('atlasTesterLink');
- let glitchTimeout;
- testerCTA.addEventListener('click',()=>{
-  testerCTA.classList.add('is-glitching');
-  clearTimeout(glitchTimeout);
-  glitchTimeout=setTimeout(()=>testerCTA.classList.remove('is-glitching'),650);
- });
- host.addEventListener('pointerenter',ev=>{if(ev.pointerType!=='touch')show(true);});
- host.addEventListener('pointerleave',ev=>{if(ev.pointerType!=='touch'&&!pinned)show(false);});
- host.addEventListener('focusin',()=>show(true));
- host.addEventListener('focusout',()=>{queueMicrotask(()=>{if(!pinned&&!host.contains(document.activeElement)&&!host.matches(':hover'))show(false);});});
+ // A native outbound anchor is always clickable; the glitch is purely decorative.
+ for(const link of [$('atlasQuickDonate'),$('atlasTesterLink')]){
+  link.addEventListener('click',()=>{
+   link.classList.add('is-glitching');
+   setTimeout(()=>link.classList.remove('is-glitching'),650);
+  });
+ }
  window.addEventListener('atlas:languagechange',render);
  (async()=>{try{
   const [a,b]=await Promise.all([fetch('data/support.json',{cache:'no-store'}),fetch('data/subscriptions.json',{cache:'no-store'})]);

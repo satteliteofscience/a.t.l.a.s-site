@@ -1,52 +1,43 @@
-/* Read-only A.T.L.A.S. static donor + Early Tester checks. */
+/* A.T.L.A.S. static donation and Early Tester regression checks. */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const donation=JSON.parse(fs.readFileSync('data/support.json','utf8'));
-const signup=JSON.parse(fs.readFileSync('data/subscriptions.json','utf8'));
 const html=fs.readFileSync('index.html','utf8');
-const js=fs.readFileSync('support.js','utf8');
+const script=fs.readFileSync('support.js','utf8');
+const css=fs.readFileSync('support.css','utf8');
+const donor=JSON.parse(fs.readFileSync('data/support.json','utf8'));
+const tester=JSON.parse(fs.readFileSync('data/subscriptions.json','utf8'));
 const privacy=fs.readFileSync('privacy.html','utf8');
-assert.equal(donation.donation_provider,'monobank-jar');
-assert.equal(donation.donation_url,'https://send.monobank.ua/jar/7jkKfdWREX');
-assert.equal(donation.donation_title,'A.T.L.A.S. — Підтримка розробки');
-assert.equal(donation.iban,'');
-assert.equal(signup.provider,'tally-hosted');
-assert.equal(signup.form_url,'https://tally.so/r/ArKQJl');
-assert.equal(signup.review,'manual');
-assert.equal(signup.automated_newsletters,false);
-for(const [value,host,pattern] of [
- [donation.donation_url,'send.monobank.ua',/^\/jar\/[a-zA-Z0-9_-]+\/?$/],
- [signup.form_url,'tally.so',/^\/r\/[a-zA-Z0-9]+\/?$/]
-]){
- const url=new URL(value);
- assert.equal(url.protocol,'https:');assert.equal(url.hostname,host);assert.match(url.pathname,pattern);
+assert.equal(donor.donation_provider,'monobank-jar');
+assert.equal(donor.donation_url,'https://send.monobank.ua/jar/7jkKfdWREX');
+assert.equal(donor.iban,'');
+assert.equal(tester.provider,'tally-hosted');
+assert.equal(tester.form_url,'https://tally.so/r/ArKQJl');
+assert.equal(tester.review,'manual');
+assert.equal(tester.automated_newsletters,false);
+for(const [value,host,pattern] of [[donor.donation_url,'send.monobank.ua',/^\/jar\/[A-Za-z0-9_-]+\/?$/],[tester.form_url,'tally.so',/^\/r\/[A-Za-z0-9]+\/?$/]]){
+ const u=new URL(value);
+ assert.equal(u.protocol,'https:');assert.equal(u.hostname,host);assert.match(u.pathname,pattern);
 }
-for(const id of ['atlasDonation','atlasDonateShortcut','atlasQuickDonate','atlasQuickDonateNote','donationReveal','donationPanel','atlasDirectDonation','donationDirectLink','atlasTesterLink','atlasTesterLinkLabel','atlasTesterPrivacyLink','atlasTesterInfo','atlasTesterStep1','atlasTesterStep2','atlasTesterStep3']){
- assert.ok(html.includes('id="'+id+'"'),'missing element '+id);
+for(const id of ['atlasDonateShortcut','atlasQuickDonate','atlasQuickDonateLabel','atlasQuickDonateSubtitle','atlasQuickDonateNote','atlasTesterLink','atlasTesterLinkLabel','atlasTesterPrivacyLink','atlasTesterInfo','atlasTesterStep1','atlasTesterStep2','atlasTesterStep3']){
+ assert.ok(html.includes('id="'+id+'"'),'Missing '+id);
 }
-assert.match(html,/<a[^>]*id="donationDirectLink"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
-assert.match(html,/<a[^>]*id="atlasQuickDonate"[^>]*href="https:\/\/send\.monobank\.ua\/jar\/7jkKfdWREX"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
-assert.ok(js.includes("quickPanel.hidden=!jar"),'quick donate must use validated monobank URL');
-assert.match(html,/<a[^>]*id="atlasTesterLink"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
-assert.ok(!html.includes('id="atlasSubscriberForm"'),'legacy email form must be removed');
-const earlyCard=html.indexOf('class="support-early"');
-const tallyButton=html.indexOf('id="atlasTesterLink"');
-assert.ok(earlyCard>=0 && tallyButton>earlyCard,'Tally CTA must live inside the Early Tester program card');
-assert.ok(!html.includes('id="atlasTesterApplyPanel"'),'duplicate signup pane must be removed from donation panel');
-assert.ok(html.includes('class="atlas-donation-glitch" aria-hidden="true"></span>'),'glitch overlay must be present');
-assert.ok(js.includes("put('atlasTesterLinkLabel',t.testerButton)"),'language switching must retain the glitch layer');
-assert.ok(js.includes("testerCTA.addEventListener('click'"),'click glitch pulse must be wired up');
-const style=fs.readFileSync('support.css','utf8');
-assert.ok(style.includes('.atlas-tester-cta:hover .atlas-donation-glitch'),'hover glitch effect missing');
-assert.ok(style.includes('.atlas-tester-cta:active .atlas-donation-glitch'),'pressed glitch effect missing');
-assert.ok(style.includes('prefers-reduced-motion:reduce'),'reduced-motion support missing');
-assert.ok(js.includes("valid(support.donation_url,'send.monobank.ua'"));
-assert.ok(js.includes('donationBlock.hidden=!jar'), 'Jar container must become visible when a valid donation URL is configured');
-assert.ok(js.includes('donationLink.hidden=!jar'), 'Jar payment button must be visible when a valid donation URL is configured');
-assert.ok(js.includes("valid(application.form_url,'tally.so'"));
-for(const fragment of ['Поддержать через monobank Банку','Підтримати через monobank Банку','Support via monobank Jar','💚 Поддержать через monobank','💚 Підтримати через monobank','💚 Donate via monobank','Подать заявку тестировщика','Подати заявку тестувальника','Apply to test early firmware']){
- assert.ok(js.includes(fragment),'missing translated label: '+fragment);
+for(const id of ['atlasDonation','donationReveal','donationPanel','atlasDirectDonation','donationDirectLink','atlasSubscriberForm']){
+ assert.ok(!html.includes('id="'+id+'"'),'Legacy duplicate/spoiler remains: '+id);
 }
+assert.equal((html.match(/href="https:\/\/send\.monobank\.ua\/jar\/7jkKfdWREX"/g)||[]).length,1,'exactly one direct Jar link');
+assert.match(html,/<a[^>]*id="atlasQuickDonate"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+assert.ok(html.indexOf('id="atlasTesterLink"')>html.indexOf('class="support-early"'));
+assert.ok(html.includes('id="atlasQuickDonateLabel"')&&html.includes('id="atlasQuickDonateSubtitle"'));
+assert.ok(script.includes("shortcut.hidden=!jar"),'Jar URL must be validated');
+assert.ok(script.includes("put('atlasQuickDonateLabel',t.quickDonate)"),'RU/UA/EN text must be dynamic');
+assert.ok(script.includes("put('atlasQuickDonateSubtitle',t.subtitle)"));
+assert.ok(!script.includes("donationReveal")&&!script.includes("donationDirectLink"),'Old JS spoiler logic present');
+for(const s of ['ПОДДЕРЖАТЬ ЧЕРЕЗ MONOBANK','ПІДТРИМАТИ ЧЕРЕЗ MONOBANK','SUPPORT VIA MONOBANK','Подать заявку тестировщика','Подати заявку тестувальника','Apply to test early firmware']){
+ assert.ok(script.includes(s),'Missing translation '+s);
+}
+assert.ok(css.includes('.atlas-donate-cta:hover .atlas-donation-glitch'));
+assert.ok(css.includes('.atlas-donate-cta:active .atlas-donation-glitch'));
+assert.ok(css.includes('prefers-reduced-motion:reduce'));
+assert.ok(script.includes("for(const link of [$('atlasQuickDonate'),$('atlasTesterLink')])"));
 assert.ok(privacy.includes('Tally')&&privacy.includes('Google Sheets'));
-assert.ok(privacy.includes('необязательны')&&privacy.includes('voluntary'));
-console.log('PASS: monobank Jar, Tally form, three languages, privacy and manual review.');
+console.log('PASS: single one-click monobank CTA, glitch animations, Tally and three languages.');
