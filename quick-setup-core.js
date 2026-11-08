@@ -54,7 +54,7 @@
   if(selected.length){
    if(DSHOT_TYPES.includes(otype)){
     if(selected.length!==channels.length)return {kind:'mixed',channels,dshotChannels:selected,reason:'Some throttle outputs are DShot and others are not.'};
-    if(board==='cube-orange'&&selected.some(channel=>channel<=8))return {kind:'dshot-board-limit',channels,dshotChannels:selected,reason:'Cube Orange MAIN outputs 1–8 do not support DShot; verify the physical AUX output mapping.'};
+    if(board==='cube-orange'&&selected.some(channel=>channel<=8))return {kind:'dshot-board-limit',channels,dshotChannels:selected,reason:'Cube Orange MAIN DShot support depends on firmware and IOMCU configuration. On modern ArduPlane versions MAIN outputs may support DShot; verify BRD_IO_DSHOT (where present), wiring and the boot RCOut protocol report.'};
     return {kind:'dshot',channels,dshotChannels:selected,otype,reason:'All detected throttle outputs are selected by SERVO_BLH_MASK with a DShot SERVO_BLH_OTYPE.'};
    }
    if(ONESHOT_TYPES.includes(otype))return {kind:'other-pulse',channels,selected,otype,reason:'OneShot / OneShot125 / brushed output is configured; do not assume the traditional PWM calibration procedure applies.'};
