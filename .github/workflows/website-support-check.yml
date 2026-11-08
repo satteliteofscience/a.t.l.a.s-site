@@ -5,6 +5,8 @@ on:
       - 'index.html'
       - 'support.js'
       - 'support.css'
+      - 'styles.css'
+      - 'tools/check_performance.cjs'
       - 'contact-support.css'
       - 'contact-support.js'
       - 'tools/check_support_contact.cjs'
@@ -57,6 +59,8 @@ jobs:
         run: node tools/check_firmware_access.cjs
       - name: Verify firmware notice cleanup and support contact modal
         run: node tools/check_support_contact.cjs
+      - name: Check render performance and animation scheduling
+        run: node tools/check_performance.cjs
       - name: Verify old public release scripts cannot run
         run: |
           python3 -m py_compile tools/release_manager.py tools/update_firmware_manifest.py tools/publish_github_releases.py

@@ -71,6 +71,7 @@ function navigate(tab){
  state.selectedTab=tab;
  document.querySelectorAll('.cc-tab').forEach(el=>el.classList.toggle('active',el.dataset.panel===tab));
  document.querySelectorAll('.cc-nav').forEach(el=>{let active=el.dataset.tab===tab;el.classList.toggle('active',active);el.setAttribute('aria-current',active?'page':'false');});
+ scheduleHorizon();
  window.location.hash=tab;
  // A new visit to Parameter List initiates a fresh live read, as in Mission Planner.
  // Do not reset the list while another parameter transfer or batch write is running.
@@ -481,7 +482,18 @@ async function loadCatalog(){let info=null;try{const embedded=$('atlasEmbeddedDa
 async function parseApj(file){if(!file)return;state.apj=null;state.apjFilename=file.name;try{if(file.size>32*1024*1024)throw Error('File too large');const obj=JSON.parse(await file.text());if(!Number.isSafeInteger(obj.board_id)||typeof obj.image!=='string'||!obj.image.length)throw Error(tr('metaBad'));state.apj=obj;
  const node=$('apjMetadata');node.replaceChildren();const pair=(k,v)=>{const dl=document.createElement('dl'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=k;dd.textContent=String(v);dl.append(dt,dd);node.append(dl);};pair(tr('filename'),file.name);pair(tr('boardid'),obj.board_id);pair(tr('size'),(obj.image_size===undefined?'?':`${(obj.image_size/1024).toFixed(1)} KiB`));pair(tr('format'),'ArduPilot APJ / JSON');pair('STATUS',tr('metaFound'));toast(`APJ board_id=${obj.board_id} · ${file.name}`);
  }catch(err){$('apjMetadata').textContent=tr('metaBad');toast(`${tr('error')}: ${err.message}`,true);}}
-function drawHorizon(ts){if(!state.hudLoopActive||state.pageLeaving)return;if(document.hidden||state.selectedTab!=='dashboard'||ts-(state.lastCanvasDraw||0)<33){state.hudRaf=requestAnimationFrame(drawHorizon);return;}state.lastCanvasDraw=ts;const canvas=$('attitudeCanvas'),ctx=canvas.getContext('2d');const rect=canvas.getBoundingClientRect();if(rect.width<10){state.hudRaf=requestAnimationFrame(drawHorizon);return;}
+// Schedule work only while the user can see the dashboard; keep the same ~30 FPS when active.
+function scheduleHorizon(){
+ if(state.pageLeaving||!state.hudLoopActive||document.hidden||state.selectedTab!=='dashboard'||state.hudRaf)return;
+ state.hudRaf=requestAnimationFrame(drawHorizon);
+}
+function drawHorizon(ts){
+ state.hudRaf=0;
+ if(!state.hudLoopActive||state.pageLeaving||document.hidden||state.selectedTab!=='dashboard')return;
+ if(ts-(state.lastCanvasDraw||0)<33){scheduleHorizon();return;}
+ state.lastCanvasDraw=ts;
+ const canvas=$('attitudeCanvas'),ctx=canvas.getContext('2d');const rect=canvas.getBoundingClientRect();
+ if(rect.width<10)return;
  const dpr=Math.min(2,window.devicePixelRatio||1),w=rect.width,h=rect.height;if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  if(state.demo){const t=ts/1000;state.telemetry.roll=19*Math.sin(t*.66);state.telemetry.pitch=8*Math.sin(t*.41);state.telemetry.yaw=(220+(t*3.2)%360)%360;state.telemetry.airspeed=104+28*Math.sin(t*.21);state.telemetry.altitude=150+16*Math.sin(t*.32);state.telemetry.voltage=23.2+0.1*Math.cos(t*.05);}
  const roll=state.telemetry.roll||0,pitch=state.telemetry.pitch||0;const r=roll*Math.PI/180;
@@ -498,7 +510,7 @@ function drawHorizon(ts){if(!state.hudLoopActive||state.pageLeaving)return;if(do
  ctx.strokeStyle='#d4c368b8';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(midx,midy,Math.min(w,h)*.45,Math.PI*1.1,Math.PI*1.9);ctx.stroke();for(let a=-60;a<=60;a+=15){const deg=(a-90)*Math.PI/180,rad=Math.min(w,h)*.45;ctx.beginPath();ctx.moveTo(midx+rad*Math.cos(deg),midy+rad*Math.sin(deg));ctx.lineTo(midx+(rad-((a%30)?7:13))*Math.cos(deg),midy+(rad-((a%30)?7:13))*Math.sin(deg));ctx.stroke();}
  ctx.fillStyle='#f6e17b';ctx.beginPath();ctx.moveTo(midx,midy-Math.min(w,h)*.46);ctx.lineTo(midx-9,midy-Math.min(w,h)*.46-13);ctx.lineTo(midx+9,midy-Math.min(w,h)*.46-13);ctx.fill();
  ctx.font='bold 12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.fillStyle='#e4d088';ctx.fillText('A.T.L.A.S. // ATTITUDE',midx,h-20);ctx.textAlign='left';ctx.fillStyle='#b9c495a6';ctx.fillText('EKF3',15,26);ctx.textAlign='right';ctx.fillText(state.demo?'SYNTHETIC':state.connected?'MAVLINK':'OFFLINE',w-15,26);
- if(ts-state.renderTimer>140){state.renderTimer=ts;updateTelemetryUI();}state.hudRaf=requestAnimationFrame(drawHorizon);
+ if(ts-state.renderTimer>140){state.renderTimer=ts;updateTelemetryUI();}scheduleHorizon();
 }
 function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.language)));document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.tab)));
  // Explicitly close the live serial session BEFORE navigating home; pagehide alone
@@ -520,7 +532,8 @@ function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEve
  const leavePage=()=>{cleanupForNavigation().catch(()=>{});};
  window.addEventListener('pagehide',leavePage,{capture:true});
  window.addEventListener('beforeunload',leavePage,{capture:true});
- window.addEventListener('pageshow',ev=>{if(ev.persisted){state.pageLeaving=false;state.hudLoopActive=true;state.lastHeartbeat=0;updateConnectionUI();state.hudRaf=requestAnimationFrame(drawHorizon);}});
+ document.addEventListener('visibilitychange',scheduleHorizon);
+ window.addEventListener('pageshow',ev=>{if(ev.persisted){state.pageLeaving=false;state.hudLoopActive=true;state.lastHeartbeat=0;updateConnectionUI();scheduleHorizon();}});
 }
-wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Pre-Release');state.hudLoopActive=true;state.hudRaf=requestAnimationFrame(drawHorizon);
+wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Pre-Release');state.hudLoopActive=true;scheduleHorizon();
 })();
