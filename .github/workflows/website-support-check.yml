@@ -5,6 +5,9 @@ on:
       - 'index.html'
       - 'support.js'
       - 'support.css'
+      - 'contact-support.css'
+      - 'contact-support.js'
+      - 'tools/check_support_contact.cjs'
       - 'data/support.json'
       - 'data/subscriptions.json'
       - 'privacy.html'
@@ -45,13 +48,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check JavaScript syntax
-        run: node --check support.js && node --check page-meta.js && node --check app.js && node --check configurator.js && node --check dfu-ui.js && node --check firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
+        run: node --check support.js && node --check page-meta.js && node --check app.js && node --check contact-support.js && node --check configurator.js && node --check dfu-ui.js && node --check firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
       - name: Verify monobank/Tally URLs, labels, privacy, no legacy form
         run: node tools/check_monobank_support.cjs
       - name: Verify link preview Open Graph and Twitter metadata
         run: node tools/check_social_preview.cjs
       - name: Verify production private firmware metadata, PIN routes and fail-closed publishers
         run: node tools/check_firmware_access.cjs
+      - name: Verify firmware notice cleanup and support contact modal
+        run: node tools/check_support_contact.cjs
       - name: Verify old public release scripts cannot run
         run: |
           python3 -m py_compile tools/release_manager.py tools/update_firmware_manifest.py tools/publish_github_releases.py

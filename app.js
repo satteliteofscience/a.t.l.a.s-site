@@ -4,9 +4,9 @@
   const tr = (key) => window.AtlasI18n?.t(key) ?? key;
   function localText(key) {
     const data = {
-      ru: {history:'Архив и откат к предыдущим версиям',source:'Исходный код',sourceNotice:'Перед публичной публикацией HEX предоставьте соответствующий исходный код этой сборки по GNU GPLv3.'},
-      uk: {history:'Архів і повернення до попередніх версій',source:'Вихідний код',sourceNotice:'Перед публічним розповсюдженням HEX надайте відповідний вихідний код цієї збірки згідно з GNU GPLv3.'},
-      en: {history:'Release history and rollback',source:'Source code',sourceNotice:'Provide the corresponding source code for this build under GNU GPLv3 before publicly distributing the HEX.'}
+      ru: {history:'Архив и откат к предыдущим версиям',source:'Исходный код'},
+      uk: {history:'Архів і повернення до попередніх версій',source:'Вихідний код'},
+      en: {history:'Release history and rollback',source:'Source code'}
     };
     return (data[window.AtlasI18n?.lang] || data.ru)[key];
   }
@@ -90,9 +90,6 @@
         history.append(summary);
         downloadable.slice(1).forEach(item => history.append(buildEntry(item, true)));
         actions.append(history);
-      }
-      if (!downloadable.every(item => item.source_url && safeUrl(item.source_url))) {
-        actions.append($('p', 'version-gpl-note', localText('sourceNotice')));
       }
     } else {
       actions.append($('div', 'download-placeholder', board.status === 'unverified'

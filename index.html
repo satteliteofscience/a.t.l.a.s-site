@@ -22,7 +22,7 @@
   <meta name="twitter:image" content="https://satteliteofscience.github.io/a.t.l.a.s-site/assets/github-social-preview.jpg">
   <meta name="twitter:image:alt" content="A.T.L.A.S. Control Center — ArduPlane EKF3 NOAID">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="support.css"><link rel="stylesheet" href="firmware-access.css">
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="support.css"><link rel="stylesheet" href="firmware-access.css"><link rel="stylesheet" href="contact-support.css">
   <title>A.T.L.A.S. — экспериментальная прошивка ArduPlane и конфигуратор</title>
 <style>.nav-console-link{color:#dec96e!important}.nav-console-link:hover{color:#fff0a2!important}</style>  <meta name="atlas-page" content="index.html">
   <script src="page-meta.js" defer></script>
@@ -113,7 +113,7 @@
         <div class="download-status" id="downloadStatus" role="status" aria-live="polite">Загружаем список платформ…</div>
         <p class="download-release-external"><a class="text-link" href="https://github.com/satteliteofscience/a.t.l.a.s-site/releases" target="_blank" rel="noopener noreferrer">GitHub Releases ↗</a> · <a class="text-link" href="https://github.com/satteliteofscience/a.t.l.a.s-site/blob/main/PROVIDER-SETUP.md" target="_blank" rel="noopener noreferrer">Deployment / Integrations</a></p>
         <div class="board-grid" id="boardGrid" aria-live="polite"></div>
-        <div class="downloads-foot"><div class="foot-icon">i</div><p>Не видишь своей платы? Не прошивай сборку для другой аппаратной ревизии. Совместимость зависит от target/hwdef, загрузчика и распиновки.</p><a id="issuesLink" href="#guide" class="text-link">Как запросить поддержку <span>↗</span></a></div>
+        <div class="downloads-foot"><div class="foot-icon">i</div><p>Не видишь своей платы? Не прошивай сборку для другой аппаратной ревизии. Совместимость зависит от target/hwdef, загрузчика и распиновки.</p><button id="issuesLink" type="button" class="text-link support-contact-trigger" aria-haspopup="dialog" aria-controls="supportContactDialog">Как запросить поддержку <span aria-hidden="true">↗</span></button></div>
       </section>
       <section class="section installation-section" id="guide"><div class="section-header"><div><p class="kicker">03 / DEPLOYMENT GUIDE</p><h2 class="block-blueprint-title"><img data-headline="guide" src="assets/headline-guide.png" alt="От выбора платы до первого старта."></h2></div><p class="section-intro">Не пропускай проверку аппаратной ревизии и резервное копирование параметров. Прошивка управляет реальными исполнительными механизмами.</p></div>
         <div class="steps-grid"><article class="step-card"><span>01 / IDENTIFY</span><h3>Уточни плату</h3><p>Найди точную модель и ревизию полётного контроллера. Название должно совпадать со сборкой.</p></article><article class="step-card"><span>02 / BACKUP</span><h3>Сохрани параметры</h3><p>Экспортируй параметры и проверь инструкции по совместимости. Не переноси вслепую конфигурацию из другой версии.</p></article><article class="step-card"><span>03 / FLASH</span><h3>Установи прошивку</h3><p>Используй совместимый загрузчик и режим установки прошивки в Mission Planner. Проводить настройку — без пропеллера.</p></article><article class="step-card"><span>04 / VERIFY</span><h3>Протестируй</h3><p>Проверь датчики, рули, направления, failsafe и режимы в SITL и на земле прежде, чем рассматривать полёт.</p></article></div>
@@ -162,9 +162,37 @@
       </section>
       <section class="section project-section" id="project"><div class="project-panel"><div><p class="kicker">04 / OPEN DEVELOPMENT</p><h2 class="project-placeholder-title">Публичные сборки на сайте.</h2><p>Актуальные и архивные прошивки доступны в каталоге этого сайта. Исходный репозиторий разработчика не публикуется; для распространяемых сборок соответствующие исходники должны быть доступны отдельно согласно GNU GPL.</p><div class="dev-credit"><span>РАЗРАБОТКА</span><b>Oleksandr</b><i>+</i><b>AI CODEX</b></div><p class="project-credit-note">Lead developer: Oleksandr · AI copilot: CODEX</p><div class="project-actions"><a class="btn btn-primary" href="#downloads">Каталог прошивок ↗</a><span class="repo-pending">Загрузка, история версий и откат — здесь, на сайте A.T.L.A.S.</span></div></div><div class="terminal-card" aria-label="Статус проекта"><div class="terminal-top"><span><i></i><i></i><i></i></span><span>atlas — status</span></div><div class="terminal-body"><p><b>$</b> atlas info</p><p><span>PROJECT</span> A.T.L.A.S.</p><p><span>BASE</span> ArduPlane 4.7.2</p><p><span>LICENSE</span> GPL-3.0-or-later *</p><p><span>CHANNEL</span> pre-release</p><p><span>LEAD</span> Oleksandr</p><p><span>AI</span> CODEX</p><p class="cursorline">_<i></i></p></div></div></div><p class="license-note">* GNU GPLv3: при публичной раздаче HEX необходимо обеспечить соответствующие исходники именно этой версии сборки. Закрытый служебный репозиторий не заменяет доступ к исходникам для получателей прошивки.</p></section>
     </main>
+    <dialog id="supportContactDialog" class="atlas-contact-dialog" aria-labelledby="supportContactTitle" aria-describedby="supportContactDescription">
+      <div class="atlas-contact-panel">
+        <button id="supportContactClose" class="atlas-contact-close" type="button" aria-label="Закрыть окно" title="Закрыть окно">×</button>
+        <p class="atlas-contact-kicker">A.T.L.A.S. / CONTACT CHANNEL</p>
+        <div class="atlas-contact-symbol" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="presentation" width="55" height="55" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="15" width="46" height="34" rx="3"></rect>
+            <path d="M10 17l22 19 22-19"></path>
+            <path d="M10 48l17-16M54 48L37 32"></path>
+          </svg>
+        </div>
+        <h2 id="supportContactTitle">Связь с разработчиком</h2>
+        <p id="supportContactDescription">Есть вопрос о A.T.L.A.S. или совместимости полётного контроллера? Напиши на почту проекта.</p>
+        <div class="atlas-contact-email-box">
+          <span id="supportContactEmailLabel">EMAIL / SUPPORT</span>
+          <a id="supportContactEmail" href="mailto:deluxe.history@outlook.com">deluxe.history@outlook.com</a>
+        </div>
+        <div class="atlas-contact-actions">
+          <a id="supportContactSend" class="atlas-contact-send" href="mailto:deluxe.history@outlook.com?subject=A.T.L.A.S.%20Support">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m3 6 9 7 9-7"></path></svg>
+            <span id="supportContactSendLabel">Написать письмо ↗</span>
+          </a>
+          <button id="supportContactCopy" class="atlas-contact-copy" type="button">Скопировать адрес</button>
+        </div>
+        <p id="supportContactHint" class="atlas-contact-hint">Укажи модель платы, версию прошивки и опиши свой вопрос. Кнопка откроет установленную почтовую программу.</p>
+      </div>
+    </dialog>
     <footer class="site-footer"><a class="footer-brand" href="#top"><img src="assets/mark.svg" alt="" width="32" height="32"><span>A.T.L.A.S.</span></a><p>Pre-Release ArduPlane project by Oleksandr &amp; AI CODEX. Not an official ArduPilot release.</p><span>© <span id="copyrightYear"></span> A.T.L.A.S. / Oleksandr + AI CODEX</span></footer>
   </div>
   <script src="i18n.js" defer></script>
+  <script src="contact-support.js" defer></script>
   <script src="firmware-access.js" defer></script>
   <script src="app.js" defer></script>
   <script src="support.js" defer></script>
