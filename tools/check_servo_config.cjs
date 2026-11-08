@@ -117,7 +117,7 @@ function testConfiguratorUsesOneQueue(){
  const toggleAt=source.indexOf("$('servoLiveApply').addEventListener('change'");
  const toggleEnd=source.indexOf("$('servoBenchConsent')",toggleAt);
  const toggleHandler=source.slice(toggleAt,toggleEnd);
- assert.match(toggleHandler,/if\(\$('servoLiveApply'\)\.checked\)queueRealtime\('ALL'\)/,'enabling Apply Immediately must flush the current draft');
+ assert.ok(toggleHandler.includes("if($('servoLiveApply').checked)queueRealtime('ALL')"),'enabling Apply Immediately must flush the current draft');
  assert.match(source,/await enqueueServoWrite\(async\(\)=>/);
  assert.match(source,/servoSavePending/);
  assert.doesNotMatch(source,/servoLiveQueue/);
