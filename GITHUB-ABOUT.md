@@ -4,13 +4,13 @@
 `ATLAS-Control-Center`
 
 ## Description (English, for GitHub → About)
-Experimental ArduPlane 4.7.2 flight firmware and A.T.L.A.S. Control Center: GPS-denied EKF3, MAVLink tools, versioned firmware releases and multilingual docs.
+Tested A.T.L.A.S. ArduPlane 4.7.2 Release 1.0 for Matek H743-WING V3, with GPS-denied EKF3, MAVLink tools, a browser configurator and multilingual documentation.
 
 ## Описание (русский)
-A.T.L.A.S. — экспериментальная модификация ArduPlane 4.7.2 и веб-конфигуратор: EKF3 без GPS, инструменты MAVLink, архив прошивок и документация.
+A.T.L.A.S. — проверенная модификация ArduPlane 4.7.2 Release 1.0 для Matek H743-WING V3: EKF3 без GPS, инструменты MAVLink, веб-конфигуратор и документация.
 
 ## Опис (українська)
-A.T.L.A.S. — експериментальна модифікація ArduPlane 4.7.2 і вебконфігуратор: EKF3 без GPS, інструменти MAVLink, архів прошивок і документація.
+A.T.L.A.S. — перевірена модифікація ArduPlane 4.7.2 Release 1.0 для Matek H743-WING V3: EKF3 без GPS, інструменти MAVLink, вебконфігуратор і документація.
 
 ## Topics
 `ardupilot` `arduplane` `mavlink` `ekf3` `flight-controller` `stm32` `fixed-wing` `open-source` `webserial` `webusb` `no-gps`

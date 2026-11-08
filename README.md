@@ -4,9 +4,9 @@
 
 # A.T.L.A.S. — Control Center
 
-**Independent ArduPlane research build · Browser-based configurator · Flight-controller tooling**
+**Independent ArduPlane 4.7.2 Release 1.0 · Browser-based configurator · Flight-controller tooling**
 
-![Status](https://img.shields.io/badge/CHANNEL-PRE--RELEASE-c6bd68?style=flat-square&labelColor=152010)
+![Status](https://img.shields.io/badge/CHANNEL-RELEASE%201.0-86ac64?style=flat-square&labelColor=152010)
 ![Base](https://img.shields.io/badge/ARDUPLANE-4.7.2-b7c56b?style=flat-square&labelColor=152010)
 ![Languages](https://img.shields.io/badge/LANG-RU%20%7C%20UA%20%7C%20EN-dbc980?style=flat-square&labelColor=152010)
 ![License](https://img.shields.io/badge/FIRMWARE-GPLv3--or--later-90ac64?style=flat-square&labelColor=152010)
@@ -15,12 +15,12 @@
 
 </div>
 
-> [!WARNING]
-> **Experimental aircraft control software.** Use ground testing, correct airframe configuration and independent validation. Browser DFU, GPS-denied navigation and automated modes are not universally verified on physical hardware. Remove the propeller for bench work.
+> [!IMPORTANT]
+> **A.T.L.A.S. Release 1.0 is tested and ready to install on Matek H743-WING V3.** Select the exact hardware revision, back up existing parameters and remove the propeller for bench configuration. GPS-denied navigation can accumulate position drift; verify sensor health, failsafes and aircraft-specific settings before flight.
 
 ## What is A.T.L.A.S.?
 
-A.T.L.A.S. is an independent experimental modification of **ArduPlane 4.7.2**, with an accompanying **Control Center** website. The project explores GPS-denied EKF3/NOAID estimation, additional TAKEOFF and CRUISE logic, navigation experiments, telemetry, calibration tools and a web-based firmware catalog.
+A.T.L.A.S. is an independently developed and tested modification of **ArduPlane 4.7.2**, accompanied by the **Control Center** website. Release 1.0 includes GPS-denied EKF3/NOAID estimation, adapted TAKEOFF and CRUISE logic, navigation features, telemetry, calibration tools and a web-based firmware catalog.
 
 The public repository is for the **website and published artifacts**. The developer's private working repository is not linked. Recipients of GPL-covered firmware must nonetheless have access to the corresponding firmware source for each distributed binary.
 
@@ -66,7 +66,7 @@ The repository cover under `assets/github-social-preview.jpg` may be uploaded in
 ## Repository resources
 
 - [FAQ](faq.html) — modified flight modes and minimum NOAID sensor requirements.
-- [Changelog](changelog.html) — pre-release 1.0 and future releases.
+- [Changelog](changelog.html) — Release 1.0 and future updates.
 - [Release process](RELEASE-DEPLOYMENT.md) — private R2 uploads, version catalog, keys and matching GPL source.
 - [No-server provider setup](PROVIDER-SETUP.md) — Brevo hosted forms, LiqPay, release notifications and private early testing.
 - [Legacy mail service setup](MAIL-SERVICE-SETUP.md) — optional self-hosted SMTP/SQLite alternative.
@@ -77,4 +77,4 @@ The repository cover under `assets/github-social-preview.jpg` may be uploaded in
 
 **A.T.L.A.S.** is an independent project developed by Oleksandr with AI-assisted tooling, built on top of the ArduPilot ecosystem. This is **not an official ArduPilot release**. Keep the upstream copyright notices and license conditions. Firmware modifications derived from ArduPilot remain subject to applicable **GNU GPLv3-or-later** obligations.
 
-<div align="center"><sub>A.T.L.A.S. Control Center • Community research • Pre-release</sub></div>
+<div align="center"><sub>A.T.L.A.S. Control Center • Release 1.0 • Tested build</sub></div>

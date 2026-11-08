@@ -14,10 +14,11 @@ for(const page of pages){
 }
 assert.ok(!read('styles.css').includes('@import url('),'Do not block local stylesheet on remote font discovery');
 const home=read('index.html');
-for(const name of ['features','downloads','guide','safety']){
+for(const name of ['features','downloads','guide']){
  assert.match(home,new RegExp('<img data-headline="'+name+'"[^>]+decoding="async" loading="lazy" fetchpriority="low">'),name+' should lazy load');
 }
 assert.match(home,/<img data-headline="hero"[^>]+decoding="async" loading="eager" fetchpriority="high">/,'hero stays high-priority');
+assert.match(home,/<h2 class="block-blueprint-title">Проверенная сборка\. Ответственная эксплуатация\.<\/h2>/,'release safety heading is rendered as live text');
 const config=read('configurator.js');
 assert.ok(config.includes("function scheduleHorizon()"),'HUD visibility scheduler missing');
 assert.ok(config.includes("document.hidden||state.selectedTab!=='dashboard'||state.hudRaf"),'Do not schedule hidden/inactive HUD frames');

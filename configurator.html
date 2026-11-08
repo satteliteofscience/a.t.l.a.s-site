@@ -20,7 +20,7 @@
   <meta property="og:image" content="https://satteliteofscience.github.io/a.t.l.a.s-site/assets/github-social-preview.jpg">
   <meta property="og:image:secure_url" content="https://satteliteofscience.github.io/a.t.l.a.s-site/assets/github-social-preview.jpg">
   <meta property="og:image:type" content="image/jpeg">
-  <meta property="og:image:alt" content="A.T.L.A.S. Control Center — experimental ArduPlane flight firmware with EKF3 NOAID">
+  <meta property="og:image:alt" content="A.T.L.A.S. Control Center — tested ArduPlane 4.7.2 Release 1.0">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="A.T.L.A.S. — Конфигуратор полётных контроллеров">
   <meta name="twitter:description" content="Веб-конфигуратор A.T.L.A.S. для ArduPlane: MAVLink, параметры, датчики, OSD и настройки полётных контроллеров.">
@@ -32,7 +32,7 @@
 <body class="console-body">
   <div class="cc-backdrop" aria-hidden="true"></div>
   <header class="cc-topbar">
-    <a class="cc-brand" href="index.html" title="A.T.L.A.S. Home"><img src="assets/mark.svg" alt=""><span><strong>A.T.L.A.S.</strong><small>CONTROL CENTER <b>0.7.1 / PRE-RELEASE</b></small></span></a>
+    <a class="cc-brand" href="index.html" title="A.T.L.A.S. Home"><img src="assets/mark.svg" alt=""><span><strong>A.T.L.A.S.</strong><small>CONTROL CENTER <b>0.7.1 / PUBLIC RELEASE</b></small></span></a>
     <nav class="cc-toplinks" aria-label="Навигация"><a href="index.html" data-t="home">← На сайт</a><span class="cc-top-divider">/</span><span data-t="workspace">Конфигуратор</span></nav>
     <div class="cc-righthead"><span class="cc-connection-pill" id="connectionPill"><i></i><span id="connectionLabel" data-t="offline">НЕ ПОДКЛЮЧЕН</span></span>
       <div class="cc-language" aria-label="Language"><button data-language="uk">UA</button><button data-language="en">ENG</button><button data-language="ru">RU</button></div>
@@ -67,7 +67,7 @@
         <a class="cc-nav cc-link-nav" href="changelog.html"><span class="cc-icon">≋</span><span data-t="changelog">Список изменений</span><i>↗</i></a>
         <a class="cc-nav cc-link-nav" href="index.html#support"><span class="cc-icon">♡</span><span data-t="atlasSupport">Поддержать проект</span><i>↗</i></a>
       </div>
-      <div class="cc-sidebar-foot"><div class="cc-led"></div><span data-t="experimental">PRE-RELEASE / DEVELOPMENT</span><small>Oleksandr × AI CODEX</small></div>
+      <div class="cc-sidebar-foot"><div class="cc-led"></div><span data-t="experimental">RELEASE 1.0 / VERIFIED</span><small>Oleksandr × AI CODEX</small></div>
     </aside>
 
     <div class="cc-main">
@@ -79,7 +79,7 @@
           <button type="button" id="connectBtn" class="cc-button primary"><span>⌁</span> <span id="connectBtnText" data-t="connect">Подключить USB</span></button>
         </div>
       </section>
-      <div class="cc-hintbar"><span class="cc-hint-icon">!</span><span data-t="safety">Экспериментальный веб-инструмент. Настройка только на земле, со снятым пропеллером. Режим DEMO никогда не записывает параметры в плату.</span></div>
+      <div class="cc-hintbar"><span class="cc-hint-icon">!</span><span data-t="safety">Рабочий конфигуратор A.T.L.A.S. для поддерживаемых плат. Настраивай контроллер на земле; перед изменениями сними пропеллер. Режим DEMO никогда не записывает параметры в плату.</span></div>
 
       <!-- FLIGHT DATA -->
       <section class="cc-tab active" data-panel="dashboard" aria-labelledby="flightDataTitle">
@@ -290,7 +290,7 @@
 
         <!-- Hardware DFU / ST ROM bootloader section, independent of MAVLink serial. -->
         <section class="cc-card dfu-panel" id="dfuPanel" aria-labelledby="dfuTitle">
-          <div class="cc-card-title"><span>⚡</span><strong id="dfuTitle" data-dfu-t="title">STM32 DFU · ПОЛНАЯ ЗАПИСЬ HEX</strong><small>STM32H743 · PRE-RELEASE</small></div>
+          <div class="cc-card-title"><span>⚡</span><strong id="dfuTitle" data-dfu-t="title">STM32 DFU · ПОЛНАЯ ЗАПИСЬ HEX</strong><small>STM32H743 · RELEASE 1.0</small></div>
           <div class="dfu-grid">
             <div class="dfu-column">
               <h3 data-dfu-t="mode">DFU-подключение (не MAVLink)</h3><p class="dfu-enter-tip" data-dfu-t="howdfu">Удерживай кнопку BOOT на USB-переходнике Matek и подключи USB к ПК, затем нажми «Подключить DFU». Закрой Mission Planner и другие программы, использующие этот USB-порт.</p>
@@ -317,7 +317,7 @@
         <div class="cc-release-section"><div class="cc-card-title"><span>▤</span><strong data-t="releases">Сборки A.T.L.A.S.</strong><small>data/releases.json</small></div><div id="releaseList" class="cc-release-list"></div></div>
       </section>
 
-      <footer class="cc-footer"><span>A.T.L.A.S. PRE-RELEASE · DEVELOPED BY OLEKSANDR & AI CODEX</span><span data-t="footer">НЕ ОФИЦИАЛЬНЫЙ ПРОДУКТ ARDUPILOT</span></footer>
+      <footer class="cc-footer"><span>A.T.L.A.S. RELEASE 1.0 · DEVELOPED BY OLEKSANDR & AI CODEX</span><span data-t="footer">НЕ ОФИЦИАЛЬНЫЙ ПРОДУКТ ARDUPILOT</span></footer>
     </div>
   </main>
   <dialog id="editDialog" class="cc-modal"><form method="dialog" id="editForm"><div class="cc-modal-head"><span>PARAMETER EDITOR</span><button type="button" id="closeEdit" aria-label="Close">✕</button></div><h2 id="editName">PARAM</h2><p id="editOriginal">—</p><label for="editValue" data-t="newvalue">Новое значение</label><input id="editValue" type="number" step="any" required><p id="editWarning" class="cc-edit-warning" data-t="editwarning">Изменение конфигурации влияет на поведение автопилота. Перед записью снимите пропеллер и проверьте значение.</p><div class="cc-modal-actions"><button type="button" class="cc-button ghost" id="cancelEdit" data-t="cancel">Отмена</button><button class="cc-button primary" type="submit" data-t="save">Подтвердить запись</button></div></form></dialog>

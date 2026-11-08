@@ -4,7 +4,7 @@
     "version": "4.7.2",
     "repository_url": "https://github.com/satteliteofscience/a.t.l.a.s-site",
     "issues_url": "https://github.com/satteliteofscience/a.t.l.a.s-site/issues",
-    "release_channel": "pre-release"
+    "release_channel": "release"
   },
   "boards": [
     {
@@ -25,14 +25,14 @@
       "id": "matek-h743-wing-v3",
       "name": "Matek H743-WING V3",
       "family": "Matek Systems / H743",
-      "description": "A.T.L.A.S. 4.7.2: HEX доступен по общему PIN через защищённый Cloudflare R2. Веб-DFU и аппаратная совместимость пока не проверены на реальном контроллере.",
+      "description": "A.T.L.A.S. Release 1.0: проверенная сборка HEX для Matek H743-WING V3. Прошивка готова к установке; перед записью проверь маркировку платы, ревизию и сохрани текущие параметры.",
       "status": "available",
       "target": "Matek H743-WING V3 — STM32H743",
       "version": "1.0",
       "downloads": [
         {
           "filename": "ATLAS-Matek-H743-V3-release-1.hex",
-          "label": "A.T.L.A.S. Pre-Release 1.0 · ArduPlane 4.7.2",
+          "label": "A.T.L.A.S. Release 1.0 · ArduPlane 4.7.2",
           "version": "1.0",
           "sha256": "db18bb8cda5805508a4834ee40388c8f493ceaa4498a3c778d37c600b24bcda9",
           "timestamp": 1794072475,
@@ -43,8 +43,8 @@
           "channel": "release"
         }
       ],
-      "description_uk": "A.T.L.A.S. 4.7.2: HEX доступний за спільним PIN через захищений Cloudflare R2. Веб-DFU та апаратну сумісність іще не перевірено на реальному контролері.",
-      "description_en": "A.T.L.A.S. 4.7.2: HEX available with a shared PIN through private Cloudflare R2. Web DFU and hardware compatibility are not yet verified on a physical controller.",
+      "description_uk": "A.T.L.A.S. Release 1.0: перевірена збірка HEX для Matek H743-WING V3. Прошивка готова до встановлення; перед записом перевір маркування й ревізію плати та збережи поточні параметри.",
+      "description_en": "A.T.L.A.S. Release 1.0: tested HEX build for Matek H743-WING V3, ready to install. Before flashing, verify the board marking and revision and back up the current parameters.",
       "target_uk": "Matek H743-WING V3 — STM32H743",
       "target_en": "Matek H743-WING V3 — STM32H743"
     },
