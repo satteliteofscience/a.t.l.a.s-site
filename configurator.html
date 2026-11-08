@@ -3,15 +3,17 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1209">
-  <meta name="description" content="A.T.L.A.S. Control Center — веб-конфигуратор ArduPlane: авиагоризонт, настройки, параметры, проверка APJ.">
+  <meta name="description" content="A.T.L.A.S. Control Center: MAVLink, параметры ArduPlane, калибровка датчиков, настройка сервоприводов, OSD и прошивки.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="configurator.css"><link rel="stylesheet" href="advanced.css"><link rel="stylesheet" href="osd-editor.css">
-  <title>A.T.L.A.S. — Control Center</title>
+  <title>A.T.L.A.S. — Конфигуратор полётного контроллера</title>
+  <meta name="atlas-page" content="configurator.html">
+  <script src="page-meta.js" defer></script>
 </head>
 <body class="console-body">
   <div class="cc-backdrop" aria-hidden="true"></div>
   <header class="cc-topbar">
-    <a class="cc-brand" href="index.html" title="A.T.L.A.S. Home"><img src="assets/mark.svg" alt=""><span><strong>A.T.L.A.S.</strong><small>CONTROL CENTER <b>0.7.0 / PRE-RELEASE</b></small></span></a>
+    <a class="cc-brand" href="index.html" title="A.T.L.A.S. Home"><img src="assets/mark.svg" alt=""><span><strong>A.T.L.A.S.</strong><small>CONTROL CENTER <b>0.7.1 / PRE-RELEASE</b></small></span></a>
     <nav class="cc-toplinks" aria-label="Навигация"><a href="index.html" data-t="home">← На сайт</a><span class="cc-top-divider">/</span><span data-t="workspace">Конфигуратор</span></nav>
     <div class="cc-righthead"><span class="cc-connection-pill" id="connectionPill"><i></i><span id="connectionLabel" data-t="offline">НЕ ПОДКЛЮЧЕН</span></span>
       <div class="cc-language" aria-label="Language"><button data-language="uk">UA</button><button data-language="en">ENG</button><button data-language="ru">RU</button></div>
