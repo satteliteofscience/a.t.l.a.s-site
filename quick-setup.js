@@ -65,7 +65,7 @@ const stepNames=['intro','safety','firmware','params','accel','level','reboot','
 const saved=(()=>{try{return JSON.parse(localStorage.getItem('atlas.quicksetup.v1')||'null');}catch{return null;}})();
 const qs={
  step:0,completed:{},safety:[false,false,false,false,false,false],firmwareSource:null,firmwareError:'',
- paramsMode:'keep',fileName:'',preview:null,metadata:{},metadataReady:false,backupDownloaded:false,compatConfirmed:false,keepConfirmed:false,applyBusy:false,cancelApply:false,paramsMessage:'',paramsApplied:false,
+ paramsMode:'keep',fileName:'',preview:null,previewBoard:null,fileToken:0,awaitingCalibration:null,metadata:{},metadataReady:false,backupDownloaded:false,compatConfirmed:false,keepConfirmed:false,applyBusy:false,cancelApply:false,paramsMessage:'',paramsApplied:false,
  accelError:'',levelError:'',rebootBaseline:0,rebootSawDisconnect:false,rebootReady:false,rebootReading:false,rebootUserConfirmed:false,firmwareBoard:null,escConfirmed:false,compassAwaitingSave:false,compassError:'',finalChecks:[false,false,false,false,false,false,false,false],
  resumeFrom:saved&&Number.isInteger(saved.step)?saved.step:0
 };
@@ -91,7 +91,7 @@ function complete(step,status='done'){qs.completed[step]=status;persist();render
 function invalidateFrom(step){
  for(let index=step;index<stepKeys.length;index++)delete qs.completed[index];
  if(step<=3){
-  qs.paramsApplied=false;
+  qs.paramsApplied=false;qs.awaitingCalibration=null;
   qs.rebootBaseline=0;qs.rebootSawDisconnect=false;qs.rebootReady=false;qs.rebootUserConfirmed=false;
   qs.rebootReading=false;qs.escConfirmed=false;qs.compassAwaitingSave=false;qs.compassError='';
   qs.accelError='';qs.levelError='';qs.finalChecks.fill(false);
@@ -202,9 +202,10 @@ async function waitForParams(timeout=90000){
  });
 }
 async function loadParams(){
- const s=state();if(!s.connected){qs.paramsMessage=t('readNoLink');render();return;}
+ const s=state();if(!safeLink(s)){qs.paramsMessage=t('readNoLink');render();return;}
  qs.paramsMessage=t('readWaiting');render();
  api.requestParameters();
+ if(!state().paramLoading){qs.paramsMessage=t('readPartial');render();return;}
  const result=await waitForParams();
  qs.paramsMessage=result.ok?t('readComplete'):result.reason==='partial'||result.reason==='noReply'?t('readPartial'):t('readNoLink');
  render();
@@ -215,16 +216,18 @@ function paramErrorText(error){
 }
 async function onParamFile(file){
  if(!file||qs.applyBusy)return;
- invalidateFrom(3);qs.compatConfirmed=false;qs.keepConfirmed=false;qs.preview=null;
- const s=state();
+ const token=++qs.fileToken;
+ invalidateFrom(3);qs.compatConfirmed=false;qs.keepConfirmed=false;qs.preview=null;qs.previewBoard=null;
+ const s=state(),board=s.selectedBoard;
  if(!paramReady(s)){qs.paramsMessage=t('readWaiting');render();return;}
  qs.fileName=file.name;qs.paramsMessage=t('readWaiting');render();
- const metadata=await getMetadata(),result=core.parseParamText(await file.text(),s.params,metadata,{boardLabel:boardLabel(s.selectedBoard)});
- qs.preview=result;qs.paramsMessage=result.valid?t('preview'):t('paramInvalid');render();
+ const metadata=await getMetadata(),result=core.parseParamText(await file.text(),s.params,metadata,{boardLabel:boardLabel(board)});
+ if(token!==qs.fileToken||selectedBoard()!==board||!paramReady(state()))return;
+ qs.preview=result;qs.previewBoard=board;qs.paramsMessage=result.valid?t('preview'):t('paramInvalid');render();
 }
 async function applyCustomParams(){
  const s=state();
- if(!qs.preview?.valid||!qs.backupDownloaded||!qs.compatConfirmed||!paramReady(s)||!safeLink(s)){qs.paramsMessage=t('paramInvalid');render();return;}
+ if(!qs.preview?.valid||qs.previewBoard!==s.selectedBoard||!qs.backupDownloaded||!qs.compatConfirmed||!paramReady(s)||!safeLink(s)){qs.paramsMessage=t('paramInvalid');render();return;}
  if(!qs.preview.changes.length){qs.paramsApplied=false;qs.paramsMessage=t('paramNoChanges');complete(3,'manual');return;}
  if(!window.confirm(t('applyConfirm')+'\n\n'+qs.preview.changes.length+' '+t('changed')))return;
  invalidateFrom(3);qs.applyBusy=true;qs.cancelApply=false;qs.paramsMessage=t('applying');render();
@@ -268,7 +271,7 @@ function renderParams(box){
    if(qs.preview.warnings.length)callout(box,t('paramWarning'),'warning');
    const diff=el('div','qs-diff');qs.preview.changes.slice(0,100).forEach(([name,value])=>{const row=el('div','qs-diff-row');row.append(el('code','',name));row.append(el('span','',(s.params.get(name)?.value??'—')+' → '+value));diff.append(row);});if(qs.preview.changes.length>100)diff.append(el('p','', '+ '+(qs.preview.changes.length-100)));box.append(diff);
    checkbox(box,t('compatConfirm'),qs.compatConfirmed,value=>{qs.compatConfirmed=value;render();});
-   const canApply=ready&&qs.backupDownloaded&&qs.preview.valid&&qs.compatConfirmed&&safeLink(s)&&!qs.applyBusy;
+   const canApply=ready&&qs.previewBoard===s.selectedBoard&&qs.backupDownloaded&&qs.preview.valid&&qs.compatConfirmed&&safeLink(s)&&!qs.applyBusy;
    const applyRow=el('div','qs-inline-actions');
    button(applyRow,qs.applyBusy?t('applying'):t('apply'),applyCustomParams,'cc-button primary').disabled=!canApply;
    if(qs.applyBusy)button(applyRow,t('cancelApply'),()=>{qs.cancelApply=true;setGlobal(t('cancelled'));},'cc-button outline');
@@ -279,9 +282,12 @@ function renderParams(box){
 }
 function startCalibration(kind){
  if(!api.canCalibrate()){setGlobal(t('accelNeedLink'),true);return;}
- if(kind==='six'){api.navigate('accelerometer');$('accSixBtn')?.click();}
- else if(kind==='level'){api.navigate('accelerometer');$('accLevelBtn')?.click();}
- else if(kind==='compass'){api.navigate('compass');$('compassStartBtn')?.click();}
+ const target={six:['accelerometer','accSixBtn'],level:['accelerometer','accLevelBtn'],compass:['compass','compassStartBtn']}[kind];
+ if(!target)return;
+ api.navigate(target[0]);
+ const control=$(target[1]);if(!control||control.disabled){setGlobal(t('accelNeedLink'),true);return;}
+ qs.awaitingCalibration=kind;
+ control.click();
 }
 function renderAccel(box){
  addHeading(box,t('accelTitle'),t('accelBody'));
@@ -306,9 +312,11 @@ function renderReboot(box){
  if(qs.rebootReady&&qs.rebootUserConfirmed&&s.connected&&Date.now()-s.lastHeartbeat<4000){
   appendText(box,'p',t('rebootStatus'),'qs-global-status');
   button(box,t('rebootRead'),async()=>{
-   if(qs.rebootReading)return;qs.rebootReading=true;render();
-   api.requestParameters();const result=await waitForParams();qs.rebootReading=false;
-   if(result.ok){complete(6,'done');setGlobal(t('rebootDone'));}else setGlobal(t('readPartial'),true);
+   if(qs.rebootReading||!safeLink(state())){setGlobal(t('readNoLink'),true);return;}qs.rebootReading=true;render();
+   api.requestParameters();
+   if(!state().paramLoading){qs.rebootReading=false;setGlobal(t('readPartial'),true);render();return;}
+   const result=await waitForParams();qs.rebootReading=false;
+   if(result.ok&&safeLink(result.state)){complete(6,'done');setGlobal(t('rebootDone'));}else setGlobal(t('readPartial'),true);
   },'cc-button primary').disabled=qs.rebootReading;
  }else appendText(box,'p',t('rebootStatus'),'qs-global-status');
 }
@@ -398,9 +406,22 @@ window.addEventListener('atlas:dfu',event=>{
 });
 window.addEventListener('atlas:calibration',event=>{
  const d=event.detail||{};
- if(d.kind==='six'){if(core.verifiedEvent(d,'six')){qs.accelError='';complete(4,'done');setGlobal(t('accelDone'));}else if(d.status==='failed'){qs.accelError=t('accelFail');qs.completed[4]='failed';render();}}
- if(d.kind==='level'){if(core.verifiedEvent(d,'level')){qs.levelError='';complete(5,'done');setGlobal(t('levelDone'));}else if(d.status==='failed'){qs.levelError=t('levelFail');qs.completed[5]='failed';render();}}
- if(d.kind==='compass'){if(core.verifiedEvent(d,'compass')){qs.compassAwaitingSave=false;qs.compassError='';complete(8,'done');setGlobal(t('compassDone'));}else if(d.status==='awaiting-save'){qs.compassAwaitingSave=true;render();}else if(d.status==='failed'){qs.compassError=t('compassFail');qs.completed[8]='failed';render();}}
+ const step={six:4,level:5,compass:8}[d.kind];
+ if(step===undefined||qs.step!==step||qs.awaitingCalibration!==d.kind)return;
+ if(core.verifiedEvent(d,d.kind)){
+  if(!safeLink(state())){setGlobal(t('accelNeedLink'),true);return;}
+  qs.awaitingCalibration=null;
+  if(d.kind==='six'){qs.accelError='';complete(4,'done');setGlobal(t('accelDone'));}
+  else if(d.kind==='level'){qs.levelError='';complete(5,'done');setGlobal(t('levelDone'));}
+  else{qs.compassAwaitingSave=false;qs.compassError='';complete(8,'done');setGlobal(t('compassDone'));}
+ }else if(d.kind==='compass'&&d.status==='awaiting-save'){qs.compassAwaitingSave=true;render();}
+ else if(d.status==='failed'||d.status==='cancelled'){
+  qs.awaitingCalibration=null;
+  if(d.kind==='six'){qs.accelError=t('accelFail');qs.completed[4]='failed';}
+  else if(d.kind==='level'){qs.levelError=t('levelFail');qs.completed[5]='failed';}
+  else{qs.compassError=t('compassFail');qs.completed[8]='failed';}
+  render();
+ }
 });
 setInterval(()=>{
  if(qs.step===6&&qs.paramsApplied){
