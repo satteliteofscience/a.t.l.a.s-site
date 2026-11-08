@@ -302,6 +302,7 @@
               <div class="dfu-file-meta" id="dfuFileMeta" aria-live="polite">Файл не загружен</div>
               <div class="dfu-progress-wrap"><div class="dfu-progress-track"><i id="dfuProgress"></i></div><span id="dfuProgressLabel">DFU · 0%</span></div>
               <p class="dfu-status" id="dfuStatus" role="status" aria-live="polite">Загрузка прошивки — только по команде пользователя</p>
+              <p class="dfu-postflash-note" data-dfu-t="postflash" role="note">После успешной записи дождись полной загрузки контроллера. Если COM-порт не появился, отключи и подключи USB ещё два раза. На Matek H743-WING V3 он может определиться только при третьем подключении.</p>
             </div>
             <div class="dfu-column dfu-check-column">
               <div class="dfu-danger" data-dfu-t="warning">ВНИМАНИЕ: полный Mass Erase 2 MiB (до 0xFF), затем запись и побайтовая проверка. При обрыве питания понадобится восстановление через DFU/STM32CubeProgrammer. Проверено только на уровне кода, не на физической плате.</div>

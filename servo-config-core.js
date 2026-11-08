@@ -27,6 +27,11 @@
     const changes=Object.entries(values).filter(([field,value])=>params.get(`SERVO${channel}_${field}`)?.value!==value);
     return {values,changes};
   }
+  const LIVE_FIELDS=Object.freeze(['MIN','TRIM','MAX','REVERSED']);
+  function selectLiveChanges(validation,field='ALL'){
+    if(!validation||validation.error||!Array.isArray(validation.changes))return [];
+    return validation.changes.filter(([key])=>LIVE_FIELDS.includes(key)&&(field==='ALL'||key===field));
+  }
   function createSerialQueue(){
     let tail=Promise.resolve(),pending=0;
     const enqueue=task=>{
@@ -39,5 +44,5 @@
     Object.defineProperty(enqueue,'pending',{get:()=>pending});
     return enqueue;
   }
-  return Object.freeze({EDITABLE_FIELDS,validateDraft,createSerialQueue});
+  return Object.freeze({EDITABLE_FIELDS,LIVE_FIELDS,validateDraft,selectLiveChanges,createSerialQueue});
 });

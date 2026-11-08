@@ -72,9 +72,9 @@ let servoEditing=null,servoIsSaving=false;
 const servoFields=['FUNCTION','MIN','TRIM','MAX','REVERSED'];
 const servoFunctions={0:'Disabled',4:'Aileron',19:'Elevator',21:'Rudder',70:'Throttle',79:'VTail left',80:'VTail right'};
 const servoRealtimeWords={
- ru:{on:'Применять сразу (реверс и PWM-пределы)',note:'REVERSED — при щелчке; MIN / TRIM / MAX — при отпускании поля или ползунка. Запись проверяется по PARAM_VALUE.',bench:'PWM BENCH TEST / Ручной выход',help:'Прямая команда PWM доступна только для FUNCTION 0, 1 и RC Passthrough. Для THROTTLE и V-tail не применяется; сайт не меняет FUNCTION автоматически.',consent:'Снят пропеллер; DISARMED; понимаю, что сигнал может немедленно запустить двигатель или двигать руль.',start:'Начать тест',stop:'Остановить / 1000 µs',direct:'Задать PWM',idle:'Тест выключен. При потере связи PWM может остаться на выходе: отключи питание ESC.',unsupported:'Для этой функции прямой PWM не поддерживается. Изменяй SERVOx_* или используй отдельную процедуру настройки ESC.',liveDone:'Изменение подтверждено полётником',liveError:'Ошибка мгновенной записи',benchStart:'Отправлена первая команда 1000 µs; двигай ползунок. Тест автоматически завершится через 30 с.',benchStop:'Отправлена команда 1000 µs. Проверь фактический выход и отключи питание ESC.',benchSent:'PWM отправлен. Ожидается физическая проверка / SERVO_OUTPUT_RAW.',benchTimeout:'30 с истекли — отправлена команда 1000 µs. Проверь сигнал.',busy:'Другая операция выполняется; повтори после подтверждения.'},
- uk:{on:'Застосовувати відразу (реверс і межі PWM)',note:'REVERSED — під час перемикання; MIN / TRIM / MAX — після зміни поля або повзунка. Запис підтверджується PARAM_VALUE.',bench:'PWM BENCH TEST / Ручний вихід',help:'Прямий PWM доступний лише для FUNCTION 0, 1 та RC Passthrough. Для THROTTLE і V-tail не використовується; сайт не змінює FUNCTION автоматично.',consent:'Пропелер знято; DISARMED; розумію, що сигнал може запустити двигун або зрушити руль.',start:'Почати тест',stop:'Зупинити / 1000 µs',direct:'Встановити PWM',idle:'Тест вимкнено. Після втрати зв’язку PWM може залишитись на виході: вимкни живлення ESC.',unsupported:'Для цієї функції прямий PWM не підтримується. Змінюй SERVOx_* або використовуй окреме калібрування ESC.',liveDone:'Зміну підтверджено контролером',liveError:'Помилка миттєвого запису',benchStart:'Надіслано 1000 µs; керуй повзунком. Тест автоматично завершується через 30 с.',benchStop:'Надіслано 1000 µs. Перевір фізичний вихід та вимкни живлення ESC.',benchSent:'PWM надіслано. Потрібна перевірка фізичного виходу або SERVO_OUTPUT_RAW.',benchTimeout:'Минуло 30 с — надіслано 1000 µs. Перевір вихід.',busy:'Інша операція триває; спробуй після підтвердження.'},
- en:{on:'Apply reverse and PWM limits immediately',note:'REVERSED is written on toggle; MIN / TRIM / MAX on field change. Each PARAM_SET is checked via PARAM_VALUE.',bench:'PWM BENCH TEST / Direct output',help:'Direct PWM only works for FUNCTION 0, 1 and RC passthrough. THROTTLE and V-tail are not eligible; the website never reassigns FUNCTION automatically.',consent:'Propeller removed; FC DISARMED; I understand an output signal may start a motor or move a control surface.',start:'Start test',stop:'Stop / 1000 µs',direct:'Output PWM',idle:'Test inactive. PWM may persist on lost connection: disconnect ESC power.',unsupported:'Direct PWM is unsupported for this function. Edit SERVOx_* or use an ESC-specific procedure.',liveDone:'Controller confirmed the parameter change',liveError:'Immediate write failed',benchStart:'Initial 1000 µs command sent; move the slider. Test stops automatically after 30 s.',benchStop:'1000 µs command sent. Verify hardware output and disconnect ESC power.',benchSent:'PWM command sent, physical output / SERVO_OUTPUT_RAW still needs verification.',benchTimeout:'30 s elapsed — 1000 µs command sent. Check output.',busy:'Another write is active; retry after acknowledgment.'}
+ ru:{on:'Применять сразу (реверс и PWM-пределы)',note:'При включении режима отправляются все накопленные REVERSED / MIN / TRIM / MAX; далее REVERSED — при щелчке, пределы — после изменения поля. Запись проверяется по PARAM_VALUE.',bench:'PWM BENCH TEST / Ручной выход',help:'Прямая команда PWM доступна только для FUNCTION 0, 1 и RC Passthrough. Для THROTTLE и V-tail не применяется; сайт не меняет FUNCTION автоматически.',consent:'Снят пропеллер; DISARMED; понимаю, что сигнал может немедленно запустить двигатель или двигать руль.',start:'Начать тест',stop:'Остановить / 1000 µs',direct:'Задать PWM',idle:'Тест выключен. При потере связи PWM может остаться на выходе: отключи питание ESC.',unsupported:'Для этой функции прямой PWM не поддерживается. Изменяй SERVOx_* или используй отдельную процедуру настройки ESC.',liveDone:'Изменение подтверждено полётником',liveError:'Ошибка мгновенной записи',benchStart:'Отправлена первая команда 1000 µs; двигай ползунок. Тест автоматически завершится через 30 с.',benchStop:'Отправлена команда 1000 µs. Проверь фактический выход и отключи питание ESC.',benchSent:'PWM отправлен. Ожидается физическая проверка / SERVO_OUTPUT_RAW.',benchTimeout:'30 с истекли — отправлена команда 1000 µs. Проверь сигнал.',busy:'Другая операция выполняется; повтори после подтверждения.'},
+ uk:{on:'Застосовувати відразу (реверс і межі PWM)',note:'Під час увімкнення режиму надсилаються всі накопичені REVERSED / MIN / TRIM / MAX; далі REVERSED — під час перемикання, межі — після зміни поля. Запис підтверджується PARAM_VALUE.',bench:'PWM BENCH TEST / Ручний вихід',help:'Прямий PWM доступний лише для FUNCTION 0, 1 та RC Passthrough. Для THROTTLE і V-tail не використовується; сайт не змінює FUNCTION автоматично.',consent:'Пропелер знято; DISARMED; розумію, що сигнал може запустити двигун або зрушити руль.',start:'Почати тест',stop:'Зупинити / 1000 µs',direct:'Встановити PWM',idle:'Тест вимкнено. Після втрати зв’язку PWM може залишитись на виході: вимкни живлення ESC.',unsupported:'Для цієї функції прямий PWM не підтримується. Змінюй SERVOx_* або використовуй окреме калібрування ESC.',liveDone:'Зміну підтверджено контролером',liveError:'Помилка миттєвого запису',benchStart:'Надіслано 1000 µs; керуй повзунком. Тест автоматично завершується через 30 с.',benchStop:'Надіслано 1000 µs. Перевір фізичний вихід та вимкни живлення ESC.',benchSent:'PWM надіслано. Потрібна перевірка фізичного виходу або SERVO_OUTPUT_RAW.',benchTimeout:'Минуло 30 с — надіслано 1000 µs. Перевір вихід.',busy:'Інша операція триває; спробуй після підтвердження.'},
+ en:{on:'Apply reverse and PWM limits immediately',note:'Enabling this mode sends all pending REVERSED / MIN / TRIM / MAX edits. Afterwards, REVERSED is sent on toggle and limits on field change; every write is checked via PARAM_VALUE.',bench:'PWM BENCH TEST / Direct output',help:'Direct PWM only works for FUNCTION 0, 1 and RC passthrough. THROTTLE and V-tail are not eligible; the website never reassigns FUNCTION automatically.',consent:'Propeller removed; FC DISARMED; I understand an output signal may start a motor or move a control surface.',start:'Start test',stop:'Stop / 1000 µs',direct:'Output PWM',idle:'Test inactive. PWM may persist on lost connection: disconnect ESC power.',unsupported:'Direct PWM is unsupported for this function. Edit SERVOx_* or use an ESC-specific procedure.',liveDone:'Controller confirmed the parameter change',liveError:'Immediate write failed',benchStart:'Initial 1000 µs command sent; move the slider. Test stops automatically after 30 s.',benchStop:'1000 µs command sent. Verify hardware output and disconnect ESC power.',benchSent:'PWM command sent, physical output / SERVO_OUTPUT_RAW still needs verification.',benchTimeout:'30 s elapsed — 1000 µs command sent. Check output.',busy:'Another write is active; retry after acknowledgment.'}
 };
 const rt=k=>(servoRealtimeWords[language]||servoRealtimeWords.ru)[k];
 const directAllowed=fn=>Number.isInteger(fn)&&(fn===0||fn===1||(fn>=51&&fn<=66)||(fn>=140&&fn<=155));
@@ -101,24 +101,37 @@ function updateRealtimeUi(){
 }
 async function realtimeParamChange(field){
  if(!isLiveEditor()||servoLiveBusy||benchActive||field==='FUNCTION')return;
- const validation=validateServoEditor();if(validation.error){$('servoEditorStatus').textContent='⚠ '+validation.error;return;}
- const actual=validation.changes.find(([key])=>key===field);if(!actual)return;
- const channel=servoEditing,newValue=actual[1];servoLiveBusy=true;servoIsSaving=true;updateRealtimeUi();
- $('servoEditorStatus').textContent=`PARAM_SET SERVO${channel}_${field} = ${newValue}…`;
+ const validation=validateServoEditor();
+ if(validation.error){$('servoEditorStatus').textContent='⚠ '+validation.error;return;}
+ // ALL is used when Apply Immediately is enabled: flush every pending live-edit field,
+ // not just the field that happened to fire the most recent change event.
+ const changes=servoCore.selectLiveChanges(validation,field);
+ if(!changes.length)return;
+ const channel=servoEditing,updates=Object.fromEntries(changes);
+ servoLiveBusy=true;servoIsSaving=true;updateRealtimeUi();
+ const summary=changes.map(([key,value])=>`SERVO${channel}_${key} = ${value}`).join(', ');
+ $('servoEditorStatus').textContent=`PARAM_SET ${summary}…`;
  try{
-  await api.writeServoConfig(channel,{[field]:newValue});
-  $('servoEditorStatus').textContent=`✓ ${rt('liveDone')} · SERVO${channel}_${field} = ${newValue}`;
+  await api.writeServoConfig(channel,updates);
+  $('servoEditorStatus').textContent=`✓ ${rt('liveDone')} · ${changes.length} parameter(s)`;
  }catch(e){
   $('servoEditorStatus').textContent=`⚠ ${rt('liveError')}: ${e.message}`;
-  const v=servoValues(channel)[field];
-  if(field==='REVERSED')$('servoEditReverse').checked=Number(v)===1;
-  else if(Number.isFinite(v))$('servoEdit'+field.charAt(0)+field.slice(1).toLowerCase()).value=String(v);
-  emit(`Live SERVO${channel}_${field}: ${e.message}`,true);
+  const values=servoValues(channel);
+  for(const [key] of changes){
+   const value=values[key];
+   if(key==='REVERSED')$('servoEditReverse').checked=Number(value)===1;
+   else if(Number.isFinite(value))$('servoEdit'+key.charAt(0)+key.slice(1).toLowerCase()).value=String(value);
+  }
+  emit(`Live SERVO${channel}: ${e.message}`,true);
  }finally{servoLiveBusy=false;servoIsSaving=false;updateServoEditor();renderServo();updateRealtimeUi();}
 }
 function queueRealtime(field){
  if(!isLiveEditor()||servoSavePending)return;
- // Both immediate writes and the Apply button share one serial PARAM_SET queue.
+ if(field==='ALL'){
+  // Cancel pending debounce callbacks and commit the whole current draft once.
+  for(const key of Object.keys(servoLiveDebounce)){clearTimeout(servoLiveDebounce[key]);delete servoLiveDebounce[key];}
+ }
+ // Immediate field writes and the Apply Immediately flush share one serial queue.
  enqueueServoWrite(()=>realtimeParamChange(field)).catch(e=>emit(e.message,true));
 }
 function benchCanSend(){const v=servoValues(servoEditing||0);return benchActive&&servoEditing!==null&&safe()&&$('servoBenchConsent').checked&&directAllowed(v.FUNCTION)&&!servoIsSaving&&!servoLiveBusy;}
@@ -165,7 +178,7 @@ function stopBench(reason='manual'){
  }else $('servoBenchStatus').textContent=rt('idle');
 }
 function servoEditorClosed(){if(benchActive)stopBench('closed');for(const t of Object.values(servoLiveDebounce))clearTimeout(t);servoEditing=null;servoIsSaving=false;servoSavePending=false;benchStopTimer();}
-$('servoLiveApply').addEventListener('change',()=>{if(benchActive)stopBench('mode');updateRealtimeUi();});
+$('servoLiveApply').addEventListener('change',()=>{if(benchActive)stopBench('mode');updateRealtimeUi();if($('servoLiveApply').checked)queueRealtime('ALL');});
 $('servoBenchConsent').addEventListener('change',()=>{if(benchActive&&!$('servoBenchConsent').checked)stopBench('consent');updateRealtimeUi();});
 $('servoBenchSlider').addEventListener('input',()=>{$('servoBenchReadout').textContent=`${$('servoBenchSlider').value} µs`;if(benchActive)queueBenchSend(Number($('servoBenchSlider').value));});
 $('servoBenchStart').addEventListener('click',startBench);$('servoBenchStop').addEventListener('click',()=>stopBench('manual'));
