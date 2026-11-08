@@ -21,6 +21,21 @@ function escParams({mask=0,otype=0,channels=[3],can=false}={}){
  const result=core.parseParamText('THR_MAX 100.5\nAIRSPEED_MIN 999\n',params([['THR_MAX',100,6],['AIRSPEED_MIN',15,9]]),{AIRSPEED_MIN:{Range:{low:'5',high:'60'}}});
  assert.equal(result.valid,false);assert.ok(result.errors.some(x=>x.reason==='integer'));assert.ok(result.errors.some(x=>x.reason==='range'));
 })();
+(function testDeclaredBoardHeaderMustMatch(){
+ const live=params([['AIRSPEED_MIN',15,9]]);
+ const match=core.parseParamText('# Board: Matek H743-WING V3\nAIRSPEED_MIN 18\n',live,{}, {boardLabel:'Matek H743-WING V3'});
+ const wrong=core.parseParamText('# Board: Orange Cube\nAIRSPEED_MIN 18\n',live,{}, {boardLabel:'Matek H743-WING V3'});
+ assert.equal(match.valid,true);
+ assert.equal(wrong.valid,false);
+ assert.ok(wrong.errors.some(x=>x.reason==='board'));
+})();
+(function testProtectedSystemStateSkipped(){
+ const live=params([['FORMAT_VERSION',0,6],['STAT_BOOTCNT',20,6],['THR_MAX',100,6]]);
+ const profile=core.parseParamText('FORMAT_VERSION 999\nSTAT_BOOTCNT 0\nTHR_MAX 95\n',live,{});
+ assert.equal(profile.valid,true);
+ assert.deepEqual(profile.changes,[['THR_MAX',95]]);
+ assert.ok(profile.warnings.filter(x=>x.reason==='protected-skipped').length===2);
+})();
 (function testEscClassification(){
  assert.equal(core.classifyEscProtocol(escParams({mask:1<<2,otype:6,channels:[3]}),'matek-h743-wing-v3').kind,'dshot');
  assert.equal(core.classifyEscProtocol(escParams({mask:0,otype:6,channels:[3]}),'matek-h743-wing-v3').kind,'pwm');
