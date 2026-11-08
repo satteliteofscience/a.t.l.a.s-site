@@ -32,9 +32,9 @@ The public repository is for the **website and published artifacts**. The develo
 | Settings | Full parameter list, Basic Tuning, Flight Modes, Servo Output |
 | Calibration | Accelerometer, compass, radio, battery monitoring |
 | Video | Onboard OSD layout editor, gimbal configuration |
-| Firmware | Intel HEX catalog, SHA-256 verification, version archive / rollback selection |
+| Firmware | PIN-protected Intel HEX catalog, SHA-256 verification and web-DFU loading |
 | Documentation | FAQ and release-by-release changelog, translated to RU / UA / EN |
-| Community | Donations via manual IBAN transfer, optional verified email subscription |
+| Community | Voluntary monobank Jar donations and Tally Early Tester applications |
 
 ### Website languages
 
@@ -45,9 +45,9 @@ The public repository is for the **website and published artifacts**. The develo
 1. Upload the **contents** of this repository to your public GitHub Pages repository.
 2. GitHub → **Settings → Pages → Deploy from a branch**, select `main`, `/(root)`.
 3. Open the HTTPS site and review its flight-control disclaimers and firmware links.
-4. To release a new HEX without replacing an older build, use the release indexer documented in **[RELEASE-DEPLOYMENT.md](RELEASE-DEPLOYMENT.md)**.
+4. For another build, upload the HEX privately to Cloudflare R2, update its private firmware index and the site's public *metadata-only* catalogs. See [RELEASE-DEPLOYMENT.md](RELEASE-DEPLOYMENT.md).
 
-The site is static, but release indexing requires a GitHub Actions workflow or a private watcher on your own server. Simply dropping a file into a published GitHub Pages folder is not enough to trigger reindexing until a build/commit occurs.
+The static GitHub Pages site prompts for a PIN, but **server-side Cloudflare Worker** verifies the code and streams the encrypted-at-rest private R2 object. Do not commit raw HEX files into this public repository. Legacy GitHub Actions public firmware publishing is disabled.
 
 ## Receive updates and donate
 
@@ -57,7 +57,9 @@ Early Tester applications now use the public [Tally form](https://tally.so/r/ArK
 
 ## Firmware releases and source compliance
 
-Firmware binaries are distributed through `Firmware/`, with immutable archived versions and checksums. The original development repository is not publicly linked; **that does not replace the obligation to provide Corresponding Source to recipients** for GPL-covered distributions. Publish a source archive matching the released firmware under `Firmware/Sources/` or another accessible, documented location.
+Firmware binaries are now downloaded through a private Cloudflare R2 bucket and server-side PIN-checking Worker. GitHub Pages contains catalog metadata only. The ordinary release uses a shared PIN; Early Tester firmware uses individual revocable keys. **Already-public Git history and redistributed binaries cannot be made private retroactively.**
+
+**Corresponding Source warning:** A.T.L.A.S. is derived from ArduPlane under GNU GPLv3-or-later, so recipients must have access to the Corresponding Source and retain their GPL redistribution rights. The current 1.0 build does not have a verified source URL in the public catalog. Supply the exact corresponding source and required notices before broad distribution.
 
 The repository cover under `assets/github-social-preview.jpg` may be uploaded in **Settings → Social preview**. The public repository should not contain private API credentials, bank API tokens, subscriber databases, SMTP credentials or server passwords.
 
@@ -65,7 +67,7 @@ The repository cover under `assets/github-social-preview.jpg` may be uploaded in
 
 - [FAQ](faq.html) — modified flight modes and minimum NOAID sensor requirements.
 - [Changelog](changelog.html) — pre-release 1.0 and future releases.
-- [Release process](RELEASE-DEPLOYMENT.md) — incoming HEX, archive, rollback and manifests.
+- [Release process](RELEASE-DEPLOYMENT.md) — private R2 uploads, version catalog, keys and matching GPL source.
 - [No-server provider setup](PROVIDER-SETUP.md) — Brevo hosted forms, LiqPay, release notifications and private early testing.
 - [Legacy mail service setup](MAIL-SERVICE-SETUP.md) — optional self-hosted SMTP/SQLite alternative.
 - [Suggested commits](GITHUB-COMMITS.md) — ready-to-use commit titles and short descriptions.

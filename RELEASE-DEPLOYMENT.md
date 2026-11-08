@@ -1,52 +1,36 @@
-# A.T.L.A.S. PUBLIC SITE — RELEASE DEPLOYMENT
+# A.T.L.A.S. — secure firmware publishing (Cloudflare R2)
 
-The original ArduPlane/modification repository is NEVER required for this website. Keep it on a separate protected server, not in the public website directory.
+The website is hosted on GitHub Pages. **Actual HEX files are stored only in private Cloudflare R2 on the current branch.** The gateway checks a shared release PIN or individual Early Tester keys on the server before returning file bytes. Never put a PIN, its SHA-256 digest from the encrypted secret, individual keys, or private R2 credentials into the public site.
 
-## Static GitHub Pages mode
+## Verified production settings
 
-1. Upload the contents of the site ZIP into your PUBLIC WEBSITE repository, not the private firmware source repository.
-2. `.github/workflows/firmware-manifest.yml` can process new HEX files on push if GitHub Actions is enabled and `contents: write` is permitted. Use a separate PUBLIC SITE repository; never give its workflow access to your private firmware sources or secrets.
-3. To publish a new version, put the new HEX into `Firmware/incoming/matek-h743-wing-v3/`. You CAN use the same filename as last time because this is an inbox, not the archive. Commit/push the HEX into the public site repository. The workflow copies it to a unique immutable archive filename and refreshes `data/releases.json` and `manifest.json`. It removes the incoming upload in its generated commit.
-4. Older releases remain in `Firmware/Matek Wing H743-V3/releases/`; the original 1.0 HEX stays at the old path too.
-5. Upload a complete corresponding source package for each distributed GPL binary to `Firmware/Sources/`. Add its relative path as `source_url` in the optional `release.json`, or set the reference in the catalog. WITHOUT the matching source, distribution does not comply with GNU GPLv3.
+- Cloudflare Worker: https://atlas-firmware-gateway.gamingchanel57.workers.dev/
+- Private R2 bucket: atlas-firmware-private; public access and r2.dev disabled.
+- Worker bindings: FIRMWARE (bucket), ACCESS_LIMITER (10 attempts / 60s, approximately per IP), ACCESS_CODES_JSON (encrypted Cloudflare Secret).
+- Private R2 paths: release/matek-h743-v3-release-1.hex and _internal/firmware-index.json.
+- Release secure_id: matek-h743-v3-release-1, channel: release.
+- Verified release file: 4,654,592 bytes, SHA-256 db18bb8cda5805508a4834ee40388c8f493ceaa4498a3c778d37c600b24bcda9.
+- User tested: wrong PIN -> HTTP 401; correct PIN -> HTTP 200 and matching length/header/content SHA-256.
+- This proves correct **downloads and integrity**, not correct behavior or hardware verification when flashing.
 
-NOTE: GitHub Pages cannot run Python on each HTTP request or scan an FTP directory. The workflow runs during deployment. It will not notice an uncommitted file copied to your local PC; you must push it.
+## Safe release procedure
 
-## Own Linux server / truly automatic mode
+1. Build and validate the target-specific Intel HEX offline. Verify checksums, target Flash addresses and SHA-256. Never flash a Cube Orange with the Matek build.
+2. Upload the HEX under a **new unique filename** to the private R2 bucket, either in release/ (shared PIN) or early/ (individual tester keys). The bucket must remain private, without public R2 URL or custom domain.
+3. Update R2's private object _internal/firmware-index.json to map its public build ID to the private object_key, safe filename, channel, and actual SHA-256. Existing index metadata is available as firmware-gateway/firmware-index.json.
+4. Update public catalog data/releases.json and the board's metadata-only manifest.json with the matching secure_id, channel, filename, sha256, bytes, timestamp and label. **Do not include public HEX URL/path or a download fallback.**
+5. A shared release PIN is stored only as a hash inside the encrypted ACCESS_CODES_JSON Worker secret. Early Tester keys must be individually generated, long, scoped to build_ids, manually approved and revocable. These are bearer secrets, not individually authenticated identities.
+6. Provide Corresponding Source for ArduPlane-derived binaries under GNU GPLv3 to recipients. **A PIN cannot restrict their GPL redistribution rights.** The 1.0 catalog's source_url is empty and source_verified is false; that outstanding requirement must be resolved before broad distribution.
+7. Confirm a wrong PIN fails, a valid PIN fetch returns a verified SHA-256, the website's download button opens the PIN modal, and the DFU *Load Latest/Selected* button opens the same modal before reading HEX. Hardware ERASE/WRITE always requires separate user confirmation, selected board and safeguards.
 
-1. Deploy the PUBLIC site to `/srv/atlas-public`. Do not place private code or private files under that webroot.
-2. Create a low-privilege `atlas-public` service user with write access ONLY to `Firmware/` and `data/`.
-3. Serve the public pages over HTTPS with Nginx or another static server, disabling directory listing. `deploy/nginx-static.example.conf` is a starting example only, not a configured production HTTPS site.
-4. Run `python3 tools/release_manager.py --watch --interval 5`, or install the sample systemd unit after adjusting the paths and service user. It waits 3 seconds after the last modified time before ingesting a file to avoid reading an incomplete copy.
-5. Build a new HEX and copy it to `/srv/atlas-public/Firmware/incoming/matek-h743-wing-v3/`, using the SAME name if desired. The watcher moves a validated copy into the immutable `releases/` directory, updates both manifests atomically, and deletes the inbox copy. Do not copy directly over an archived HEX.
-6. You may optionally add `release.json` in that same inbox with the version, display label, and public path to a corresponding source archive. Example `data/release-example.json`. If absent, a UTC build timestamp is used instead.
-7. The homepage catalog refreshes automatically every 60 seconds while visible. Hard reload if necessary. DFU lists archived versions separately for selection and checksum verification.
+## Legacy automation is disabled
 
-## Donation setup (no payment gateway credentials inside the site)
+The previous .github/workflows/firmware-manifest.yml pipeline archived incoming HEX in the public website folder and created public GitHub Release attachments. That would bypass the Worker PIN. The workflow is now manually triggered and checks only that the current repository does not include any raw HEX; it **does not publish binaries or email subscribers**.
 
-Edit `data/support.json` in the PUBLIC webroot. You may set:
-- `donation_url`: HTTPS donation page created by your bank/payment provider (e.g. monobank Banka). This opens outside the website; no payment data is handled by this site.
-- `iban`: your OWN Ukrainian IBAN `UA` plus 27 digits, checksum-validated by site JS.
-- `recipient`: legal name of the account holder; `bank`: name of bank; `purpose`: optional transfer note.
+tools/release_manager.py, tools/update_firmware_manifest.py, and tools/publish_github_releases.py now refuse to execute their old public publishing logic when data/firmware-access.json has enabled=true. Don't bypass those safety checks. Use private R2 storage and metadata-only release records.
 
-Never place API tokens, personal login credentials, authentication cookies, seed phrases, or card details in support.json. The entire JSON file is public. The donation button will display a configuration notice until a valid payment URL or IBAN is provided. Donations cannot be processed until real details have been supplied. Check Ukrainian tax and payment-provider requirements before accepting transfers.
+**Historical exposure:** The original 1.0 HEX was in the public repository before the switch. Removing it from the main branch and UI cannot erase past Git history, caches or any downloaded copy. Similarly, people receiving the PIN can redistribute a downloaded binary; revoking the key only prevents future authenticated API requests.
 
-## Private source code and access control
+## Related systems
 
-Private work-in-progress source repositories should be stored on a separate domain/server or private VCS with MFA, user accounts, access logs, off-site backup, firewall and least-privilege access. Daily rotating shared passwords do not automatically offer strong protection; use unique per-user access and TOTP/SSO/SSH keys. Nothing on a STATIC public website can securely enforce server-side permissions. Publicly distributed GPL firmware still requires corresponding source access to the binary recipient. This project contains no server-side password rotation implementation.
-
-## Supported board / safeguards
-
-Only target `Matek H743-WING V3` is configured for automatic publishing. ArduPilot .HEX is validated for contiguous STM32H743 2MiB full-flash boundaries, Intel HEX checksums and SHA-256 before it is published. Other hardware needs a separate board-specific pipeline and validation; do NOT reuse the Matek firmware on another board. The WebUSB DFU path still requires hardware testing; rollback can always be performed using a compatible external flasher.
-
-## GitHub Releases + automated opt-in email (no own server)
-
-The Actions workflow validates and archives an incoming Intel HEX, commits the immutable archive, then publishes a **public GitHub Release only if a corresponding source archive was supplied and explicitly approved**. Before ingesting a new firmware, add `Firmware/incoming/matek-h743-wing-v3/release.json`:
-
-```json
-{"version":"1.1","label":"A.T.L.A.S. 1.1 for Matek H743-WING V3","source_url":"Firmware/Sources/atlas-1.1-source.zip","source_verified":true}
-```
-
-The source archive must already exist in `Firmware/Sources/` and correspond to this exact HEX; setting `source_verified` is the maintainer's assertion. An older HEX with no source archive stays in the site catalog but is **not promoted to GitHub Releases**. The workflow creates a GitHub release tag using the firmware SHA-256 prefix; repeated runs skip already-created tags.
-
-The same workflow optionally notifies the **confirmed Brevo list for that board only**, and only after a new public Release is created and `ATLAS_BREVO_SEND_ENABLED=true` plus the required Brevo variables and secret are configured. Refer to [PROVIDER-SETUP.md](PROVIDER-SETUP.md). Never publish early tester binaries or private contacts through this workflow.
+The monobank Jar remains an independent, voluntary donation link. Tally + private Google Sheets track Early Tester applications; the project owner manually reviews candidates. Donations never provide automatic access to private test firmware. Avoid adding applicant records, secrets or payments to this public repository.

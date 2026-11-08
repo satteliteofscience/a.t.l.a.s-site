@@ -98,6 +98,9 @@ def record(path, *, version, title, published, source_path='', source_verified=F
 
 
 def ingest_once(min_age=0):
+    # Fail closed: this legacy pipeline would place HEX files in public GitHub Pages.
+    if read_json(HERE / 'data' / 'firmware-access.json', {}).get('enabled') is True:
+        raise RuntimeError('Public HEX publishing disabled: upload to private R2 and update secure catalogs instead')
     history = read_json(HISTORY_PATH, {'schema': 1, 'board_id': BOARD_ID, 'releases': []})
     entries = history.get('releases', [])
     if not isinstance(entries, list):
@@ -222,7 +225,7 @@ def main():
         while True:
             try:
                 ingest_once(min_age=3)
-            except (OSError, ValueError) as e:
+            except (OSError, ValueError, RuntimeError) as e:
                 print(f'Publish failed: {e}', file=sys.stderr, flush=True)
             time.sleep(max(args.interval, 2))
     except KeyboardInterrupt:

@@ -18,6 +18,15 @@ on:
       - 'firmware-access.js'
       - 'firmware-access.css'
       - 'data/firmware-access.json'
+      - 'data/releases.json'
+      - 'data/firmware-history.json'
+      - 'Firmware/Matek Wing H743-V3/manifest.json'
+      - 'Firmware/Matek Wing H743-V3/**/*.hex'
+      - '.github/workflows/firmware-manifest.yml'
+      - 'tools/release_manager.py'
+      - 'tools/update_firmware_manifest.py'
+      - 'tools/publish_github_releases.py'
+      - 'RELEASE-DEPLOYMENT.md'
       - 'firmware-gateway/**'
       - 'tools/check_firmware_access.cjs'
       - 'firmware-gateway-check.html'
@@ -41,8 +50,14 @@ jobs:
         run: node tools/check_monobank_support.cjs
       - name: Verify link preview Open Graph and Twitter metadata
         run: node tools/check_social_preview.cjs
-      - name: Verify staged private firmware access code and no hardcoded PINs
+      - name: Verify production private firmware metadata, PIN routes and fail-closed publishers
         run: node tools/check_firmware_access.cjs
+      - name: Verify old public release scripts cannot run
+        run: |
+          python3 -m py_compile tools/release_manager.py tools/update_firmware_manifest.py tools/publish_github_releases.py
+          if python3 tools/release_manager.py --once; then echo "Unsafe public archiver accepted run"; exit 1; fi
+          if python3 tools/update_firmware_manifest.py; then echo "Unsafe public manifest accepted run"; exit 1; fi
+          if python3 tools/publish_github_releases.py --dry-run; then echo "Unsafe public GitHub publisher accepted run"; exit 1; fi
       - name: Unit-test server-side release PIN and per-tester keys
         run: node --test firmware-gateway/tests/*.test.js
       - name: Check temporary gateway diagnostics page

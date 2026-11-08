@@ -4,8 +4,7 @@
     "version": "4.7.2",
     "repository_url": "https://github.com/satteliteofscience/a.t.l.a.s-site",
     "issues_url": "https://github.com/satteliteofscience/a.t.l.a.s-site/issues",
-    "release_channel": "pre-release",
-    "downloads_base": "Firmware/"
+    "release_channel": "pre-release"
   },
   "boards": [
     {
@@ -26,13 +25,13 @@
       "id": "matek-h743-wing-v3",
       "name": "Matek H743-WING V3",
       "family": "Matek Systems / H743",
-      "description": "Публичная HEX-сборка A.T.L.A.S. 4.7.2 с полной Flash-записью через STM32 ROM DFU. Аппаратная совместимость и веб-прошивальщик пока не проверены на реальном контроллере.",
+      "description": "A.T.L.A.S. 4.7.2: HEX доступен по общему PIN через защищённый Cloudflare R2. Веб-DFU и аппаратная совместимость пока не проверены на реальном контроллере.",
       "status": "available",
       "target": "Matek H743-WING V3 — STM32H743",
       "version": "1.0",
       "downloads": [
         {
-          "filename": "REALESE ArduPlane 4.7.2 - A.T.L.A.S EKF3 - MATEK WING H743 V3 (480 Mhz Clock).hex",
+          "filename": "ATLAS-Matek-H743-V3-release-1.hex",
           "label": "A.T.L.A.S. Pre-Release 1.0 · ArduPlane 4.7.2",
           "version": "1.0",
           "sha256": "db18bb8cda5805508a4834ee40388c8f493ceaa4498a3c778d37c600b24bcda9",
@@ -40,11 +39,12 @@
           "release_id": "db18bb8cda580550",
           "source_url": "",
           "source_verified": false,
-          "url": "Firmware/Matek%20Wing%20H743-V3/REALESE%20ArduPlane%204.7.2%20-%20A.T.L.A.S%20EKF3%20-%20MATEK%20WING%20H743%20V3%20%28480%20Mhz%20Clock%29.hex"
+          "secure_id": "matek-h743-v3-release-1",
+          "channel": "release"
         }
       ],
-      "description_uk": "Публічна HEX-збірка A.T.L.A.S. 4.7.2 для повного запису Flash через STM32 ROM DFU. Сумісність та вебпрошивач поки не перевірені на реальній платі.",
-      "description_en": "Public A.T.L.A.S. 4.7.2 Intel HEX image for STM32 ROM DFU full-flash programming. Hardware compatibility and web flashing remain unverified on a physical board.",
+      "description_uk": "A.T.L.A.S. 4.7.2: HEX доступний за спільним PIN через захищений Cloudflare R2. Веб-DFU та апаратну сумісність іще не перевірено на реальному контролері.",
+      "description_en": "A.T.L.A.S. 4.7.2: HEX available with a shared PIN through private Cloudflare R2. Web DFU and hardware compatibility are not yet verified on a physical controller.",
       "target_uk": "Matek H743-WING V3 — STM32H743",
       "target_en": "Matek H743-WING V3 — STM32H743"
     },

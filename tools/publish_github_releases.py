@@ -44,6 +44,10 @@ def gh(*args, check=True):
     return result
 
 def publish(dry_run=False):
+    # GitHub Release binary attachments would bypass PIN protection entirely.
+    config_path = ROOT / "data" / "firmware-access.json"
+    if config_path.is_file() and json.loads(config_path.read_text(encoding="utf-8")).get("enabled") is True:
+        raise RuntimeError("Legacy public GitHub Releases are disabled while secure R2 distribution is active")
     repo = os.getenv("GITHUB_REPOSITORY", "satteliteofscience/a.t.l.a.s-site")
     if repo != "satteliteofscience/a.t.l.a.s-site":
         raise RuntimeError("This release automation is locked to the public A.T.L.A.S. site repository")

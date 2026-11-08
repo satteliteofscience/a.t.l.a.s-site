@@ -459,27 +459,20 @@ function renderReleases(){
   const box=document.createElement('div');box.className='cc-release-item';
   const title=document.createElement('strong');title.textContent=board.name;
   const info=document.createElement('small');
-  const downloads=(board.downloads||[]).filter(d=>{
-   if(window.AtlasFirmwareAccess?.isProtected(d))return true;
-   try{const u=new URL(d.url,location.href);return u.protocol==='https:'||(u.protocol==='http:'&&['localhost','127.0.0.1'].includes(u.hostname));}
-   catch{return false;}
-  });
+  const downloads=(board.downloads||[]).filter(d=>
+   window.AtlasFirmwareAccess?.isProtected(d) && d.channel==='release' &&
+   /^[a-f0-9]{64}$/i.test(d.sha256||''));
   info.textContent=downloads.length?`${downloads.length} ${tr('releases')}`:tr('notavailable');box.append(title,info);
   for(const d of downloads){
-   if(window.AtlasFirmwareAccess?.isProtected(d)){
-    const btn=document.createElement('button');
-    btn.className='cc-release-download';btn.type='button';btn.textContent=(d.label||d.filename||'Firmware')+' · PIN ↗';
-    btn.addEventListener('click',async()=>{
-     btn.disabled=true;
-     try{await window.AtlasFirmwareAccess.download(d);}
-     catch(err){if(err.message!=='Access cancelled')toast(err.message||'Firmware access failed',true);}
-     finally{btn.disabled=false;}
-    });
-    box.append(btn);
-   }else{
-    const a=document.createElement('a');a.href=new URL(d.url,location.href).href;
-    a.rel='noopener noreferrer';a.target='_blank';a.textContent=(d.label||d.filename||'Firmware')+' ↗';box.append(a);
-   }
+   const btn=document.createElement('button');
+   btn.className='cc-release-download';btn.type='button';btn.textContent=(d.label||d.filename||'Firmware')+' · PIN ↗';
+   btn.addEventListener('click',async()=>{
+    btn.disabled=true;
+    try{await window.AtlasFirmwareAccess.download(d);}
+    catch(err){if(err.message!=='Access cancelled')toast(err.message||'Firmware access failed',true);}
+    finally{btn.disabled=false;}
+   });
+   box.append(btn);
   }
   container.append(box);
  }

@@ -55,6 +55,9 @@ def commit_time(path):
     return int(path.stat().st_mtime)
 
 def main():
+    config = ROOT / 'data' / 'firmware-access.json'
+    if config.is_file() and json.loads(config.read_text(encoding='utf-8')).get('enabled') is True:
+        raise RuntimeError('Legacy public manifest generation disabled: use secure build IDs and private R2')
     DIR.mkdir(parents=True,exist_ok=True)
     files=[]
     for path in DIR.glob('*.hex'):

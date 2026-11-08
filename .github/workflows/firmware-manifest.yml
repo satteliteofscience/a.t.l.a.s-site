@@ -1,57 +1,19 @@
-name: A.T.L.A.S. publish immutable firmware releases
+name: A.T.L.A.S. protected firmware distribution — public publish disabled
 on:
-  push:
-    paths:
-      - 'Firmware/incoming/**'
-      - 'Firmware/Matek Wing H743-V3/**/*.hex'
-      - 'Firmware/Sources/**'
-      - 'tools/release_manager.py'
-      - 'tools/update_firmware_manifest.py'
-      - 'tools/publish_github_releases.py'
-      - 'tools/notify_brevo.py'
-      - '.github/workflows/firmware-manifest.yml'
   workflow_dispatch:
 permissions:
-  contents: write
-concurrency:
-  group: atlas-release-publisher
-  cancel-in-progress: false
+  contents: read
 jobs:
-  publish:
+  verify-private-distribution:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout public website repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-      - name: Check public frontend and release scripts
+      - uses: actions/checkout@v4
+      - name: Refuse accidentally published plaintext firmware files
         run: |
-          node --check support.js
-          python3 -m json.tool data/subscriptions.json > /dev/null
-          python3 -m json.tool data/support.json > /dev/null
-          python3 -m py_compile tools/release_manager.py tools/publish_github_releases.py tools/notify_brevo.py
-      - name: Validate, archive, and index release files
-        run: python3 tools/release_manager.py --once
-      - name: Commit generated site index and immutable archive
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A -- Firmware/incoming/ Firmware/Matek\ Wing\ H743-V3/ data/releases.json data/firmware-history.json
-          if ! git diff --cached --quiet; then
-            git commit -m 'Publish A.T.L.A.S. release archive [skip ci]'
-            git push
+          if find Firmware/ -type f -iname '*.hex' | grep -q .; then
+            echo "::error::Public HEX found. Private R2 publishing required."
+            exit 1
           fi
-      - name: Validate publishable GitHub Releases (no network mutations)
-        run: python3 tools/publish_github_releases.py --dry-run
-      - name: Publish approved firmware and matching source as GitHub Releases
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: python3 tools/publish_github_releases.py --output "$RUNNER_TEMP/new_public_releases.json"
-      - name: Notify Brevo confirmed subscribers by controller model
-        env:
-          ATLAS_BREVO_SEND_ENABLED: ${{ vars.ATLAS_BREVO_SEND_ENABLED }}
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
-          BREVO_SENDER_EMAIL: ${{ vars.BREVO_SENDER_EMAIL }}
-          BREVO_LIST_ID_MATEK: ${{ vars.BREVO_LIST_ID_MATEK }}
-        run: python3 tools/notify_brevo.py --input "$RUNNER_TEMP/new_public_releases.json"
+          node tools/check_firmware_access.cjs
+          echo "Old public archive workflow is intentionally disabled."
+          echo "Upload new firmware privately to R2, update signed-off catalog/manifest and matching GPL source."

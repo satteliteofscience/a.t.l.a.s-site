@@ -1,7 +1,12 @@
 {
   "schema": 1,
-  "enabled": false,
-  "gateway_url": "",
-  "status": "pending_external_gateway_setup",
-  "note": "The public firmware is currently accessible without a PIN. Enable only once Cloudflare Worker, private R2 files, access code secrets and both download/DFU gate paths are verified."
+  "enabled": true,
+  "gateway_url": "https://atlas-firmware-gateway.gamingchanel57.workers.dev/",
+  "status": "verified_production_gateway",
+  "verified_user_browser_test": {
+    "http_status": 200,
+    "size_bytes": 4654592,
+    "sha256": "db18bb8cda5805508a4834ee40388c8f493ceaa4498a3c778d37c600b24bcda9"
+  },
+  "notes": "Standard releases require a shared PIN; Early Tester releases require revocable per-person keys. Protected site downloads and DFU load-from-site use the same Worker API. The old HEX was publicly exposed in prior Git history and cannot be made secret retroactively."
 }

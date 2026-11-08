@@ -22,9 +22,12 @@
     try { const u = new URL(value, document.baseURI); return u.protocol === 'https:' || (u.protocol === 'http:' && ['localhost','127.0.0.1'].includes(u.hostname)) ? u.href : null; }
     catch { return null; }
   };
-  // Protected releases are never read through a publicly visible file URL.
+  // Fail closed: no public direct download fallback for release archives.
+  // Local-file flashing remains a separate user-supplied operation.
   const downloadItems = (board) => Array.isArray(board.downloads)
-    ? board.downloads.filter(item => (window.AtlasFirmwareAccess?.isProtected(item) || safeUrl(item.url)) && typeof item.filename === 'string' && item.filename.trim())
+    ? board.downloads.filter(item => window.AtlasFirmwareAccess?.isProtected(item)
+      && typeof item.filename === 'string' && item.filename.trim()
+      && item.channel === 'release' && /^[a-f0-9]{64}$/i.test(item.sha256||''))
     : [];
 
   function renderCard(board) {
@@ -48,20 +51,15 @@
     if (available) {
       const buildEntry = (item, historical = false) => {
         const wrap = $('div', historical ? 'version-history-row' : 'version-current');
-        const protectedBuild=!!window.AtlasFirmwareAccess?.isProtected(item);
-        const link = $(protectedBuild ? 'button' : 'a', 'download-btn');
-        if(protectedBuild){
-          link.type='button';
-          link.addEventListener('click',async()=>{
-            try{link.disabled=true;await window.AtlasFirmwareAccess.download(item);}
-            catch(error){if(error.message!=='Access cancelled')window.alert(error.message||'Firmware access failed');}
-            finally{link.disabled=false;}
-          });
-        }else{
-          link.href = safeUrl(item.url); link.target = '_blank'; link.rel = 'noopener noreferrer';
-        }
+        const link = $('button', 'download-btn');
+        link.type='button';
+        link.addEventListener('click',async()=>{
+          try{link.disabled=true;await window.AtlasFirmwareAccess.download(item);}
+          catch(error){if(error.message!=='Access cancelled')window.alert(error.message||'Firmware access failed');}
+          finally{link.disabled=false;}
+        });
         const name = $('span', '', item.label || item.version || item.filename);
-        const hint = $('small', '', historical ? tr('СКАЧАТЬ ↗') : `LATEST · ${tr('СКАЧАТЬ ↗')}`);
+        const hint = $('small', '', historical ? 'PIN · '+tr('СКАЧАТЬ ↗') : `LATEST · PIN · ${tr('СКАЧАТЬ ↗')}`);
         link.append(name, hint); wrap.append(link);
         const details = $('div', 'version-meta');
         if (item.timestamp) {
