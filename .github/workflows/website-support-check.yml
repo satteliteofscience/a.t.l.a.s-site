@@ -11,6 +11,9 @@ on:
       - 'faq.js'
       - 'i18n.js'
       - 'calibration.js'
+      - 'servo-config-core.js'
+      - 'configurator.css'
+      - 'tools/check_servo_config.cjs'
       - 'support.js'
       - 'support.css'
       - 'styles.css'
@@ -58,7 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check JavaScript syntax
-        run: node --check support.js && node --check page-meta.js && node --check app.js && node --check contact-support.js && node --check configurator.js && node --check calibration.js && node --check i18n.js && node --check faq.js && node --check changelog.js && node --check dfu-ui.js && node --check firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
+        run: node --check support.js && node --check page-meta.js && node --check app.js && node --check contact-support.js && node --check configurator.js && node --check servo-config-core.js && node --check calibration.js && node --check i18n.js && node --check faq.js && node --check changelog.js && node --check dfu-ui.js && node --check firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
       - name: Verify monobank/Tally URLs, labels, privacy, no legacy form
         run: node tools/check_monobank_support.cjs
       - name: Verify link preview Open Graph and Twitter metadata
@@ -71,6 +74,8 @@ jobs:
         run: node tools/check_performance.cjs
       - name: Verify automatic parameter loading and Release 1.0 status
         run: node tools/check_release_ready.cjs
+      - name: Verify servo reverse persistence and serialized writes
+        run: node tools/check_servo_config.cjs
       - name: Verify old public release scripts cannot run
         run: |
           python3 -m py_compile tools/release_manager.py tools/update_firmware_manifest.py tools/publish_github_releases.py
