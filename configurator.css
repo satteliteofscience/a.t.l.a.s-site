@@ -237,3 +237,14 @@
 .cc-battery-cal-fields output{display:block;min-height:40px;padding:9px 12px;border:1px solid #4b573a;font:700 18px 'IBM Plex Mono',monospace}
 .cc-skipped-list{font:12px/1.6 'IBM Plex Mono',monospace;max-height:180px;overflow:auto;margin:8px 0 12px;color:#e2b79d}
 @media(max-width:700px){.cc-battery-cal-fields{grid-template-columns:1fr}}
+
+/* Local MAVLink bridge transport; no browser direct UDP/TCP sockets. */
+.cc-network-settings{position:relative;align-self:center;z-index:35;min-width:160px}
+.cc-network-settings>summary{cursor:pointer;user-select:none;padding:12px 14px;border:1px solid #657442;background:#1d2918;color:#ecdc9c;font:600 12px 'IBM Plex Mono',monospace}
+.cc-network-settings[open]{background:#111c10;outline:1px solid #53633e}
+.cc-network-settings[open] .cc-network-fields,.cc-network-settings[open] .cc-network-warning,.cc-network-settings[open] #networkConnectBtn,.cc-network-settings[open] #networkStatus{margin:10px 14px}
+.cc-network-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-width:300px;max-width:620px}
+.cc-network-fields label{display:flex;flex-direction:column;gap:5px;font:12px 'IBM Plex Mono',monospace;color:#d4cf9f}
+.cc-network-fields input,.cc-network-fields select{background:#10180f;color:#f2e5b6;border:1px solid #596947;min-height:38px;padding:9px;min-width:0;width:100%;font:inherit}
+.cc-network-warning{color:#d8b08d;font-size:12px;line-height:1.6;max-width:580px}
+@media(max-width:900px){.cc-network-settings{width:100%}.cc-network-fields{grid-template-columns:1fr;min-width:0}}
