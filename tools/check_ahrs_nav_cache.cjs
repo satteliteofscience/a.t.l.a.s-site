@@ -56,9 +56,9 @@ function p(...rows){return new Map(rows.map(([name,value])=>[name,{value,type:9,
  assert.match(js,/updateNetworkLabels\(\);\s*\}/,
  'manual network button should synchronize with main connection state');
  assert.match(js,/activeFilter:null/,'runtime AHRS state must be tracked per connection');
- assert.match(js,/message\.compid===state\.compid[\s\S]{0,180}activeFromText\(data\.text\)/,
+ assert.match(js,/message\.compid===state\.compid[\s\S]{0,220}activeFromText\(entry\.text\)/,
  'only actual FC component status messages should set the active backend');
- assert.match(js,/state\.activeFilter=null;updateConnectionUI\(\);updateTelemetryUI\(\)/,
+ assert.match(js,/state\.activeFilter=null;state\.statusTextAssembler\.reset\(\);updateConnectionUI\(\);updateTelemetryUI\(\)/,
  'lost heartbeat must reset estimator confidence');
  assert.match(js,/const info=core\.indication\(/,'AHRS on the dashboard must use provenance-sensitive state');
  assert.doesNotMatch(js,/ctx\.fillText\('EKF3',15,26\)/,
