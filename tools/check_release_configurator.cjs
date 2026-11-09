@@ -20,7 +20,8 @@ assert.match(config,/state\.importReport\.skipped/,'ordinary import must report 
 assert.match(config,/writeParameterWithAck\(name,value,p\.type\)/,'single edits must use central acknowledged PARAM_SET writer');
 assert.match(tree,/valueButton\.disabled=readOnly\|\|!canWrite\(\)/,'read-only table row must be locked');
 assert.match(quick,/String\(definition\.ReadOnly\)\.toLowerCase/,'pdef string ReadOnly fields must be respected');
-assert.match(config,/batteryCal/,'battery calibration telemetry must be surfaced in normal monitor');
+assert.match(fs.readFileSync('calibration.js','utf8'),/function renderBatteryCal\(/,'battery calibration preview must be rendered in normal monitor');
+assert.match(config,/lastVoltageTelemetry/,'battery calibration needs fresh SYS_STATUS voltage timing');
 assert.match(html,/id="batteryCalMeasured"/,'measured voltage input is missing');
 assert.match(html,/id="networkMode"/,'UDP/TCP configurator controls must exist');
 assert.match(config,/function connectBridge\(\)/,'MAVLink network transport should be supported');
