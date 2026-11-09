@@ -199,7 +199,17 @@
         <div class="cc-section-title"><div><p class="cc-overline">08 / MAGNETOMETER</p><h1 id="compassTitle" data-t="compassTitle">Компас</h1></div><span class="cc-view-status caution" id="compassBadge">DISARM REQUIRED</span></div>
         <p class="cc-section-desc" data-cal-t="compassIntro">Настройка компаса и калибровка вращением аппарата. На самолётах без GPS компас может быть выключен — в этом случае запускай калибровку только если он действительно установлен и используется.</p>
         <div class="cc-card cal-card"><div class="cc-card-title"><span>⌖</span><strong data-cal-t="compassCal">Калибровка магнитометра</strong><small>MAV_CMD 42424–42426</small></div>
-          <div class="cal-content"><p data-cal-t="compassHelp">После запуска медленно поворачивай самолёт вокруг всех трёх осей. Прогресс и итог передаются самим автопилотом. Сохранение выполняется отдельной командой.</p>
+          <div class="cal-content"><p data-cal-t="compassHelp">Повертай аппарат вокруг всех осей. При неудачной попытке автопилот автоматически повторит сбор данных, а успешный результат сохранит.</p>
+          <div class="qs-compass-settings">
+            <label for="compassFitness" data-cal-t="fitnessLabel">Точность калибровки</label>
+            <select id="compassFitness" class="qs-board-select">
+              <option value="32" data-cal-t="fitnessFast">Быстрая (32 · мягкий порог)</option>
+              <option value="16" data-cal-t="fitnessNormal" selected>Обычная (16 · стандарт)</option>
+              <option value="8" data-cal-t="fitnessAccurate">Точная (8 · строгий порог)</option>
+              <option value="4" data-cal-t="fitnessVeryAccurate">Очень точная (4 · очень строгий порог)</option>
+            </select>
+            <p class="qs-global-status" data-cal-t="fitnessExplanation">Меньший порог — более строгая проверка, а не гарантированно более быстрая калибровка. Режим сохраняется в COMPASS_CAL_FIT только после подтверждения записи полётником.</p>
+          </div>
           <div class="cal-action-row"><button class="cc-button primary" id="compassStartBtn" data-cal-t="compassStart">Начать калибровку</button><button class="cc-button ghost" id="compassAcceptBtn" data-cal-t="compassAccept" disabled>Сохранить результат</button><button class="cc-button outline" id="compassCancelBtn" data-cal-t="compassCancel" disabled>Отмена</button></div>
           <div class="cal-progress-label"><span id="compassProgressText">NO DATA</span><b id="compassProgressValue">0%</b></div><div class="cal-progress-track"><i id="compassProgressBar"></i></div><p id="compassStatus" class="cal-status" role="status">IDLE</p></div></div>
         <div class="cc-card cal-settings"><div class="cc-card-title"><span>⌘</span><strong data-cal-t="compassSettings">Параметры компаса</strong><small>COMPASS_*</small></div><div class="cal-param-grid" id="compassParamGrid"></div></div>

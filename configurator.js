@@ -268,6 +268,11 @@ window.AtlasCC = Object.freeze({
   navigate:(tab)=>navigate(tab),
   diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
   canCalibrate:()=>state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait,
+  rebootController:()=>{
+    if(!state.connected||state.demo||state.sysid===null||state.armed!==false||Date.now()-state.lastHeartbeat>=4000||state.writeWait||state.servoConfigBusy||state.paramLoading||state.bulk?.running)throw Error('Reboot blocked: live USB, DISARMED and idle writes required');
+    // MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN: param1=1 reboots autopilot only. Actual reboot must be confirmed by fresh heartbeat after disconnect.
+    return transmit(76,M.commandLong(state.sysid,state.compid,246,[1,0,0,0,0,0,0]));
+  },
   command:(id,p=[])=>{if(!window.AtlasCC.canCalibrate())throw Error('USB / DISARM heartbeat required');return transmit(76,M.commandLong(state.sysid,state.compid,id,p));},
   requestMessage:(id,micros)=>{if(!state.connected||state.sysid===null)return Promise.reject(Error('No MAVLink heartbeat'));return transmit(76,M.commandLong(state.sysid,state.compid,511,[id,micros,0,0,0,0,0]));},
   editParam:(name)=>openEdit(name),
