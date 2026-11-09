@@ -248,3 +248,24 @@
 .cc-network-fields input,.cc-network-fields select{background:#10180f;color:#f2e5b6;border:1px solid #596947;min-height:38px;padding:9px;min-width:0;width:100%;font:inherit}
 .cc-network-warning{color:#d8b08d;font-size:12px;line-height:1.6;max-width:580px}
 @media(max-width:900px){.cc-network-settings{width:100%}.cc-network-fields{grid-template-columns:1fr;min-width:0}}
+
+/* Release 1.0 · INS thermal calibration editor */
+.tc-workspace{padding:22px;min-height:200px}
+.tc-root{display:flex;flex-direction:column;gap:14px;color:#ded9ab}
+.tc-root h2{margin:4px 0;font-size:22px}
+.tc-sensor{display:flex;flex-direction:column;gap:10px;padding:18px;border:1px solid #566744;background:#10190f;border-radius:4px}
+.tc-sensor h3{font:700 16px 'IBM Plex Mono',monospace;color:#e9df9e;margin:0}
+.tc-mode-desc{font-size:13px;line-height:1.6;color:#c0c8a4;margin:0}
+.tc-field{display:flex;flex-direction:column;gap:7px;min-width:0;font-size:12px}
+.tc-field select,.tc-field input{width:100%;max-width:520px;min-height:42px;background:#0b140b;color:#e9df9e;border:1px solid #536341;padding:10px;font:inherit}
+.tc-range{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tc-note{font-size:12px;line-height:1.6;color:#b7be94;margin:3px 0}
+.tc-warning{color:#e5b198}
+.tc-summary{font:600 12px 'IBM Plex Mono',monospace;border:1px solid #50623b;background:#1a2715;padding:13px}
+.tc-detail{display:grid;gap:7px;padding:11px;border:1px solid #35482e;font:12px/1.6 'IBM Plex Mono',monospace}
+.tc-coeff-list{border:1px solid #48593a;padding:10px 12px}
+.tc-coeff-list summary{cursor:pointer;color:#e4dc9f;font-weight:600}
+.tc-coeff-table{width:100%;font:12px/1.7 'IBM Plex Mono',monospace;border-collapse:collapse;margin:9px 0}
+.tc-coeff-table tr{border-bottom:1px solid #33432a}
+.tc-coeff-table td{padding:5px 8px}.tc-coeff-table td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:700px){.tc-range{grid-template-columns:1fr}.tc-workspace{padding:12px}}
