@@ -93,8 +93,21 @@
     if(id===147 && v.byteLength>=36) return {type:'battery_status',id:v.getUint8(32),voltageCells:Array.from({length:10},(_,i)=>v.getUint16(10+i*2,true)),current:v.getInt16(30,true),consumed:v.getInt32(0,true),remaining:v.getInt8(35),temperature:v.getInt16(8,true)};
     if(id===191 && v.byteLength>=17) return {type:'mag_progress',compassId:v.getUint8(12),mask:v.getUint8(13),status:v.getUint8(14),attempt:v.getUint8(15),pct:v.getUint8(16)};
     if(id===192 && v.byteLength>=40) return {type:'mag_report',compassId:v.getUint8(36),mask:v.getUint8(37),status:v.getUint8(38),autosaved:!!v.getUint8(39),fitness:v.getFloat32(0,true)};
-    // STATUSTEXT is also commonly MAVLink2 zero-truncated when the message is shorter than 50 chars.
-    if(id===253 && v.byteLength>=2) return {type:'text',severity:v.getUint8(0),text:asciiText(frame.payload.slice(1,Math.min(51,v.byteLength)))};
+    // STATUSTEXT (253): 50 text bytes + optional MAVLink2 extension
+    // fields uint16 id and uint8 chunk_seq (offsets 51..53).
+    // MAVLink2 may truncate trailing zero bytes; the truncated bytes are
+    // logically zero. Preserve raw UTF-8 bytes for cross-chunk reconstruction.
+    if(id===253 && v.byteLength>=2){
+      const textBytes=frame.payload.slice(1,Math.min(51,v.byteLength));
+      // A zero-trimmed MAVLink2 frame can contain *only* the low byte
+      // of id (e.g. id=1, chunk_seq=0 => payload length 52).
+      // Decode extension fields byte by byte and default missing bytes to 0.
+      const statustextId=(v.byteLength>51?v.getUint8(51):0)|
+        ((v.byteLength>52?v.getUint8(52):0)<<8);
+      const chunkSeq=v.byteLength>53?v.getUint8(53):0;
+      return {type:'text',severity:v.getUint8(0),text:asciiText(textBytes),textBytes,
+        statustextId,chunkSeq,terminated:textBytes.length<50||textBytes.indexOf(0)>=0};
+    }
     return null;
   }
   // One flight controller per session: a second vehicle on a UDP/TCP stream must not
