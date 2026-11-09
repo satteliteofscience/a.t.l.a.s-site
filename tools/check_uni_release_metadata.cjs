@@ -4,6 +4,17 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const json=p=>JSON.parse(fs.readFileSync(p,'utf8'));
 const boards=json('data/releases.json').boards;
+assert.ok(!boards.some(b=>b.id==='other-boards'),'redundant Other controllers placeholder should not occupy space on the homepage');
+assert.deepEqual(
+  boards.filter(b=>b.status==='available').map(b=>b.id).sort(),
+  ['cube-orange-plus','matek-h743-wing-v3','uni-ic743-mini'],
+  'all three protected releases must remain visible in the homepage catalog'
+);
+const home=fs.readFileSync('index.html','utf8'),app=fs.readFileSync('app.js','utf8');
+assert.match(home,/id="boardSearch"/,'search by controller must be preserved');
+assert.match(home,/id="boardGrid"/,'firmware catalog grid must remain mounted');
+assert.match(app,/function renderBoards\(\)/,'board rendering must remain operational');
+
 const manifest=json('Firmware/Uni-IC743 Mini/manifest.json');
 const history=json('data/firmware-history.json').releases;
 const index=json('firmware-gateway/firmware-index.json').builds;
