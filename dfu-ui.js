@@ -5,7 +5,8 @@
   if(!$('dfuPanel')||!window.AtlasDFU)return;
   const MANIFESTS=Object.freeze({
     'matek-h743-wing-v3':'Firmware/Matek Wing H743-V3/manifest.json',
-    'cube-orange-plus':'Firmware/Cube Orange Plus/manifest.json'
+    'cube-orange-plus':'Firmware/Cube Orange Plus/manifest.json',
+    'uni-ic743-mini':'Firmware/Uni-IC743 Mini/manifest.json'
   });
   const supportedBoard=id=>Object.prototype.hasOwnProperty.call(MANIFESTS,id);
   const T={
@@ -36,18 +37,43 @@
       postflash:'After flashing, reconnect USB and verify Cube Orange Plus starts. If not, use STM32CubeProgrammer or a hardware debug probe. Remove propellers before calibrations.'
     }
   };
+  const UNI_T={
+    ru:{
+      howdfu:'Uni-IC743 Mini (STM32H743): для полной записи HEX требуется режим STM32 ROM DFU. Способ входа в BOOT зависит от кастомной платы; проверь её схему. Не замыкай контакты наугад. Отключи Mission Planner.',
+      model:'Я проверил именно плату Uni-IC743 Mini (STM32H743) и маркер Uni_IC743Mini в HEX. Идентификатор STM32 DFU сам по себе не определяет модель платы.',
+      warning:'ЭКСПЕРИМЕНТАЛЬНО: полный Mass Erase 2 MiB удаляет загрузчик и параметры. Веб-запись на физической Uni-IC743 Mini пока не испытана. Перед записью обеспечь возможность восстановления через STM32CubeProgrammer или SWD.',
+      postflash:'После записи отключи BOOT-режим и переподключи USB. Проверь появление MAVLink, параметры, датчики и режимы. Пропеллер снимай до любых проверок и калибровок.'
+    },
+    uk:{
+      howdfu:'Uni-IC743 Mini (STM32H743): для повного HEX потрібен STM32 ROM DFU. Вхід у BOOT залежить від кастомної плати; перевір її схему. Не замикай контакти навмання. Закрий Mission Planner.',
+      model:'Я перевірив саме Uni-IC743 Mini (STM32H743) і маркер Uni_IC743Mini у HEX. STM32 DFU сам по собі не визначає модель плати.',
+      warning:'ЕКСПЕРИМЕНТАЛЬНО: повне стирання 2 MiB видаляє завантажувач і параметри. Веб-запис на фізичній Uni-IC743 Mini ще не перевірено. Підготуй відновлення через STM32CubeProgrammer або SWD.',
+      postflash:'Після запису вийди з BOOT і повторно підключи USB. Перевір MAVLink, параметри, датчики та режими. Зніми пропелер перед калібруванням.'
+    },
+    en:{
+      howdfu:'Uni-IC743 Mini (STM32H743): full HEX installation requires STM32 ROM DFU. BOOT entry depends on the custom board hardware; consult its schematic, and do not randomly bridge pins. Close Mission Planner.',
+      model:'I verified the Uni-IC743 Mini (STM32H743) board label and Uni_IC743Mini firmware marker. Generic STM32 DFU cannot identify the board.',
+      warning:'EXPERIMENTAL: full 2 MiB Mass Erase removes the bootloader and parameters. Web flashing has not been hardware-tested on Uni-IC743 Mini. Ensure STM32CubeProgrammer/SWD recovery is available.',
+      postflash:'Exit BOOT mode and reconnect USB. Verify MAVLink, parameters, sensors and flight modes. Remove the propeller before checks or calibration.'
+    }
+  };
   const tr=key=>{
     const lang=window.AtlasLanguage?.()||'ru';
-    return (selectedBoard()==='cube-orange-plus'?CUBE_T[lang]?.[key]:null)||(T[lang]||T.ru)[key]||key;
+    const board=selectedBoard();
+    return (board==='cube-orange-plus'?CUBE_T[lang]?.[key]:board==='uni-ic743-mini'?UNI_T[lang]?.[key]:null)||(T[lang]||T.ru)[key]||key;
   };
   let current=null, image=null, fileInfo=null, busy=false, lastPhase='', usbSupported=!!(navigator.usb&&window.isSecureContext);
    window.AtlasDfuUi=Object.freeze({isBusy:()=>busy});
   function selectedBoard(){return window.AtlasSelectedBoard?.()||'cube-orange-plus';}
   function imageMatchesBoard(){
     if(!image||!supportedBoard(selectedBoard()))return false;
-    return selectedBoard()==='cube-orange-plus'
-      ? image.detectedTarget==='cube-orange-plus'
-      : image.detectedTarget!=='cube-orange-plus';
+    const board=selectedBoard();
+    if(board==='cube-orange-plus')return image.detectedTarget==='cube-orange-plus';
+    if(board==='uni-ic743-mini')return image.detectedTarget==='uni-ic743-mini';
+    // Preserve support for legacy Matek builds without a public target string,
+    // but never allow a known Cube or Uni target to be written to a Matek.
+    return board==='matek-h743-wing-v3' &&
+      (image.detectedTarget===null||image.detectedTarget==='matek-h743-wing-v3');
   }
   function log(message,kind='info'){
     const box=$('dfuLog'),row=document.createElement('div');row.className='dfu-log-line'+(kind==='error'?' error':'');const tm=document.createElement('time');tm.textContent=new Date().toLocaleTimeString('en-GB',{hour12:false});const txt=document.createElement('span');txt.textContent=message;row.append(tm,txt);box.prepend(row);while(box.children.length>70)box.lastChild.remove();
@@ -82,16 +108,16 @@
     const el=$('dfuGateStatus');if(!el)return;
     const lang=window.AtlasLanguage?.()||'ru';const key=blockedBy();
     const targetMessages={
-      ru:'HEX не соответствует выбранной плате: Cube Orange Plus требует маркер CubeOrangePlus. Запись заблокирована.',
-      uk:'HEX не відповідає обраній платі: Cube Orange Plus потребує маркера CubeOrangePlus. Запис заблоковано.',
-      en:'HEX does not match the selected board: Cube Orange Plus requires the CubeOrangePlus target marker. Flashing locked.'
+      ru:'Целевая плата внутри HEX не совпадает с выбранной (CubeOrangePlus / Uni_IC743Mini / MatekH743). Запись заблокирована.',
+      uk:'Цільова плата в HEX не збігається з обраною (CubeOrangePlus / Uni_IC743Mini / MatekH743). Запис заблоковано.',
+      en:'Firmware target does not match the selected board (CubeOrangePlus / Uni_IC743Mini / MatekH743). Flashing locked.'
     };
     el.textContent=key==='target'?targetMessages[lang]:(G[lang]||G.ru)[key];
     el.dataset.ready=key==='ready'?'true':'false';
   }
   function readyToFlash(){return !busy&&current?.opened&&current?.flashMapVerified&&!!current?.transferSize&&image&&supportedBoard(selectedBoard())&&imageMatchesBoard()&&$('dfuConfirmBoard').checked&&$('dfuConfirmBackup').checked&&$('dfuConfirmText').value.trim()==='ERASE';}
   function refreshControls(){
-    $('dfuFlashBtn').disabled=!readyToFlash();$('dfuConnectBtn').disabled=busy||!usbSupported;$('dfuLatestBtn').disabled=busy;$('dfuLocalInput').disabled=busy;$('dfuLoadReleaseBtn').disabled=busy||$('dfuReleaseSelect').disabled;
+    $('dfuFlashBtn').disabled=!readyToFlash();$('dfuConnectBtn').disabled=busy||!usbSupported;$('dfuLatestBtn').disabled=busy||releaseLoadBusy;$('dfuLocalInput').disabled=busy||releaseLoadBusy;$('dfuLoadReleaseBtn').disabled=busy||releaseLoadBusy||$('dfuReleaseSelect').disabled;
     $('dfuConfirmBoard').disabled=busy;$('dfuConfirmBackup').disabled=busy;$('dfuConfirmText').disabled=busy;
     $('dfuFlashBtn').textContent=busy?tr('erasing'):tr('flash');$('dfuConnectBtn').textContent=current?.opened?tr('disconnect'):tr('detect');
     updateGateStatus();
@@ -105,16 +131,20 @@
   }
   async function digest(data){const result=await crypto.subtle.digest('SHA-256',data);return [...new Uint8Array(result)].map(x=>x.toString(16).padStart(2,'0')).join('');}
   async function loadHex(blob,info){
+    const expectedBoard=selectedBoard();
     const bytes=await blob.arrayBuffer();
     const hash=await digest(bytes);
     if(info.sha256&&hash.toLowerCase()!==info.sha256.toLowerCase())throw Error('SHA-256 mismatch. File rejected.');
     if(info.bytes&&bytes.byteLength!==info.bytes)throw Error('Manifest size mismatch. File rejected.');
     const hex=new TextDecoder('ascii',{fatal:true}).decode(bytes);
     const parsed=window.AtlasDFU.parseIntelHex(hex);
+    if(selectedBoard()!==expectedBoard)throw Error('Board selection changed while validating the HEX. Select the file again.');
     if(selectedBoard()==='cube-orange-plus'&&parsed.detectedTarget!=='cube-orange-plus')
       throw Error('Cube Orange Plus firmware marker missing. Never flash a Cube Orange or Matek HEX to Orange Plus.');
-    if(selectedBoard()==='matek-h743-wing-v3'&&parsed.detectedTarget==='cube-orange-plus')
-      throw Error('Cube Orange Plus HEX cannot be flashed to a Matek controller.');
+    if(selectedBoard()==='uni-ic743-mini'&&parsed.detectedTarget!=='uni-ic743-mini')
+      throw Error('Uni-IC743 Mini target marker missing. Wrong HEX rejected.');
+    if(selectedBoard()==='matek-h743-wing-v3'&&parsed.detectedTarget!==null&&parsed.detectedTarget!=='matek-h743-wing-v3')
+      throw Error('Wrong target: Cube Orange Plus or Uni-IC743 Mini HEX cannot be flashed to a Matek controller.');
     image=parsed;fileInfo={...info,sha256:hash};meta();refreshControls();status(`${info.filename} · ${image.dataBytes} image bytes · SHA-256 OK`);
   }
   async function loadManifest(){
@@ -124,13 +154,13 @@
     const response=await fetch(new URL(MANIFESTS[board],document.baseURI),{cache:'no-store'});
     // Cube's local HEX flash mode can precede the protected server release.
     // No placeholder public firmware, no fake download or broken page state.
-    if(!response.ok&&!(board==='cube-orange-plus'&&response.status===404))
+    if(!response.ok&&!(['cube-orange-plus','uni-ic743-mini'].includes(board)&&response.status===404))
       throw Error(`HTTP ${response.status}: manifest.json`);
     const manifest=response.ok?await response.json():{board_id:board,files:[]};
     if(manifest.board_id!==board||board!==selectedBoard()||!Array.isArray(manifest.files))throw Error(tr('manifestEmpty'));
     const select=$('dfuReleaseSelect');
     select.replaceChildren();
-    if(!manifest.files.length){select.disabled=true;$('dfuLoadReleaseBtn').disabled=true;return manifest;}
+    if(!manifest.files.length){select.disabled=true;$('dfuLoadReleaseBtn').disabled=true;refreshControls();return manifest;}
     manifest.files.forEach((entry,index)=>{
       const option=document.createElement('option');option.value=String(index);
       const stamp=entry.timestamp?new Date(entry.timestamp*1000).toLocaleDateString('en-CA'):'';
@@ -140,8 +170,10 @@
     select.disabled=false;$('dfuLoadReleaseBtn').disabled=false;
     return manifest;
   }
+  let releaseLoadBusy=false;
   async function latest(requestedIndex=null){
-    if(busy)return;
+    if(busy||releaseLoadBusy)return;
+    releaseLoadBusy=true;refreshControls();
     const expectedBoard=selectedBoard();
     try{
       $('dfuLatestBtn').disabled=true;$('dfuLoadReleaseBtn').disabled=true;
@@ -156,17 +188,17 @@
       const blob=await window.AtlasFirmwareAccess.requestBlob(info);
       if(selectedBoard()!==expectedBoard)throw Error('Board selection changed while loading firmware.');
       await loadHex(blob,{...info,source:'A.T.L.A.S. Secure R2 · PIN'});
-    }catch(error){image=null;fileInfo=null;meta();status(error.message||String(error),true);}finally{refreshControls();}
+    }catch(error){image=null;fileInfo=null;meta();status(error.message||String(error),true);}finally{releaseLoadBusy=false;refreshControls();}
   }
   async function localFile(file){
-    if(!file||busy)return;
+    if(!file||busy||releaseLoadBusy)return;
     try{
       if(!/\.hex$/i.test(file.name)||file.size>16*1024*1024)throw Error('Select an Intel HEX file under 16 MiB');
       await loadHex(file,{filename:file.name,source:'LOCAL FILE'});
     }catch(error){image=null;fileInfo=null;meta();status(`${tr('fileIssue')}: ${error.message}`,true);}finally{refreshControls();}
   }
   async function connect(){
-    if(busy)return;
+    if(busy||releaseLoadBusy)return;
     if(current?.opened){try{await current.close();}catch(e){status(e.message,true);}current=null;refreshControls();return;}
     if(!usbSupported){status(tr('unsupported'),true);return;}
     try{
@@ -178,7 +210,7 @@
     }catch(error){status(`DFU: ${error.message}`,true);}finally{refreshControls();}
   }
   async function flash(){
-    if(!readyToFlash())return;
+    if(releaseLoadBusy||!readyToFlash())return;
     const expected=fileInfo?.filename;
     if(!imageMatchesBoard())return;
     const words=[tr('warning'),`Controller: ${selectedBoard()}`,`File: ${expected}`,`SHA256: ${fileInfo?.sha256}`,`Start: 0x08000000`, 'ERASE ALL INTERNAL FLASH (2 MiB)?'];
