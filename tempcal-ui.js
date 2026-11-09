@@ -91,12 +91,13 @@ function report(){
  return {sensors:list,connected:s.connected,complete:s.paramComplete===true,busy:busy||reading,learning:list.some(i=>i.mode===2),
   configured:list.length>0&&list.every(i=>i.mode!==2),supported:list.length>0};
 }
-function rememberLearning(sensor){startedLearning.set(sensor.prefix,{start:core.snapshot(getState().params).find(x=>x.prefix===sensor.prefix)||null,time:Date.now()});completedLearning.delete(sensor.prefix);}
+function rememberLearning(sensor){startedLearning.set(sensor.prefix,{start:core.snapshot(getState().params).find(x=>x.prefix===sensor.prefix)||null,time:Date.now(),sawDisconnect:false});completedLearning.delete(sensor.prefix);}
 function watchLearning(sensors,fullyRead){
  if(!fullyRead)return;
  for(const sensor of sensors){
   if(!startedLearning.has(sensor.prefix))continue;
-  if(sensor.mode===1){completedLearning.set(sensor.prefix,{previous:startedLearning.get(sensor.prefix),current:sensor});startedLearning.delete(sensor.prefix);}
+  const record=startedLearning.get(sensor.prefix);
+  if(sensor.mode===1&&record.sawDisconnect){completedLearning.set(sensor.prefix,{previous:record,current:sensor});startedLearning.delete(sensor.prefix);}
  }
 }
 function announce(detail={}){
@@ -125,18 +126,22 @@ async function waitForParameters(timeout=65000){
  }
  return {ok:false,reason:'timeout'};
 }
-async function refreshParameters(force=true){
+async function refreshParameters(force=true,passes=1){
  if(reading)return;
  const s=getState();
  if(!s.connected||!Number.isInteger(s.sysid))throw Error(t('noLink'));
  reading=true;readToken++;updateAll();
  try{
-  if(!s.paramLoading&&!api.requestParameters(force))throw Error(t('partial'));
-  const result=await waitForParameters();
-  if(!result.ok)throw Error(t('partial')+' ('+result.reason+')');
+  for(let pass=1;pass<=passes;pass++){
+   const current=getState();
+   if(!current.connected||!Number.isInteger(current.sysid))throw Error(t('disconnect'));
+   if(!current.paramLoading&&!api.requestParameters(force))throw Error(t('partial'));
+   const result=await waitForParameters();
+   if(!result.ok)throw Error(t('partial')+' ('+result.reason+')');
+  }
   lastEvent='read-ok';
   updateAll();announce({type:'read',success:true});
-  return result;
+  return {ok:true,passes};
  }finally{reading=false;updateAll();}
 }
 async function chooseMode(sensor,mode){
@@ -153,7 +158,7 @@ async function chooseMode(sensor,mode){
    // Force the second complete list automatically, without a confirm dialog.
    busy=false;
    updateAll();
-   try{await refreshParameters(true);messages.set(sensor.prefix,t('reloaded'));}
+   try{await refreshParameters(true,2);messages.set(sensor.prefix,t('reloaded'));}
    catch(error){messages.set(sensor.prefix,error.message);}
   }
  }catch(error){messages.set(sensor.prefix,error.message||String(error));}
@@ -269,7 +274,10 @@ window.addEventListener('atlas:parameters',()=>{
 });
 window.addEventListener('atlas:state',()=>{
  const s=getState(),connected=!!s.connected;
- if(connected!==lastConnected){lastConnected=connected;updateAll();announce({type:'connection'});}
+ if(connected!==lastConnected){
+  if(!connected)for(const record of startedLearning.values())record.sawDisconnect=true;
+  lastConnected=connected;updateAll();announce({type:'connection'});
+ }
 });
 function translateHeader(){
  const dict=translations[language()]||translations.ru;
