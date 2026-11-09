@@ -678,6 +678,7 @@ function renderFinal(box){
  box.append(panel);
 }
 
+let wizardActive=!!document.querySelector('.cc-tab[data-panel="quicksetup"].active');
 function render(){
  translateStatic();
  restoreCalWidgets();
@@ -768,21 +769,33 @@ setInterval(()=>{
   if(!s.connected||Date.now()-s.lastHeartbeat>6000)qs.rebootSawDisconnect=true;
   if(qs.rebootUserConfirmed&&qs.rebootSawDisconnect&&s.connected&&s.lastHeartbeat>qs.rebootBaseline&&Date.now()-s.lastHeartbeat<4000&&!qs.rebootReady){qs.rebootReady=true;setGlobal(t('rebootDone'));render();}
  }
- renderHeader();
- if(qs.step===3)updateWriteGate();
+ if(wizardActive)renderHeader();
+ if(wizardActive&&qs.step===3)updateWriteGate();
  if(qs.step===10&&qs.finalPhase==='reading'){
   const progress=$('qsFinalProgress'),s=state();
   if(progress)progress.textContent=t('finalReadProgress')+' · '+String(s.params?.size??0)+' / '+String(s.paramCount??'?');
  }
  if(qs.step===8&&(!safeLink(state()))&&(qs.compassNeedReboot||qs.awaitingCalibration==='compass'))qs.compassSawDisconnect=true;
 },1000);
-window.addEventListener('atlas:tempcal',()=>{if(qs.step===9)renderHeader();});
-window.addEventListener('atlas:language',render);
-window.addEventListener('atlas:navigate',event=>{if(event.detail?.tab==='quicksetup')render();else{restoreDfuPanel();restoreCalWidgets();}});
-window.addEventListener('atlas:state',()=>{if([1,2,3,6,8,9].includes(qs.step))render();});
-window.addEventListener('atlas:board',()=>{if(qs.firmwareBoard&&qs.firmwareBoard!==selectedBoard()){invalidateFrom(2);qs.fileToken++;qs.fileText=null;qs.preview=null;qs.firmwareSource=null;qs.firmwareBoard=null;}render();});
-window.addEventListener('atlas:parameters',()=>{if(![4,5,8].includes(qs.step))render();});
-window.addEventListener('atlas:message',event=>{if(qs.step!==8||event.detail?.type!=='sys')return;const current=state(),kind=core.detectCompass(current.params,current.compassStatus).kind;if(kind!==qs.lastCompassKind){qs.lastCompassKind=kind;render();}});
+window.addEventListener('atlas:tempcal',()=>{if(wizardActive&&qs.step===9)renderHeader();});
+window.addEventListener('atlas:language',()=>{if(wizardActive)render();else translateStatic();});
+window.addEventListener('atlas:navigate',event=>{wizardActive=event.detail?.tab==='quicksetup';if(wizardActive)render();else{restoreDfuPanel();restoreCalWidgets();}});
+window.addEventListener('atlas:state',()=>{if(wizardActive&&[1,2,3,6,8,9].includes(qs.step))render();});
+window.addEventListener('atlas:board',()=>{if(qs.firmwareBoard&&qs.firmwareBoard!==selectedBoard()){invalidateFrom(2);qs.fileToken++;qs.fileText=null;qs.preview=null;qs.firmwareSource=null;qs.firmwareBoard=null;}if(wizardActive)render();});
+window.addEventListener('atlas:parameters',()=>{
+ if(!wizardActive||[4,5,8].includes(qs.step))return;
+ if(qs.step===9){
+  // The INS editor observes atlas:parameters itself. Rebuilding its live form
+  // for every PARAM_VALUE packet interrupts keyboard edits and allocates DOM.
+  const s=state(),embedded=!!$('qsContent')?.querySelector('.tc-root');
+  const ready=paramReady(s)&&s.paramComplete;
+  if((ready&&!embedded)||(!ready&&embedded))render();
+  else renderHeader();
+  return;
+ }
+ if(qs.step!==10)render();
+});
+window.addEventListener('atlas:message',event=>{if(!wizardActive||qs.step!==8||event.detail?.type!=='sys')return;const current=state(),kind=core.detectCompass(current.params,current.compassStatus).kind;if(kind!==qs.lastCompassKind){qs.lastCompassKind=kind;render();}});
 document.querySelectorAll('[data-language]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(render,0)));
 render();
 })();

@@ -23,6 +23,7 @@ on:
       - 'tempcal-core.js'
       - 'tempcal-ui.js'
       - 'tools/check_tempcal.cjs'
+      - 'tools/check_post_hardware_audit.cjs'
       - 'quick-setup-core.js'
       - 'quick-setup.js'
       - 'tools/check_quick_setup.cjs'
@@ -93,6 +94,8 @@ jobs:
         run: node tools/check_servo_config.cjs
       - name: Verify configurator apply transition, support anchor and post-flash note
         run: node tools/check_configurator_ui.cjs
+      - name: Verify post-hardware MAVLink multi-vehicle and UI safety regressions
+        run: node tools/check_post_hardware_audit.cjs
       - name: Verify INS temperature calibration modes, readback and diagnostic coefficients
         run: node tools/check_tempcal.cjs
       - name: Verify Quick Setup protocol, parameter and safety gates

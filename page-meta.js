@@ -4,14 +4,14 @@
   'use strict';
   const pages = {
     'index.html': {
-      ru: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 и конфигуратор', description:'Проверенная сборка A.T.L.A.S. Release 1.0 для Matek H743-WING V3: EKF3 NOAID, режимы без GPS, веб-конфигуратор и документация.'},
-      uk: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 та конфігуратор', description:'Перевірена збірка A.T.L.A.S. Release 1.0 для Matek H743-WING V3: EKF3 NOAID, режими без GPS, вебконфігуратор і документація.'},
-      en: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 & Configurator', description:'Tested A.T.L.A.S. Release 1.0 build for Matek H743-WING V3, with EKF3 NOAID, GPS-denied modes, a browser configurator and documentation.'}
+      ru: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 и конфигуратор', description:'Проверенная сборка A.T.L.A.S. Release 1.0 для Matek H743-WING V3: EKF3 NOAID, режимы без GPS, веб-конфигуратор, проверенный на реальном полётном контроллере, и документация.'},
+      uk: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 та конфігуратор', description:'Перевірена збірка A.T.L.A.S. Release 1.0 для Matek H743-WING V3: EKF3 NOAID, режими без GPS, вебконфігуратор, перевірений на реальному контролері, та документація.'},
+      en: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 & Configurator', description:'Tested A.T.L.A.S. Release 1.0 build for Matek H743-WING V3, with EKF3 NOAID, GPS-denied modes, a hardware-tested browser configurator and documentation.'}
     },
     'configurator.html': {
-      ru: {title:'A.T.L.A.S. — Конфигуратор полётного контроллера', description:'A.T.L.A.S. Control Center: MAVLink, параметры ArduPlane, калибровка датчиков, настройка сервоприводов, OSD и прошивки.'},
-      uk: {title:'A.T.L.A.S. — Конфігуратор польотного контролера', description:'A.T.L.A.S. Control Center: MAVLink, параметри ArduPlane, калібрування датчиків, сервоприводи, OSD та прошивки.'},
-      en: {title:'A.T.L.A.S. — Flight Controller Configurator', description:'A.T.L.A.S. Control Center for MAVLink, ArduPlane parameters, sensor calibration, servo outputs, OSD and firmware management.'}
+      ru: {title:'A.T.L.A.S. — Конфигуратор полётного контроллера', description:'A.T.L.A.S. Release 1.0: веб-конфигуратор проверен на реальном полётном контроллере. USB/MAVLink, Quick Setup, параметры, калибровки, OSD и прошивка.'},
+      uk: {title:'A.T.L.A.S. — Конфігуратор польотного контролера', description:'A.T.L.A.S. Release 1.0: вебконфігуратор перевірено на реальному польотному контролері. USB/MAVLink, Quick Setup, параметри, калібрування та OSD.'},
+      en: {title:'A.T.L.A.S. — Flight Controller Configurator', description:'A.T.L.A.S. Release 1.0: browser configurator bench-tested with a real flight controller. USB/MAVLink, Quick Setup, parameters, calibration and OSD.'}
     },
     'faq.html': {
       ru: {title:'A.T.L.A.S. — Вопросы и ответы', description:'Ответы на вопросы об EKF3 NOAID, необходимых датчиках и изменённых режимах полёта A.T.L.A.S.'},

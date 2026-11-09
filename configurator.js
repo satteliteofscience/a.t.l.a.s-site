@@ -37,7 +37,7 @@ function parameterCategory(name){
 
 let lang='ru';try{let saved=localStorage.getItem('atlas-language');if(words[saved])lang=saved;}catch{}
 const tr=(k)=>words[lang]?.[k]||words.ru[k]||k;
-const state={demo:false,connected:false,connecting:false,transport:null,netSocket:null,bridgeReady:false,lastVoltageTelemetry:0,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,readTwoBusy:false,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
+const state={demo:false,connected:false,connecting:false,transport:null,netSocket:null,bridgeReady:false,lastVoltageTelemetry:0,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,heartbeatStale:false,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,readTwoBusy:false,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
 window.AtlasLanguage=()=>lang;
 window.AtlasSelectedBoard=()=>state.selectedBoard;
 const settingDefs=[
@@ -83,8 +83,26 @@ function navigate(tab){
    startParamLoad();
  }
 }
-function updateConnectionUI(){const c=state.connected,d=state.demo;$('connectionPill').classList.toggle('online',c);$('connectionPill').classList.toggle('demo',d);$('connectionLabel').textContent=c&&state.transport==='bridge'?'UDP/TCP · MAVLINK':tr(c?'online':d?'demoStatus':'offline');$('connectBtnText').textContent=tr(c?'disconnect':'connect');$('demoBtn').lastElementChild.textContent=tr(d?'stopDemo':'demo');$('linkSubtitle').textContent=(c?`${tr('connected')} · ${state.transport==='bridge'?'UDP/TCP':'USB'} · sys ${state.sysid||'?'}`:tr('choose'));$('flightSource').textContent=c?'MAVLINK / LIVE':d?'DEMO / SIMULATION':'NO DATA';$('hudSource').textContent=c?'ATTITUDE / MAVLINK':d?'ATTITUDE / SYNTHETIC':'NO TELEMETRY';$('hudWatermark').textContent=c?'LIVE MAVLINK':d?'SIMULATED DATA':'WAITING FOR FC';$('connectBtn').disabled=state.connecting;
- const net=$('networkConnectBtn');if(net)net.disabled=state.connecting;}
+function heartbeatLive(now=Date.now()){
+ return state.connected&&state.sysid!==null&&state.lastHeartbeat>0&&now-state.lastHeartbeat>=0&&now-state.lastHeartbeat<7000;
+}
+function updateConnectionUI(){
+ const connected=state.connected,live=heartbeatLive(),demo=state.demo;
+ $('connectionPill').classList.toggle('online',live);
+ $('connectionPill').classList.toggle('demo',demo);
+ $('connectionLabel').textContent=connected&&!live?(state.sysid!==null?'MAVLINK TIMEOUT':'WAITING FOR MAVLINK'):
+   live?(state.transport==='bridge'?'UDP/TCP · MAVLINK':tr('online')):tr(demo?'demoStatus':'offline');
+ $('connectBtnText').textContent=tr(connected?'disconnect':'connect');
+ $('demoBtn').lastElementChild.textContent=tr(demo?'stopDemo':'demo');
+ $('linkSubtitle').textContent=connected?
+   (live?`${tr('connected')} · ${state.transport==='bridge'?'UDP/TCP':'USB'} · sys ${state.sysid}`:
+     `${state.transport==='bridge'?'UDP/TCP':'USB'} · ${state.sysid!==null?'HEARTBEAT LOST':'WAITING HEARTBEAT'}`):tr('choose');
+ $('flightSource').textContent=live?'MAVLINK / LIVE':demo?'DEMO / SIMULATION':'NO DATA';
+ $('hudSource').textContent=live?'ATTITUDE / MAVLINK':demo?'ATTITUDE / SYNTHETIC':'NO TELEMETRY';
+ $('hudWatermark').textContent=live?'LIVE MAVLINK':demo?'SIMULATED DATA':connected?'WAITING FOR FC':'WAITING FOR FC';
+ $('connectBtn').disabled=state.connecting;
+ const net=$('networkConnectBtn');if(net)net.disabled=state.connecting;
+}
 function formatParam(n){return Number.isFinite(n)?(Number.isInteger(n)?String(n):Number(n.toPrecision(7)).toString()):'—';}
 const paramLex={
  ru:{waiting:'Ожидание первого PARAM_VALUE…',receiving:'Загрузка параметров',repair:'Восстанавливаются пропущенные параметры',done:'Получен полный список параметров',partial:'Получен неполный список. Повтори загрузку или проверь связь USB.',idle:'Нажми «Загрузить параметры» после соединения.',retry:'Повторяем запрос списка параметров…',noReply:'Нет ответа PARAM_VALUE от контроллера.'},
@@ -154,7 +172,7 @@ async function recoverMissingParams(){
  }catch(e){toast('PARAM_REQUEST_READ: '+e.message,true);}
  finally{if(x)x.repairBusy=false;}
 }
-function updateTelemetryUI(){const t=state.telemetry;
+function updateTelemetryUI(){const t=state.demo||heartbeatLive()?state.telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};
  $('rollReadout').textContent=Number.isFinite(t.roll)?`${t.roll>=0?'+':''}${cleanNum(t.roll,1)}°`:'--.-°';
  $('pitchReadout').textContent=Number.isFinite(t.pitch)?`${t.pitch>=0?'+':''}${cleanNum(t.pitch,1)}°`:'--.-°';
  $('yawReadout').textContent=Number.isFinite(t.yaw)?`${cleanNum((t.yaw+360)%360,1)}°`:'---.-°';
@@ -163,10 +181,11 @@ function updateTelemetryUI(){const t=state.telemetry;
  $('speedReadout').title=freshAirspeed?'MAVLink VFR_HUD · воздушная скорость по данным автопилота':'Нет свежего VFR_HUD · проверь отправку телеметрии и работу датчика Пито';
  $('voltageReadout').textContent=Number.isFinite(t.voltage)?`${cleanNum(t.voltage,2)} V`:'—';
  $('altReadout').textContent=Number.isFinite(t.altitude)?`${cleanNum(t.altitude,1)} m`:'—';
- $('vehicleModel').textContent=state.demo?'SIM / ArduPlane':state.connected?`MAVLink SYS ${state.sysid??'?'}`:'—';
- $('armedState').textContent=state.demo?tr('disarmed'):state.armed===true?tr('armed'):state.armed===false?tr('disarmed'):tr('unknown');
- $('armedState').style.color=state.armed?'#efae7f':'#c4d685';
- $('flightMode').textContent=state.demo?'FBWA / SIM':state.mode!==null?(modes[state.mode]||`CUSTOM ${state.mode}`):'—';showProgress();
+ $('vehicleModel').textContent=state.demo?'SIM / ArduPlane':heartbeatLive()?`MAVLink SYS ${state.sysid}`:'—';
+ const armed=heartbeatLive()?state.armed:null;
+ $('armedState').textContent=state.demo?tr('disarmed'):armed===true?tr('armed'):armed===false?tr('disarmed'):tr('unknown');
+ $('armedState').style.color=armed===true?'#efae7f':'#c4d685';
+ $('flightMode').textContent=state.demo?'FBWA / SIM':heartbeatLive()&&state.mode!==null?(modes[state.mode]||`CUSTOM ${state.mode}`):'—';showProgress();
 }
 function enterDemo(){if(state.connected||state.connecting){toast(tr('needlink'),true);return;}state.demo=!state.demo;stopParamRepair();state.paramTransfer=null;state.params.clear();state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramCount=null;state.armed=null;
  if(state.demo){const demo={'ROLL_LIMIT_DEG':45,'PITCH_MAX':2000,'PITCH_MIN':-1500,'AIRSPEED_MIN':16,'AIRSPEED_MAX':45,'TRIM_ARSPD_CM':2200,'THR_MIN':0,'THR_MAX':100,'STALL_PREVENTION':1,'FS_LONG_ACTN':0,'ARSPD_USE':1,'RUD_LIMIT_DEG':30,'EK3_PRIMARY':0,'EK3_IMU_MASK':3,'TECS_SPDWEIGHT':1,'TKOFF_ALT':150,'SERVO1_FUNCTION':4,'SERVO2_FUNCTION':19,'SERVO3_FUNCTION':70,'OSD_TYPE':1,'OSD_UNITS':0,'OSD1_ENABLE':1,'OSD1_ALTITUDE_EN':1,'OSD1_ALTITUDE_X':24,'OSD1_ALTITUDE_Y':2,'OSD1_ASPEED_EN':1,'OSD1_ASPEED_X':1,'OSD1_ASPEED_Y':3,'OSD1_BAT_VOLT_EN':1,'OSD1_BAT_VOLT_X':2,'OSD1_BAT_VOLT_Y':13,'OSD1_HORIZON_EN':1,'OSD1_HORIZON_X':15,'OSD1_HORIZON_Y':8,'OSD1_RSSI_EN':1,'OSD1_RSSI_X':2,'OSD1_RSSI_Y':1,'OSD1_MESSAGE_EN':0,'OSD1_MESSAGE_X':1,'OSD1_MESSAGE_Y':12};for(const [name,value]of Object.entries(demo))state.params.set(name,{value,type:Number.isInteger(value)?6:9,index:state.params.size});state.paramCount=state.params.size;toast('SIM DEMO · no USB hardware connected');}else toast('Demo exited');
@@ -187,7 +206,7 @@ async function disconnect(){state.bulkCancel=true;stopParamRepair();state.paramT
  try{if(reader)reader.releaseLock();}catch{}
  const port=state.port;state.port=null;try{if(port)await port.close();}catch(e){console.warn(e);}
  const socket=state.netSocket;state.netSocket=null;state.bridgeReady=false;state.transport=null;if(socket){try{socket.close();}catch{}}
- state.connected=false;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.lastVfr=0;state.vfrFallbackSent=false;state.armed=null;state.mode=null;state.params.clear();state.paramCount=null;state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramLoading=false;
+ state.connected=false;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVfr=0;state.vfrFallbackSent=false;state.armed=null;state.mode=null;state.params.clear();state.paramCount=null;state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramLoading=false;
  if(state.writeWait){clearTimeout(state.writeWait.timer);state.writeWait.reject(Error('Connection closed'));state.writeWait=null;}
  updateConnectionUI();renderBasic();renderParams();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));toast('MAVLink disconnected');}
 async function transmit(messageId,payload){
@@ -210,12 +229,13 @@ async function requestStreams(){if(!state.connected||state.sysid===null)return;
    try{await transmit(76,M.commandLong(state.sysid,state.compid,511,[id,rate,0,0,0,0,0]));}catch(e){toast('Stream request: '+e.message,true);}
  }
 }
-function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMessage(message);if(!data)return;
+function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMessage(message);if(!data||!M.belongsToSelectedVehicle(message,data,state.sysid))return;
  if(data.type==='command_long'){state.rxCommands=(state.rxCommands||0)+1;if(data.command===42429)state.rxPositions=(state.rxPositions||0)+1;}
  if(data.type==='ack')state.rxAcks=(state.rxAcks||0)+1;
  if(data.type==='text')state.rxTexts=(state.rxTexts||0)+1;
- if(data.type==='heartbeat' && data.compid===1){const first=state.sysid===null;state.sysid=data.sysid;state.compid=data.compid;state.lastHeartbeat=Date.now();state.armed=data.armed;state.mode=data.mode;
+ if(data.type==='heartbeat' && data.compid===1){const first=state.sysid===null,recovered=state.heartbeatStale;state.sysid=data.sysid;state.compid=data.compid;state.lastHeartbeat=Date.now();state.heartbeatStale=false;state.armed=data.armed;state.mode=data.mode;
    if(first){state.streamStart=Date.now();toast(`MAVLink HEARTBEAT · sys=${state.sysid} comp=${state.compid}`);requestStreams();updateConnectionUI();startParamLoad();window.dispatchEvent(new Event('atlas:state'));}
+   else if(recovered){updateConnectionUI();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));}
  }else if(data.type==='attitude'){state.telemetry.roll=data.roll*180/Math.PI;state.telemetry.pitch=data.pitch*180/Math.PI;state.telemetry.yaw=data.yaw*180/Math.PI;state.lastAttitude=Date.now();}
  else if(data.type==='vfr'&&message.sysid===state.sysid){state.lastVfr=Date.now();state.telemetry.airspeed=Number.isFinite(data.airspeed)&&data.airspeed>=0?data.airspeed*3.6:null;state.telemetry.altitude=data.altitude;state.telemetry.throttle=data.throttle;}
  else if(data.type==='sys'){state.telemetry.voltage=data.voltage===65535?null:data.voltage/1000;if(data.voltage!==65535&&message.sysid===state.sysid)state.lastVoltageTelemetry=Date.now();if(message.sysid===state.sysid&&message.compid===state.compid){const magBit=4;state.compassStatus={present:!!(data.sensorsPresent&magBit),enabled:!!(data.sensorsEnabled&magBit),healthy:!!(data.sensorsHealthy&magBit),lastSeen:Date.now()};}}
@@ -245,14 +265,14 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
 }
 let renderQueued=false;
 function scheduleParameterRerender(){if(renderQueued||state.pageLeaving)return;renderQueued=true;setTimeout(()=>{renderQueued=false;if(state.pageLeaving)return;if(state.selectedTab==='params')renderParams();if(state.selectedTab==='basic')renderBasic();showProgress();if(!document.hidden)window.dispatchEvent(new Event('atlas:parameters'));},state.paramLoading?1600:400);}
-async function connect(){if(state.connected){await disconnect();return;}
+async function connect(){if(state.connecting)return;if(state.connected){await disconnect();return;}
  if(state.demo)enterDemo();
  if(!window.isSecureContext||!('serial' in navigator)){toast(tr('nosupport'),true);alert(tr('nosupport'));return;}
  state.connecting=true;updateConnectionUI();
  try{
   const port=await navigator.serial.requestPort();
   await port.open({baudRate:Number($('baud').value),bufferSize:8192});
-  state.port=port;state.transport='usb';state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
+  state.port=port;state.transport='usb';state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
   updateConnectionUI();log('USB CDC open · '+$('baud').value+' bps');
   const parser=new M.Parser(handleMessage);state.rxParser=parser;
   state.rxPositions=0;state.rxCommands=0;state.rxAcks=0;state.rxTexts=0;
@@ -317,6 +337,7 @@ async function connectBridge(){
  try{
   const url=endpoint.href+(endpoint.href.includes('?')?'&':'?')+'token='+encodeURIComponent(token);
   const ws=new WebSocket(url);ws.binaryType='arraybuffer';state.netSocket=ws;
+  const handshakeTimer=setTimeout(()=>{if(state.netSocket===ws&&!state.bridgeReady){networkStatus('WebSocket bridge handshake timed out (12 s)',true);ws.close();}},12000);
   ws.onopen=()=>{if(state.netSocket===ws)ws.send(JSON.stringify({mode,host,port}));};
   ws.onmessage=event=>{
    if(state.netSocket!==ws)return;
@@ -324,9 +345,9 @@ async function connectBridge(){
     let message;try{message=JSON.parse(event.data);}catch{networkStatus('Unexpected bridge message',true);return;}
     if(message.type==='error'){networkStatus('MAVLink bridge: '+message.message,true);ws.close();return;}
     if(message.type!=='ready')return;
-    state.bridgeReady=true;state.transport='bridge';state.connected=true;state.connecting=false;state.rxActive=true;state.seq=0;
+    clearTimeout(handshakeTimer);state.bridgeReady=true;state.transport='bridge';state.connected=true;state.connecting=false;state.rxActive=true;state.seq=0;
     stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;
-    state.armed=null;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.lastVoltageTelemetry=0;
+    state.armed=null;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVoltageTelemetry=0;
     state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
     const parser=new M.Parser(handleMessage);state.rxParser=parser;
     state.rxPositions=0;state.rxCommands=0;state.rxAcks=0;state.rxTexts=0;
@@ -338,13 +359,15 @@ async function connectBridge(){
    }else if(state.bridgeReady&&event.data instanceof ArrayBuffer)state.rxParser.push(new Uint8Array(event.data));
   };
   ws.onerror=()=>{if(state.netSocket===ws)networkStatus('WebSocket error: check bridge token / TLS / browser network restrictions',true);};
-  ws.onclose=()=>{if(state.netSocket!==ws)return;state.connecting=false;if(state.connected){void disconnect().then(updateNetworkLabels);}else{state.netSocket=null;state.bridgeReady=false;updateConnectionUI();updateNetworkLabels();}};
+  ws.onclose=()=>{clearTimeout(handshakeTimer);if(state.netSocket!==ws)return;state.connecting=false;if(state.connected){void disconnect().then(updateNetworkLabels);}else{state.netSocket=null;state.bridgeReady=false;updateConnectionUI();updateNetworkLabels();}};
  }catch(e){networkStatus(e.message,true);state.connecting=false;updateConnectionUI();}
 }
 function heartbeatTick(){
  if(!state.connected)return;
  transmit(0,M.heartbeat()).catch(()=>{});
- if(state.sysid!==null&&Date.now()-state.lastHeartbeat>7000)$('connectionLabel').textContent='MAVLINK TIMEOUT';
+ if(state.sysid!==null&&!heartbeatLive()&&!state.heartbeatStale){
+  state.heartbeatStale=true;updateConnectionUI();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));
+ }
  if(state.sysid!==null&&!state.vfrFallbackSent&&state.streamStart>0&&state.lastVfr===0&&Date.now()-state.streamStart>7000&&Date.now()-state.lastHeartbeat<4000){
   state.vfrFallbackSent=true;
   transmit(66,M.requestDataStream(state.sysid,state.compid,11,3)).catch(err=>log('VFR_HUD fallback: '+err.message));
@@ -658,7 +681,8 @@ function drawHorizon(ts){
  if(rect.width<10)return;
  const dpr=Math.min(2,window.devicePixelRatio||1),w=rect.width,h=rect.height;if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  if(state.demo){const t=ts/1000;state.telemetry.roll=19*Math.sin(t*.66);state.telemetry.pitch=8*Math.sin(t*.41);state.telemetry.yaw=(220+(t*3.2)%360)%360;state.telemetry.airspeed=104+28*Math.sin(t*.21);state.telemetry.altitude=150+16*Math.sin(t*.32);state.telemetry.voltage=23.2+0.1*Math.cos(t*.05);}
- const roll=state.telemetry.roll||0,pitch=state.telemetry.pitch||0;const r=roll*Math.PI/180;
+ const visualValid=state.demo||heartbeatLive();
+ const roll=visualValid?(state.telemetry.roll||0):0,pitch=visualValid?(state.telemetry.pitch||0):0;const r=roll*Math.PI/180;
  const midx=w/2,midy=h/2;ctx.save();ctx.beginPath();ctx.rect(0,0,w,h);ctx.clip();ctx.translate(midx,midy);ctx.rotate(-r);ctx.translate(0,pitch*h/88);const W=2*Math.max(w,h);
  const sky=ctx.createLinearGradient(0,-W,0,0);sky.addColorStop(0,'#0a201b');sky.addColorStop(1,'#304b38');ctx.fillStyle=sky;ctx.fillRect(-W,-W,2*W,W);
  const ground=ctx.createLinearGradient(0,0,0,W);ground.addColorStop(0,'#474326');ground.addColorStop(1,'#18190d');ctx.fillStyle=ground;ctx.fillRect(-W,0,2*W,W);
@@ -671,7 +695,7 @@ function drawHorizon(ts){
  ctx.lineWidth=3.2;ctx.strokeStyle='#ffe48a';ctx.lineCap='square';ctx.beginPath();ctx.moveTo(midx-w*.23,midy);ctx.lineTo(midx-w*.085,midy);ctx.lineTo(midx-w*.05,midy+12);ctx.moveTo(midx+w*.23,midy);ctx.lineTo(midx+w*.085,midy);ctx.lineTo(midx+w*.05,midy+12);ctx.moveTo(midx-13,midy);ctx.lineTo(midx+13,midy);ctx.moveTo(midx,midy-13);ctx.lineTo(midx,midy+13);ctx.stroke();
  ctx.strokeStyle='#d4c368b8';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(midx,midy,Math.min(w,h)*.45,Math.PI*1.1,Math.PI*1.9);ctx.stroke();for(let a=-60;a<=60;a+=15){const deg=(a-90)*Math.PI/180,rad=Math.min(w,h)*.45;ctx.beginPath();ctx.moveTo(midx+rad*Math.cos(deg),midy+rad*Math.sin(deg));ctx.lineTo(midx+(rad-((a%30)?7:13))*Math.cos(deg),midy+(rad-((a%30)?7:13))*Math.sin(deg));ctx.stroke();}
  ctx.fillStyle='#f6e17b';ctx.beginPath();ctx.moveTo(midx,midy-Math.min(w,h)*.46);ctx.lineTo(midx-9,midy-Math.min(w,h)*.46-13);ctx.lineTo(midx+9,midy-Math.min(w,h)*.46-13);ctx.fill();
- ctx.font='bold 12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.fillStyle='#e4d088';ctx.fillText('A.T.L.A.S. // ATTITUDE',midx,h-20);ctx.textAlign='left';ctx.fillStyle='#b9c495a6';ctx.fillText('EKF3',15,26);ctx.textAlign='right';ctx.fillText(state.demo?'SYNTHETIC':state.connected?'MAVLINK':'OFFLINE',w-15,26);
+ ctx.font='bold 12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.fillStyle='#e4d088';ctx.fillText('A.T.L.A.S. // ATTITUDE',midx,h-20);ctx.textAlign='left';ctx.fillStyle='#b9c495a6';ctx.fillText('EKF3',15,26);ctx.textAlign='right';ctx.fillText(state.demo?'SYNTHETIC':heartbeatLive()?'MAVLINK':state.connected?'NO HEARTBEAT':'OFFLINE',w-15,26);
  if(ts-state.renderTimer>140){state.renderTimer=ts;updateTelemetryUI();}scheduleHorizon();
 }
 function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.language)));document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.tab)));

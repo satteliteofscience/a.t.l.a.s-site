@@ -30,7 +30,7 @@ The public repository is for the **website and published artifacts**. The develo
 | :--- | :--- |
 | Flight data | Attitude readout, MAVLink telemetry, simulated aircraft |
 | Settings | Full parameter list, Basic Tuning, Flight Modes, Servo Output |
-| Calibration | Accelerometer, compass, radio, battery monitoring |
+| Calibration | Accelerometer, compass, INS temperature compensation, radio, analog battery monitor |
 | Video | Onboard OSD layout editor, gimbal configuration |
 | Firmware | PIN-protected Intel HEX catalog, SHA-256 verification and web-DFU loading |
 | Documentation | FAQ and release-by-release changelog, translated to RU / UA / EN |
@@ -39,6 +39,12 @@ The public repository is for the **website and published artifacts**. The develo
 ### Website languages
 
 **Русский · Українська · English.** Technical parameter names follow ArduPilot naming.
+
+## Hardware-tested configurator
+
+The project maintainer has **bench-tested A.T.L.A.S. Control Center on a real flight controller**, including the core USB/MAVLink connection, guided Quick Setup, parameter loading and the successful compass-calibration and completion workflow. These are real-device observations, not only synthetic tests. Automated GitHub Actions regression suites also cover parameter validation, MAVLink framing and the UI.
+
+**Scope matters:** this hardware verification does not mean every supported controller, DFU firmware/erase path, local UDP/TCP bridge, analog multimeter voltage adjustment or the complete INS temperature-learning warmup cycle was individually verified. Those workflows remain subject to independent board-specific bench testing with the propeller removed. A successful wizard is not flight clearance.
 
 ## Deploying the public site
 
@@ -66,6 +72,7 @@ The repository cover under `assets/github-social-preview.jpg` may be uploaded in
 ## Repository resources
 
 - [FAQ](faq.html) — modified flight modes and minimum NOAID sensor requirements.
+- [Post-hardware configurator audit](POST-HARDWARE-AUDIT-2026-11-09.md) — actual real-FC checks, MAVLink hardening and software regression coverage.
 - [Changelog](changelog.html) — Release 1.0 and future updates.
 - [Release process](RELEASE-DEPLOYMENT.md) — private R2 uploads, version catalog, keys and matching GPL source.
 - [No-server provider setup](PROVIDER-SETUP.md) — Brevo hosted forms, LiqPay, release notifications and private early testing.
