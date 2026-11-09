@@ -122,11 +122,15 @@
     const board=selectedBoard();
     if(!supportedBoard(board))throw Error('Unsupported board');
     const response=await fetch(new URL(MANIFESTS[board],document.baseURI),{cache:'no-store'});
-    if(!response.ok)throw Error(`HTTP ${response.status}: manifest.json`);
-    const manifest=await response.json();
-    if(manifest.board_id!==board||board!==selectedBoard()||!Array.isArray(manifest.files)||!manifest.files.length)throw Error(tr('manifestEmpty'));
+    // Cube's local HEX flash mode can precede the protected server release.
+    // No placeholder public firmware, no fake download or broken page state.
+    if(!response.ok&&!(board==='cube-orange-plus'&&response.status===404))
+      throw Error(`HTTP ${response.status}: manifest.json`);
+    const manifest=response.ok?await response.json():{board_id:board,files:[]};
+    if(manifest.board_id!==board||board!==selectedBoard()||!Array.isArray(manifest.files))throw Error(tr('manifestEmpty'));
     const select=$('dfuReleaseSelect');
     select.replaceChildren();
+    if(!manifest.files.length){select.disabled=true;$('dfuLoadReleaseBtn').disabled=true;return manifest;}
     manifest.files.forEach((entry,index)=>{
       const option=document.createElement('option');option.value=String(index);
       const stamp=entry.timestamp?new Date(entry.timestamp*1000).toLocaleDateString('en-CA'):'';
@@ -143,7 +147,7 @@
       $('dfuLatestBtn').disabled=true;$('dfuLoadReleaseBtn').disabled=true;
       const manifest=await loadManifest();
       const index=requestedIndex===null?0:Number(requestedIndex);
-      const info=manifest.files[index];if(!info)throw Error('Firmware version not found');
+      const info=manifest.files[index];if(!info)throw Error(tr('manifestEmpty'));
       $('dfuReleaseSelect').value=String(index);
       status(`Selected: ${info.label||info.filename}`);
       if(!window.AtlasFirmwareAccess?.isProtected(info) || info.channel!=='release')
