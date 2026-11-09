@@ -19,7 +19,7 @@ ru:{
  levelTitle:'Установка горизонта',levelBody:'Установи самолёт в положение, соответствующее горизонтальному полёту. Команда будет отправлена только после отдельного нажатия.',startLevel:'Открыть и установить уровень',levelDone:'Команда установки уровня подтверждена автопилотом.',levelFail:'Установка уровня не подтверждена. Повтори процедуру.',
  rebootTitle:'Перезапуск после пользовательских параметров',rebootNotNeeded:'Пользовательские параметры не записывались — отдельный перезапуск этим мастером не требуется.',rebootBody:'После применения пользовательского .param-файла выполни обычный цикл питания контроллера. Отключи USB/питание, дождись выключения, подключи снова и дождись нового MAVLink heartbeat.',rebootStatus:'Ожидается отключение и повторное подключение контроллера.',rebootDone:'Обнаружено отключение, повторное подключение и новый heartbeat. Повторно считай параметры.',rebootRead:'Перечитать параметры после перезапуска',rebootNeed:'Перезапусти контроллер физически и переподключи USB/MAVLink. Мастер не отправляет команду ARM или reboot автоматически.',rebootAck:'Подтверждаю: я выполнил полный цикл выключения и включения именно этого полётного контроллера.',
  escTitle:'Проверка и калибровка ESC',escBody:'Определение выполняется по текущим параметрам ArduPlane и назначенным throttle-выходам. Мастер не включает ARM, не меняет газ и не отправляет PWM.',escProtocol:'Определённая конфигурация',escChannels:'Выходы газа',escDshot:'Обнаружен DShot. Калибровка min/max не требуется: цифровой протокол передаёт данные без аналогового диапазона PWM.',escPwm:'Обнаружен обычный PWM-выход газа. Такой ESC может требовать калибровки min/max, но точная процедура зависит от производителя и модели регулятора.',escPulse:'Обнаружен OneShot / OneShot125 / brushed. Не запускай стандартную PWM-процедуру автоматически; проверь руководство ESC.',escUnknown:'Протокол или физический путь ESC не удалось надёжно определить. Не выполняй калибровку по предположению.',escMixed:'Обнаружены смешанные протоколы на throttle-выходах. Проверь каждый канал и его физическое подключение отдельно.',escCubeLimit:'На Cube Orange DShot на MAIN может поддерживаться современной прошивкой и конфигурацией IOMCU. Проверь BRD_IO_DSHOT (если доступен), группу выходов, проводку и RCOut в сообщениях загрузки.',escNone:'Не найдено назначение throttle-функции SERVOx_FUNCTION 70/73/74. Если у самолёта есть двигатель, остановись и проверь назначение выходов в полном конфигураторе.',escDocs:'Официальная инструкция ArduPlane по ESC ↗',escManual:'Я снял пропеллер и выполнил процедуру из инструкции именно моего ESC либо подтвердил у производителя, что калибровка не требуется.',escDshotConfirm:'Я проверил, что выбранный throttle-выход физически поддерживает DShot и мой ESC совместим. Калибровка min/max не нужна.',escOtherConfirm:'Я проверил протокол, разводку и руководство ESC. Не запускаю неподходящую PWM-калибровку.',escNoneConfirm:'Я подтвердил, что мотор/ESC не используются в этой конфигурации.',
- compassTitle:'Проверка компаса',compassBody:'Мастер проверяет COMPASS_USE / COMPASS_USE2 / COMPASS_USE3. Если компас используется, калибровка запускается отдельной командой и должна завершиться сохранённым отчётом.',compassEnabled:'Активный компас обнаружен.',compassDisabled:'Все полученные экземпляры компаса отключены.',compassUnknown:'Не удалось определить наличие активного компаса. Проверь оборудование и параметры вручную.',startCompass:'Открыть и начать калибровку',compassAwaitSave:'Калибровка завершена, но автопилот ещё не подтвердил сохранение. Открой раздел компаса и нажми «Сохранить результат».',compassDone:'Отчёт калибровки компаса получен, результат сохранён автопилотом.',compassFail:'Калибровка компаса не завершилась успешно.',compassSkip:'Я проверил конфигурацию и подтверждаю, что этот самолёт не использует компас.',compassManual:'Я вручную проверил компас и его использование в полном конфигураторе.',
+ compassTitle:'Проверка компаса',calInline:'Калибровка выполняется прямо в мастере. Следуй запросам контроллера, подтверждай положения здесь и дождись результата.',escProfileSource:'Источник: выбранный .param-файл + параметры контроллера. Это настройка выходного протокола, а не подтверждение модели ESC.',escLiveSource:'Источник: текущие параметры контроллера.',escDshotBrand:'DShot (совместим с BLHeli32/AM32; фактическая прошивка ESC не определена)',escVerifyHardware:'Перед полётом проверь физический выход и фактический протокол ESC. Настройки файла сами по себе не доказывают, что оборудование уже переключилось.',compassAbsent:'Контроллер сообщает через SYS_STATUS: магнитометр не обнаружен. Даже если COMPASS_USE включён, калибровка недоступна.',compassNotConfirmed:'Нет свежих данных SYS_STATUS о наличии магнитометра. Настройка COMPASS_USE не является подтверждением датчика.',compassUnhealthy:'Магнитометр обнаружен, но пока не отмечен исправным; калибровка может потребоваться для восстановления статуса.',compassBody:'Мастер проверяет COMPASS_USE / COMPASS_USE2 / COMPASS_USE3. Если компас используется, калибровка запускается отдельной командой и должна завершиться сохранённым отчётом.',compassEnabled:'Активный компас обнаружен.',compassDisabled:'Все полученные экземпляры компаса отключены.',compassUnknown:'Не удалось определить наличие активного компаса. Проверь оборудование и параметры вручную.',startCompass:'Открыть и начать калибровку',compassAwaitSave:'Калибровка завершена, но автопилот ещё не подтвердил сохранение. Открой раздел компаса и нажми «Сохранить результат».',compassDone:'Отчёт калибровки компаса получен, результат сохранён автопилотом.',compassFail:'Калибровка компаса не завершилась успешно.',compassSkip:'Я проверил конфигурацию и подтверждаю, что этот самолёт не использует компас.',compassManual:'Я вручную проверил компас и его использование в полном конфигураторе.',
  finalTitle:'Финальная проверка',finalBody:'Завершение мастера не означает, что самолёт готов к полёту. Перед каждым полётом пилот обязан независимо проверить все системы и пригодность конфигурации.',finalChecks:['Проверены направление, ход, крепление и механика всех рулевых поверхностей.','Проверены RC-входы, режимы, failsafe и потеря связи.','Проверены питание, аккумулятор, BEC, проводка и разъёмы.','Проверены воздушная скорость, трубка Пито и датчики, если установлены.','Проверены компас, GPS и EKF — если эти источники используются.','Проверены мотор, ESC, направление вращения и безопасный запуск без пропеллера.','Выполнен полный внешний предполётный осмотр; пропеллер установлен только после безопасных проверок.','Я понимаю, что Quick Setup не выдаёт разрешение на полёт; окончательное решение принимает пилот/техник.'],finalComplete:'Этапы Quick Setup завершены. Это не допуск к полёту.',doneTitle:'Мастер пройден',doneBody:'Пошаговые процедуры отмечены. Сохрани отчёт и выполни независимую предполётную проверку.',
  live:'СВЯЗЬ',disarmed:'DISARMED',connected:'Подключено',disconnected:'Нет подключения',notComplete:'НЕ ЗАВЕРШЕНО',error:'Ошибка',cancelled:'Остановлено',manual:'Ручное подтверждение',skip:'Пропустить этап',confirm:'Подтвердить',open:'Открыть раздел',download:'Скачать',progress:'ПРОГРЕСС',unsupported:'Не поддерживается автоматически',verified:'ПОДТВЕРЖДЕНО',fullLink:'Перейти к полному конфигуратору'
 },
@@ -37,7 +37,7 @@ uk:{
  levelTitle:'Встановлення горизонту',levelBody:'Встанови літак у положення, що відповідає горизонтальному польоту. Команду буде надіслано лише після окремого натискання.',startLevel:'Відкрити й встановити рівень',levelDone:'Команду встановлення рівня підтверджено автопілотом.',levelFail:'Встановлення рівня не підтверджено. Повтори процедуру.',
  rebootTitle:'Перезапуск після користувацьких параметрів',rebootNotNeeded:'Користувацькі параметри не записувалися — окремий перезапуск цим майстром не потрібен.',rebootBody:'Після застосування користувацького .param-файлу виконай звичайний цикл живлення контролера. Від’єднай USB/живлення, дочекайся вимкнення, під’єднай знову та дочекайся нового MAVLink heartbeat.',rebootStatus:'Очікується від’єднання та повторне підключення контролера.',rebootDone:'Виявлено від’єднання, повторне підключення та новий heartbeat. Повторно зчитай параметри.',rebootRead:'Перечитати параметри після перезапуску',rebootNeed:'Перезапусти контролер фізично та перепід’єднай USB/MAVLink. Майстер не надсилає ARM або reboot автоматично.',rebootAck:'Підтверджую: я виконав повний цикл вимкнення й увімкнення саме цього польотного контролера.',
  escTitle:'Перевірка та калібрування ESC',escBody:'Визначення виконується за поточними параметрами ArduPlane та призначеними throttle-виходами. Майстер не вмикає ARM, не змінює газ і не надсилає PWM.',escProtocol:'Визначена конфігурація',escChannels:'Виходи газу',escDshot:'Виявлено DShot. Калібрування min/max не потрібне: цифровий протокол передає дані без аналогового діапазону PWM.',escPwm:'Виявлено звичайний PWM-вихід газу. Такий ESC може потребувати калібрування min/max, але точна процедура залежить від виробника та моделі регулятора.',escPulse:'Виявлено OneShot / OneShot125 / brushed. Не запускай стандартну PWM-процедуру автоматично; перевір інструкцію ESC.',escUnknown:'Протокол або фізичний шлях ESC не вдалося надійно визначити. Не виконуй калібрування за припущенням.',escMixed:'Виявлено змішані протоколи на throttle-виходах. Перевір кожен канал і фізичне підключення окремо.',escCubeLimit:'Cube Orange з новою прошивкою може підтримувати DShot на MAIN через IOMCU. Перевір BRD_IO_DSHOT (якщо доступний), групи виходів, підключення та повідомлення RCOut при запуску.',escNone:'Не знайдено призначення throttle-функції SERVOx_FUNCTION 70/73/74. Якщо літак має двигун, зупинись і перевір призначення виходів у повному конфігураторі.',escDocs:'Офіційна інструкція ArduPlane щодо ESC ↗',escManual:'Я зняв пропелер і виконав процедуру з інструкції саме мого ESC або підтвердив у виробника, що калібрування не потрібне.',escDshotConfirm:'Я перевірив, що вибраний throttle-вихід фізично підтримує DShot і мій ESC сумісний. Калібрування min/max не потрібне.',escOtherConfirm:'Я перевірив протокол, підключення та інструкцію ESC. Не запускаю невідповідне PWM-калібрування.',escNoneConfirm:'Я підтвердив, що мотор/ESC не використовуються в цій конфігурації.',
- compassTitle:'Перевірка компаса',compassBody:'Майстер перевіряє COMPASS_USE / COMPASS_USE2 / COMPASS_USE3. Якщо компас використовується, калібрування запускається окремою командою та має завершитися збереженим звітом.',compassEnabled:'Активний компас виявлено.',compassDisabled:'Усі отримані екземпляри компаса вимкнені.',compassUnknown:'Не вдалося визначити наявність активного компаса. Перевір обладнання та параметри вручну.',startCompass:'Відкрити й почати калібрування',compassAwaitSave:'Калібрування завершено, але автопілот ще не підтвердив збереження. Відкрий розділ компаса й натисни «Зберегти результат».',compassDone:'Звіт калібрування компаса отримано, результат збережено автопілотом.',compassFail:'Калібрування компаса не завершилося успішно.',compassSkip:'Я перевірив конфігурацію та підтверджую, що цей літак не використовує компас.',compassManual:'Я вручну перевірив компас і його використання в повному конфігураторі.',
+ compassTitle:'Перевірка компаса',calInline:'Калібрування виконується прямо в майстрі. Дотримуйся запитів контролера, підтверджуй позиції тут та дочекайся результату.',escProfileSource:'Джерело: обраний .param-файл і параметри контролера. Це налаштування протоколу виходу, а не підтвердження моделі ESC.',escLiveSource:'Джерело: поточні параметри контролера.',escDshotBrand:'DShot (сумісний із BLHeli32/AM32; фактичну прошивку ESC не визначено)',escVerifyHardware:'Перед польотом перевір фізичний вихід та реальний протокол ESC. Файл параметрів сам по собі не підтверджує перемикання обладнання.',compassAbsent:'Контролер повідомляє через SYS_STATUS: магнітометр не виявлено. Навіть за активного COMPASS_USE калібрування недоступне.',compassNotConfirmed:'Немає свіжих даних SYS_STATUS про наявність магнітометра. COMPASS_USE не є підтвердженням датчика.',compassUnhealthy:'Магнітометр виявлено, але не позначено справним; калібрування може допомогти відновити статус.',compassBody:'Майстер перевіряє COMPASS_USE / COMPASS_USE2 / COMPASS_USE3. Якщо компас використовується, калібрування запускається окремою командою та має завершитися збереженим звітом.',compassEnabled:'Активний компас виявлено.',compassDisabled:'Усі отримані екземпляри компаса вимкнені.',compassUnknown:'Не вдалося визначити наявність активного компаса. Перевір обладнання та параметри вручну.',startCompass:'Відкрити й почати калібрування',compassAwaitSave:'Калібрування завершено, але автопілот ще не підтвердив збереження. Відкрий розділ компаса й натисни «Зберегти результат».',compassDone:'Звіт калібрування компаса отримано, результат збережено автопілотом.',compassFail:'Калібрування компаса не завершилося успішно.',compassSkip:'Я перевірив конфігурацію та підтверджую, що цей літак не використовує компас.',compassManual:'Я вручну перевірив компас і його використання в повному конфігураторі.',
  finalTitle:'Підсумкова перевірка',finalBody:'Завершення майстра не означає, що літак готовий до польоту. Перед кожним польотом пілот має незалежно перевірити всі системи та придатність конфігурації.',finalChecks:['Перевірено напрямок, хід, кріплення й механіку всіх рулів.','Перевірено RC-входи, режими, failsafe та втрату зв’язку.','Перевірено живлення, акумулятор, BEC, проводку та роз’єми.','Перевірено повітряну швидкість, трубку Піто та датчики, якщо встановлені.','Перевірено компас, GPS та EKF — якщо ці джерела використовуються.','Перевірено мотор, ESC, напрямок обертання та безпечний запуск без пропелера.','Виконано зовнішній передпольотний огляд; пропелер встановлюється лише після безпечних перевірок.','Я розумію, що Quick Setup не видає дозвіл на політ; остаточне рішення приймає пілот/технік.'],finalComplete:'Етапи Quick Setup завершено. Це не допуск до польоту.',doneTitle:'Майстер пройдено',doneBody:'Покрокові процедури відмічено. Збережи звіт і виконай незалежну передпольотну перевірку.',
  live:'ЗВ’ЯЗОК',disarmed:'DISARMED',connected:'Підключено',disconnected:'Немає з’єднання',notComplete:'НЕ ЗАВЕРШЕНО',error:'Помилка',cancelled:'Зупинено',manual:'Ручне підтвердження',skip:'Пропустити етап',confirm:'Підтвердити',open:'Відкрити розділ',download:'Завантажити',progress:'ПРОГРЕС',unsupported:'Не підтримується автоматично',verified:'ПІДТВЕРДЖЕНО',fullLink:'Перейти до повного конфігуратора'
 },
@@ -55,7 +55,7 @@ en:{
  levelTitle:'Level horizon',levelBody:'Place the aircraft in its level-flight attitude. The command is sent only after a separate user click.',startLevel:'Open and set level',levelDone:'Level command was acknowledged by the autopilot.',levelFail:'Level setting was not confirmed. Retry.',
  rebootTitle:'Reboot after custom parameters',rebootNotNeeded:'No custom parameters were written, so this wizard does not require a separate reboot.',rebootBody:'After applying a custom .param file, perform a normal controller power cycle. Disconnect USB/power, wait for shutdown, reconnect and wait for a new MAVLink heartbeat.',rebootStatus:'Waiting for controller disconnect and reconnect.',rebootDone:'Disconnect, reconnect and a new heartbeat were detected. Read parameters again.',rebootRead:'Read parameters after reboot',rebootNeed:'Power-cycle the controller and reconnect USB/MAVLink. The wizard does not send ARM or reboot automatically.',rebootAck:'I confirm that I fully powered off and restarted this same flight controller.',
  escTitle:'ESC check and calibration',escBody:'Detection uses current ArduPlane parameters and assigned throttle outputs. The wizard never arms, changes throttle or sends PWM.',escProtocol:'Detected configuration',escChannels:'Throttle outputs',escDshot:'DShot detected. Min/max calibration is not required: the digital protocol does not use an analogue PWM range.',escPwm:'Normal PWM throttle output detected. This ESC may need min/max calibration, but the exact procedure depends on the ESC manufacturer and model.',escPulse:'OneShot / OneShot125 / brushed output detected. Do not automatically run the traditional PWM procedure; check the ESC manual.',escUnknown:'The ESC protocol or physical signal path could not be identified safely. Do not calibrate by assumption.',escMixed:'Mixed protocols were detected on throttle outputs. Check each channel and physical connection separately.',escCubeLimit:'Modern Cube Orange firmware may support DShot on MAIN via IOMCU. Verify BRD_IO_DSHOT where available, output groups, wiring and the RCOut boot message before proceeding.',escNone:'No SERVOx_FUNCTION 70/73/74 throttle output was found. If the aircraft has a motor, stop and verify output assignments in the full configurator.',escDocs:'Official ArduPlane ESC calibration guide ↗',escManual:'I removed the propeller and followed my ESC manufacturer’s procedure, or confirmed with the manufacturer that calibration is not required.',escDshotConfirm:'I verified that the selected throttle output physically supports DShot and my ESC is compatible. Min/max calibration is not needed.',escOtherConfirm:'I verified the protocol, wiring and ESC manual. I am not running an unsuitable PWM calibration.',escNoneConfirm:'I confirmed that no motor/ESC is used in this configuration.',
- compassTitle:'Compass check',compassBody:'The wizard checks COMPASS_USE / COMPASS_USE2 / COMPASS_USE3. If a compass is enabled, calibration is started separately and must finish with a saved report.',compassEnabled:'An enabled compass was detected.',compassDisabled:'All received compass instances are disabled.',compassUnknown:'Could not determine whether a compass is active. Verify hardware and parameters manually.',startCompass:'Open and start calibration',compassAwaitSave:'Calibration completed, but the autopilot has not confirmed saving. Open the compass section and select Save result.',compassDone:'Compass calibration report received and saved by the autopilot.',compassFail:'Compass calibration did not complete successfully.',compassSkip:'I verified the configuration and confirm this aircraft does not use a compass.',compassManual:'I manually checked the compass and its use in the full configurator.',
+ compassTitle:'Compass check',calInline:'Calibration stays inside Quick Setup. Follow the autopilot pose requests, confirm each position here and wait for the verified result.',escProfileSource:'Source: selected .param profile and controller parameters. This describes the output protocol, not the actual ESC firmware brand.',escLiveSource:'Source: current controller parameters.',escDshotBrand:'DShot (compatible with BLHeli32/AM32; actual ESC firmware unverified)',escVerifyHardware:'Before flight verify the physical output and actual ESC protocol. A profile alone does not prove the ESC or board has switched.',compassAbsent:'Autopilot SYS_STATUS reports no physical magnetometer. Calibration is unavailable even if COMPASS_USE is enabled.',compassNotConfirmed:'No fresh SYS_STATUS magnetometer presence information. COMPASS_USE alone is not proof of attached hardware.',compassUnhealthy:'Magnetometer is detected but not reported healthy yet; calibration may be needed.',compassBody:'The wizard checks COMPASS_USE / COMPASS_USE2 / COMPASS_USE3. If a compass is enabled, calibration is started separately and must finish with a saved report.',compassEnabled:'An enabled compass was detected.',compassDisabled:'All received compass instances are disabled.',compassUnknown:'Could not determine whether a compass is active. Verify hardware and parameters manually.',startCompass:'Open and start calibration',compassAwaitSave:'Calibration completed, but the autopilot has not confirmed saving. Open the compass section and select Save result.',compassDone:'Compass calibration report received and saved by the autopilot.',compassFail:'Compass calibration did not complete successfully.',compassSkip:'I verified the configuration and confirm this aircraft does not use a compass.',compassManual:'I manually checked the compass and its use in the full configurator.',
  finalTitle:'Final checks',finalBody:'Completing this wizard does not mean the aircraft is ready to fly. Before every flight, the pilot must independently verify all systems and configuration suitability.',finalChecks:['Control-surface direction, travel, attachment and mechanics checked.','RC inputs, flight modes, failsafe and link-loss behavior checked.','Power, battery, BEC, wiring and connectors checked.','Airspeed, pitot tube and sensors checked where installed.','Compass, GPS and EKF checked where those sources are used.','Motor, ESC, rotation direction and safe no-propeller start checked.','External preflight inspection completed; propeller installed only after safe checks.','I understand Quick Setup does not grant flight clearance; the pilot/technician makes the final decision.'],finalComplete:'Quick Setup stages completed. This is not flight clearance.',doneTitle:'Wizard completed',doneBody:'The guided stages are marked. Save the report and perform an independent preflight check.',
  live:'LINK',disarmed:'DISARMED',connected:'Connected',disconnected:'Not connected',notComplete:'NOT COMPLETE',error:'Error',cancelled:'Stopped',manual:'Manual confirmation',skip:'Skip stage',confirm:'Confirm',open:'Open section',download:'Download',progress:'PROGRESS',unsupported:'Not supported automatically',verified:'VERIFIED',fullLink:'Open full configurator'
 }
@@ -397,20 +397,32 @@ function renderParams(box){
  }
  if(!ready&&s.paramPhase==='partial')callout(box,t('readPartial'),'warning');
 }
+const accelWidget=document.querySelector('[data-panel="accelerometer"] .cal-wizard');
+const compassWidget=document.querySelector('[data-panel="compass"] .cal-card');
+const widgetAnchors=new Map();
+for(const widget of [accelWidget,compassWidget]){
+ if(widget?.parentNode){const anchor=document.createComment('Quick Setup calibration restore');widget.parentNode.insertBefore(anchor,widget);widgetAnchors.set(widget,anchor);}
+}
+function restoreCalWidgets(){for(const [widget,anchor] of widgetAnchors)if(anchor.parentNode)anchor.parentNode.insertBefore(widget,anchor.nextSibling);}
+function mountCalibrationWidget(box,widget){
+ if(!widget)return;
+ const dock=el('div','qs-cal-dock');box.append(dock);dock.append(widget);
+}
 function startCalibration(kind){
  if(!api.canCalibrate()){setGlobal(t('accelNeedLink'),true);return;}
- const target={six:['accelerometer','accSixBtn'],level:['accelerometer','accLevelBtn'],compass:['compass','compassStartBtn']}[kind];
+ if(kind==='compass'&&core.detectCompass(state().params,state().compassStatus).kind!=='enabled'){setGlobal(t('compassNotConfirmed'),true);return;}
+ const target={six:'accSixBtn',level:'accLevelBtn',compass:'compassStartBtn'}[kind];
  if(!target)return;
- api.navigate(target[0]);
- const control=$(target[1]);if(!control||control.disabled){setGlobal(t('accelNeedLink'),true);return;}
- qs.awaitingCalibration=kind;
- control.click();
+ const control=$(target);if(!control||control.disabled){setGlobal(t('accelNeedLink'),true);return;}
+ qs.awaitingCalibration=kind;control.click();
 }
 function renderAccel(box){
  addHeading(box,t('accelTitle'),t('accelBody'));
  const s=state();callout(box,api.canCalibrate()?t('disarmed'):t('accelNeedLink'),api.canCalibrate()?'success':'warning');
  if(qs.accelError)callout(box,qs.accelError,'danger');
  button(box,t('startAccel'),()=>startCalibration('six'),'cc-button primary').disabled=!api.canCalibrate();
+ callout(box,t('calInline'));
+ mountCalibrationWidget(box,accelWidget);
  if(qs.completed[4])callout(box,t('accelDone'),'success');
 }
 function renderLevel(box){
@@ -418,12 +430,15 @@ function renderLevel(box){
  if(qs.levelError)callout(box,qs.levelError,'danger');
  callout(box,api.canCalibrate()?t('disarmed'):t('accelNeedLink'),api.canCalibrate()?'success':'warning');
  button(box,t('startLevel'),()=>startCalibration('level'),'cc-button primary').disabled=!api.canCalibrate();
+ callout(box,t('calInline'));
+ mountCalibrationWidget(box,accelWidget);
  if(qs.completed[5])callout(box,t('levelDone'),'success');
 }
 function renderReboot(box){
  addHeading(box,t('rebootTitle'));
  if(!qs.paramsApplied){callout(box,t('rebootNotNeeded'),'success');if(!qs.completed[6])qs.completed[6]='skipped';return;}
  callout(box,t('rebootBody'),'warning');callout(box,t('rebootNeed'),'warning');
+ addUsbButton(box);
  checkbox(box,t('rebootAck'),qs.rebootUserConfirmed,checked=>{qs.rebootUserConfirmed=checked;if(!checked){qs.rebootReady=false;delete qs.completed[6];}render();});
  const s=state();
  if(qs.rebootReady&&qs.rebootUserConfirmed&&s.connected&&Date.now()-s.lastHeartbeat<4000){
@@ -440,9 +455,10 @@ function renderReboot(box){
 function renderEsc(box){
  addHeading(box,t('escTitle'),t('escBody'));
  const s=state();if(!paramReady(s)){callout(box,t('readWaiting'),'warning');return;}
- const result=core.classifyEscProtocol(s.params,s.selectedBoard);
+ const profile=qs.paramsMode==='custom'&&qs.fileText&&qs.previewBoard===s.selectedBoard?qs.fileText:null;
+ const result=core.classifyEscFromProfile(s.params,profile,s.selectedBoard);
  const channels=result.channels?.length?result.channels.join(', '):'—';
- const kv=el('div','qs-kv');[[t('escProtocol'),result.kind.toUpperCase()],[t('escChannels'),channels]].forEach(pair=>{const cell=el('div');cell.append(el('small','',pair[0]),el('strong','',pair[1]));kv.append(cell);});box.append(kv);
+ const kv=el('div','qs-kv');[[t('escProtocol'),result.kind==='dshot'?t('escDshotBrand'):result.kind.toUpperCase()],[t('escChannels'),channels]].forEach(pair=>{const cell=el('div');cell.append(el('small','',pair[0]),el('strong','',pair[1]));kv.append(cell);});box.append(kv);
  let message='escUnknown',confirmLabel='escOtherConfirm',status='manual';
  if(result.kind==='dshot'){message='escDshot';confirmLabel='escDshotConfirm';status='skipped';}
  else if(result.kind==='pwm'){message='escPwm';confirmLabel='escManual';status='manual';}
@@ -452,25 +468,28 @@ function renderEsc(box){
  else if(result.kind==='no-throttle'){message='escNone';confirmLabel='escNoneConfirm';}
  callout(box,t(message),result.kind==='dshot'?'success':'warning');
  if(result.reason)appendText(box,'p',result.reason,'qs-global-status');
+ callout(box,t(result.source==='profile+controller'?'escProfileSource':'escLiveSource'));
+ if(result.source==='profile+controller')callout(box,t('escVerifyHardware'),'warning');
  if(result.kind==='pwm')link(box,t('escDocs'),'https://ardupilot.org/plane/docs/common-esc-calibration.html');
  checkbox(box,t(confirmLabel),!!qs.escConfirmed,value=>{qs.escConfirmed=value;if(value)complete(7,status);else{delete qs.completed[7];render();}});
 }
 function renderCompass(box){
  addHeading(box,t('compassTitle'),t('compassBody'));
  const s=state();if(!paramReady(s)){callout(box,t('readWaiting'),'warning');return;}
- const result=core.detectCompass(s.params);
+ const result=core.detectCompass(s.params,s.compassStatus);
  if(result.kind==='enabled'){
   callout(box,t('compassEnabled'),'success');
+  if(result.healthy===false)callout(box,t('compassUnhealthy'),'warning');
   if(qs.compassAwaitingSave)callout(box,t('compassAwaitSave'),'warning');
   if(qs.compassError)callout(box,qs.compassError,'danger');
   button(box,t('startCompass'),()=>startCalibration('compass'),'cc-button primary').disabled=!api.canCalibrate();
-  button(box,t('open'),()=>api.navigate('compass'),'cc-button ghost');
+  mountCalibrationWidget(box,compassWidget);
   if(qs.completed[8])callout(box,t('compassDone'),'success');
- }else if(result.kind==='disabled'){
-  callout(box,t('compassDisabled'),'warning');
+ }else if(result.kind==='disabled'||result.kind==='absent'){
+  callout(box,t(result.kind==='absent'?'compassAbsent':'compassDisabled'),'warning');
   checkbox(box,t('compassSkip'),!!qs.completed[8],value=>{if(value)complete(8,'skipped');else{delete qs.completed[8];render();}});
  }else{
-  callout(box,t('compassUnknown'),'warning');
+  callout(box,t('compassNotConfirmed'),'warning');
   checkbox(box,t('compassManual'),!!qs.completed[8],value=>{if(value)complete(8,'manual');else{delete qs.completed[8];render();}});
  }
 }
@@ -486,6 +505,7 @@ function renderFinal(box){
 }
 function render(){
  translateStatic();
+ restoreCalWidgets();
  if(qs.step!==2)restoreDfuPanel();
  const box=$('qsContent');if(!box)return;box.replaceChildren();
  const titles=[t('introTitle'),t('safetyTitle'),t('firmwareTitle'),t('paramsTitle'),t('accelTitle'),t('levelTitle'),t('rebootTitle'),t('escTitle'),t('compassTitle'),t('finalTitle')];
@@ -552,10 +572,11 @@ setInterval(()=>{
  if(qs.step===3)updateWriteGate();
 },1000);
 window.addEventListener('atlas:language',render);
-window.addEventListener('atlas:navigate',event=>{if(event.detail?.tab==='quicksetup')render();else restoreDfuPanel();});
-window.addEventListener('atlas:state',()=>{if(qs.step===1||qs.step===2||qs.step===3)render();});
+window.addEventListener('atlas:navigate',event=>{if(event.detail?.tab==='quicksetup')render();else{restoreDfuPanel();restoreCalWidgets();}});
+window.addEventListener('atlas:state',()=>{if([1,2,3,6,8].includes(qs.step))render();});
 window.addEventListener('atlas:board',()=>{if(qs.firmwareBoard&&qs.firmwareBoard!==selectedBoard()){invalidateFrom(2);qs.fileToken++;qs.fileText=null;qs.preview=null;qs.firmwareSource=null;qs.firmwareBoard=null;}render();});
-window.addEventListener('atlas:parameters',render);
+window.addEventListener('atlas:parameters',()=>{if(![4,5,8].includes(qs.step))render();});
+window.addEventListener('atlas:message',event=>{if(qs.step!==8||event.detail?.type!=='sys')return;const current=state(),kind=core.detectCompass(current.params,current.compassStatus).kind;if(kind!==qs.lastCompassKind){qs.lastCompassKind=kind;render();}});
 document.querySelectorAll('[data-language]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(render,0)));
 render();
 })();
