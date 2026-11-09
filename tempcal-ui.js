@@ -31,7 +31,7 @@ const translations={
   startHint:'Выбор режима 2 сразу записывает INS_TCALn_ENABLE=2 с подтверждением и автоматически перечитывает полный список. Других подтверждений на этом шаге не требуется.',
   noFields:'Диапазон будет доступен после обновления параметров, иногда только после перезагрузки.',
   imuReady:'IMU с температурной компенсацией: ',idle:'Ожидается команда.',reloadButton:'Обновить после перепитания',
-  invalidValue:'Некорректное значение температуры.',noHardware:'Фактическое завершение обучения проверяется после нового полного чтения INS_TCAL. Режим 1 сам по себе не гарантирует точности.',base:'Температура базовой калибровки',accel:'Акселерометр',gyro:'Гироскоп',coefficients:'Коэффициенты температурных смещений',coeffCount:'Коэффициентов прочитано',coefInfo:'ACC/GYR — полиномы 1–3 порядка по X, Y и Z; показаны только реальные значения INS_TCAL из контроллера.',noneCoefficients:'Коэффициенты ещё не переданы контроллером.',recorded:'Записанный диапазон',pendingTraining:'Предыдущее самообучение было запущено в этой сессии. После переподключения контроллер вернул ENABLE=1; это признак завершения по ArduPilot, проверь диапазон и коэффициенты.',pendingUnfinished:'Повторное считывание показало ENABLE=2. Обучение ещё включено либо было прервано.',baselineMissing:'Отсутствует действительная температура базовой калибровки INS_ACC/GYR_CALTEMP. Проверь калибровку IMU.',cached:'Значения считываются с контроллера автоматически при MAVLink-подключении; если список неполный, используй повторное чтение.'
+  invalidValue:'Некорректное значение температуры.',noHardware:'Фактическое завершение обучения проверяется после нового полного чтения INS_TCAL. Режим 1 сам по себе не гарантирует точности.',base:'Температура базовой калибровки',accel:'Акселерометр',gyro:'Гироскоп',coefficients:'Коэффициенты температурных смещений',coeffCount:'Коэффициентов прочитано',coefInfo:'ACC/GYR — полиномы 1–3 порядка по X, Y и Z; показаны только реальные значения INS_TCAL из контроллера.',noneCoefficients:'Коэффициенты ещё не переданы контроллером.',recorded:'Диапазон компенсации TMIN/TMAX',beforeAfter:'До запуска → после переподключения',finishCaution:'TMAX — сохранённая верхняя граница компенсации, не обязательно точная температура, достигнутая в момент завершения.',pendingTraining:'Предыдущее самообучение было запущено в этой сессии. После переподключения контроллер вернул ENABLE=1; это признак завершения по ArduPilot, проверь диапазон и коэффициенты.',pendingUnfinished:'Повторное считывание показало ENABLE=2. Обучение ещё включено либо было прервано.',baselineMissing:'Отсутствует действительная температура базовой калибровки INS_ACC/GYR_CALTEMP. Проверь калибровку IMU.',cached:'Значения считываются с контроллера автоматически при MAVLink-подключении; если список неполный, используй повторное чтение.'
  },
  uk:{
   title:'Температурне калібрування INS',body:'Налаштовуй кожен IMU окремо. Це температурна компенсація гіроскопа та акселерометра, не звичайне шестипозиційне калібрування.',
@@ -53,7 +53,7 @@ const translations={
   prep:'До запуску потрібні чинні INS_ACCn_CALTEMP та INS_GYRn_CALTEMP. Для журналу корисний LOG_DISARMED=1 із картою пам’яті.',
   caltemp:'Не знайдено чинні температури початкового калібрування. Виконай калібрування акселерометра й гіроскопа.',
   disconnect:'Немає актуального з’єднання.',startHint:'Вибір 2 одразу записує ENABLE=2 і зчитує параметри без додаткових підтверджень.',noFields:'Діапазон може з’явитися після перезапуску.',imuReady:'IMU з компенсацією: ',idle:'Очікування.',reloadButton:'Оновити після перезапуску',
-  invalidValue:'Неправильна температура.',noHardware:'Завершення навчання перевіряється після нового зчитування INS_TCAL. Режим 1 не гарантує точності.',base:'Температура базового калібрування',accel:'Акселерометр',gyro:'Гіроскоп',coefficients:'Коефіцієнти температурних зміщень',coeffCount:'Зчитано коефіцієнтів',coefInfo:'ACC/GYR — поліноми 1–3 порядку для X, Y та Z; показано тільки отримані INS_TCAL.',noneCoefficients:'Коефіцієнти ще не надійшли від контролера.',recorded:'Збережений діапазон',pendingTraining:'Навчання було запущене в цій сесії. Після повторного зчитування ENABLE=1 — ознака завершення; перевір діапазон і коефіцієнти.',pendingUnfinished:'Після зчитування ENABLE=2. Навчання ще активне або було перерване.',baselineMissing:'Не знайдено дійсної температури INS_ACC/GYR_CALTEMP. Перевір калібрування IMU.',cached:'Параметри зчитуються автоматично після MAVLink-підключення. Якщо список неповний, перечитай його.'
+  invalidValue:'Неправильна температура.',noHardware:'Завершення навчання перевіряється після нового зчитування INS_TCAL. Режим 1 не гарантує точності.',base:'Температура базового калібрування',accel:'Акселерометр',gyro:'Гіроскоп',coefficients:'Коефіцієнти температурних зміщень',coeffCount:'Зчитано коефіцієнтів',coefInfo:'ACC/GYR — поліноми 1–3 порядку для X, Y та Z; показано тільки отримані INS_TCAL.',noneCoefficients:'Коефіцієнти ще не надійшли від контролера.',recorded:'Діапазон компенсації TMIN/TMAX',beforeAfter:'До запуску → після підключення',finishCaution:'TMAX — збережена верхня межа компенсації, не обов’язково температура у момент завершення.',pendingTraining:'Навчання було запущене в цій сесії. Після повторного зчитування ENABLE=1 — ознака завершення; перевір діапазон і коефіцієнти.',pendingUnfinished:'Після зчитування ENABLE=2. Навчання ще активне або було перерване.',baselineMissing:'Не знайдено дійсної температури INS_ACC/GYR_CALTEMP. Перевір калібрування IMU.',cached:'Параметри зчитуються автоматично після MAVLink-підключення. Якщо список неповний, перечитай його.'
  },
  en:{
   title:'INS temperature calibration',body:'Configure each IMU separately. This is gyro/accelerometer temperature compensation, not a six-position calibration.',
@@ -76,7 +76,7 @@ const translations={
   caltemp:'Baseline INS_ACC/GYR_CALTEMP missing or invalid. Calibrate gyro and accelerometer first.',
   disconnect:'No fresh MAVLink link.',startHint:'Selecting 2 writes ENABLE=2 with readback, then automatically rereads all parameters without extra confirmation.',
   noFields:'Temperature fields may become available after a reboot.',imuReady:'IMUs with compensation: ',idle:'Waiting.',reloadButton:'Refresh after reboot',
-  invalidValue:'Invalid temperature range.',noHardware:'After reconnect, inspect genuine INS_TCAL values. Mode 1 alone does not prove calibration accuracy.',base:'Baseline calibration temperature',accel:'Accelerometer',gyro:'Gyroscope',coefficients:'Temperature offset coefficients',coeffCount:'Coefficients received',coefInfo:'ACC/GYR are first- to third-order X/Y/Z polynomials; only values actually reported by the FC are displayed.',noneCoefficients:'No coefficients received yet.',recorded:'Stored temperature interval',pendingTraining:'Learning was started in this session. After reconnect ENABLE=1, which normally indicates completion; inspect the coefficients and range.',pendingUnfinished:'After reread ENABLE is still 2; learning is active or was interrupted.',baselineMissing:'Valid INS_ACC/GYR_CALTEMP was not received. Check basic IMU calibration.',cached:'INS temperature parameters are read automatically on MAVLink connect. Retry if the full list is incomplete.'
+  invalidValue:'Invalid temperature range.',noHardware:'After reconnect, inspect genuine INS_TCAL values. Mode 1 alone does not prove calibration accuracy.',base:'Baseline calibration temperature',accel:'Accelerometer',gyro:'Gyroscope',coefficients:'Temperature offset coefficients',coeffCount:'Coefficients received',coefInfo:'ACC/GYR are first- to third-order X/Y/Z polynomials; only values actually reported by the FC are displayed.',noneCoefficients:'No coefficients received yet.',recorded:'Compensation range TMIN/TMAX',beforeAfter:'Before learning → after reconnect',finishCaution:'TMAX is the stored upper validity limit, not necessarily the exact final live temperature.',pendingTraining:'Learning was started in this session. After reconnect ENABLE=1, which normally indicates completion; inspect the coefficients and range.',pendingUnfinished:'After reread ENABLE is still 2; learning is active or was interrupted.',baselineMissing:'Valid INS_ACC/GYR_CALTEMP was not received. Check basic IMU calibration.',cached:'INS temperature parameters are read automatically on MAVLink connect. Retry if the full list is incomplete.'
  }
 };
 const roots=new Set(),drafts=new Map(),messages=new Map();
@@ -113,7 +113,7 @@ function updateAll(){
 }
 function setMessage(prefix,text){messages.set(prefix,text);updateAll();}
 function getDraft(sensor){
- if(!drafts.has(sensor.prefix))drafts.set(sensor.prefix,{min:sensor.min===null?'':String(sensor.min),max:sensor.max===null?'':String(sensor.max)});
+ if(!drafts.has(sensor.prefix))drafts.set(sensor.prefix,{min:sensor.min===null?'':String(sensor.min),max:sensor.max===null?'':String(sensor.max),dirty:false});
  return drafts.get(sensor.prefix);
 }
 async function waitForParameters(timeout=65000){
@@ -174,7 +174,7 @@ async function saveRange(sensor){
   const res=await api.writeAdvancedParams({[sensor.minName]:min,[sensor.maxName]:max});
   if(res.total!==undefined&&res.done!==res.total)throw Error('Temperature PARAM_VALUE readback missing');
   messages.set(sensor.prefix,t('written'));
-  drafts.set(sensor.prefix,{min:String(min),max:String(max)});
+  drafts.set(sensor.prefix,{min:String(min),max:String(max),dirty:false});
   announce({type:'range',sensor:sensor.index,verified:true,min,max});
  }catch(err){messages.set(sensor.prefix,err.message||String(err));}
  finally{busy=false;updateAll();announce({type:'settled'});}
@@ -214,12 +214,18 @@ function draw(root){
   const formatTemp=value=>value===null?'—':Number(value).toFixed(1)+' °C';
   const info=e('div','tc-detail');
   info.append(e('div','tc-detail-row',t('recorded')+' · '+formatTemp(sensor.min)+' → '+formatTemp(sensor.max)));
+  if(sensor.mode===1||sensor.mode===2)addInfo(info,t('finishCaution'));
   info.append(e('div','tc-detail-row',t('base')+' · '+t('accel')+': '+formatTemp(sensor.baseline.accel)+' / '+t('gyro')+': '+formatTemp(sensor.baseline.gyro)));
   info.append(e('div','tc-detail-row',t('coeffCount')+' · '+sensor.coefficientCount+'/18'));
   card.append(info);
   if(!sensor.baselineReady)addInfo(card,t('baselineMissing'),true);
   const done=completedLearning.get(sensor.prefix);
-  if(done)addInfo(card,t('pendingTraining'),!sensor.calibratedRange||!sensor.coefficientCount);
+  if(done){
+   addInfo(card,t('pendingTraining'),!sensor.calibratedRange||!sensor.coefficientCount);
+   const old=done.previous.start;
+   if(old){const fmt=v=>v===null?'—':Number(v).toFixed(1)+' °C';
+    addInfo(card,t('beforeAfter')+' · '+fmt(old.min)+'…'+fmt(old.max)+' → '+fmt(sensor.min)+'…'+fmt(sensor.max));}
+  }
   else if(startedLearning.has(sensor.prefix))addInfo(card,t('pendingUnfinished'),true);
   const details=e('details','tc-coeff-list'),summary=e('summary','',t('coefficients')+' · '+sensor.coefficientCount);details.append(summary);
   addInfo(details,t('coefInfo'));
@@ -237,7 +243,7 @@ function draw(root){
     for(const [key,word] of [['min','min'],['max','max']]){
      const input=e('input');input.type='number';input.min='-70';input.max='80';input.step='0.5';input.inputMode='decimal';input.value=values[key];
      input.disabled=busy||reading||!safe();
-     input.addEventListener('input',()=>{values[key]=input.value;});
+     input.addEventListener('input',()=>{values[key]=input.value;values.dirty=true;});
      fields.append(label(t(word),input));
     }
     card.append(fields);
@@ -270,7 +276,11 @@ window.addEventListener('atlas:parameters',()=>{
  const s=getState(),sensorInfo=core.readSensors(s.params);
  watchLearning(sensorInfo,!s.paramLoading&&s.paramComplete===true);
  const summary=sensorInfo.map(i=>i.prefix+':'+i.mode+':'+i.min+':'+i.max+':'+i.coefficientCount+':'+i.coefficients.map(x=>x.value).join(',')).join('|')+'|'+s.paramComplete;
- if(!s.paramLoading&&summary!==lastSensors){lastSensors=summary;updateAll();announce({type:'parameters'});}
+ if(!s.paramLoading&&summary!==lastSensors){
+  lastSensors=summary;
+  for(const sensor of sensorInfo){const draft=drafts.get(sensor.prefix);if(draft&&!draft.dirty){draft.min=sensor.min===null?'':String(sensor.min);draft.max=sensor.max===null?'':String(sensor.max);}}
+  updateAll();announce({type:'parameters'});
+ }
 });
 window.addEventListener('atlas:state',()=>{
  const s=getState(),connected=!!s.connected;
