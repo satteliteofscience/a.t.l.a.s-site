@@ -39,13 +39,27 @@
       "id": "uni-ic743-mini",
       "name": "Uni-IC743 Mini",
       "family": "Custom / Uni-IC743 Mini",
-      "description": "A.T.L.A.S. ArduPlane 4.7.2 для кастомного Uni-IC743 Mini (STM32H743). Подтверждены формат Intel HEX и строка цели Uni_IC743Mini. Запись через STM32 ROM DFU доступна локально в экспериментальном режиме, без проверки на физической плате. Защищённый релиз появится после загрузки HEX в R2.",
-      "status": "planned",
+      "description": "A.T.L.A.S. Release 1.0 для кастомного Uni-IC743 Mini (STM32H743). Проверены формат HEX, целевая плата Uni_IC743Mini и SHA-256. Полная Web-DFU запись экспериментальная, не проверена на физическом контроллере; сохрани параметры и предусмотрите восстановление загрузчика.",
+      "status": "available",
       "target": "Uni_IC743Mini — STM32H743",
       "version": "1.0",
-      "downloads": [],
-      "description_uk": "A.T.L.A.S. ArduPlane 4.7.2 для кастомного Uni-IC743 Mini (STM32H743). Перевірено формат Intel HEX і рядок цілі Uni_IC743Mini. Локальний запис через STM32 ROM DFU доступний в експериментальному режимі; фізичні випробування ще не підтверджені. Захищений реліз з’явиться після завантаження HEX у R2.",
-      "description_en": "A.T.L.A.S. ArduPlane 4.7.2 for the custom Uni-IC743 Mini (STM32H743). Intel HEX structure and Uni_IC743Mini target marker verified. Local STM32 ROM DFU flashing is experimental and not hardware-validated. Protected release download will activate after R2 upload.",
+      "downloads": [
+        {
+          "filename": "ATLAS-Uni-IC743-Mini-release-1.hex",
+          "label": "A.T.L.A.S. Release 1.0 · ArduPlane 4.7.2 · Uni-IC743 Mini",
+          "version": "1.0",
+          "sha256": "647029f6835f4af59a5ea32cf081acf67394721341ed8482b4923a99dca1c375",
+          "bytes": 4505460,
+          "timestamp": 1794253800,
+          "release_id": "647029f6835f4af5",
+          "source_url": "",
+          "source_verified": false,
+          "secure_id": "uni-ic743-mini-release-1",
+          "channel": "release"
+        }
+      ],
+      "description_uk": "A.T.L.A.S. Release 1.0 для кастомного Uni-IC743 Mini (STM32H743). Перевірено формат HEX, ціль Uni_IC743Mini та SHA-256. Повне Web-DFU прошивання експериментальне та не перевірене на фізичному контролері; збережи параметри й підготуй відновлення завантажувача.",
+      "description_en": "A.T.L.A.S. Release 1.0 for custom Uni-IC743 Mini (STM32H743). HEX format, Uni_IC743Mini target and SHA-256 verified. Full Web-DFU programming is experimental and has not been validated on hardware; back up settings and prepare bootloader recovery.",
       "target_uk": "Uni_IC743Mini — STM32H743",
       "target_en": "Uni_IC743Mini — STM32H743"
     },
