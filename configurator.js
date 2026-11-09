@@ -37,7 +37,7 @@ function parameterCategory(name){
 
 let lang='ru';try{let saved=localStorage.getItem('atlas-language');if(words[saved])lang=saved;}catch{}
 const tr=(k)=>words[lang]?.[k]||words.ru[k]||k;
-const state={demo:false,connected:false,connecting:false,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
+const state={demo:false,connected:false,connecting:false,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
 window.AtlasLanguage=()=>lang;
 window.AtlasSelectedBoard=()=>state.selectedBoard;
 const settingDefs=[
@@ -115,6 +115,7 @@ function finishParamTransfer(complete){
  toast(complete?`${tr('saved')} · ${x.seen.size}/${state.paramCount}`:`${pl('partial')} · ${x.seen.size}/${state.paramCount}`,!complete);
  // Rendering thousands of rows during the stream blocks the serial RX loop.
  state.tableLimit=150;
+ if(state.importedText)prepareImported();
  scheduleParameterRerender();
 }
 async function recoverMissingParams(){
@@ -271,7 +272,7 @@ function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBu
  transmit(21,M.paramList(state.sysid,state.compid)).then(()=>toast(tr('refreshdone'))).catch(err=>{toast(err.message,true);state.paramLoading=false;stopParamRepair();state.paramTransfer.phase='partial';showProgress();});
  return true;
 }
-function canWrite(){return state.connected&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading;}
+function canWrite(){return state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading;}
 window.AtlasCC = Object.freeze({
   getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,compassStatus:state.compassStatus,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
   canWrite:()=>canWrite(),
@@ -395,18 +396,25 @@ window.AtlasCC = Object.freeze({
 });
 function openEdit(name){const p=state.params.get(name);if(!p){toast(tr('noread'),true);return;}
  if(!canWrite()){toast(state.demo?tr('saveNotLive'):tr('onlyDisarmed'),true);return;}
+ if(window.AtlasParamTree?.isReadOnly(name)){toast(name+' · ReadOnly',true);return;}
  state.editName=name;$('editName').textContent=name;$('editOriginal').textContent=`${tr('value')}: ${formatParam(p.value)} | MAV_PARAM_TYPE: ${p.type}`;$('editValue').value=formatParam(p.value);$('editDialog').showModal();$('editValue').focus();$('editValue').select();}
-async function saveEdit(ev){ev.preventDefault();const name=state.editName,p=state.params.get(name),value=Number($('editValue').value);
- if(!p||!Number.isFinite(value)||$('editValue').value===''){toast(tr('selectvalid'),true);return;}
- if(!canWrite()){toast(tr('onlyDisarmed'),true);$('editDialog').close();return;}
+async function saveEdit(ev){
+ ev.preventDefault();
+ const name=state.editName,p=state.params.get(name),raw=$('editValue').value.trim(),value=Number(raw);
+ if(!p||!raw||!Number.isFinite(value)){toast(tr('selectvalid'),true);return;}
+ if(!canWrite()){toast(tr('onlyDisarmed'),true);return;}
+ const metadata=Object.fromEntries(window.AtlasParamTree?.getMetadata?.()||[]);
+ const report=window.AtlasQuickSetupCore?.parseParamText(name+' '+raw+'\n',state.params,metadata);
+ if(!report?.valid||report.skipped.length||report.errors.length){toast(name+' · '+(report?.skipped?.[0]?.reason||report?.errors?.[0]?.reason||'Invalid parameter'),true);return;}
  if(!confirm(`${name}: ${formatParam(p.value)} → ${value}\n${tr('editwarning')}`))return;
  $('editDialog').close();
- try{const result=new Promise((resolve,reject)=>{const timer=setTimeout(()=>{state.writeWait=null;reject(Error(tr('paramReq')));},3500);state.writeWait={name,value,resolve,reject,timer};});
-  await transmit(23,M.paramSet(state.sysid,state.compid,name,value,p.type));
-  await result;
+ try{
+  await writeParameterWithAck(name,value,p.type);
   toast(`${tr('writesuccess')}: ${name}=${value}`);
+  renderParams();renderBasic();
  }catch(err){toast(`${tr('senderror')} ${name}: ${err.message}`,true);}
 }
+
 function renderBasic(){const grid=$('basicGrid');grid.replaceChildren();const filter=state.group;for(const s of settingDefs){if(filter!=='all'&&filter!==s.group)continue;
  const value=state.params.get(s.key);const card=document.createElement('article');card.className='cc-setting-card';
  const row=document.createElement('div');row.className='cc-setting-line';const code=document.createElement('code');code.textContent=s.key;const label=document.createElement('span');label.className='cc-setting-tag';label.textContent=s.group.toUpperCase();row.append(code,label);
@@ -432,27 +440,50 @@ function renderParams(){
 
 function exportParams(){if(state.params.size===0){toast(tr('exportempty'),true);return;}
  const rows=[...state.params].sort((a,b)=>a[0].localeCompare(b[0])).map(([name,p])=>`${name}\t${formatParam(p.value)}`);const blob=new Blob(['# A.T.L.A.S. parameter backup\n# '+new Date().toISOString()+'\n'+rows.join('\n')+'\n'],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`ATLAS-${new Date().toISOString().slice(0,10)}.param`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
-async function importParams(file){if(!file)return;try{
- const content=await file.text();const found=new Map();let bad=0;
- for(const line of content.split(/\r?\n/)){let s=line.trim();if(!s||s.startsWith('#')||s.startsWith('//'))continue;
-  const match=s.match(/^([A-Za-z0-9_]{1,16})[\s,=]+([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)(?:[\s,;]|$)/);
-  if(match){const val=Number(match[2]);if(Number.isFinite(val))found.set(match[1],val);else bad++;}else bad++;
- }
- if(!found.size)throw Error('No numeric parameters found in file');
- state.imported=found;$('bulkConsent').checked=false;state.bulk=null;state.bulkCancel=false;renderImportDiff();navigate('params');toast(`${tr('imported')}: ${found.size}`+(bad?` · skipped ${bad} lines`:''));
- }catch(e){toast(e.message,true);}finally{$('importParamFile').value='';}}
+function prepareImported(){
+ if(!state.importedText||!state.params.size){state.imported=null;state.importReport=null;return;}
+ const metadata=Object.fromEntries(window.AtlasParamTree?.getMetadata?.()||[]);
+ const report=window.AtlasQuickSetupCore.parseParamText(state.importedText,state.params,metadata);
+ state.importReport=report;state.imported=new Map(report.entries);
+}
+async function importParams(file){
+ if(!file)return;
+ try{
+  if(file.size>5*1024*1024)throw Error('Maximum .param file size: 5 MiB');
+  state.importedText=await file.text();
+  state.imported=null;state.importReport=null;
+  if(!state.params.size)toast('File selected: read FC parameters first');
+  else prepareImported();
+  $('bulkConsent').checked=false;state.bulk=null;state.bulkCancel=false;
+  renderImportDiff();navigate('params');
+  toast(`${tr('imported')}: ${state.importReport?.entries?.size||0}; skipped: ${state.importReport?.skipped?.length||0}`);
+ }catch(e){toast(e.message,true);}finally{$('importParamFile').value='';}
+}
+function downloadImportReport(){
+ if(!state.importReport)return;
+ const lines=['# A.T.L.A.S. skipped .param entries','# '+new Date().toISOString()];
+ for(const x of state.importReport.skipped)lines.push([x.line||'',x.name||'',x.reason||'',x.value??''].join('\t'));
+ for(const x of state.importReport.errors)lines.push(['',x.name||'',x.reason||'validation-error',''].join('\t'));
+ if(state.bulk?.failed)for(const x of state.bulk.failed)lines.push(['',x,'write-rejected',''].join('\t'));
+ const blob=new Blob([lines.join('\n')+'\n'],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='ATLAS-import-skipped.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
 function paramEqual(a,b){return Math.abs(a-b)<=Math.max(1e-5,Math.abs(b)*2e-6);}
 function importDiffRows(){if(!state.imported)return [];
  return [...state.imported].filter(([name,value])=>{const p=state.params.get(name);return !p||!paramEqual(p.value,value);});}
-function renderImportDiff(){const box=$('importDiff');if(!state.imported){box.hidden=true;return;}box.hidden=false;
- const differing=importDiffRows(),missing=differing.filter(([name])=>!state.params.has(name)),writable=differing.filter(([name])=>state.params.has(name));
+function renderImportDiff(){const box=$('importDiff');if(!state.importedText){box.hidden=true;return;}box.hidden=false;
+ const differing=importDiffRows(),missing=state.importReport?.skipped||[],writable=differing.filter(([name])=>state.params.has(name));
  $('importDiffCount').textContent=`${writable.length} ${tr('parameterImportDiff')} / ${missing.length} ${tr('batchUnsupported')}`;
  const rows=$('importDiffRows');rows.replaceChildren();for(const [name,val]of differing.slice(0,60)){
   const row=document.createElement('div');row.className='cc-diff-row';const key=document.createElement('code');key.textContent=name;const right=document.createElement('span');const current=state.params.get(name);
   right.textContent=current?`${formatParam(current.value)} → ${formatParam(val)}`:`— → ${formatParam(val)} (${tr('batchUnsupported')})`;
   row.append(key,right);rows.append(row);
  }if(differing.length>60){const x=document.createElement('p');x.textContent=`+ ${differing.length-60} ...`;rows.append(x);}
- const b=state.bulk,canStart=!!state.imported&&writable.length>0&&canWrite()&&$('bulkConsent').checked&&!state.paramLoading;
+ const summary=$('importSkipNote');if(summary)summary.textContent=state.importedText&&!state.params.size?'Read FC parameters first':`${missing.length} skipped (unknown, read-only, invalid or unsupported) · ${state.importReport?.metadataMissingCount||0} without local range metadata`;
+ const list=$('importSkippedRows');if(list){list.replaceChildren();for(const item of missing.slice(0,20)){const row=document.createElement('div');row.textContent=(item.name||'line '+item.line)+' · '+item.reason;list.append(row);}}
+ const reportBtn=$('importDownloadSkipped');if(reportBtn)reportBtn.disabled=!state.importReport;
+ const b=state.bulk,canStart=!!state.importReport&&!state.importReport.errors.length&&writable.length>0&&canWrite()&&$('bulkConsent').checked&&!state.paramLoading;
  $('bulkWriteBtn').disabled=!!b?.running||!canStart;
  $('bulkCancelBtn').hidden=!b?.running;
  $('bulkConsent').disabled=!!b?.running;
@@ -468,7 +499,7 @@ async function writeParameterWithAck(name,value,type){
  catch(e){if(state.writeWait?.name===name){clearTimeout(state.writeWait.timer);state.writeWait=null;}throw e;}
 }
 async function writeImported(){
- if(!state.imported||!$('bulkConsent').checked||!canWrite()||state.paramLoading){toast(tr('batchNoLink'),true);renderImportDiff();return;}
+ if(!state.imported||!state.importReport||state.importReport.errors.length||!$('bulkConsent').checked||!canWrite()||state.paramLoading){toast(tr('batchNoLink'),true);renderImportDiff();return;}
  const entries=importDiffRows().filter(([name])=>state.params.has(name));
  if(!entries.length){toast(tr('batchEmpty'));return;}
  state.bulk={running:true,total:entries.length,done:0,failed:[],message:''};state.bulkCancel=false;
@@ -557,9 +588,9 @@ function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEve
    window.location.assign(href);
  }));
  $('connectBtn').addEventListener('click',connect);$('demoBtn').addEventListener('click',enterDemo);$('readBasicsBtn').addEventListener('click',startParamLoad);$('refreshParamsBtn').addEventListener('click',startParamLoad);$('exportParamsBtn').addEventListener('click',exportParams);$('paramSearch').addEventListener('input',()=>{state.tableLimit=150;renderParams();});$('moreParamsBtn').addEventListener('click',()=>{state.tableLimit+=180;renderParams();});$('paramModifiedOnly').addEventListener('change',renderParams);$('paramNoDefaultOnly').addEventListener('change',renderParams);
- window.addEventListener('atlas:metadata',renderParams);
+ window.addEventListener('atlas:metadata',()=>{if(state.importedText)prepareImported();renderParams();renderImportDiff();});
  window.AtlasParamTree?.initialize({render:renderParams,langGetter:()=>lang});
- $('importParamFile').addEventListener('change',ev=>importParams(ev.target.files[0]));$('bulkConsent').addEventListener('change',renderImportDiff);$('bulkWriteBtn').addEventListener('click',writeImported);$('bulkCancelBtn').addEventListener('click',()=>{state.bulkCancel=true;$('bulkProgress').textContent=tr('batchStopped')+' — '+tr('pending');});$('apjInput').addEventListener('change',ev=>parseApj(ev.target.files[0]));
+ $('importParamFile').addEventListener('change',ev=>importParams(ev.target.files[0]));$('bulkConsent').addEventListener('change',renderImportDiff);$('bulkWriteBtn').addEventListener('click',writeImported);$('importDownloadSkipped').addEventListener('click',downloadImportReport);$('bulkCancelBtn').addEventListener('click',()=>{state.bulkCancel=true;$('bulkProgress').textContent=tr('batchStopped')+' — '+tr('pending');});$('apjInput').addEventListener('change',ev=>parseApj(ev.target.files[0]));
  $('apjDropzone').addEventListener('dragover',ev=>{ev.preventDefault();$('apjDropzone').classList.add('dragging');});$('apjDropzone').addEventListener('dragleave',()=>$('apjDropzone').classList.remove('dragging'));$('apjDropzone').addEventListener('drop',ev=>{ev.preventDefault();$('apjDropzone').classList.remove('dragging');parseApj(ev.dataTransfer?.files?.[0]);});
  document.querySelectorAll('[data-group]').forEach(btn=>btn.addEventListener('click',()=>{state.group=btn.dataset.group;document.querySelectorAll('[data-group]').forEach(n=>n.classList.toggle('active',n===btn));renderBasic();}));
  $('closeEdit').addEventListener('click',()=>$('editDialog').close());$('cancelEdit').addEventListener('click',()=>$('editDialog').close());$('editForm').addEventListener('submit',saveEdit);
