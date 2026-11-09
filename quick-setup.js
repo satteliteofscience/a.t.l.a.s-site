@@ -152,9 +152,10 @@ function renderSafety(box){
  const actions=el('div','qs-inline-actions');
  button(actions,state().connected?t('usbDisconnect'):t('usbConnect'),()=>api.connectUsb(),'cc-button primary').disabled=!!window.AtlasDfuUi?.isBusy();
  button(actions,t('readTwice'),loadParams,'cc-button ghost').disabled=!safeLink(state())||qs.readBusy;
- button(actions,t('preflashBackup'),()=>{try{downloadBackup();}catch(e){setGlobal(e.message,true);}},'cc-button outline').disabled=!paramReady(state())||state().paramComplete!==true;
+ button(actions,t('preflashBackup'),()=>{try{downloadBackup();}catch(e){setGlobal(e.message,true);}},'cc-button outline').disabled=!paramReady(state());
  box.append(actions);
  if(qs.backupDownloaded)callout(box,t('backupDone'),'success');
+ if(paramReady(state())&&state().paramComplete!==true)callout(box,t('readPartialOk'),'warning');
 }
 const dfuPanel=$('dfuPanel');
 const dfuAnchor=dfuPanel?document.createComment('DFU panel original position'):null;
@@ -183,7 +184,7 @@ function renderFirmware(box){
  }
  select.value=board;
  select.disabled=!!window.AtlasDfuUi?.isBusy();
- select.addEventListener('change',()=>{if(api.selectBoard(select.value))render();});
+ select.addEventListener('change',()=>{api.selectBoard(select.value);});
  label.append(select);box.append(label);
  if(matek){
   callout(box,t('dfuInline'),'warning');
@@ -215,9 +216,9 @@ async function getMetadata(){
 }
 function currentParamState(){return state();}
 function downloadBackup(){
- const s=currentParamState();if(!paramReady(s)||s.paramComplete!==true)throw Error(t('readPartial'));
+ const s=currentParamState();if(!paramReady(s))throw Error(t('readWaiting'));
  const boardHeader=qs.firmwareBoard===s.selectedBoard?'# Board: '+boardLabel(s.selectedBoard):'# Board not verified: '+boardLabel(s.selectedBoard);
- const lines=['# A.T.L.A.S. Quick Setup backup',boardHeader,'# Generated: '+new Date().toISOString()];
+ const lines=['# A.T.L.A.S. Quick Setup backup',boardHeader,'# Read status: '+(s.paramComplete===true?'COMPLETE':'PARTIAL / NOT ALL PARAMETERS RECEIVED'),'# Generated: '+new Date().toISOString()];
  [...s.params.entries()].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([name,p])=>lines.push(name+' '+Number(p.value)));
  const blob=new Blob([lines.join('\n')+'\n'],{type:'text/plain'}),url=URL.createObjectURL(blob),a=el('a');
  a.href=url;a.download='ATLAS-backup-'+new Date().toISOString().slice(0,10)+'.param';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -348,7 +349,7 @@ function renderParams(box){
  const actions=el('div','qs-inline-actions');
  button(actions,s.connected?t('usbDisconnect'):t('usbConnect'),()=>api.connectUsb(),'cc-button primary').disabled=qs.applyBusy||qs.readBusy;
  button(actions,t('readTwice'),loadParams,'cc-button ghost').disabled=qs.applyBusy||qs.readBusy||!safeLink(s);
- button(actions,t('backup'),()=>{try{downloadBackup();}catch(e){setGlobal(e.message,true);}},'cc-button outline').disabled=qs.applyBusy||qs.readBusy||s.paramComplete!==true;
+ button(actions,t('backup'),()=>{try{downloadBackup();}catch(e){setGlobal(e.message,true);}},'cc-button outline').disabled=qs.applyBusy||qs.readBusy||!ready;
  box.append(actions);
  if(qs.readBusy)callout(box,t('readBusy'),'warning');
  if(ready&&s.paramComplete!==true)callout(box,t('readPartialOk'),'warning');
