@@ -269,3 +269,15 @@
 .tc-coeff-table tr{border-bottom:1px solid #33432a}
 .tc-coeff-table td{padding:5px 8px}.tc-coeff-table td:last-child{text-align:right;font-variant-numeric:tabular-nums}
 @media(max-width:700px){.tc-range{grid-template-columns:1fr}.tc-workspace{padding:12px}}
+
+/* One-click TCP for Windows: keep beginner path separate from advanced UDP/TCP. */
+.cc-tcp-one-click{padding:16px 18px 11px;border-bottom:1px solid #435634;display:flex;flex-direction:column;align-items:flex-start;gap:9px}
+.cc-tcp-one-click strong{font-size:14px;color:#ece0a7}
+.cc-tcp-one-click>p{font-size:12px;line-height:1.65;color:#cdd1a8;margin:0;max-width:660px}
+.cc-tcp-one-click>.cc-button{margin-top:3px;display:inline-flex;justify-content:center;max-width:100%;text-align:center;text-decoration:none}
+.cc-network-advanced{margin:11px 14px 12px;border:1px solid #4b5d3a;padding:10px}
+.cc-network-advanced>summary{cursor:pointer;font:600 12px 'IBM Plex Mono',monospace;color:#e3dca4}
+.cc-network-advanced>.cc-network-fields{margin:12px 0!important}
+.cc-network-advanced>.cc-network-warning,.cc-network-advanced>.cc-network-help,.cc-network-advanced>#networkConnectBtn{margin:8px 0!important}
+.cc-network-settings>#networkStatus{padding:8px 14px;margin:0 0 10px}
+@media(max-width:700px){.cc-tcp-one-click{padding:12px}.cc-tcp-one-click>.cc-button{width:100%}}
