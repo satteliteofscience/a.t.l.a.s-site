@@ -52,6 +52,10 @@ assert.equal(f.parseIntelHex(synthetic(['MatekH743'])).detectedTarget,'matek-h74
 assert.equal(f.parseIntelHex(synthetic([])).detectedTarget,null);
 assert.throws(()=>f.parseIntelHex(synthetic(['Uni_IC743Mini','CubeOrangePlus'])),/Conflicting board target markers/);
 assert.throws(()=>f.parseIntelHex(synthetic(['Uni_IC743Mini']).replace(/:[0-9A-F]{6}00/,'INVALID')),/Invalid HEX syntax/);
+const pin=read('firmware-access.js');
+assert.ok(pin.includes('signal:abortController.signal'),'PIN fetch must be cancellable');
+assert.ok(pin.includes('if(finished)return;'),'cancelled PIN request must not alter a new modal');
+assert.ok(pin.includes('blob.size!==entry.bytes'),'protected download size must match release metadata');
 const mavlink=read('mavlink.js');const mctx={window:{},TextEncoder,TextDecoder,Uint8Array,DataView,console};
 vm.runInNewContext(mavlink,mctx,{filename:'mavlink.js'});
 const mav=mctx.window.AtlasMAV;
