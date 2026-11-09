@@ -506,6 +506,7 @@ $('qsContent').addEventListener('click',event=>{
  if(anchor){event.preventDefault();api.navigate('basic');}
 });
 document.querySelector('[data-qs-t="fullConfigurator"]')?.addEventListener('click',event=>{event.preventDefault();api.navigate('basic');});
+window.addEventListener('atlas:dfu-idle',()=>{if(qs.step===2)render();});
 window.addEventListener('atlas:dfu',event=>{
  const d=event.detail||{};
  if(d.success&&d.verified&&d.board===selectedBoard()){qs.firmwareSource='dfu';qs.firmwareBoard=d.board;qs.firmwareError='';complete(2,'done');setGlobal(t('firmwareSuccess'));}
