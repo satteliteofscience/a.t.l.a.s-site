@@ -37,7 +37,8 @@ function parameterCategory(name){
 
 let lang='ru';try{let saved=localStorage.getItem('atlas-language');if(words[saved])lang=saved;}catch{}
 const tr=(k)=>words[lang]?.[k]||words.ru[k]||k;
-const state={demo:false,connected:false,connecting:false,transport:null,netSocket:null,bridgeReady:false,lastVoltageTelemetry:0,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,heartbeatStale:false,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,ftpClient:null,activeFilter:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,readTwoBusy:false,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
+const state={demo:false,connected:false,connecting:false,transport:null,netSocket:null,bridgeReady:false,lastVoltageTelemetry:0,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,heartbeatStale:false,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,ftpClient:null,activeFilter:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,readTwoBusy:false,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,statusTextAssembler:null,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
+state.statusTextAssembler=new window.AtlasStatusTextCore.Assembler();
 window.AtlasLanguage=()=>lang;
 window.AtlasSelectedBoard=()=>state.selectedBoard;
 const settingDefs=[
@@ -58,7 +59,24 @@ const settingDefs=[
 ];
 const modes={0:'MANUAL',1:'CIRCLE',2:'STABILIZE',3:'TRAINING',4:'ACRO',5:'FBWA',6:'FBWB',7:'CRUISE',8:'AUTOTUNE',10:'AUTO',11:'RTL',12:'LOITER',13:'TAKEOFF',14:'AVOID_ADSB',15:'GUIDED',17:'QSTABILIZE',18:'QHOVER',19:'QLOITER',20:'QLAND',21:'QRTL',22:'QAUTOTUNE',23:'QACRO'};
 const cleanNum=(n,dec=2)=>Number.isFinite(n)?Number(n).toFixed(dec):'—';
-function log(msg,warn=false){const tm=new Date().toLocaleTimeString('ru-RU',{hour12:false});const row=document.createElement('div');row.className='cc-event'+(warn?' warn':'');const time=document.createElement('time');time.textContent=tm;const span=document.createElement('span');span.textContent=msg;row.append(time,span);$('events').prepend(row);while($('events').children.length>11)$('events').lastChild.remove();state.logCount++;$('logCounter').textContent=`${state.logCount} EVENTS`;}
+function log(msg,warn=false,meta=null){
+ const tm=new Date().toLocaleTimeString('ru-RU',{hour12:false});
+ const row=document.createElement('div');
+ row.className='cc-event'+(warn?' warn':'')+(meta?.source==='fc'?' cc-event-fc':'');
+ const time=document.createElement('time');time.textContent=tm;
+ const body=document.createElement('span');
+ if(meta?.source==='fc'){
+  row.dataset.source='fc';row.dataset.severity=String(meta.severity);
+  const tag=document.createElement('strong');tag.className='cc-event-tag';
+  tag.textContent='FC · '+meta.level;
+  body.append(tag,document.createTextNode(' '+msg));
+ }else body.textContent=msg;
+ row.append(time,body);
+ const events=$('events');events.prepend(row);
+ // Keep a useful scrollback without unbounded DOM growth from periodic INFO.
+ while(events.children.length>150)events.lastChild.remove();
+ state.logCount++;$('logCounter').textContent=`${state.logCount} EVENTS`;
+}
 function toast(message,warning=false){log(message,warning);}
 function setLang(next){if(!words[next])return;lang=next;try{localStorage.setItem('atlas-language',lang);}catch{};document.documentElement.lang=next;
  document.querySelectorAll('[data-t]').forEach(el=>{let k=el.dataset.t;if(words[lang][k])el.textContent=tr(k);});document.querySelectorAll('[data-ph]').forEach(el=>el.placeholder=tr(el.dataset.ph));
@@ -208,7 +226,7 @@ function enterDemo(){if(state.connected||state.connecting){toast(tr('needlink'),
  updateConnectionUI();renderParams();renderBasic();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));}
 async function cleanupForNavigation(){
  state.pageLeaving=true;state.hudLoopActive=false;if(state.hudRaf){cancelAnimationFrame(state.hudRaf);state.hudRaf=0;}
- state.bulkCancel=true;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.activeFilter=null;state.paramTransfer=null;state.paramLoading=false;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;
+ state.bulkCancel=true;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.activeFilter=null;state.statusTextAssembler.reset();state.paramTransfer=null;state.paramLoading=false;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;
  const reader=state.reader;state.reader=null;
  try{if(reader)await reader.cancel();}catch{}
  const port=state.port;state.port=null;
@@ -217,7 +235,7 @@ async function cleanupForNavigation(){
  state.connected=false;state.connecting=false;state.demo=false;state.sysid=null;state.armed=null;
 }
 
-async function disconnect(){state.bulkCancel=true;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.activeFilter=null;state.paramTransfer=null;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;const reader=state.reader;state.reader=null;
+async function disconnect(){state.bulkCancel=true;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.activeFilter=null;state.statusTextAssembler.reset();state.paramTransfer=null;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;const reader=state.reader;state.reader=null;
  try{if(reader)await reader.cancel();}catch{}
  try{if(reader)reader.releaseLock();}catch{}
  const port=state.port;state.port=null;try{if(port)await port.close();}catch(e){console.warn(e);}
@@ -256,11 +274,17 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
  else if(data.type==='vfr'&&message.sysid===state.sysid){state.lastVfr=Date.now();state.telemetry.airspeed=Number.isFinite(data.airspeed)&&data.airspeed>=0?data.airspeed*3.6:null;state.telemetry.altitude=data.altitude;state.telemetry.throttle=data.throttle;}
  else if(data.type==='sys'){state.telemetry.voltage=data.voltage===65535?null:data.voltage/1000;if(data.voltage!==65535&&message.sysid===state.sysid)state.lastVoltageTelemetry=Date.now();if(message.sysid===state.sysid&&message.compid===state.compid){const magBit=4;state.compassStatus={present:!!(data.sensorsPresent&magBit),enabled:!!(data.sensorsEnabled&magBit),healthy:!!(data.sensorsHealthy&magBit),lastSeen:Date.now()};}}
  else if(data.type==='text'){
-   if(message.compid===state.compid){
-     const observed=window.AtlasAhrsFilterCore?.activeFromText(data.text);
-     if(observed){state.activeFilter=observed;renderAhrsFilter();}
+   // All standard MAV_SEVERITY levels 0..7 are user-visible, including
+   // performance-monitor INFO (6) / DEBUG (7). Do not lose fragments or
+   // treat incomplete multi-chunk STATUSTEXT as a complete notification.
+   const entry=state.statusTextAssembler.receive(data,message);
+   if(entry){
+     if(message.compid===state.compid){
+       const observed=window.AtlasAhrsFilterCore?.activeFromText(entry.text);
+       if(observed){state.activeFilter=observed;renderAhrsFilter();}
+     }
+     log(entry.text,entry.warning,{source:'fc',severity:entry.severity,level:entry.level});
    }
-   if(data.text && data.severity<=5)toast(`FC: ${data.text}`,data.severity<=3);
  }
  else if(data.type==='mavftp'&&message.compid===state.compid){state.ftpClient?.handle(data.data);}
  else if(data.type==='param'){
@@ -295,7 +319,7 @@ async function connect(){if(state.connecting)return;if(state.connected){await di
  try{
   const port=await navigator.serial.requestPort();
   await port.open({baudRate:Number($('baud').value),bufferSize:8192});
-  state.port=port;state.transport='usb';state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.activeFilter=null;state.ftpClient?.cancel();state.ftpClient=null;state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
+  state.port=port;state.transport='usb';state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.activeFilter=null;state.statusTextAssembler.reset();state.ftpClient?.cancel();state.ftpClient=null;state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
   updateConnectionUI();log('USB CDC open · '+$('baud').value+' bps');
   const parser=new M.Parser(handleMessage);state.rxParser=parser;
   state.rxPositions=0;state.rxCommands=0;state.rxAcks=0;state.rxTexts=0;
@@ -396,7 +420,7 @@ async function connectBridge(){
     }
     if(message.type!=='ready')return;
     clearTimeout(handshakeTimer);state.bridgeReady=true;state.transport='bridge';state.connected=true;state.connecting=false;state.rxActive=true;state.seq=0;
-    stopParamRepair();state.activeFilter=null;state.ftpClient?.cancel();state.ftpClient=null;state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;
+    stopParamRepair();state.activeFilter=null;state.statusTextAssembler.reset();state.ftpClient?.cancel();state.ftpClient=null;state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;
     state.armed=null;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVoltageTelemetry=0;
     state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
     const parser=new M.Parser(handleMessage);state.rxParser=parser;
@@ -416,7 +440,7 @@ function heartbeatTick(){
  if(!state.connected)return;
  transmit(0,M.heartbeat()).catch(()=>{});
  if(state.sysid!==null&&!heartbeatLive()&&!state.heartbeatStale){
-  state.heartbeatStale=true;state.activeFilter=null;updateConnectionUI();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));
+  state.heartbeatStale=true;state.activeFilter=null;state.statusTextAssembler.reset();updateConnectionUI();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));
  }
  if(state.sysid!==null&&!state.vfrFallbackSent&&state.streamStart>0&&state.lastVfr===0&&Date.now()-state.streamStart>7000&&Date.now()-state.lastHeartbeat<4000){
   state.vfrFallbackSent=true;
