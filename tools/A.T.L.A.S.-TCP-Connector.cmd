@@ -77,7 +77,7 @@ Write-Host ''
 
 $node = $null
 $existing = Get-Command node.exe -ErrorAction SilentlyContinue
-if($existing) {
+if($existing -and $env:ATLAS_CONNECTOR_FORCE_PORTABLE -ne '1') {
  try {
   $versionText = (& $existing.Source --version 2>$null | Select-Object -First 1)
   if($versionText -match '^v([0-9]+)\.' -and [int]$Matches[1] -ge 20) { $node = $existing.Source }
