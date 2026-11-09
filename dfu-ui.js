@@ -62,8 +62,8 @@
     const board=selectedBoard();
     return (board==='cube-orange-plus'?CUBE_T[lang]?.[key]:board==='uni-ic743-mini'?UNI_T[lang]?.[key]:null)||(T[lang]||T.ru)[key]||key;
   };
-  let current=null, image=null, fileInfo=null, busy=false, lastPhase='', usbSupported=!!(navigator.usb&&window.isSecureContext);
-   window.AtlasDfuUi=Object.freeze({isBusy:()=>busy});
+  let current=null, image=null, fileInfo=null, busy=false, releaseLoadBusy=false, localLoadBusy=false, lastPhase='', usbSupported=!!(navigator.usb&&window.isSecureContext);
+   window.AtlasDfuUi=Object.freeze({isBusy:()=>busy||releaseLoadBusy||localLoadBusy});
   function selectedBoard(){return window.AtlasSelectedBoard?.()||'cube-orange-plus';}
   function imageMatchesBoard(){
     if(!image||!supportedBoard(selectedBoard()))return false;
@@ -93,7 +93,7 @@
     en:{busy:'DFU operation already in progress.',usb:'Connect the STM32 DFU device first.',map:'Flash map or transfer size has not been verified. Erase is blocked.',file:'Load and verify a HEX file first.',board:'Select Matek H743-WING V3 in the Quick Setup step or the Flight Controller section.',model:'Confirm the board marking.',backup:'Confirm your backup and understand the erase risk.',erase:'Enter ERASE in uppercase letters.',ready:'All conditions met. WARNING: WebUSB flashing is still untested on a real Matek controller.'}
   };
   function blockedBy(){
-    if(busy)return 'busy';
+    if(busy||releaseLoadBusy||localLoadBusy)return 'busy';
     if(!current?.opened)return 'usb';
     if(!current.flashMapVerified||!current.transferSize)return 'map';
     if(!image)return 'file';
@@ -115,9 +115,9 @@
     el.textContent=key==='target'?targetMessages[lang]:(G[lang]||G.ru)[key];
     el.dataset.ready=key==='ready'?'true':'false';
   }
-  function readyToFlash(){return !busy&&current?.opened&&current?.flashMapVerified&&!!current?.transferSize&&image&&supportedBoard(selectedBoard())&&imageMatchesBoard()&&$('dfuConfirmBoard').checked&&$('dfuConfirmBackup').checked&&$('dfuConfirmText').value.trim()==='ERASE';}
+  function readyToFlash(){return !busy&&!releaseLoadBusy&&!localLoadBusy&&current?.opened&&current?.flashMapVerified&&!!current?.transferSize&&image&&supportedBoard(selectedBoard())&&imageMatchesBoard()&&$('dfuConfirmBoard').checked&&$('dfuConfirmBackup').checked&&$('dfuConfirmText').value.trim()==='ERASE';}
   function refreshControls(){
-    $('dfuFlashBtn').disabled=!readyToFlash();$('dfuConnectBtn').disabled=busy||!usbSupported;$('dfuLatestBtn').disabled=busy||releaseLoadBusy;$('dfuLocalInput').disabled=busy||releaseLoadBusy;$('dfuLoadReleaseBtn').disabled=busy||releaseLoadBusy||$('dfuReleaseSelect').disabled;
+    $('dfuFlashBtn').disabled=!readyToFlash();$('dfuConnectBtn').disabled=busy||!usbSupported;$('dfuLatestBtn').disabled=busy||releaseLoadBusy||localLoadBusy;$('dfuLocalInput').disabled=busy||releaseLoadBusy||localLoadBusy;$('dfuLoadReleaseBtn').disabled=busy||releaseLoadBusy||localLoadBusy||$('dfuReleaseSelect').disabled;
     $('dfuConfirmBoard').disabled=busy;$('dfuConfirmBackup').disabled=busy;$('dfuConfirmText').disabled=busy;
     $('dfuFlashBtn').textContent=busy?tr('erasing'):tr('flash');$('dfuConnectBtn').textContent=current?.opened?tr('disconnect'):tr('detect');
     updateGateStatus();
@@ -170,9 +170,8 @@
     select.disabled=false;$('dfuLoadReleaseBtn').disabled=false;
     return manifest;
   }
-  let releaseLoadBusy=false;
   async function latest(requestedIndex=null){
-    if(busy||releaseLoadBusy)return;
+    if(busy||releaseLoadBusy||localLoadBusy)return;
     releaseLoadBusy=true;refreshControls();
     const expectedBoard=selectedBoard();
     try{
@@ -191,11 +190,12 @@
     }catch(error){image=null;fileInfo=null;meta();status(error.message||String(error),true);}finally{releaseLoadBusy=false;refreshControls();}
   }
   async function localFile(file){
-    if(!file||busy||releaseLoadBusy)return;
+    if(!file||busy||releaseLoadBusy||localLoadBusy)return;
+    localLoadBusy=true;refreshControls();
     try{
       if(!/\.hex$/i.test(file.name)||file.size>16*1024*1024)throw Error('Select an Intel HEX file under 16 MiB');
       await loadHex(file,{filename:file.name,source:'LOCAL FILE'});
-    }catch(error){image=null;fileInfo=null;meta();status(`${tr('fileIssue')}: ${error.message}`,true);}finally{refreshControls();}
+    }catch(error){image=null;fileInfo=null;meta();status(`${tr('fileIssue')}: ${error.message}`,true);}finally{localLoadBusy=false;refreshControls();}
   }
   async function connect(){
     if(busy||releaseLoadBusy)return;
@@ -210,7 +210,7 @@
     }catch(error){status(`DFU: ${error.message}`,true);}finally{refreshControls();}
   }
   async function flash(){
-    if(releaseLoadBusy||!readyToFlash())return;
+    if(releaseLoadBusy||localLoadBusy||!readyToFlash())return;
     const expected=fileInfo?.filename;
     if(!imageMatchesBoard())return;
     const words=[tr('warning'),`Controller: ${selectedBoard()}`,`File: ${expected}`,`SHA256: ${fileInfo?.sha256}`,`Start: 0x08000000`, 'ERASE ALL INTERNAL FLASH (2 MiB)?'];
@@ -235,7 +235,7 @@
   $('dfuConnectBtn').addEventListener('click',connect);
   $('dfuLatestBtn').addEventListener('click',()=>latest());
   $('dfuLoadReleaseBtn').addEventListener('click',()=>latest($('dfuReleaseSelect').value));
-  $('dfuLocalInput').addEventListener('change',e=>localFile(e.target.files?.[0]));
+  $('dfuLocalInput').addEventListener('change',e=>{const file=e.target.files?.[0];e.target.value='';void localFile(file);});
   $('dfuFlashBtn').addEventListener('click',flash);
   [$('dfuConfirmBoard'),$('dfuConfirmBackup')].forEach(e=>e.addEventListener('change',refreshControls));
   $('dfuConfirmText').addEventListener('input',refreshControls);
