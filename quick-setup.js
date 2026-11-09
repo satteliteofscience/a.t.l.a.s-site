@@ -215,7 +215,7 @@ async function getMetadata(){
 }
 function currentParamState(){return state();}
 function downloadBackup(){
- const s=currentParamState();if(!paramReady(s))throw Error(t('readWaiting'));
+ const s=currentParamState();if(!paramReady(s)||s.paramComplete!==true)throw Error(t('readPartial'));
  const boardHeader=qs.firmwareBoard===s.selectedBoard?'# Board: '+boardLabel(s.selectedBoard):'# Board not verified: '+boardLabel(s.selectedBoard);
  const lines=['# A.T.L.A.S. Quick Setup backup',boardHeader,'# Generated: '+new Date().toISOString()];
  [...s.params.entries()].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([name,p])=>lines.push(name+' '+Number(p.value)));
@@ -223,58 +223,118 @@ function downloadBackup(){
  a.href=url;a.download='ATLAS-backup-'+new Date().toISOString().slice(0,10)+'.param';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
  qs.backupDownloaded=true;qs.paramsMessage=t('backupDone');if(qs.paramsMode==='keep'&&qs.keepConfirmed&&paramReady(state()))qs.completed[3]='manual';persist();render();
 }
-async function waitForParams(timeout=90000){
+async function waitForParams(timeout=180000){
  return new Promise(resolve=>{
-  const start=Date.now(),timer=setInterval(()=>{
+  const started=Date.now(),timer=setInterval(()=>{
    const s=state();
-   if(paramReady(s)){clearInterval(timer);resolve({ok:true,state:s});}
-   else if(!s.connected){clearInterval(timer);resolve({ok:false,reason:'disconnected'});}
-   else if(!s.paramLoading&&(s.paramPhase==='partial'||s.paramPhase==='noReply')){clearInterval(timer);resolve({ok:false,reason:s.paramPhase});}
-   else if(Date.now()-start>timeout){clearInterval(timer);resolve({ok:false,reason:'timeout'});}
-  },500);
+   if(!s.connected){clearInterval(timer);resolve({ok:false,reason:'disconnected',state:s});}
+   else if(!s.paramLoading){
+    clearInterval(timer);
+    resolve({ok:paramReady(s)&&safeLink(s),complete:s.paramComplete===true,state:s,reason:s.paramPhase});
+   }else if(Date.now()-started>timeout){
+    clearInterval(timer);resolve({ok:false,reason:'timeout',state:s});
+   }
+  },450);
  });
 }
-async function loadParams(){
- const s=state();if(!safeLink(s)){qs.paramsMessage=t('readNoLink');render();return;}
- qs.paramsMessage=t('readWaiting');render();
- api.requestParameters();
- if(!state().paramLoading){qs.paramsMessage=t('readPartial');render();return;}
- const result=await waitForParams();
- qs.paramsMessage=result.ok?t('readComplete'):result.reason==='partial'||result.reason==='noReply'?t('readPartial'):t('readNoLink');
+async function refreshProfile(preserveConfirmation=false){
+ if(!qs.fileText||!paramReady(state()))return;
+ const token=qs.fileToken,board=selectedBoard(),metadata=await getMetadata();
+ const live=state();
+ if(token!==qs.fileToken||selectedBoard()!==board||!paramReady(live))return;
+ qs.preview=core.parseParamText(qs.fileText,live.params,metadata,{boardLabel:boardLabel(board)});
+ qs.previewBoard=board;
+ if(!preserveConfirmation)qs.compatConfirmed=false;
+ qs.paramsMessage=qs.preview.valid?t('preview'):t('paramInvalid');
  render();
 }
+async function loadParams(){
+ if(qs.readBusy||qs.applyBusy||!safeLink(state())){if(!qs.readBusy)setGlobal(t('readNoLink'),true);return;}
+ qs.readBusy=true;qs.readPass=0;qs.paramsMessage=t('readWaiting');render();
+ let result=null;
+ try{
+  for(let pass=1;pass<=2;pass++){
+   if(!safeLink(state()))throw Error(t('readNoLink'));
+   const alreadyLoading=pass===1&&state().paramLoading;
+   if(!alreadyLoading&&!api.requestParameters(true))throw Error(t('readPartial'));
+   qs.readPass=pass;qs.paramsMessage=t('readPass')+' '+pass+'/2';render();
+   result=await waitForParams();
+   if(!result.ok)throw Error(t('readPartial')+' · '+(result.reason||''));
+  }
+  qs.paramsMessage=result?.complete?t('readComplete'):t('readPartialOk');
+ }catch(error){qs.paramsMessage=error.message||t('readPartial');setGlobal(qs.paramsMessage,true);}
+ finally{
+  qs.readBusy=false;qs.readPass=0;
+  if(qs.fileText&&paramReady(state()))await refreshProfile();
+  else render();
+ }
+}
 function paramErrorText(error){
- const keys={board:'paramBoard',unknown:'paramUnknown',duplicate:'paramDuplicate',range:'paramRange',format:'paramFormat',integer:'paramInteger',readonly:'paramReadonly','int64-unsupported':'paramInt64',type:'paramType'};
+ const keys={board:'paramBoard',unknown:'paramUnknown',duplicate:'paramDuplicate',range:'paramRange',format:'paramFormat',integer:'paramInteger',readonly:'paramReadonly','int64-unsupported':'paramInt64',type:'paramType','type-range':'paramRange','protected-skipped':'paramReadonly',number:'paramInvalid'};
  return t(keys[error.reason]||'paramInvalid')+(error.name?' · '+error.name:'')+(error.line?' · line '+error.line:'');
 }
 async function onParamFile(file){
- if(!file||qs.applyBusy)return;
+ if(!file||qs.applyBusy||qs.readBusy)return;
  const token=++qs.fileToken;
- invalidateFrom(3);qs.compatConfirmed=false;qs.keepConfirmed=false;qs.preview=null;qs.previewBoard=null;
- const s=state(),board=s.selectedBoard;
- if(!paramReady(s)){qs.paramsMessage=t('readWaiting');render();return;}
+ invalidateFrom(3);qs.compatConfirmed=false;qs.keepConfirmed=false;qs.preview=null;qs.previewBoard=null;qs.fileText=null;qs.applySkipped=[];
  qs.fileName=file.name;qs.paramsMessage=t('readWaiting');render();
- const metadata=await getMetadata(),result=core.parseParamText(await file.text(),s.params,metadata,{boardLabel:boardLabel(board)});
- if(token!==qs.fileToken||selectedBoard()!==board||!paramReady(state()))return;
- qs.preview=result;qs.previewBoard=board;qs.paramsMessage=result.valid?t('preview'):t('paramInvalid');render();
+ try{
+  if(file.size>5*1024*1024)throw Error(t('fileTooBig'));
+  const contents=await file.text();
+  if(token!==qs.fileToken)return;
+  qs.fileText=contents;
+  if(paramReady(state()))await refreshProfile();
+  else{qs.paramsMessage=t('filePending');render();}
+ }catch(error){if(token===qs.fileToken){qs.paramsMessage=error.message||t('paramInvalid');setGlobal(qs.paramsMessage,true);render();}}
+}
+function downloadSkippedReport(){
+ const skipped=[...(qs.preview?.skipped||[]),...qs.applySkipped.map(item=>({name:item.name,line:'',reason:'write-rejected: '+item.reason}))];
+ if(!skipped.length)return;
+ const rows=['# A.T.L.A.S. Quick Setup: skipped entries','# '+new Date().toISOString(),'# '+qs.fileName];
+ for(const item of skipped)rows.push([item.line??'',item.name??'',item.reason??'',item.value??''].join('\t'));
+ const blob=new Blob([rows.join('\n')+'\n'],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=el('a');
+ a.href=url;a.download='ATLAS-skipped-parameters.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 async function applyCustomParams(){
  const s=state();
- if(!qs.preview?.valid||qs.previewBoard!==s.selectedBoard||!qs.backupDownloaded||!qs.compatConfirmed||!paramReady(s)||!safeLink(s)){qs.paramsMessage=t('paramInvalid');render();return;}
+ if(!qs.preview?.valid||qs.previewBoard!==s.selectedBoard||!qs.backupDownloaded||!qs.compatConfirmed||!paramReady(s)||!safeLink(s)||qs.readBusy){qs.paramsMessage=t('paramInvalid');render();return;}
+ const fresh=core.parseParamText(qs.fileText,s.params,qs.metadata,{boardLabel:boardLabel(s.selectedBoard)});
+ if(!fresh.valid||JSON.stringify(fresh.changes)!==JSON.stringify(qs.preview.changes)){
+  qs.preview=fresh;qs.compatConfirmed=false;qs.paramsMessage=t('retryAfterParam');render();return;
+ }
  if(!qs.preview.changes.length){qs.paramsApplied=false;qs.paramsMessage=t('paramNoChanges');complete(3,'manual');return;}
- if(!window.confirm(t('applyConfirm')+'\n\n'+qs.preview.changes.length+' '+t('changed')))return;
- invalidateFrom(3);qs.applyBusy=true;qs.cancelApply=false;qs.paramsMessage=t('applying');render();
+ if(!window.confirm(t('applyConfirm')+'\n\n'+qs.preview.changes.length+' '+t('changed')+' / '+qs.preview.skipped.length+' '+t('skipped')))return;
+ const expected=qs.preview.changes.slice(),board=s.selectedBoard;
+ invalidateFrom(3);qs.applyBusy=true;qs.cancelApply=false;qs.applySkipped=[];qs.paramsMessage=t('applying');render();
  try{
-  const updates=Object.fromEntries(qs.preview.changes);
-  const result=await api.writeAdvancedParams(updates,p=>{qs.paramsMessage=t('applying')+' · '+p.done+'/'+p.total+' · '+(p.name||'');setGlobal(qs.paramsMessage);},()=>qs.cancelApply);
-  if(result.done!==result.total)throw Error('Incomplete PARAM_VALUE acknowledgements');
-  qs.paramsMessage=t('readWaiting');api.requestParameters();
-  const readback=await waitForParams();
-  if(!readback.ok)throw Error(t('readPartial'));
-  const live=readback.state.params;
-  const mismatches=qs.preview.changes.filter(([name,value])=>{const actual=Number(live.get(name)?.value);return !Number.isFinite(actual)||Math.abs(actual-value)>Math.max(1e-5,Math.abs(value)*2e-6);});
+  const updates=Object.fromEntries(expected);
+  const result=await api.writeAdvancedParams(updates,p=>{qs.paramsMessage=t('applying')+' · '+p.done+'/'+p.total+' · '+(p.name||'');setGlobal(qs.paramsMessage);},()=>qs.cancelApply,{skipRejected:true});
+  qs.applySkipped=result.skipped||[];
+  if(!result.done)throw Error(t('applyPartial'));
+  qs.paramsApplied=true;
+  let readback=null;
+  for(let pass=1;pass<=2;pass++){
+   qs.paramsMessage=t('readPass')+' '+pass+'/2';render();
+   if(!api.requestParameters(true))throw Error(t('readPartial'));
+   readback=await waitForParams();
+   if(!readback.ok)throw Error(t('readPartial'));
+  }
+  const live=readback.state.params,rejected=new Set(qs.applySkipped.map(item=>item.name));
+  const mismatches=expected.filter(([name,value])=>{
+   if(rejected.has(name))return false;
+   const actual=Number(live.get(name)?.value);
+   return !Number.isFinite(actual)||Math.abs(actual-value)>Math.max(1e-5,Math.abs(value)*2e-6);
+  });
   if(mismatches.length)throw Error('Readback mismatch: '+mismatches.map(x=>x[0]).join(', '));
-  qs.paramsApplied=true;qs.paramsMessage=t('applyDone');complete(3,'done');
+  const parsed=core.parseParamText(qs.fileText,live,qs.metadata,{boardLabel:boardLabel(board)});
+  parsed.changes=parsed.changes.filter(([name])=>!rejected.has(name));
+  qs.preview=parsed;qs.previewBoard=board;
+  if(parsed.changes.length){
+   qs.compatConfirmed=false;qs.paramsMessage=t('retryAfterParam');setGlobal(qs.paramsMessage,true);
+  }else{
+   qs.paramsMessage=t('applyDone')+(qs.applySkipped.length?' · '+qs.applySkipped.length+' '+t('applySkipped'):'');
+   complete(3,'done');
+  }
  }catch(error){qs.paramsMessage=t('applyPartial')+' · '+error.message;setGlobal(qs.paramsMessage,true);}
  finally{qs.applyBusy=false;qs.cancelApply=false;render();}
 }
@@ -285,30 +345,43 @@ function renderParams(box){
  const a=el('div');a.append(el('small','',t('live')),el('strong','',s.connected?(s.armed===false?t('disarmed'):'ARM / UNKNOWN'):t('disconnected')));
  const b=el('div');b.append(el('small','',t('readCount')),el('strong','',String(s.params?.size||0)+' / '+(s.paramCount??'?')));
  status.append(a,b);box.append(status);
- const actions=el('div','qs-inline-actions');button(actions,t('readParams'),loadParams,'cc-button ghost').disabled=qs.applyBusy;button(actions,t('backup'),()=>{try{downloadBackup();}catch(e){setGlobal(e.message,true);}},'cc-button outline').disabled=qs.applyBusy;box.append(actions);
+ const actions=el('div','qs-inline-actions');
+ button(actions,s.connected?t('usbDisconnect'):t('usbConnect'),()=>api.connectUsb(),'cc-button primary').disabled=qs.applyBusy||qs.readBusy;
+ button(actions,t('readTwice'),loadParams,'cc-button ghost').disabled=qs.applyBusy||qs.readBusy||!safeLink(s);
+ button(actions,t('backup'),()=>{try{downloadBackup();}catch(e){setGlobal(e.message,true);}},'cc-button outline').disabled=qs.applyBusy||qs.readBusy||s.paramComplete!==true;
+ box.append(actions);
+ if(qs.readBusy)callout(box,t('readBusy'),'warning');
+ if(ready&&s.paramComplete!==true)callout(box,t('readPartialOk'),'warning');
  if(ready&&qs.backupDownloaded)callout(box,t('backupDone'),'success');
  if(qs.paramsMessage)callout(box,qs.paramsMessage,qs.paramsMessage.includes(t('applyPartial'))||qs.paramsMessage===t('paramInvalid')?'danger':'');
- radio(box,t('paramsKeep'), 'keep',qs.paramsMode==='keep',value=>{if(qs.applyBusy)return;invalidateFrom(3);qs.paramsMode=value;qs.preview=null;qs.fileName='';qs.compatConfirmed=false;qs.keepConfirmed=false;render();});
- radio(box,t('paramsCustom'),'custom',qs.paramsMode==='custom',value=>{if(qs.applyBusy)return;invalidateFrom(3);qs.paramsMode=value;qs.keepConfirmed=false;qs.compatConfirmed=false;render();});
+ radio(box,t('paramsKeep'),'keep',qs.paramsMode==='keep',value=>{if(qs.applyBusy||qs.readBusy)return;qs.fileToken++;invalidateFrom(3);qs.paramsMode=value;qs.preview=null;qs.fileText=null;qs.fileName='';qs.compatConfirmed=false;qs.keepConfirmed=false;render();});
+ radio(box,t('paramsCustom'),'custom',qs.paramsMode==='custom',value=>{if(qs.applyBusy||qs.readBusy)return;qs.fileToken++;invalidateFrom(3);qs.paramsMode=value;qs.keepConfirmed=false;qs.compatConfirmed=false;render();});
  if(qs.paramsMode==='keep'){
   callout(box,t('paramsKeepWarn'),'warning');
   if(ready)checkbox(box,t('keepConfirm'),qs.keepConfirmed,value=>{qs.keepConfirmed=value;if(value&&qs.backupDownloaded&&ready){qs.completed[3]='manual';persist();}else delete qs.completed[3];render();});
  }else{
-  const fileInput=el('input','qs-input');fileInput.type='file';fileInput.accept='.param,.txt';fileInput.disabled=qs.applyBusy;fileInput.addEventListener('change',event=>onParamFile(event.target.files?.[0]));box.append(el('label','',t('file')),fileInput);
+  const fileInput=el('input','qs-input');fileInput.type='file';fileInput.accept='.param,.txt';fileInput.disabled=qs.applyBusy||qs.readBusy;fileInput.addEventListener('change',event=>onParamFile(event.target.files?.[0]));box.append(el('label','',t('file')),fileInput);
   appendText(box,'p',qs.fileName||t('fileName'),'qs-global-status');
   if(qs.preview){
    const summary=el('div','qs-kv');
-   [[t('changed'),String(qs.preview.changes.length)],[t('errors'),String(qs.preview.errors.length)],[t('warnings'),String(qs.preview.warnings.length)]].forEach(pair=>{const cell=el('div');cell.append(el('small','',pair[0]),el('strong','',pair[1]));summary.append(cell);});
+   [[t('changed'),String(qs.preview.changes.length)],[t('skipped'),String(qs.preview.skipped.length+qs.applySkipped.length)],[t('errors'),String(qs.preview.errors.length)],[t('metaMissing'),String(qs.preview.metadataMissingCount)]].forEach(pair=>{const cell=el('div');cell.append(el('small','',pair[0]),el('strong','',pair[1]));summary.append(cell);});
    box.append(summary);
    if(qs.preview.errors.length){const list=el('div','qs-callout danger');qs.preview.errors.slice(0,20).forEach(err=>list.append(el('div','',paramErrorText(err))));box.append(list);}
-   if(qs.preview.warnings.length)callout(box,t('paramWarning'),'warning');
+   const skipped=[...qs.preview.skipped,...qs.applySkipped.map(item=>({name:item.name,reason:'write-rejected: '+item.reason}))];
+   if(skipped.length){
+    callout(box,t('skippedInfo'),'warning');
+    const list=el('div','qs-skipped');skipped.slice(0,30).forEach(item=>list.append(el('div','',paramErrorText(item))));if(skipped.length>30)list.append(el('div','', '+ '+(skipped.length-30)));
+    box.append(list);button(box,t('skippedDownload'),downloadSkippedReport,'cc-button outline');
+   }
+   if(qs.preview.warnings.length||qs.preview.metadataMissingCount>0)callout(box,t('paramWarning'),'warning');
    const diff=el('div','qs-diff');qs.preview.changes.slice(0,100).forEach(([name,value])=>{const row=el('div','qs-diff-row');row.append(el('code','',name));row.append(el('span','',(s.params.get(name)?.value??'—')+' → '+value));diff.append(row);});if(qs.preview.changes.length>100)diff.append(el('p','', '+ '+(qs.preview.changes.length-100)));box.append(diff);
    checkbox(box,t('compatConfirm'),qs.compatConfirmed,value=>{qs.compatConfirmed=value;render();});
-   const canApply=ready&&qs.previewBoard===s.selectedBoard&&qs.backupDownloaded&&qs.preview.valid&&qs.compatConfirmed&&safeLink(s)&&!qs.applyBusy;
+   const canApply=ready&&qs.previewBoard===s.selectedBoard&&qs.backupDownloaded&&qs.preview.valid&&qs.compatConfirmed&&safeLink(s)&&!qs.applyBusy&&!qs.readBusy&&qs.preview.changes.length>0;
    const applyRow=el('div','qs-inline-actions');
    button(applyRow,qs.applyBusy?t('applying'):t('apply'),applyCustomParams,'cc-button primary').disabled=!canApply;
    if(qs.applyBusy)button(applyRow,t('cancelApply'),()=>{qs.cancelApply=true;setGlobal(t('cancelled'));},'cc-button outline');
    box.append(applyRow);
+   if(qs.preview.valid&&qs.preview.changes.length===0&&qs.compatConfirmed&&ready&&qs.backupDownloaded&&!qs.completed[3])button(box,t('confirm'),()=>{qs.paramsMessage=t('paramNoChanges');complete(3,'manual');},'cc-button ghost');
   }
  }
  if(!ready&&s.paramPhase==='partial')callout(box,t('readPartial'),'warning');
