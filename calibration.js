@@ -299,8 +299,8 @@ $('servoDialog').addEventListener('cancel',ev=>{if(servoIsSaving)ev.preventDefau
 for(const id of ['servoEditFunction','servoEditMin','servoEditTrim','servoEditMax','servoEditReverse'])$(id).addEventListener('input',updateServoEditor);
 function renderBattery(){const s=currentState();const demo=s.demo;const v=demo?23.4:s.telemetry.voltage;const curr=demo?4.7:live.current;const pct=demo?78:live.remaining;const consumed=demo?2340:live.consumed;
  status('batteryVoltage',Number.isFinite(v)?v.toFixed(2)+' V':'—');status('batteryCurrent',Number.isFinite(curr)?curr.toFixed(2)+' A':'—');status('batteryPercent',Number.isFinite(pct)?pct+' %':'—');status('batteryConsumed',Number.isFinite(consumed)?Math.round(consumed)+' mAh':'—');status('batteryBadge',demo?tt('fromDemo'):live.batteryTime&&now()-live.batteryTime<10000?'BATTERY_STATUS / LIVE':s.connected?'SYS_STATUS / MAVLINK':'NO MAVLINK');}
-function renderCompass(){const s=currentState();const can=safe()&&!accel.kind&&detectedMagnetometer();const reportDone=mag.complete;
- $('compassStartBtn').disabled=!can||mag.running;
+function renderCompass(){const s=currentState();const can=safe()&&!accel.kind,physical=detectedMagnetometer();const reportDone=mag.complete;
+ $('compassStartBtn').disabled=!can||!physical||mag.running;
  $('compassAcceptBtn').disabled=!can||!reportDone||mag.autosaved||mag.saving;
  $('compassCancelBtn').disabled=!can||!mag.running;
  $('compassProgressBar').style.width=mag.pct+'%';status('compassProgressValue',Math.round(mag.pct)+'%');status('compassProgressText',mag.running?tt('compassRunning'):mag.complete?(mag.autosaved?tt('done'):tt('notSaved')):mag.lastResult||'NO DATA');status('compassBadge',s.demo?tt('demo'):safe()?'USB / DISARMED':'DISARM REQUIRED');}
