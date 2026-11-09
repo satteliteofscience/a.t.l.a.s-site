@@ -16,6 +16,12 @@ assert.match(cmd,/\$nodeVersion\s*=\s*'v24\.22\.2'/,'Node version must be pinned
 assert.match(cmd,/\$nodeChecksums\s*=/,'Node runtime SHA checksums must be pinned');
 assert.match(cmd,/Get-FileHash -LiteralPath \$target -Algorithm SHA256/,'portable Node binary must be SHA256-verified');
 assert.match(cmd,/Get-GitBlobHash \$target/,'downloaded bridge must be checked against its Git object hash');
+assert.match(cmd,/Join-Path \$env:LOCALAPPDATA 'ATLAS-TCP-Connector'/,'cache path must not have trailing period');
+assert.doesNotMatch(cmd,/A\.T\.L\.A\.S\.\\TCP-Connector/,'Windows paths with a trailing period must never be used');
+assert.match(cmd,/function Remove-DownloadedFile\(\[string\]\$path\)/,'cleanup must check whether a temporary file exists');
+assert.match(cmd,/\[System\.IO\.File\]::Exists\(\$path\)/,'cleanup must not try to remove a missing file');
+assert.match(cmd,/Unable to download or verify/,'real download failures must be displayed, never shadowed by cleanup');
+assert.match(cmd,/ATLAS_CONNECTOR_SELFTEST/,'Windows bootstrap must support first launch regression test');
 assert.match(cmd,/\$env:ATLAS_BRIDGE_TOKEN = \$token/,'launcher must pass an ephemeral strong token to the bridge');
 assert.match(cmd,/\$env:ATLAS_BRIDGE_PORT = '8765'/,'launcher should use the documented localhost bridge port');
 assert.match(cmd,/\$site \+ '#atlas-tcp=' \+ \$token/,'token must be passed in fragment not as URL query to GitHub Pages');
