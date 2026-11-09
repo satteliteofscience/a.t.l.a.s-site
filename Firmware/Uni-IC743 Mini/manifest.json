@@ -4,6 +4,22 @@
   "board_name": "Uni-IC743 Mini",
   "flash_type": "STM32H743 internal 2 MiB",
   "format": "intel-hex",
-  "latest": null,
-  "files": []
+  "latest": "ATLAS-Uni-IC743-Mini-release-1.hex",
+  "files": [
+    {
+      "filename": "ATLAS-Uni-IC743-Mini-release-1.hex",
+      "bytes": 4505460,
+      "image_bytes": 1638196,
+      "address_start": "0x08000000",
+      "address_end_exclusive": "0x0818FF34",
+      "sha256": "647029f6835f4af59a5ea32cf081acf67394721341ed8482b4923a99dca1c375",
+      "timestamp": 1794253800,
+      "version": "1.0",
+      "label": "A.T.L.A.S. Release 1.0 · ArduPlane 4.7.2 · Uni-IC743 Mini",
+      "source_url": "",
+      "source_verified": false,
+      "secure_id": "uni-ic743-mini-release-1",
+      "channel": "release"
+    }
+  ]
 }
