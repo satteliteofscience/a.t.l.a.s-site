@@ -138,7 +138,7 @@
       $('dfuProgressLabel').textContent='VERIFIED · 100%';
       window.dispatchEvent(new CustomEvent('atlas:dfu',{detail:{success:true,board:selectedBoard(),filename:expected,sha256:fileInfo?.sha256||null,verified:true}}));
     }catch(error){status(`DFU ${tr('stError')}: ${error.message} — Leave board in DFU; recover/reflash via STM32CubeProgrammer if needed.`,true);window.dispatchEvent(new CustomEvent('atlas:dfu',{detail:{success:false,board:selectedBoard(),reason:error.message}}));}finally{
-      window.removeEventListener('beforeunload',unload);busy=false;refreshControls();
+      window.removeEventListener('beforeunload',unload);busy=false;refreshControls();window.dispatchEvent(new Event('atlas:dfu-idle'));
     }
   }
   function translate(){
