@@ -10,7 +10,8 @@
     };
     return (data[window.AtlasI18n?.lang] || data.ru)[key];
   }
-  const state = { data: null, catalogSignature: '', query: '', filter: 'all' };
+  const state = { data: null, catalogSignature: '', query: '', filter: 'all', fetchFailed: false };
+  let catalogRequestActive = false;
   const icon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 1v3m6-3v3M9 20v3m6-3v3M1 9h3m-3 6h3m16-6h3m-3 6h3M9 9h6v6H9z"/></svg>';
   const $ = (tag, className, content) => {
     const node = document.createElement(tag);
@@ -104,6 +105,21 @@
     const grid = el('boardGrid');
     if (!state.data) return;
     const boards = Array.isArray(state.data.boards) ? state.data.boards : [];
+    // When all supported platforms have releases, hide the empty "In preparation"
+    // filter. Re-enable it automatically if a planned platform is added later.
+    const plannedChip=document.querySelector('.filter-chip[data-filter="planned"]');
+    if(plannedChip){
+      const hasPlanned=boards.some(b=>b.status!=='available'||downloadItems(b).length===0);
+      plannedChip.hidden=!hasPlanned;
+      if(!hasPlanned&&state.filter==='planned'){
+        state.filter='all';
+        document.querySelectorAll('.filter-chip').forEach(chip=>{
+          const selected=chip.dataset.filter==='all';
+          chip.classList.toggle('is-active',selected);
+          chip.setAttribute('aria-pressed',String(selected));
+        });
+      }
+    }
     const filtered = boards.filter((b) => {
       const hasRelease = b.status === 'available' && downloadItems(b).length > 0;
       if (state.filter === 'available' && !hasRelease) return false;
@@ -127,6 +143,8 @@
   }
 
   async function loadData() {
+    if(catalogRequestActive)return;
+    catalogRequestActive=true;
     try {
       const embedded = el('atlasEmbeddedData');
       if (embedded) {
@@ -138,16 +156,31 @@
       const data = await response.json();
       if (!data || !Array.isArray(data.boards)) throw new Error('Неверный формат JSON');
       const signature=JSON.stringify(data.boards);
-      if(signature===state.catalogSignature)return; // preserve open archive panels on routine polling
+      if(signature===state.catalogSignature){
+        if(state.fetchFailed){
+          state.fetchFailed=false;
+          renderBoards(); // restore normal status after a transient network outage
+        }
+        return; // preserve open archive panels on routine polling
+      }
+      state.fetchFailed=false;
       state.catalogSignature=signature;
       state.data = data; bindPublicCatalog(data); renderBoards();
     } catch (error) {
-      el('downloadStatus').textContent = tr('Не удалось прочитать каталог сборок.');
-      const grid = el('boardGrid'); grid.replaceChildren();
-      const placeholder = $('div', 'empty-state');
-      placeholder.append($('strong', '', tr('Каталог пока недоступен')), $('span', '', tr('Запустите сайт через HTTP-сервер или проверьте файл data/releases.json.')));
-      grid.append(placeholder);
+      state.fetchFailed=true;
+      if(state.data&&Array.isArray(state.data.boards)){
+        // Never make already validated PIN builds disappear due to a transient poll failure.
+        el('downloadStatus').textContent=tr('Ошибка обновления каталога. Показаны ранее загруженные сборки.');
+      }else{
+        el('downloadStatus').textContent=tr('Не удалось прочитать каталог сборок.');
+        const grid = el('boardGrid'); grid.replaceChildren();
+        const placeholder = $('div', 'empty-state');
+        placeholder.append($('strong', '', tr('Каталог пока недоступен')), $('span', '', tr('Запустите сайт через HTTP-сервер или проверьте файл data/releases.json.')));
+        grid.append(placeholder);
+      }
       console.error('A.T.L.A.S. releases catalog:', error);
+    }finally{
+      catalogRequestActive=false;
     }
   }
 

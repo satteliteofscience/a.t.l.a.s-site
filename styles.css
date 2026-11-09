@@ -181,3 +181,6 @@ body{font-family:'IBM Plex Sans',Arial,sans-serif;font-size:16px;letter-spacing:
 
 /* Accessible contrast for supporter section heading */
 .support-section h2{color:#f1e5ae!important;text-shadow:0 1px 0 #0b130a!important}
+
+/* The planned-release filter is hidden when all listed boards have published firmware. */
+.filter-chip[hidden]{display:none!important}
