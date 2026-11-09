@@ -26,6 +26,7 @@ assert.match(wizard,/restoreDfuPanel\(\)/,'DFU panel must be restored on exiting
 assert.match(wizard,/t\('usbConnect'\)/,'wizard must provide inline USB connection');
 assert.match(wizard,/pass<=2/,'parameter reading must support a two-pass workflow');
 assert.match(wizard,/qs\.preview\.skipped/,'wizard must disclose skipped parameter entries');
+assert.match(wizard,/readback mismatch \/ value not verified/,'mismatched readback must be explicitly reported instead of silently counted as success');
 assert.match(cfg,/selectBoard:\(id\)=>/,'wizard must change board before DFU');
 assert.match(wizard,/qs\.awaitingCalibration!==d\.kind/,'calibration events must belong to the active wizard session');
 assert.match(wizard,/safeLink\(result\.state\)/,'post-reboot readback requires a live DISARMED heartbeat');
