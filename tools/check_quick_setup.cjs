@@ -102,7 +102,7 @@ function escParams({mask=0,otype=0,channels=[3],can=false}={}){
  const now=Date.now(),enabled=params([['COMPASS_USE',1,6],['COMPASS_USE2',0,6]]);
  assert.equal(core.detectCompass(enabled).kind,'unknown','enable setting does not prove hardware is present');
  assert.equal(core.detectCompass(enabled,{present:false,healthy:false,lastSeen:now},now).kind,'absent');
- assert.equal(core.detectCompass(enabled,{present:true,healthy:false,lastSeen:now},now).kind,'enabled');
+ assert.equal(core.detectCompass(enabled,{present:true,healthy:false,lastSeen:now},now).kind,'unhealthy','a configured but unhealthy compass must not be claimed fully connected');
  assert.equal(core.detectCompass(enabled,{present:true,healthy:true,lastSeen:now-6000},now).kind,'unknown','stale SYS_STATUS cannot certify presence');
  assert.equal(core.detectCompass(params([['COMPASS_USE',0,6],['COMPASS_USE2',0,6]]),{present:true,lastSeen:now},now).kind,'disabled');
  assert.equal(core.detectCompass(params([])).kind,'unknown');
