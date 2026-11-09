@@ -74,7 +74,7 @@
     if(id===0 && v.byteLength>=9) return {type:'heartbeat',sysid:frame.sysid,compid:frame.compid,mode:v.getUint32(0,true),vehicleType:v.getUint8(4),autopilot:v.getUint8(5),baseMode:v.getUint8(6),systemStatus:v.getUint8(7),armed:!!(v.getUint8(6)&128)};
     if(id===30 && v.byteLength>=28) return {type:'attitude',roll:v.getFloat32(4,true),pitch:v.getFloat32(8,true),yaw:v.getFloat32(12,true)};
     if(id===74 && v.byteLength>=20) return {type:'vfr',airspeed:v.getFloat32(0,true),groundspeed:v.getFloat32(4,true),altitude:v.getFloat32(8,true),climb:v.getFloat32(12,true),heading:v.getInt16(16,true),throttle:v.getUint16(18,true)};
-    if(id===1 && v.byteLength>=19) return {type:'sys',voltage:v.getUint16(14,true),remaining:v.getInt8(18)};
+    if(id===1 && v.byteLength>=19) return {type:'sys',sensorsPresent:v.getUint32(0,true),sensorsEnabled:v.getUint32(4,true),sensorsHealthy:v.getUint32(8,true),voltage:v.getUint16(14,true),remaining:v.getInt8(18)};
     if(id===22 && v.byteLength>=25) return {type:'param',value:v.getFloat32(0,true),count:v.getUint16(4,true),index:v.getUint16(6,true),name:ascii16(frame.payload.slice(8,24)),paramType:v.getUint8(24)};
     // MAVLink 2 trims trailing zero bytes. COMMAND_LONG sent to target 0/0 with confirmation 0
     // is only 30 bytes, not the nominal 33. The command and 7 params are complete at 30.
