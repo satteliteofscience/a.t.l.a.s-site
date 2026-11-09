@@ -296,3 +296,66 @@
 .cc-event-fc[data-severity="7"]{border-left-color:#64775c;color:#99a88c}
 .cc-event-fc[data-severity="0"] .cc-event-tag,.cc-event-fc[data-severity="1"] .cc-event-tag,.cc-event-fc[data-severity="2"] .cc-event-tag,.cc-event-fc[data-severity="3"] .cc-event-tag{color:#e8ac98;border-color:#9b5a47}
 .cc-event-fc[data-severity="4"] .cc-event-tag{color:#e4c37e;border-color:#897246}
+
+
+/* Firmware archive: deliberate two-level PIN download actions.
+   This overrides the browser's native grey button style without touching USB/DFU logic. */
+.cc-release-item .cc-release-download{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:9px;
+  width:100%;
+  min-width:0;
+  min-height:92px;
+  padding:15px 17px;
+  margin-top:5px;
+  border:1px solid #9e8a4f;
+  border-radius:7px;
+  background:linear-gradient(145deg,#2f3b22 0%,#202e1b 48%,#172415 100%);
+  box-shadow:inset 3px 0 0 #d6bc62,inset 0 1px 0 #f0df8e17,0 6px 16px #050b0666;
+  color:#f7e8ad;
+  cursor:pointer;
+  text-align:left;
+  font:inherit;
+  transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.cc-release-item .cc-release-download-title{
+  display:block;
+  max-width:100%;
+  color:#f3e5ad;
+  font:700 12px/1.55 'IBM Plex Mono',monospace;
+  overflow-wrap:anywhere;
+}
+.cc-release-item .cc-release-download-action{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:#e6cb75;
+  font:700 10px/1.5 'IBM Plex Mono',monospace;
+  letter-spacing:.08em;
+}
+.cc-release-item .cc-release-download:hover:not(:disabled){
+  border-color:#e5cb74;
+  background:linear-gradient(145deg,#3a492a 0%,#293b22 48%,#1b301c 100%);
+  box-shadow:inset 3px 0 0 #f1d77a,inset 0 1px 0 #f0df8e2e,0 0 18px #ccac4b25,0 11px 24px #050b0680;
+  transform:translateY(-2px);
+}
+.cc-release-item .cc-release-download:focus-visible{
+  outline:2px solid #f4d97e;
+  outline-offset:3px;
+}
+.cc-release-item .cc-release-download:active:not(:disabled){
+  transform:translateY(0);
+  box-shadow:inset 3px 0 0 #d6bc62,inset 0 2px 7px #02070288,0 3px 8px #050b064d;
+}
+.cc-release-item .cc-release-download:disabled{
+  cursor:wait;
+  opacity:.58;
+  box-shadow:inset 3px 0 0 #867746;
+}
+@media(prefers-reduced-motion:reduce){
+  .cc-release-item .cc-release-download{transition:none}
+  .cc-release-item .cc-release-download:hover:not(:disabled){transform:none}
+}

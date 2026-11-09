@@ -765,7 +765,15 @@ function renderReleases(){
   info.textContent=downloads.length?`${downloads.length} ${tr('releases')}`:tr('notavailable');box.append(title,info);
   for(const d of downloads){
    const btn=document.createElement('button');
-   btn.className='cc-release-download';btn.type='button';btn.textContent=(d.label||d.filename||'Firmware')+' · PIN ↗';
+   btn.className='cc-release-download';btn.type='button';
+   const releaseName=document.createElement('span');
+   releaseName.className='cc-release-download-title';
+   releaseName.textContent=d.label||d.filename||'Firmware';
+   const actionLabel=document.createElement('span');
+   actionLabel.className='cc-release-download-action';
+   const actionText={ru:'СКАЧАТЬ',uk:'ЗАВАНТАЖИТИ',en:'DOWNLOAD'};
+   actionLabel.textContent='PIN · '+(actionText[lang]||actionText.ru)+' ↗';
+   btn.append(releaseName,actionLabel);
    btn.addEventListener('click',async()=>{
     btn.disabled=true;
     try{await window.AtlasFirmwareAccess.download(d);}

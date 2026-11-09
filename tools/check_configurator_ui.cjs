@@ -29,4 +29,16 @@ for(const language of [
  'After a successful flash, wait for the flight controller to finish booting'
 ])assert.ok(dfu.includes(language),'missing localized post-flash guidance: '+language);
 assert.match(dfu,/Matek H743-WING V3[^']*third connection/,'English note must qualify the behavior as board-specific');
+const firmwareUi=read('configurator.js');
+const firmwareCss=read('configurator.css');
+assert.match(firmwareUi,/className='cc-release-download-title'/,'firmware download must have a readable release title');
+assert.match(firmwareUi,/className='cc-release-download-action'/,'firmware download must display a separate PIN action');
+assert.match(firmwareUi,/actionText=\{ru:'СКАЧАТЬ',uk:'ЗАВАНТАЖИТИ',en:'DOWNLOAD'\}/,'PIN action must be translated into RU, UA and EN');
+assert.match(firmwareUi,/AtlasFirmwareAccess\.download\(d\)/,'protected firmware download must still use the PIN gateway');
+for(const selector of [
+ '.cc-release-item .cc-release-download{',
+ '.cc-release-item .cc-release-download:hover:not(:disabled){',
+ '.cc-release-item .cc-release-download:focus-visible{',
+ '.cc-release-item .cc-release-download:disabled{'
+])assert.ok(firmwareCss.includes(selector),'firmware download styling missing: '+selector);
 console.log('PASS: Apply Immediately flushes pending draft; support anchor offsets; RU/UA/EN post-flash USB guidance.');
