@@ -32,7 +32,7 @@
 <body class="console-body">
   <div class="cc-backdrop" aria-hidden="true"></div>
   <header class="cc-topbar">
-    <a class="cc-brand" href="index.html" title="A.T.L.A.S. Home"><img src="assets/mark.svg" alt=""><span><strong>A.T.L.A.S.</strong><small>CONTROL CENTER <b>0.7.1 / PUBLIC RELEASE</b></small></span></a>
+    <a class="cc-brand" href="index.html" title="A.T.L.A.S. Home"><img src="assets/mark.svg" alt=""><span><strong>A.T.L.A.S.</strong><small>CONTROL CENTER <b>RELEASE 1.0</b></small></span></a>
     <nav class="cc-toplinks" aria-label="Навигация"><a href="index.html" data-t="home">← На сайт</a><span class="cc-top-divider">/</span><span data-t="workspace">Конфигуратор</span></nav>
     <div class="cc-righthead"><span class="cc-connection-pill" id="connectionPill"><i></i><span id="connectionLabel" data-t="offline">НЕ ПОДКЛЮЧЕН</span></span>
       <div class="cc-language" aria-label="Language"><button data-language="uk">UA</button><button data-language="en">ENG</button><button data-language="ru">RU</button></div>
@@ -53,6 +53,7 @@
         <button class="cc-nav" type="button" data-tab="servos"><span class="cc-icon">↔</span><span data-t="servoTitle">Выходы сервоприводов</span><i>06</i></button>
         <button class="cc-nav" type="button" data-tab="battery"><span class="cc-icon">▣</span><span data-t="batteryTitle">Монитор батареи</span><i>07</i></button>
         <button class="cc-nav" type="button" data-tab="compass"><span class="cc-icon">⌖</span><span data-t="compassTitle">Компас</span><i>08</i></button>
+        <button class="cc-nav" type="button" data-tab="temperature"><span class="cc-icon">◫</span><span data-tc-nav>Температурная калибровка INS</span><i>17</i></button>
         <button class="cc-nav" type="button" data-tab="modes"><span class="cc-icon">▥</span><span data-x="modes">Flight Modes</span><i>12</i></button>
         <button class="cc-nav" type="button" data-tab="radio"><span class="cc-icon">⌁</span><span data-x="radio">Radio Calibration</span><i>13</i></button>
         <button class="cc-nav" type="button" data-tab="joystick"><span class="cc-icon">✣</span><span data-x="joystick">Joystick</span><i>14</i></button>
@@ -244,6 +245,18 @@
         <p class="cc-under-panel" data-cal-t="compassNote">Не включай компас принудительно только ради этого раздела. При отключённом датчике калибровка может быть отклонена автопилотом.</p>
       </section>
 
+      <!-- INS IMU TEMPERATURE CALIBRATION -->
+      <section class="cc-tab" data-panel="temperature" aria-labelledby="temperatureTitle">
+        <div class="cc-section-title">
+          <div><p class="cc-overline">17 / INS TEMP CALIBRATION</p><h1 id="temperatureTitle" data-tc-head>Температурная калибровка INS</h1></div>
+          <span class="cc-view-status caution" id="temperatureBadge">MAVLINK / DISARMED</span>
+        </div>
+        <p class="cc-section-desc" data-tc-description>Автоматическое считывание INS_TCAL после подключения контроллера. Настройка термокомпенсации каждого IMU и просмотр сохранённых коэффициентов.</p>
+        <div class="cc-card tc-workspace" id="temperatureWorkspace">
+          <p>INS_TCAL · MAVLink</p>
+        </div>
+      </section>
+
       <!-- OSD LAYOUT / MISSION PLANNER-STYLE EDITOR -->
       <section class="cc-tab" data-panel="osd" aria-labelledby="osdTitle">
         <div class="cc-section-title"><div><p class="cc-overline">09 / ON-SCREEN DISPLAY</p><h1 id="osdTitle" data-osd-t="osdTitle">Настройка полётного OSD</h1></div><span class="cc-view-status" id="osdConnectionStatus">NO DATA</span></div>
@@ -421,5 +434,5 @@
       <div class="cc-modal-actions"><button type="button" class="cc-button ghost" id="servoEditorCancel">Отмена</button><button class="cc-button primary" id="servoEditorSave" type="submit">Записать изменения</button></div>
     </form>
   </dialog>
-  <script src="mavlink.js" defer></script><script src="param-tree.js" defer></script><script src="firmware-access.js" defer></script><script src="configurator.js" defer></script><script src="servo-config-core.js" defer></script><script src="battery-cal-core.js" defer></script><script src="calibration.js" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script><script src="quick-setup-core.js" defer></script><script src="quick-setup.js" defer></script>
+  <script src="mavlink.js" defer></script><script src="param-tree.js" defer></script><script src="firmware-access.js" defer></script><script src="configurator.js" defer></script><script src="servo-config-core.js" defer></script><script src="battery-cal-core.js" defer></script><script src="calibration.js" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script><script src="quick-setup-core.js" defer></script><script src="tempcal-core.js" defer></script><script src="tempcal-ui.js" defer></script><script src="quick-setup.js" defer></script>
 </body></html>

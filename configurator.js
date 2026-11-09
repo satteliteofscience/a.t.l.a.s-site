@@ -68,7 +68,7 @@ function setLang(next){if(!words[next])return;lang=next;try{localStorage.setItem
  updateConnectionUI();renderBasic();renderParams();renderBoards();renderReleases();updateTelemetryUI();renderImportDiff();renderCategoryNav();showProgress();window.dispatchEvent(new Event('atlas:language'));
 }
 function navigate(tab){
- if(!['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))return;
+ if(!['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))return;
  const previous=state.selectedTab;
  state.selectedTab=tab;
  document.body.classList.toggle('cc-quick-setup',tab==='quicksetup');
@@ -79,7 +79,7 @@ function navigate(tab){
  window.location.hash=tab;
  // A new visit to Parameter List initiates a fresh live read, as in Mission Planner.
  // Do not reset the list while another parameter transfer or batch write is running.
- if(((tab==='params'&&previous!=='params')||((['servos','osd','tuning','modes','radio','gimbal','parachute'].includes(tab))&&state.params.size===0))&&state.connected&&state.sysid!==null&&!state.paramLoading&&!state.bulk?.running&&!state.servoConfigBusy){
+ if(((tab==='params'&&previous!=='params')||((['servos','osd','tuning','modes','radio','gimbal','parachute','temperature'].includes(tab))&&state.params.size===0))&&state.connected&&state.sysid!==null&&!state.paramLoading&&!state.bulk?.running&&!state.servoConfigBusy){
    startParamLoad();
  }
 }
@@ -691,12 +691,12 @@ function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEve
  $('apjDropzone').addEventListener('dragover',ev=>{ev.preventDefault();$('apjDropzone').classList.add('dragging');});$('apjDropzone').addEventListener('dragleave',()=>$('apjDropzone').classList.remove('dragging'));$('apjDropzone').addEventListener('drop',ev=>{ev.preventDefault();$('apjDropzone').classList.remove('dragging');parseApj(ev.dataTransfer?.files?.[0]);});
  document.querySelectorAll('[data-group]').forEach(btn=>btn.addEventListener('click',()=>{state.group=btn.dataset.group;document.querySelectorAll('[data-group]').forEach(n=>n.classList.toggle('active',n===btn));renderBasic();}));
  $('closeEdit').addEventListener('click',()=>$('editDialog').close());$('cancelEdit').addEventListener('click',()=>$('editDialog').close());$('editForm').addEventListener('submit',saveEdit);
- window.addEventListener('hashchange',()=>{const tab=location.hash.replace('#','');if(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))navigate(tab);});
+ window.addEventListener('hashchange',()=>{const tab=location.hash.replace('#','');if(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))navigate(tab);});
  const leavePage=()=>{cleanupForNavigation().catch(()=>{});};
  window.addEventListener('pagehide',leavePage,{capture:true});
  window.addEventListener('beforeunload',leavePage,{capture:true});
  document.addEventListener('visibilitychange',scheduleHorizon);
  window.addEventListener('pageshow',ev=>{if(ev.persisted){state.pageLeaving=false;state.hudLoopActive=true;state.lastHeartbeat=0;updateConnectionUI();scheduleHorizon();}});
 }
-wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Release 1.0');state.hudLoopActive=true;scheduleHorizon();
+wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Release 1.0');state.hudLoopActive=true;scheduleHorizon();
 })();

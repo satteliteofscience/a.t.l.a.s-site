@@ -7,7 +7,7 @@ const core=read('quick-setup-core.js'),wizard=read('quick-setup.js'),cal=read('c
 const vm=require('node:vm');
 assert.match(html,/data-tab="quicksetup"/,'Quick Setup navigation entry missing');
 assert.match(html,/data-panel="quicksetup"/,'Quick Setup panel missing');
-assert.match(html,/<script src="dfu-ui\.js" defer><\/script><script src="quick-setup-core\.js" defer><\/script><script src="quick-setup\.js" defer>/,'Quick Setup scripts must load after DFU and calibration modules');
+assert.match(html,/<script src="dfu-ui\.js" defer><\/script><script src="quick-setup-core\.js" defer><\/script><script src="tempcal-core\.js" defer><\/script><script src="tempcal-ui\.js" defer><\/script><script src="quick-setup\.js" defer>/,'Quick Setup must load after INS temperature calibration module and DFU');
 assert.match(cfg,/quicksetup/,'configurator navigation must allow Quick Setup');
 assert.match(cfg,/paramComplete:/,'controller API must expose complete parameter read state');
 assert.match(cfg,/writeAdvancedParams:async \(updates,onProgress=\(\)=>\{\},shouldCancel=\(\)=>false,options=\{\}\)/,'bulk parameter writer must support cancellation between acknowledged writes');
@@ -25,7 +25,7 @@ assert.match(wizard,/compassRestartControls\(box\)/,'compass stage must offer in
 assert.match(wizard,/qs\.compassRebootManual\|\|!safeLink\(state\(\)\)/,'reread must require user reboot confirmation and a fresh DISARMED USB link');
 assert.match(wizard,/if\(qs\.step===8&&qs\.compassNeedReboot&&!qs\.compassRebootVerified\)/,'compass post-reboot verification is required for both automatic and manual success');
 assert.match(wizard,/function verifyFinalSetup\(/,'final stage must initiate a fresh full parameter read');
-assert.doesNotMatch(wizard,/qs\.finalChecks\.every\(Boolean\)/,'legacy final checklist reference must not crash the 10th stage');
+assert.doesNotMatch(wizard,/qs\.finalChecks\.every\(Boolean\)/,'legacy final checklist reference must not crash the final stage');
 assert.match(wizard,/waitForParams\(55000\)/,'final verification must be bounded by a real timeout');
 assert.match(wizard,/if\(!state\(\)\.paramLoading&&!api\.requestParameters\(true\)\)/,'final verifier must join an auto-started parameter transfer after reconnect');
 assert.match(wizard,/qsFinalProgress/,'final stage must show parameter read progress');
@@ -37,7 +37,7 @@ assert.match(cal,/status:'progress',verified:false,pct:mag\.pct/,'live progress 
 assert.match(wizard,/compassRebootVerified=false/,'manual sound confirmation must require reboot verification');
 assert.match(wizard,/if\(!allPrior\)throw Error/,'final must check previously completed steps');
 assert.match(wizard,/if\(!safeLink\(state\(\)\)\)throw Error/,'final must require an active disarmed USB link');
-assert.match(wizard,/if\(token!==qs\.finalToken\|\|qs\.step!==9\)return/,'final completion must discard stale reads after navigation');
+assert.match(wizard,/if\(token!==qs\.finalToken\|\|qs\.step!==10\)return/,'final completion must discard stale reads after navigation');
 assert.match(wizard,/if\(qs\.step===8&&qs\.compassNeedReboot&&!qs\.compassRebootVerified\)/,'Next must stay disabled before compass restart verification');
 assert.match(wizard,/if\(!result\.ok\|\|!result\.complete\|\|!safeLink\(result\.state\)\)/,'final success requires complete live parameter read');
 assert.match(wizard,/api\.navigate\('dashboard'\)/,'final stage should return to the horizon dashboard after successful verification');
@@ -96,7 +96,13 @@ assert.ok(wizard.includes("function invalidateFrom(step)"),'profile changes must
 assert.ok(wizard.includes("invalidateFrom(3);qs.compatConfirmed=false;qs.keepConfirmed=false;qs.preview=null;"),'a new profile must invalidate stale imported values');
 assert.ok(wizard.includes("qs.rebootUserConfirmed&&qs.rebootSawDisconnect"),'reboot must require user confirmation and verified reconnection');
 assert.ok(wizard.includes("checkbox(box,t('rebootAck')"),'manual power cycle confirmation must be visible');
-assert.match(wizard,/delete qs\.completed\[9\];persist\(\);render\(\)/,'final completion must be revoked on failed recheck');
+assert.match(wizard,/delete qs\.completed\[10\];persist\(\);render\(\)/,'final completion must be revoked on failed recheck');
+assert.match(wizard,/function renderTemperature\(box\)/,'INS calibration must be an independent wizard stage');
+assert.match(wizard,/else if\(qs\.step===9\)renderTemperature\(box\)/,'INS temperature stage must be between compass and final');
+assert.match(wizard,/Array\.from\(\{length:10\}/,'final verification must require ten prior stages');
+assert.match(wizard,/if\(qs\.step===10\)return false/,'final stage 11 must not offer Next');
+assert.match(wizard,/qs\.step===9.*?status\?\.busy/,'wizard must not advance during INS parameter writes or reads');
+assert.match(wizard,/window\.AtlasTempCal\.mount\(section,\{wizard:true\}\)/,'shared INS editor must be embedded in the wizard');
 const finalStage=wizard.slice(wizard.indexOf('function renderFinal(box){'),wizard.indexOf('function render(){'));
 assert.doesNotMatch(finalStage,/finalChecks\.every|t\('finalChecks'\)/,'final stage should be compact instead of a second lengthy checklist');
 assert.match(css,/@media\(max-width:560px\)\{\.qs-step-list/,'mobile wizard layout missing');
