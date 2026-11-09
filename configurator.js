@@ -37,7 +37,7 @@ function parameterCategory(name){
 
 let lang='ru';try{let saved=localStorage.getItem('atlas-language');if(words[saved])lang=saved;}catch{}
 const tr=(k)=>words[lang]?.[k]||words.ru[k]||k;
-const state={demo:false,connected:false,connecting:false,transport:null,netSocket:null,bridgeReady:false,lastVoltageTelemetry:0,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,heartbeatStale:false,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,readTwoBusy:false,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
+const state={demo:false,connected:false,connecting:false,transport:null,netSocket:null,bridgeReady:false,lastVoltageTelemetry:0,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,heartbeatStale:false,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,ftpClient:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,readTwoBusy:false,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
 window.AtlasLanguage=()=>lang;
 window.AtlasSelectedBoard=()=>state.selectedBoard;
 const settingDefs=[
@@ -119,6 +119,7 @@ function showProgress(){
  $('paramCount').textContent=`${known} / ${total??'?'}`;
  const note=$('paramLoadNote');if(!note)return;$('refreshParamsBtn').textContent=x?.phase==='partial'?tr('resumeLoad'):tr('load');
  const status=x?.phase||'idle';
+ if(status==='ftp'){const kb=((x.bytes||0)/1024).toFixed(1);note.textContent=`MAVFTP · ${kb} kB · @PARAM/param.pck`; $('paramProgressLabel').textContent=`MAVFTP · ${kb} kB`; $('paramCount').textContent='MAVFTP';return;}
  note.classList.toggle('is-warning',status==='partial'||status==='noReply');
  if(!x){note.textContent=pl('idle');return;}
  if(status==='complete'){note.textContent=`✓ ${pl('done')} · ${known}/${total}`;return;}
@@ -192,7 +193,7 @@ function enterDemo(){if(state.connected||state.connecting){toast(tr('needlink'),
  updateConnectionUI();renderParams();renderBasic();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));}
 async function cleanupForNavigation(){
  state.pageLeaving=true;state.hudLoopActive=false;if(state.hudRaf){cancelAnimationFrame(state.hudRaf);state.hudRaf=0;}
- state.bulkCancel=true;stopParamRepair();state.paramTransfer=null;state.paramLoading=false;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;
+ state.bulkCancel=true;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.paramTransfer=null;state.paramLoading=false;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;
  const reader=state.reader;state.reader=null;
  try{if(reader)await reader.cancel();}catch{}
  const port=state.port;state.port=null;
@@ -201,7 +202,7 @@ async function cleanupForNavigation(){
  state.connected=false;state.connecting=false;state.demo=false;state.sysid=null;state.armed=null;
 }
 
-async function disconnect(){state.bulkCancel=true;stopParamRepair();state.paramTransfer=null;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;const reader=state.reader;state.reader=null;
+async function disconnect(){state.bulkCancel=true;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.paramTransfer=null;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;const reader=state.reader;state.reader=null;
  try{if(reader)await reader.cancel();}catch{}
  try{if(reader)reader.releaseLock();}catch{}
  const port=state.port;state.port=null;try{if(port)await port.close();}catch(e){console.warn(e);}
@@ -240,6 +241,7 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
  else if(data.type==='vfr'&&message.sysid===state.sysid){state.lastVfr=Date.now();state.telemetry.airspeed=Number.isFinite(data.airspeed)&&data.airspeed>=0?data.airspeed*3.6:null;state.telemetry.altitude=data.altitude;state.telemetry.throttle=data.throttle;}
  else if(data.type==='sys'){state.telemetry.voltage=data.voltage===65535?null:data.voltage/1000;if(data.voltage!==65535&&message.sysid===state.sysid)state.lastVoltageTelemetry=Date.now();if(message.sysid===state.sysid&&message.compid===state.compid){const magBit=4;state.compassStatus={present:!!(data.sensorsPresent&magBit),enabled:!!(data.sensorsEnabled&magBit),healthy:!!(data.sensorsHealthy&magBit),lastSeen:Date.now()};}}
  else if(data.type==='text'){if(data.text && data.severity<=5)toast(`FC: ${data.text}`,data.severity<=3);}
+ else if(data.type==='mavftp'){state.ftpClient?.handle(data.data);}
  else if(data.type==='param'){
   if(!data.name||message.sysid!==state.sysid||message.compid!==state.compid)return;
   state.params.set(data.name,{value:data.value,type:data.paramType,index:data.index});
@@ -272,7 +274,7 @@ async function connect(){if(state.connecting)return;if(state.connected){await di
  try{
   const port=await navigator.serial.requestPort();
   await port.open({baudRate:Number($('baud').value),bufferSize:8192});
-  state.port=port;state.transport='usb';state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
+  state.port=port;state.transport='usb';state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
   updateConnectionUI();log('USB CDC open · '+$('baud').value+' bps');
   const parser=new M.Parser(handleMessage);state.rxParser=parser;
   state.rxPositions=0;state.rxCommands=0;state.rxAcks=0;state.rxTexts=0;
@@ -373,7 +375,7 @@ async function connectBridge(){
     }
     if(message.type!=='ready')return;
     clearTimeout(handshakeTimer);state.bridgeReady=true;state.transport='bridge';state.connected=true;state.connecting=false;state.rxActive=true;state.seq=0;
-    stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;
+    stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;
     state.armed=null;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVoltageTelemetry=0;
     state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
     const parser=new M.Parser(handleMessage);state.rxParser=parser;
@@ -400,19 +402,56 @@ function heartbeatTick(){
   transmit(66,M.requestDataStream(state.sysid,state.compid,11,3)).catch(err=>log('VFR_HUD fallback: '+err.message));
  }
 }
+function startLegacyParamStream(transfer){
+ if(!state.connected||state.paramTransfer!==transfer||!state.paramLoading)return;
+ state.ftpClient=null;stopParamRepair();
+ const time=Date.now();
+ transfer.phase='receiving';transfer.seen.clear();transfer.attempts.clear();transfer.lastRequested.clear();
+ transfer.started=time;transfer.lastNew=time;transfer.lastListRequest=time;transfer.listRetries=0;transfer.requests=0;transfer.repairBusy=false;
+ state.params.clear();state.paramCount=null;state.paramRepairTimer=setInterval(recoverMissingParams,1400);
+ showProgress();
+ transmit(21,M.paramList(state.sysid,state.compid)).then(()=>toast(tr('refreshdone'))).catch(err=>{
+  if(state.paramTransfer!==transfer)return;
+  toast(err.message,true);state.paramLoading=false;stopParamRepair();transfer.phase='partial';showProgress();
+ });
+}
+function startFastParamStream(transfer){
+ if(!window.AtlasMavFtpParams||state.transport!=='bridge'||state.compid!==1)return false;
+ transfer.phase='ftp';transfer.bytes=0;showProgress();
+ const client=new window.AtlasMavFtpParams.Client({
+  send:packet=>transmit(110,M.ftpFrame(state.sysid,state.compid,packet)),
+  onProgress:bytes=>{
+   if(state.paramTransfer!==transfer||!state.paramLoading)return;
+   transfer.bytes=bytes;showProgress();
+  }
+ });
+ state.ftpClient=client;
+ void client.download().then(rows=>{
+  if(state.ftpClient!==client||state.paramTransfer!==transfer||!state.paramLoading||!state.connected)return;
+  // Commit only fully decoded/validated sets. No partial list is presented as complete.
+  state.params=new Map(rows.map(row=>[row.name,{value:row.value,type:row.type,index:row.index}]));
+  state.paramCount=rows.length;transfer.seen=new Set(rows.map(row=>row.index));
+  transfer.lastNew=Date.now();state.ftpClient=null;
+  finishParamTransfer(true);
+ }).catch(error=>{
+  if(state.ftpClient!==client||state.paramTransfer!==transfer||!state.paramLoading||!state.connected)return;
+  state.ftpClient=null;
+  toast('MAVFTP unavailable: '+error.message+' · PARAM_REQUEST_LIST fallback',true);
+  startLegacyParamStream(transfer);
+ });
+ return true;
+}
 function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBusy){toast(tr('buttonBusy'),true);return false;}if(state.paramLoading)return false;if(!state.connected||state.sysid===null){toast(tr('needlink'),true);return false;}
- // Preserve already received parameters if the previous transfer was incomplete.
  const old=state.paramTransfer;
  if(!fresh&&old?.phase==='partial'&&state.paramCount>0&&old.seen.size<state.paramCount){
   stopParamRepair();old.attempts.clear();old.lastRequested.clear();old.requests=0;old.lastNew=Date.now()-5000;old.started=Date.now();old.phase='repair';old.repairBusy=false;state.paramLoading=true;
   state.paramRepairTimer=setInterval(recoverMissingParams,1400);recoverMissingParams();showProgress();toast(tr('resumeLoad')+` · ${state.paramCount-old.seen.size}`);return true;
  }
- stopParamRepair();state.paramLoading=true;state.params.clear();state.paramCount=null;state.tableLimit=150;
- const time=Date.now();state.paramTransfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
- renderParams();renderBasic();showProgress();
- // Retry every missing index; a one-shot PARAM_REQUEST_LIST is not reliable.
- state.paramRepairTimer=setInterval(recoverMissingParams,1400);
- transmit(21,M.paramList(state.sysid,state.compid)).then(()=>toast(tr('refreshdone'))).catch(err=>{toast(err.message,true);state.paramLoading=false;stopParamRepair();state.paramTransfer.phase='partial';showProgress();});
+ state.ftpClient?.cancel();state.ftpClient=null;stopParamRepair();
+ state.paramLoading=true;state.params.clear();state.paramCount=null;state.tableLimit=150;
+ const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
+ state.paramTransfer=transfer;renderParams();renderBasic();showProgress();
+ if(!startFastParamStream(transfer))startLegacyParamStream(transfer);
  return true;
 }
 function canWrite(){return state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading&&!state.readTwoBusy;}
