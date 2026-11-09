@@ -626,7 +626,7 @@ window.addEventListener('atlas:calibration',event=>{
   else if(d.kind==='level'){qs.levelError='';complete(5,'done');setGlobal(t('levelDone'));}
   else{qs.compassAwaitingSave=false;qs.compassError='';qs.compassNeedReboot=true;qs.compassRebootVerified=false;qs.compassRebootManual=false;qs.compassRebootBaseline=state().lastHeartbeat;qs.compassSawDisconnect=false;qs.compassRebootMessage='';complete(8,'done');setGlobal(t('compassDone'));}
  }else if(d.kind==='compass'&&d.status==='awaiting-save'){qs.compassAwaitingSave=true;render();}
- else if(d.kind==='compass'&&d.status==='retrying'){qs.compassError='';qs.compassAwaitingSave=false;setGlobal(t('compassRetryHint'));render();}
+ else if(d.kind==='compass'&&d.status==='retrying'){qs.compassError='';qs.compassAwaitingSave=false;setGlobal(t('compassRetryHint'));}
  else if(d.status==='failed'||d.status==='cancelled'){
   qs.awaitingCalibration=null;
   if(d.kind==='six'){qs.accelError=t('accelFail');qs.completed[4]='failed';}
