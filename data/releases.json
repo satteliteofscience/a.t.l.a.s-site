@@ -8,18 +8,18 @@
   },
   "boards": [
     {
-      "id": "cube-orange",
-      "name": "Orange Cube",
-      "family": "CubePilot / Cube Orange",
-      "description": "Контроллер Orange Cube. Совместимость сборки, аппаратную ревизию и target необходимо проверить перед публикацией.",
+      "id": "cube-orange-plus",
+      "name": "Cube Orange Plus",
+      "family": "CubePilot / Cube Orange Plus",
+      "description": "Cube Orange Plus (STM32H757): отдельная сборка A.T.L.A.S. подготовлена к публикации. Загрузка появится после размещения в закрытом хранилище и проверки; прошивка на реальном контроллере пока не подтверждена.",
       "status": "planned",
-      "target": "Уточняется для релиза",
+      "target": "CubeOrangePlus — STM32H757",
       "version": "4.7.2",
       "downloads": [],
-      "description_uk": "Контролер Orange Cube. Сумісність збірки, апаратну ревізію та target потрібно перевірити перед публікацією.",
-      "description_en": "Orange Cube controller. Build compatibility, hardware revision, and target must be verified before publication.",
-      "target_uk": "Уточнюється для релізу",
-      "target_en": "Pending for release"
+      "description_uk": "Cube Orange Plus (STM32H757): окрему збірку A.T.L.A.S. підготовлено до публікації. Завантаження з’явиться після розміщення у приватному сховищі й перевірки; прошивання на реальному контролері поки не підтверджено.",
+      "description_en": "Cube Orange Plus (STM32H757): a separate A.T.L.A.S. build is prepared for publication. Download will be enabled only after private storage upload and verification; hardware flashing has not yet been confirmed.",
+      "target_uk": "CubeOrangePlus — STM32H757",
+      "target_en": "CubeOrangePlus — STM32H757"
     },
     {
       "id": "matek-h743-wing-v3",
