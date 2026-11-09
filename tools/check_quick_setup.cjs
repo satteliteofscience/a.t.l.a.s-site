@@ -13,13 +13,16 @@ function escParams({mask=0,otype=0,channels=[3],can=false}={}){
  const result=core.parseParamText('# A.T.L.A.S. profile\nAIRSPEED_MIN 18\nTHR_MAX 90\n',live,{AIRSPEED_MIN:{Range:{low:'5',high:'60'}},THR_MAX:{Range:{low:'0',high:'100'}}});
  assert.equal(result.valid,true);assert.deepEqual(result.changes,[['AIRSPEED_MIN',18],['THR_MAX',90]]);assert.equal(result.errors.length,0);
 })();
-(function testDuplicateAndUnknownRejected(){
+(function testDuplicateAndUnknownAreSkipped(){
  const result=core.parseParamText('AIRSPEED_MIN 18\nAIRSPEED_MIN 19\nNOT_A_PARAM 1\n',params([['AIRSPEED_MIN',15,9]]),{});
- assert.equal(result.valid,false);assert.ok(result.errors.some(x=>x.reason==='duplicate'));assert.ok(result.errors.some(x=>x.reason==='unknown'));
+ assert.equal(result.valid,true);
+ assert.deepEqual(result.changes,[['AIRSPEED_MIN',18]]);
+ assert.ok(result.skipped.some(x=>x.reason==='duplicate'));
+ assert.ok(result.skipped.some(x=>x.reason==='unknown'));
 })();
 (function testRangeAndIntegerValidation(){
  const result=core.parseParamText('THR_MAX 100.5\nAIRSPEED_MIN 999\n',params([['THR_MAX',100,6],['AIRSPEED_MIN',15,9]]),{AIRSPEED_MIN:{Range:{low:'5',high:'60'}}});
- assert.equal(result.valid,false);assert.ok(result.errors.some(x=>x.reason==='integer'));assert.ok(result.errors.some(x=>x.reason==='range'));
+ assert.equal(result.valid,false);assert.ok(result.skipped.some(x=>x.reason==='integer'));assert.ok(result.skipped.some(x=>x.reason==='range'));
 })();
 (function testDeclaredBoardHeaderMustMatch(){
  const live=params([['AIRSPEED_MIN',15,9]]);
@@ -34,7 +37,7 @@ function escParams({mask=0,otype=0,channels=[3],can=false}={}){
  const profile=core.parseParamText('FORMAT_VERSION 999\nSTAT_BOOTCNT 0\nTHR_MAX 95\n',live,{});
  assert.equal(profile.valid,true);
  assert.deepEqual(profile.changes,[['THR_MAX',95]]);
- assert.ok(profile.warnings.filter(x=>x.reason==='protected-skipped').length===2);
+ assert.ok(profile.skipped.filter(x=>x.reason==='protected-skipped').length===2);
 })();
 (function testUnsafeParamValuesAreRejected(){
  const live=params([['THR_MAX',100,6],['SERVO3_MIN',1000,3],['SERVO3_TRIM',1500,4],['BAT_AMP_PERVLT',2.5,9],['FLOAT64_EXPERIMENT',1,10]]);
@@ -45,6 +48,22 @@ function escParams({mask=0,otype=0,channels=[3],can=false}={}){
  const okay=core.parseParamText('THR_MAX 90 # inline comment\nBAT_AMP_PERVLT 1.25 ; supported comment\n',live,{});
  assert.equal(okay.valid,true);
  assert.equal(okay.changes.length,2);
+})();
+(function testPartialImportContinuesWithSkips(){
+ const live=params([['THR_MAX',100,6],['CAN_P1_BITRATE',1000000,6],['SERVO3_MIN',1000,3]]);
+ const file='THR_MAX 95\nBARO1_WCF_BCK 1\nCAN_P1_BITRATE 250000\nSERVO3_MIN 50000\n';
+ const result=core.parseParamText(file,live,{CAN_P1_BITRATE:{ReadOnly:true}});
+ assert.equal(result.valid,true);
+ assert.deepEqual(result.changes,[['THR_MAX',95]]);
+ assert.deepEqual(result.skipped.map(x=>x.reason),['unknown','readonly','type-range']);
+ assert.equal(result.metadataMissingCount,1);
+ assert.equal(result.errors.length,0);
+})();
+(function testMetadataRangeNoLongerSpamsWarnings(){
+ const live=params([['THR_MAX',100,6],['TRIM_ARSPD_CM',2200,6]]);
+ const result=core.parseParamText('THR_MAX 90\nTRIM_ARSPD_CM 2000\n',live,{});
+ assert.equal(result.valid,true);assert.equal(result.metadataMissingCount,2);
+ assert.equal(result.warnings.length,0);
 })();
 (function testEscClassification(){
  assert.equal(core.classifyEscProtocol(escParams({mask:1<<2,otype:6,channels:[3]}),'matek-h743-wing-v3').kind,'dshot');
