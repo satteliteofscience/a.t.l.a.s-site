@@ -54,6 +54,7 @@ async function releaseCompassUsb(ackReason){
  window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:'compass',status:'auto-disconnecting',verified:false,reason:ackReason}}));
  try{
   await api.connectUsb(); // connected -> WebSerial disconnect only; no power-cycle command
+  window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:'compass',status:'usb-released',verified:false}}));
   emit(tt('magUsbReleased'));status('compassStatus',tt('magUsbReleased'));
  }catch(e){
   status('compassStatus',tt('magUsbReleaseFailed')+' '+e.message);
@@ -350,7 +351,7 @@ async function cancelMag(){if(!safe()||!mag.running)return;try{await api.command
 function magProgress(d){if(!mag.running)return;if(mag.autoRelease)void releaseCompassUsb('MAG_CAL_PROGRESS');mag.offline=false;mag.lastUpdate=now();mag.reported.set(d.compassId,Math.min(100,d.pct));const counts=[...mag.reported.values()];mag.pct=counts.reduce((a,b)=>a+b,0)/counts.length;status('compassStatus',`${tt('compassRunning')} · #${d.compassId} · ${d.pct}%`);window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:'compass',status:'progress',verified:false,pct:mag.pct,live:true}}));renderCompass();}
 function magReport(d){
  if(!mag.running&&!mag.complete)return;
- if(mag.autoRelease)void releaseCompassUsb('MAG_CAL_REPORT');
+ // A MAG_CAL_REPORT may already be final; process it before any disconnection.
  mag.offline=false;mag.lastUpdate=now();
  const count=Math.max(1,Array.from({length:8},(_,i)=>(d.mask&(1<<i))?1:0).reduce((a,b)=>a+b,0));
  mag.results.set(d.compassId,{status:d.status,autosaved:d.autosaved});
