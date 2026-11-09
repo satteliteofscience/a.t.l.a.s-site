@@ -270,7 +270,16 @@ function draw(root){
 }
 function mount(parent,options={}){
  if(!parent)return;
- const root=e('div','tc-root');root.dataset.wizard=options.wizard?'1':'0';parent.append(root);roots.add(root);draw(root);return root;
+ // The Quick Setup stage can be revisited many times. Discard stale detached
+ // roots and reuse an existing mount instead of retaining old input handlers.
+ for(const old of roots)if(!old.isConnected)roots.delete(old);
+ const current=Array.from(parent.children).find(child=>child.classList.contains('tc-root'));
+ if(current){
+  current.dataset.wizard=options.wizard?'1':'0';
+  roots.add(current);draw(current);return current;
+ }
+ const root=e('div','tc-root');root.dataset.wizard=options.wizard?'1':'0';
+ parent.append(root);roots.add(root);draw(root);return root;
 }
 window.addEventListener('atlas:parameters',()=>{
  const s=getState(),sensorInfo=core.readSensors(s.params);
