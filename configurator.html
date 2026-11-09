@@ -79,20 +79,28 @@
           <label class="cc-baud-label" for="baud">BAUD <select id="baud"><option value="115200" selected>115200</option><option value="57600">57600</option><option value="921600">921600</option><option value="230400">230400</option></select></label>
           <button type="button" id="demoBtn" class="cc-button ghost"><span>◇</span> <span data-t="demo">Демо</span></button>
           <button type="button" id="connectBtn" class="cc-button primary"><span>⌁</span> <span id="connectBtnText" data-t="connect">Подключить USB</span></button>
-          <details class="cc-network-settings" id="networkOptions"><summary data-net-t="title">UDP / TCP через локальный мост</summary>
+          <details class="cc-network-settings" id="networkOptions"><summary data-net-t="title">TCP / UDP · подключение</summary>
+            <div class="cc-tcp-one-click">
+              <strong data-net-t="oneClickTitle">TCP 127.0.0.1:5760 · подключение в один клик</strong>
+              <p data-net-t="oneClickHelp">Скачай один файл для Windows и открой двойным щелчком. Он запустит локальный коннектор, откроет сайт и подключит TCP автоматически — без ручного ввода токена. На первом запуске может понадобиться загрузка проверенной портативной версии Node.js.</p>
+              <a class="cc-button primary" href="./tools/A.T.L.A.S.-TCP-Connector.cmd" download="A.T.L.A.S.-TCP-Connector.cmd" data-net-t="oneClickDownload">Скачать TCP Connector для Windows</a>
+              <p class="cc-network-warning" data-net-t="oneClickSafety">Нужно разрешить доступ к локальному устройству в браузере. Не закрывай окно коннектора во время работы. Если TCP-сервер допускает только одного клиента, отключи Mission Planner перед подключением.</p>
+            </div>
+            <details class="cc-network-advanced" id="networkAdvanced"><summary data-net-t="advanced">Ручные настройки UDP/TCP и других адресов</summary>
             <div class="cc-network-fields">
               <label><span data-net-t="mode">Режим соединения</span><select id="networkMode">
+                <option value="tcp-client" selected>TCP Client · 5760</option>
                 <option value="udp-listen">UDP Listen · 14550</option>
-                <option value="udp-target">UDP Target · 14550</option>
-                <option value="tcp-client">TCP Client · 5760</option></select></label>
-              <label><span data-net-t="host">Адрес полётника / прослушивания</span><input id="networkHost" spellcheck="false" value="0.0.0.0" maxlength="253"></label>
-              <label><span data-net-t="port">Порт MAVLink</span><input id="networkPort" type="number" min="1" max="65535" value="14550"></label>
+                <option value="udp-target">UDP Target · 14550</option></select></label>
+              <label><span data-net-t="host">Адрес полётника / прослушивания</span><input id="networkHost" spellcheck="false" value="127.0.0.1" maxlength="253"></label>
+              <label><span data-net-t="port">Порт MAVLink</span><input id="networkPort" type="number" min="1" max="65535" value="5760"></label>
               <label><span data-net-t="bridge">Локальный WebSocket-мост</span><input id="networkBridge" value="ws://127.0.0.1:8765/mavlink" spellcheck="false"></label>
               <label><span data-net-t="token">Токен моста (показан в терминале)</span><input id="networkToken" type="password" autocomplete="off" placeholder="token"></label>
             </div>
             <p class="cc-network-warning" data-net-t="warning">GitHub Pages не открывает UDP/TCP напрямую. Запусти на ПК: node tools/mavlink-bridge.cjs. Мост требует токен и соединяется по WebSocket. UDP/TCP используют только в доверенной сети/VPN.</p>
             <p class="cc-network-help"><a href="https://github.com/satteliteofscience/a.t.l.a.s-site/blob/main/MAVLINK-NETWORK-BRIDGE.md" target="_blank" rel="noopener noreferrer">Инструкция по UDP/TCP ↗</a> · <a href="https://github.com/satteliteofscience/a.t.l.a.s-site/blob/main/tools/mavlink-bridge.cjs" target="_blank" rel="noopener noreferrer">Скачать локальный мост ↗</a></p>
-            <button id="networkConnectBtn" class="cc-button ghost" type="button" data-net-t="connect">Подключить UDP/TCP</button>
+            <button id="networkConnectBtn" class="cc-button ghost" type="button" data-net-t="connect">Подключить UDP/TCP вручную</button>
+            </details>
             <p id="networkStatus" class="cc-param-load-note" aria-live="polite" role="status"></p>
           </details>
         </div>
