@@ -65,6 +65,19 @@ function escParams({mask=0,otype=0,channels=[3],can=false}={}){
  assert.equal(result.valid,true);assert.equal(result.metadataMissingCount,2);
  assert.equal(result.warnings.length,0);
 })();
+(function testQuickWriteButtonSafetyAndNoBackupPrecondition(){
+ const now=Date.now(),s={connected:true,demo:false,armed:false,lastHeartbeat:now,paramLoading:false,params:params([['THR_MAX',100,6]]),selectedBoard:'matek-h743-wing-v3'};
+ const q={preview:{valid:true,changes:[['THR_MAX',95]]},previewBoard:s.selectedBoard,compatConfirmed:true,applyBusy:false,readBusy:false,backupDownloaded:false};
+ assert.deepEqual(core.writeBlockers(s,q,true,now),[],'backup download must not silently block a safe write');
+ assert.ok(core.writeBlockers({...s,armed:true},q,false,now).includes('disarmed'));
+ assert.ok(core.writeBlockers({...s,lastHeartbeat:now-4500},q,false,now).includes('heartbeat'));
+ assert.ok(core.writeBlockers({...s,paramLoading:true},q,false,now).includes('loading'));
+ assert.ok(core.writeBlockers({...s,params:params([])},q,false,now).includes('empty'));
+ assert.ok(core.writeBlockers(s,{...q,compatConfirmed:false},true,now).includes('compat'));
+ assert.ok(core.writeBlockers(s,{...q,previewBoard:'cube-orange'},true,now).includes('board'));
+ assert.ok(core.writeBlockers(s,{...q,preview:{...q.preview,changes:[]}},true,now).includes('unchanged'));
+ assert.deepEqual(core.writeBlockers(s,q,false,now),['writer'],'busy MAVLink parameter writer must block');
+})();
 (function testEscClassification(){
  assert.equal(core.classifyEscProtocol(escParams({mask:1<<2,otype:6,channels:[3]}),'matek-h743-wing-v3').kind,'dshot');
  assert.equal(core.classifyEscProtocol(escParams({mask:0,otype:6,channels:[3]}),'matek-h743-wing-v3').kind,'pwm');
