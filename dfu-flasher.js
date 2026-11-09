@@ -42,13 +42,24 @@
     // STM32 ROM DFU identifies the MCU family, not the mounted flight controller.
     // Keep a target marker check before any potentially destructive operation.
     const marker=new TextEncoder().encode('CubeOrangePlus');
-    let cubeTarget=false;
-    for(let pos=0;pos<=bytes.length-marker.length;pos++){
-      if(bytes[pos]!==marker[0])continue;
-      let match=true;for(let i=1;i<marker.length;i++)if(bytes[pos+i]!==marker[i]){match=false;break;}
-      if(match){cubeTarget=true;break;}
+    const uniMarker=new TextEncoder().encode('Uni_IC743Mini');
+    const matekMarker=new TextEncoder().encode('MatekH743');
+    function containsTarget(needle){
+      for(let pos=0;pos<=bytes.length-needle.length;pos++){
+        if(bytes[pos]!==needle[0])continue;
+        let match=true;
+        for(let i=1;i<needle.length;i++)if(bytes[pos+i]!==needle[i]){match=false;break;}
+        if(match)return true;
+      }
+      return false;
     }
-    return {bytes,dataBytes:total,flashStart:first,flashEndExclusive:next,paddedBytes:length,lines,detectedTarget:cubeTarget?'cube-orange-plus':null};
+    const found=[
+      containsTarget(marker)?'cube-orange-plus':null,
+      containsTarget(uniMarker)?'uni-ic743-mini':null,
+      containsTarget(matekMarker)?'matek-h743-wing-v3':null
+    ].filter(Boolean);
+    if(found.length>1)throw Error('Conflicting board target markers in HEX: '+found.join(', '));
+    return {bytes,dataBytes:total,flashStart:first,flashEndExclusive:next,paddedBytes:length,lines,detectedTarget:found[0]||null};
   }
 
   function supportsH743FlashMap(name) {
