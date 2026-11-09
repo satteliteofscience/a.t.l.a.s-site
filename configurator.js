@@ -37,7 +37,7 @@ function parameterCategory(name){
 
 let lang='ru';try{let saved=localStorage.getItem('atlas-language');if(words[saved])lang=saved;}catch{}
 const tr=(k)=>words[lang]?.[k]||words.ru[k]||k;
-const state={demo:false,connected:false,connecting:false,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
+const state={demo:false,connected:false,connecting:false,transport:null,netSocket:null,bridgeReady:false,lastVoltageTelemetry:0,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,readTwoBusy:false,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
 window.AtlasLanguage=()=>lang;
 window.AtlasSelectedBoard=()=>state.selectedBoard;
 const settingDefs=[
@@ -63,6 +63,8 @@ function toast(message,warning=false){log(message,warning);}
 function setLang(next){if(!words[next])return;lang=next;try{localStorage.setItem('atlas-language',lang);}catch{};document.documentElement.lang=next;
  document.querySelectorAll('[data-t]').forEach(el=>{let k=el.dataset.t;if(words[lang][k])el.textContent=tr(k);});document.querySelectorAll('[data-ph]').forEach(el=>el.placeholder=tr(el.dataset.ph));
  document.querySelectorAll('[data-language]').forEach(el=>{el.classList.toggle('active',el.dataset.language===next);el.setAttribute('aria-pressed',String(el.dataset.language===next));});
+ $('twoPassParamsBtn').textContent=(readTwoLex[next]||readTwoLex.ru).button;
+ updateNetworkLabels();
  updateConnectionUI();renderBasic();renderParams();renderBoards();renderReleases();updateTelemetryUI();renderImportDiff();renderCategoryNav();showProgress();window.dispatchEvent(new Event('atlas:language'));
 }
 function navigate(tab){
@@ -81,7 +83,8 @@ function navigate(tab){
    startParamLoad();
  }
 }
-function updateConnectionUI(){const c=state.connected,d=state.demo;$('connectionPill').classList.toggle('online',c);$('connectionPill').classList.toggle('demo',d);$('connectionLabel').textContent=tr(c?'online':d?'demoStatus':'offline');$('connectBtnText').textContent=tr(c?'disconnect':'connect');$('demoBtn').lastElementChild.textContent=tr(d?'stopDemo':'demo');$('linkSubtitle').textContent=(c?`${tr('connected')} · sys ${state.sysid||'?'}`:tr('choose'));$('flightSource').textContent=c?'MAVLINK / LIVE':d?'DEMO / SIMULATION':'NO DATA';$('hudSource').textContent=c?'ATTITUDE / MAVLINK':d?'ATTITUDE / SYNTHETIC':'NO TELEMETRY';$('hudWatermark').textContent=c?'LIVE MAVLINK':d?'SIMULATED DATA':'WAITING FOR FC';$('connectBtn').disabled=state.connecting;}
+function updateConnectionUI(){const c=state.connected,d=state.demo;$('connectionPill').classList.toggle('online',c);$('connectionPill').classList.toggle('demo',d);$('connectionLabel').textContent=c&&state.transport==='bridge'?'UDP/TCP · MAVLINK':tr(c?'online':d?'demoStatus':'offline');$('connectBtnText').textContent=tr(c?'disconnect':'connect');$('demoBtn').lastElementChild.textContent=tr(d?'stopDemo':'demo');$('linkSubtitle').textContent=(c?`${tr('connected')} · ${state.transport==='bridge'?'UDP/TCP':'USB'} · sys ${state.sysid||'?'}`:tr('choose'));$('flightSource').textContent=c?'MAVLINK / LIVE':d?'DEMO / SIMULATION':'NO DATA';$('hudSource').textContent=c?'ATTITUDE / MAVLINK':d?'ATTITUDE / SYNTHETIC':'NO TELEMETRY';$('hudWatermark').textContent=c?'LIVE MAVLINK':d?'SIMULATED DATA':'WAITING FOR FC';$('connectBtn').disabled=state.connecting;
+ const net=$('networkConnectBtn');if(net)net.disabled=state.connecting;}
 function formatParam(n){return Number.isFinite(n)?(Number.isInteger(n)?String(n):Number(n.toPrecision(7)).toString()):'—';}
 const paramLex={
  ru:{waiting:'Ожидание первого PARAM_VALUE…',receiving:'Загрузка параметров',repair:'Восстанавливаются пропущенные параметры',done:'Получен полный список параметров',partial:'Получен неполный список. Повтори загрузку или проверь связь USB.',idle:'Нажми «Загрузить параметры» после соединения.',retry:'Повторяем запрос списка параметров…',noReply:'Нет ответа PARAM_VALUE от контроллера.'},
@@ -115,6 +118,7 @@ function finishParamTransfer(complete){
  toast(complete?`${tr('saved')} · ${x.seen.size}/${state.paramCount}`:`${pl('partial')} · ${x.seen.size}/${state.paramCount}`,!complete);
  // Rendering thousands of rows during the stream blocks the serial RX loop.
  state.tableLimit=150;
+ if(state.importedText)prepareImported();
  scheduleParameterRerender();
 }
 async function recoverMissingParams(){
@@ -174,6 +178,7 @@ async function cleanupForNavigation(){
  try{if(reader)await reader.cancel();}catch{}
  const port=state.port;state.port=null;
  try{if(port)await port.close();}catch{}
+ if(state.netSocket){const ws=state.netSocket;state.netSocket=null;ws.close();}state.bridgeReady=false;state.transport=null;
  state.connected=false;state.connecting=false;state.demo=false;state.sysid=null;state.armed=null;
 }
 
@@ -181,13 +186,25 @@ async function disconnect(){state.bulkCancel=true;stopParamRepair();state.paramT
  try{if(reader)await reader.cancel();}catch{}
  try{if(reader)reader.releaseLock();}catch{}
  const port=state.port;state.port=null;try{if(port)await port.close();}catch(e){console.warn(e);}
- state.connected=false;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.lastVfr=0;state.vfrFallbackSent=false;state.armed=null;state.mode=null;state.params.clear();state.paramCount=null;state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramLoading=false;
+ const socket=state.netSocket;state.netSocket=null;state.bridgeReady=false;state.transport=null;if(socket){try{socket.close();}catch{}}
+ state.connected=false;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.lastVfr=0;state.vfrFallbackSent=false;state.armed=null;state.mode=null;state.params.clear();state.paramCount=null;state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramLoading=false;
  if(state.writeWait){clearTimeout(state.writeWait.timer);state.writeWait.reject(Error('Connection closed'));state.writeWait=null;}
- updateConnectionUI();renderBasic();renderParams();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));toast('USB disconnected');}
-async function transmit(messageId,payload){if(!state.port||!state.connected)throw Error(tr('needlink'));
- const frame=M.createFrame(messageId,payload,state.seq++);const current=state.txPromise.then(async()=>{if(!state.port)throw Error('Port closed');const writer=state.port.writable.getWriter();try{await writer.write(frame);}finally{writer.releaseLock();}});
+ updateConnectionUI();renderBasic();renderParams();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));toast('MAVLink disconnected');}
+async function transmit(messageId,payload){
+ if(!state.connected||(!state.port&&!(state.netSocket&&state.bridgeReady)))throw Error(tr('needlink'));
+ const frame=M.createFrame(messageId,payload,state.seq++);
+ const current=state.txPromise.then(async()=>{
+  if(state.netSocket&&state.bridgeReady){
+   if(state.netSocket.readyState!==WebSocket.OPEN)throw Error('WebSocket closed');
+   state.netSocket.send(frame);
+  }else{
+   if(!state.port)throw Error('USB port closed');
+   const writer=state.port.writable.getWriter();try{await writer.write(frame);}finally{writer.releaseLock();}
+  }
+ });
  state.txPromise=current.catch(()=>{});return current;
 }
+
 async function requestStreams(){if(!state.connected||state.sysid===null)return;
  for(const [id,rate]of [[30,100000],[74,200000],[1,1000000],[65,200000]]){
    try{await transmit(76,M.commandLong(state.sysid,state.compid,511,[id,rate,0,0,0,0,0]));}catch(e){toast('Stream request: '+e.message,true);}
@@ -201,7 +218,7 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
    if(first){state.streamStart=Date.now();toast(`MAVLink HEARTBEAT · sys=${state.sysid} comp=${state.compid}`);requestStreams();updateConnectionUI();startParamLoad();window.dispatchEvent(new Event('atlas:state'));}
  }else if(data.type==='attitude'){state.telemetry.roll=data.roll*180/Math.PI;state.telemetry.pitch=data.pitch*180/Math.PI;state.telemetry.yaw=data.yaw*180/Math.PI;state.lastAttitude=Date.now();}
  else if(data.type==='vfr'&&message.sysid===state.sysid){state.lastVfr=Date.now();state.telemetry.airspeed=Number.isFinite(data.airspeed)&&data.airspeed>=0?data.airspeed*3.6:null;state.telemetry.altitude=data.altitude;state.telemetry.throttle=data.throttle;}
- else if(data.type==='sys'){state.telemetry.voltage=data.voltage===65535?null:data.voltage/1000;if(message.sysid===state.sysid&&message.compid===state.compid){const magBit=4;state.compassStatus={present:!!(data.sensorsPresent&magBit),enabled:!!(data.sensorsEnabled&magBit),healthy:!!(data.sensorsHealthy&magBit),lastSeen:Date.now()};}}
+ else if(data.type==='sys'){state.telemetry.voltage=data.voltage===65535?null:data.voltage/1000;if(data.voltage!==65535&&message.sysid===state.sysid)state.lastVoltageTelemetry=Date.now();if(message.sysid===state.sysid&&message.compid===state.compid){const magBit=4;state.compassStatus={present:!!(data.sensorsPresent&magBit),enabled:!!(data.sensorsEnabled&magBit),healthy:!!(data.sensorsHealthy&magBit),lastSeen:Date.now()};}}
  else if(data.type==='text'){if(data.text && data.severity<=5)toast(`FC: ${data.text}`,data.severity<=3);}
  else if(data.type==='param'){
   if(!data.name||message.sysid!==state.sysid||message.compid!==state.compid)return;
@@ -235,26 +252,103 @@ async function connect(){if(state.connected){await disconnect();return;}
  try{
   const port=await navigator.serial.requestPort();
   await port.open({baudRate:Number($('baud').value),bufferSize:8192});
-  state.port=port;state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
+  state.port=port;state.transport='usb';state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
   updateConnectionUI();log('USB CDC open · '+$('baud').value+' bps');
   const parser=new M.Parser(handleMessage);state.rxParser=parser;
   state.rxPositions=0;state.rxCommands=0;state.rxAcks=0;state.rxTexts=0;
-  state.streamTimer=setInterval(()=>{
-    if(!state.connected)return;
-    transmit(0,M.heartbeat()).catch(()=>{});
-    if(state.sysid!==null&&Date.now()-state.lastHeartbeat>7000)$('connectionLabel').textContent='MAVLINK TIMEOUT';
-    // Some custom ArduPlane builds do not honor SET_MESSAGE_INTERVAL(74). One legacy
-    // EXTRA2 stream request is allowed per connection, only when VFR_HUD never arrived.
-    if(state.sysid!==null&&!state.vfrFallbackSent&&state.streamStart>0&&state.lastVfr===0&&Date.now()-state.streamStart>7000&&Date.now()-state.lastHeartbeat<4000){
-      state.vfrFallbackSent=true;
-      transmit(66,M.requestDataStream(state.sysid,state.compid,11,3)).catch(err=>log('VFR_HUD fallback: '+err.message));
-    }
-   },1000);
+  state.streamTimer=setInterval(heartbeatTick,1000);
   transmit(0,M.heartbeat()).catch(()=>{});
   // Avoid blocking the UI by running the receive loop as an async task.
   (async()=>{try{while(state.rxActive&&state.port){const reader=state.port.readable.getReader();state.reader=reader;try{while(state.rxActive){const {value,done}=await reader.read();if(done)break;if(value)parser.push(value);}}finally{reader.releaseLock();state.reader=null;}}}catch(err){if(state.rxActive)toast('USB RX: '+err.message,true);}finally{if(state.rxActive)disconnect().catch(console.error);}})();
  }catch(err){toast('USB: '+err.message,true);if(state.port)await disconnect();}
  finally{state.connecting=false;updateConnectionUI();}
+}
+const readTwoLex={
+ ru:{start:'Читаю параметры',done:'Два прохода завершены',incomplete:'Загрузка неполная: можно повторить',busy:'Ожидается завершение предыдущего чтения',button:'Прочитать параметры · 2 прохода'},
+ uk:{start:'Зчитую параметри',done:'Два проходи завершено',incomplete:'Не всі параметри отримано: повтори зчитування',busy:'Читання вже триває',button:'Зчитати параметри · 2 проходи'},
+ en:{start:'Reading parameters',done:'Two passes completed',incomplete:'Read incomplete: retry if needed',busy:'Another transfer is in progress',button:'Read parameters · 2 passes'}
+};
+async function readParamsTwice(){
+ if(state.readTwoBusy||!state.connected||state.sysid===null||state.bulk?.running||state.servoConfigBusy){toast((readTwoLex[lang]||readTwoLex.ru).busy,true);return;}
+ const text=readTwoLex[lang]||readTwoLex.ru;
+ state.readTwoBusy=true;const button=$('twoPassParamsBtn');button.disabled=true;
+ try{
+  for(let pass=1;pass<=2;pass++){
+   if(!state.connected||state.sysid===null)throw Error(tr('needlink'));
+   if(!state.paramLoading&&!startParamLoad(true))throw Error(text.busy);
+   button.textContent=text.start+' '+pass+'/2';
+   const started=Date.now();
+   while(state.connected&&state.paramLoading&&Date.now()-started<75000)await new Promise(resolve=>setTimeout(resolve,300));
+   if(state.paramLoading)throw Error(text.incomplete+' · timeout');
+   if(!state.connected)throw Error(tr('needlink'));
+  }
+  toast(state.paramTransfer?.phase==='complete'?text.done:text.incomplete,state.paramTransfer?.phase!=='complete');
+ }catch(e){toast(e.message,true);}
+ finally{state.readTwoBusy=false;button.disabled=false;button.textContent=text.button;renderParams();renderImportDiff();}
+}
+const networkLex={
+ ru:{title:'UDP / TCP через локальный мост',mode:'Режим соединения',host:'Адрес полётника / прослушивания',port:'Порт MAVLink',bridge:'Локальный WebSocket-мост',token:'Токен из терминала',warning:'GitHub Pages не открывает UDP/TCP напрямую. Запусти на ПК: node tools/mavlink-bridge.cjs. Мост слушает только localhost и требует токен. Для удалённого соединения используй доверенную сеть/VPN.',connect:'Подключить UDP/TCP',disconnect:'Отключить сеть'},
+ uk:{title:'UDP / TCP через локальний міст',mode:'Режим з’єднання',host:'Адреса контролера / прослуховування',port:'Порт MAVLink',bridge:'Локальний WebSocket-міст',token:'Токен із термінала',warning:'GitHub Pages не відкриває UDP/TCP напряму. Запусти: node tools/mavlink-bridge.cjs. Міст працює лише на localhost і потребує токен. Для віддаленого з’єднання користуйся VPN.',connect:'Під’єднати UDP/TCP',disconnect:'Від’єднати мережу'},
+ en:{title:'UDP / TCP via local bridge',mode:'Connection mode',host:'Remote / listening IP',port:'MAVLink port',bridge:'Local WebSocket bridge',token:'Terminal session token',warning:'GitHub Pages cannot open raw UDP/TCP. Run locally: node tools/mavlink-bridge.cjs. Bridge binds localhost and requires a token. Use a trusted network/VPN for remote MAVLink.',connect:'Connect UDP/TCP',disconnect:'Disconnect network'}
+};
+function updateNetworkLabels(){
+ const text=networkLex[lang]||networkLex.ru;
+ document.querySelectorAll('[data-net-t]').forEach(el=>{if(text[el.dataset.netT])el.textContent=text[el.dataset.netT];});
+ $('networkConnectBtn').textContent=state.transport==='bridge'&&state.connected?text.disconnect:text.connect;
+}
+function networkStatus(message,isError=false){const e=$('networkStatus');if(e){e.textContent=message;e.style.color=isError?'#e7a388':'#bed096';}if(message)toast(message,isError);}
+function syncNetworkDefaults(){
+ const mode=$('networkMode').value;
+ $('networkHost').value=mode==='udp-listen'?'0.0.0.0':'127.0.0.1';
+ $('networkPort').value=mode==='tcp-client'?'5760':'14550';
+}
+async function connectBridge(){
+ if(state.transport==='bridge'&&state.connected){await disconnect();updateNetworkLabels();return;}
+ if(state.connecting)return;
+ const mode=$('networkMode').value,host=$('networkHost').value.trim(),port=Number($('networkPort').value),token=$('networkToken').value.trim();
+ let endpoint;try{endpoint=new URL($('networkBridge').value.trim());}catch{networkStatus('Invalid WebSocket URL',true);return;}
+ const localhost=['127.0.0.1','localhost','[::1]'].includes(endpoint.hostname);
+ if(!['ws:','wss:'].includes(endpoint.protocol)||(!localhost&&endpoint.protocol!=='wss:')||endpoint.pathname!=='/mavlink'||endpoint.username||endpoint.password||endpoint.search||endpoint.hash||!token||!Number.isInteger(port)||port<1||port>65535||!/^[-.a-zA-Z0-9:]{1,253}$/.test(host)){
+  networkStatus('Check bridge URL, token, mode and host/port (non-local WebSocket must use WSS)',true);return;
+ }
+ if(state.connected)await disconnect();
+ if(state.demo)enterDemo();
+ state.connecting=true;updateConnectionUI();networkStatus('Opening authenticated local WebSocket…');
+ try{
+  const url=endpoint.href+(endpoint.href.includes('?')?'&':'?')+'token='+encodeURIComponent(token);
+  const ws=new WebSocket(url);ws.binaryType='arraybuffer';state.netSocket=ws;
+  ws.onopen=()=>{if(state.netSocket===ws)ws.send(JSON.stringify({mode,host,port}));};
+  ws.onmessage=event=>{
+   if(state.netSocket!==ws)return;
+   if(typeof event.data==='string'){
+    let message;try{message=JSON.parse(event.data);}catch{networkStatus('Unexpected bridge message',true);return;}
+    if(message.type==='error'){networkStatus('MAVLink bridge: '+message.message,true);ws.close();return;}
+    if(message.type!=='ready')return;
+    state.bridgeReady=true;state.transport='bridge';state.connected=true;state.connecting=false;state.rxActive=true;state.seq=0;
+    stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;
+    state.armed=null;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.lastVoltageTelemetry=0;
+    state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
+    const parser=new M.Parser(handleMessage);state.rxParser=parser;
+    state.rxPositions=0;state.rxCommands=0;state.rxAcks=0;state.rxTexts=0;
+    state.streamTimer=setInterval(heartbeatTick,1000);
+    transmit(0,M.heartbeat()).catch(()=>{});
+    updateConnectionUI();updateNetworkLabels();
+    networkStatus('WebSocket bridge ready · '+mode+' '+host+':'+port+' · waiting for MAVLink HEARTBEAT');
+    window.dispatchEvent(new Event('atlas:state'));
+   }else if(state.bridgeReady&&event.data instanceof ArrayBuffer)state.rxParser.push(new Uint8Array(event.data));
+  };
+  ws.onerror=()=>{if(state.netSocket===ws)networkStatus('WebSocket error: check bridge token / TLS / browser network restrictions',true);};
+  ws.onclose=()=>{if(state.netSocket!==ws)return;state.connecting=false;if(state.connected){void disconnect().then(updateNetworkLabels);}else{state.netSocket=null;state.bridgeReady=false;updateConnectionUI();updateNetworkLabels();}};
+ }catch(e){networkStatus(e.message,true);state.connecting=false;updateConnectionUI();}
+}
+function heartbeatTick(){
+ if(!state.connected)return;
+ transmit(0,M.heartbeat()).catch(()=>{});
+ if(state.sysid!==null&&Date.now()-state.lastHeartbeat>7000)$('connectionLabel').textContent='MAVLINK TIMEOUT';
+ if(state.sysid!==null&&!state.vfrFallbackSent&&state.streamStart>0&&state.lastVfr===0&&Date.now()-state.streamStart>7000&&Date.now()-state.lastHeartbeat<4000){
+  state.vfrFallbackSent=true;
+  transmit(66,M.requestDataStream(state.sysid,state.compid,11,3)).catch(err=>log('VFR_HUD fallback: '+err.message));
+ }
 }
 function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBusy){toast(tr('buttonBusy'),true);return false;}if(state.paramLoading)return false;if(!state.connected||state.sysid===null){toast(tr('needlink'),true);return false;}
  // Preserve already received parameters if the previous transfer was incomplete.
@@ -271,11 +365,12 @@ function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBu
  transmit(21,M.paramList(state.sysid,state.compid)).then(()=>toast(tr('refreshdone'))).catch(err=>{toast(err.message,true);state.paramLoading=false;stopParamRepair();state.paramTransfer.phase='partial';showProgress();});
  return true;
 }
-function canWrite(){return state.connected&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading;}
+function canWrite(){return state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading&&!state.readTwoBusy;}
 window.AtlasCC = Object.freeze({
-  getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,compassStatus:state.compassStatus,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
+  getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,lastVoltageTelemetry:state.lastVoltageTelemetry,transport:state.transport,compassStatus:state.compassStatus,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
   canWrite:()=>canWrite(),
   connectUsb:()=>connect(),
+  connectBridge:()=>connectBridge(),
   selectBoard:(id)=>{if(window.AtlasDfuUi?.isBusy()||!['matek-h743-wing-v3','cube-orange'].includes(id))return false;state.selectedBoard=id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:id}}));return true;},
   navigate:(tab)=>navigate(tab),
   diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
@@ -361,11 +456,13 @@ window.AtlasCC = Object.freeze({
   writeAdvancedParams:async (updates,onProgress=()=>{},shouldCancel=()=>false,options={})=>{
     if(!canWrite())throw Error('Live USB + confirmed DISARMED + idle PARAM transfer required');
     const changes=[];
+    const metadata=Object.fromEntries(window.AtlasParamTree?.getMetadata?.()||[]);
     for(const [name,value] of Object.entries(updates)){
       if(!/^[A-Z][A-Z0-9_]{0,15}$/.test(name)||!Number.isFinite(value))throw Error('Invalid parameter: '+name);
       const p=state.params.get(name);
       if(!p)throw Error(name+' not present on flight controller');
-      if((p.type===1||p.type===2||p.type===3||p.type===4||p.type===5||p.type===6||p.type===7||p.type===8)&&!Number.isInteger(value))throw Error(name+': integer required');
+      const report=window.AtlasQuickSetupCore?.parseParamText(name+' '+value+'\n',new Map([[name,p]]),metadata);
+      if(!report?.valid||report.skipped.length||report.errors.length)throw Error(name+': '+(report?.skipped?.[0]?.reason||report?.errors?.[0]?.reason||'unsupported write'));
       if(Math.abs(p.value-value)>Math.max(1e-5,Math.abs(value)*2e-6))changes.push({name,value,type:p.type});
     }
     if(!changes.length)return {done:0,total:0};
@@ -388,25 +485,32 @@ window.AtlasCC = Object.freeze({
     finally{state.servoConfigBusy=false;renderParams();renderBasic();window.dispatchEvent(new Event('atlas:parameters'));}
   },
   ftpSend:async(header)=>{
-    if(!state.connected||state.sysid===null||!state.port)throw Error('Connect USB/MAVLink first');
+    if(!state.connected||state.sysid===null||(!state.port&&!state.bridgeReady))throw Error('Connect MAVLink first');
     return transmit(110,M.ftpFrame(state.sysid,state.compid,header));
   },
   log:(msg,warning=false)=>toast(msg,warning)
 });
 function openEdit(name){const p=state.params.get(name);if(!p){toast(tr('noread'),true);return;}
  if(!canWrite()){toast(state.demo?tr('saveNotLive'):tr('onlyDisarmed'),true);return;}
+ if(window.AtlasParamTree?.isReadOnly(name)){toast(name+' · ReadOnly',true);return;}
  state.editName=name;$('editName').textContent=name;$('editOriginal').textContent=`${tr('value')}: ${formatParam(p.value)} | MAV_PARAM_TYPE: ${p.type}`;$('editValue').value=formatParam(p.value);$('editDialog').showModal();$('editValue').focus();$('editValue').select();}
-async function saveEdit(ev){ev.preventDefault();const name=state.editName,p=state.params.get(name),value=Number($('editValue').value);
- if(!p||!Number.isFinite(value)||$('editValue').value===''){toast(tr('selectvalid'),true);return;}
- if(!canWrite()){toast(tr('onlyDisarmed'),true);$('editDialog').close();return;}
+async function saveEdit(ev){
+ ev.preventDefault();
+ const name=state.editName,p=state.params.get(name),raw=$('editValue').value.trim(),value=Number(raw);
+ if(!p||!raw||!Number.isFinite(value)){toast(tr('selectvalid'),true);return;}
+ if(!canWrite()){toast(tr('onlyDisarmed'),true);return;}
+ const metadata=Object.fromEntries(window.AtlasParamTree?.getMetadata?.()||[]);
+ const report=window.AtlasQuickSetupCore?.parseParamText(name+' '+raw+'\n',state.params,metadata);
+ if(!report?.valid||report.skipped.length||report.errors.length){toast(name+' · '+(report?.skipped?.[0]?.reason||report?.errors?.[0]?.reason||'Invalid parameter'),true);return;}
  if(!confirm(`${name}: ${formatParam(p.value)} → ${value}\n${tr('editwarning')}`))return;
  $('editDialog').close();
- try{const result=new Promise((resolve,reject)=>{const timer=setTimeout(()=>{state.writeWait=null;reject(Error(tr('paramReq')));},3500);state.writeWait={name,value,resolve,reject,timer};});
-  await transmit(23,M.paramSet(state.sysid,state.compid,name,value,p.type));
-  await result;
+ try{
+  await writeParameterWithAck(name,value,p.type);
   toast(`${tr('writesuccess')}: ${name}=${value}`);
+  renderParams();renderBasic();
  }catch(err){toast(`${tr('senderror')} ${name}: ${err.message}`,true);}
 }
+
 function renderBasic(){const grid=$('basicGrid');grid.replaceChildren();const filter=state.group;for(const s of settingDefs){if(filter!=='all'&&filter!==s.group)continue;
  const value=state.params.get(s.key);const card=document.createElement('article');card.className='cc-setting-card';
  const row=document.createElement('div');row.className='cc-setting-line';const code=document.createElement('code');code.textContent=s.key;const label=document.createElement('span');label.className='cc-setting-tag';label.textContent=s.group.toUpperCase();row.append(code,label);
@@ -432,27 +536,50 @@ function renderParams(){
 
 function exportParams(){if(state.params.size===0){toast(tr('exportempty'),true);return;}
  const rows=[...state.params].sort((a,b)=>a[0].localeCompare(b[0])).map(([name,p])=>`${name}\t${formatParam(p.value)}`);const blob=new Blob(['# A.T.L.A.S. parameter backup\n# '+new Date().toISOString()+'\n'+rows.join('\n')+'\n'],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`ATLAS-${new Date().toISOString().slice(0,10)}.param`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
-async function importParams(file){if(!file)return;try{
- const content=await file.text();const found=new Map();let bad=0;
- for(const line of content.split(/\r?\n/)){let s=line.trim();if(!s||s.startsWith('#')||s.startsWith('//'))continue;
-  const match=s.match(/^([A-Za-z0-9_]{1,16})[\s,=]+([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)(?:[\s,;]|$)/);
-  if(match){const val=Number(match[2]);if(Number.isFinite(val))found.set(match[1],val);else bad++;}else bad++;
- }
- if(!found.size)throw Error('No numeric parameters found in file');
- state.imported=found;$('bulkConsent').checked=false;state.bulk=null;state.bulkCancel=false;renderImportDiff();navigate('params');toast(`${tr('imported')}: ${found.size}`+(bad?` · skipped ${bad} lines`:''));
- }catch(e){toast(e.message,true);}finally{$('importParamFile').value='';}}
+function prepareImported(){
+ if(!state.importedText||!state.params.size){state.imported=null;state.importReport=null;return;}
+ const metadata=Object.fromEntries(window.AtlasParamTree?.getMetadata?.()||[]);
+ const report=window.AtlasQuickSetupCore.parseParamText(state.importedText,state.params,metadata);
+ state.importReport=report;state.imported=new Map(report.entries);
+}
+async function importParams(file){
+ if(!file)return;
+ try{
+  if(file.size>5*1024*1024)throw Error('Maximum .param file size: 5 MiB');
+  state.importedText=await file.text();
+  state.imported=null;state.importReport=null;
+  if(!state.params.size)toast('File selected: read FC parameters first');
+  else prepareImported();
+  $('bulkConsent').checked=false;state.bulk=null;state.bulkCancel=false;
+  renderImportDiff();navigate('params');
+  toast(`${tr('imported')}: ${state.importReport?.entries?.size||0}; skipped: ${state.importReport?.skipped?.length||0}`);
+ }catch(e){toast(e.message,true);}finally{$('importParamFile').value='';}
+}
+function downloadImportReport(){
+ if(!state.importReport)return;
+ const lines=['# A.T.L.A.S. skipped .param entries','# '+new Date().toISOString()];
+ for(const x of state.importReport.skipped)lines.push([x.line||'',x.name||'',x.reason||'',x.value??''].join('\t'));
+ for(const x of state.importReport.errors)lines.push(['',x.name||'',x.reason||'validation-error',''].join('\t'));
+ if(state.bulk?.failed)for(const x of state.bulk.failed)lines.push(['',x,'write-rejected',''].join('\t'));
+ const blob=new Blob([lines.join('\n')+'\n'],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='ATLAS-import-skipped.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
 function paramEqual(a,b){return Math.abs(a-b)<=Math.max(1e-5,Math.abs(b)*2e-6);}
 function importDiffRows(){if(!state.imported)return [];
  return [...state.imported].filter(([name,value])=>{const p=state.params.get(name);return !p||!paramEqual(p.value,value);});}
-function renderImportDiff(){const box=$('importDiff');if(!state.imported){box.hidden=true;return;}box.hidden=false;
- const differing=importDiffRows(),missing=differing.filter(([name])=>!state.params.has(name)),writable=differing.filter(([name])=>state.params.has(name));
+function renderImportDiff(){const box=$('importDiff');if(!state.importedText){box.hidden=true;return;}box.hidden=false;
+ const differing=importDiffRows(),missing=state.importReport?.skipped||[],writable=differing.filter(([name])=>state.params.has(name));
  $('importDiffCount').textContent=`${writable.length} ${tr('parameterImportDiff')} / ${missing.length} ${tr('batchUnsupported')}`;
  const rows=$('importDiffRows');rows.replaceChildren();for(const [name,val]of differing.slice(0,60)){
   const row=document.createElement('div');row.className='cc-diff-row';const key=document.createElement('code');key.textContent=name;const right=document.createElement('span');const current=state.params.get(name);
   right.textContent=current?`${formatParam(current.value)} → ${formatParam(val)}`:`— → ${formatParam(val)} (${tr('batchUnsupported')})`;
   row.append(key,right);rows.append(row);
  }if(differing.length>60){const x=document.createElement('p');x.textContent=`+ ${differing.length-60} ...`;rows.append(x);}
- const b=state.bulk,canStart=!!state.imported&&writable.length>0&&canWrite()&&$('bulkConsent').checked&&!state.paramLoading;
+ const summary=$('importSkipNote');if(summary)summary.textContent=state.importedText&&!state.params.size?'Read FC parameters first':`${missing.length} skipped (unknown, read-only, invalid or unsupported) · ${state.importReport?.metadataMissingCount||0} without local range metadata`;
+ const list=$('importSkippedRows');if(list){list.replaceChildren();for(const item of missing.slice(0,20)){const row=document.createElement('div');row.textContent=(item.name||'line '+item.line)+' · '+item.reason;list.append(row);}}
+ const reportBtn=$('importDownloadSkipped');if(reportBtn)reportBtn.disabled=!state.importReport;
+ const b=state.bulk,canStart=!!state.importReport&&!state.importReport.errors.length&&writable.length>0&&canWrite()&&$('bulkConsent').checked&&!state.paramLoading;
  $('bulkWriteBtn').disabled=!!b?.running||!canStart;
  $('bulkCancelBtn').hidden=!b?.running;
  $('bulkConsent').disabled=!!b?.running;
@@ -468,7 +595,7 @@ async function writeParameterWithAck(name,value,type){
  catch(e){if(state.writeWait?.name===name){clearTimeout(state.writeWait.timer);state.writeWait=null;}throw e;}
 }
 async function writeImported(){
- if(!state.imported||!$('bulkConsent').checked||!canWrite()||state.paramLoading){toast(tr('batchNoLink'),true);renderImportDiff();return;}
+ if(!state.imported||!state.importReport||state.importReport.errors.length||!$('bulkConsent').checked||!canWrite()||state.paramLoading){toast(tr('batchNoLink'),true);renderImportDiff();return;}
  const entries=importDiffRows().filter(([name])=>state.params.has(name));
  if(!entries.length){toast(tr('batchEmpty'));return;}
  state.bulk={running:true,total:entries.length,done:0,failed:[],message:''};state.bulkCancel=false;
@@ -556,10 +683,11 @@ function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEve
    await Promise.race([cleanupForNavigation().catch(()=>{}),new Promise(resolve=>setTimeout(resolve,1500))]);
    window.location.assign(href);
  }));
- $('connectBtn').addEventListener('click',connect);$('demoBtn').addEventListener('click',enterDemo);$('readBasicsBtn').addEventListener('click',startParamLoad);$('refreshParamsBtn').addEventListener('click',startParamLoad);$('exportParamsBtn').addEventListener('click',exportParams);$('paramSearch').addEventListener('input',()=>{state.tableLimit=150;renderParams();});$('moreParamsBtn').addEventListener('click',()=>{state.tableLimit+=180;renderParams();});$('paramModifiedOnly').addEventListener('change',renderParams);$('paramNoDefaultOnly').addEventListener('change',renderParams);
- window.addEventListener('atlas:metadata',renderParams);
+ $('networkMode').addEventListener('change',syncNetworkDefaults);$('networkConnectBtn').addEventListener('click',connectBridge);
+ $('connectBtn').addEventListener('click',connect);$('demoBtn').addEventListener('click',enterDemo);$('readBasicsBtn').addEventListener('click',()=>startParamLoad(false));$('refreshParamsBtn').addEventListener('click',()=>startParamLoad(true));$('twoPassParamsBtn').addEventListener('click',readParamsTwice);$('exportParamsBtn').addEventListener('click',exportParams);$('paramSearch').addEventListener('input',()=>{state.tableLimit=150;renderParams();});$('moreParamsBtn').addEventListener('click',()=>{state.tableLimit+=180;renderParams();});$('paramModifiedOnly').addEventListener('change',renderParams);$('paramNoDefaultOnly').addEventListener('change',renderParams);
+ window.addEventListener('atlas:metadata',()=>{if(state.importedText)prepareImported();renderParams();renderImportDiff();});
  window.AtlasParamTree?.initialize({render:renderParams,langGetter:()=>lang});
- $('importParamFile').addEventListener('change',ev=>importParams(ev.target.files[0]));$('bulkConsent').addEventListener('change',renderImportDiff);$('bulkWriteBtn').addEventListener('click',writeImported);$('bulkCancelBtn').addEventListener('click',()=>{state.bulkCancel=true;$('bulkProgress').textContent=tr('batchStopped')+' — '+tr('pending');});$('apjInput').addEventListener('change',ev=>parseApj(ev.target.files[0]));
+ $('importParamFile').addEventListener('change',ev=>importParams(ev.target.files[0]));$('bulkConsent').addEventListener('change',renderImportDiff);$('bulkWriteBtn').addEventListener('click',writeImported);$('importDownloadSkipped').addEventListener('click',downloadImportReport);$('bulkCancelBtn').addEventListener('click',()=>{state.bulkCancel=true;$('bulkProgress').textContent=tr('batchStopped')+' — '+tr('pending');});$('apjInput').addEventListener('change',ev=>parseApj(ev.target.files[0]));
  $('apjDropzone').addEventListener('dragover',ev=>{ev.preventDefault();$('apjDropzone').classList.add('dragging');});$('apjDropzone').addEventListener('dragleave',()=>$('apjDropzone').classList.remove('dragging'));$('apjDropzone').addEventListener('drop',ev=>{ev.preventDefault();$('apjDropzone').classList.remove('dragging');parseApj(ev.dataTransfer?.files?.[0]);});
  document.querySelectorAll('[data-group]').forEach(btn=>btn.addEventListener('click',()=>{state.group=btn.dataset.group;document.querySelectorAll('[data-group]').forEach(n=>n.classList.toggle('active',n===btn));renderBasic();}));
  $('closeEdit').addEventListener('click',()=>$('editDialog').close());$('cancelEdit').addEventListener('click',()=>$('editDialog').close());$('editForm').addEventListener('submit',saveEdit);

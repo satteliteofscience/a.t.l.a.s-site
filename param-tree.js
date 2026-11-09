@@ -65,7 +65,8 @@ function render({state,lang,formatParam,canWrite,edit,onSelect,limit}){
  tbody.replaceChildren();const frag=document.createDocumentFragment();const visible=selected.slice(0,Math.min(limit,3000));
  for(const [name,p]of visible){const md=meta.get(name)||{},row=document.createElement('tr');
   const cName=document.createElement('td');cName.className='pt-name';cName.textContent=name;
-  const cValue=document.createElement('td');const valueButton=document.createElement('button');valueButton.type='button';valueButton.className='pt-value';valueButton.textContent=formatParam(p.value);valueButton.disabled=!canWrite();valueButton.onclick=()=>edit(name);valueButton.title=canWrite()?'Edit '+name:'Read-only';cValue.append(valueButton);
+  const cValue=document.createElement('td');const valueButton=document.createElement('button');valueButton.type='button';valueButton.className='pt-value';valueButton.textContent=formatParam(p.value);const readOnly=md.ReadOnly===true||md.readOnly===true||String(md.ReadOnly).toLowerCase()==='true'||name==='FORMAT_VERSION'||name==='SYSID_SW_MREV'||name.startsWith('STAT_');
+  valueButton.disabled=readOnly||!canWrite();valueButton.onclick=()=>edit(name);valueButton.title=readOnly?'Read-only parameter':canWrite()?'Edit '+name:'Requires live DISARMED MAVLink';cValue.append(valueButton);
   const cDefault=document.createElement('td');cDefault.textContent=md.Default??'—';
   const cUnits=document.createElement('td');cUnits.textContent=md.Units??'—';
   const cOptions=document.createElement('td');cOptions.className='pt-options';const opt=optionsText(md);cOptions.textContent=opt;cOptions.title=opt;
@@ -86,5 +87,5 @@ function render({state,lang,formatParam,canWrite,edit,onSelect,limit}){
  if($('paramMetadataOnline'))$('paramMetadataOnline').textContent=tr('online');
  if($('paramMetaUploadLabel'))$('paramMetaUploadLabel').textContent=tr('loadmeta');
 }
-window.AtlasParamTree={initialize,render};
+window.AtlasParamTree={initialize,render,getMetadata:()=>new Map(meta),isReadOnly:name=>{const d=meta.get(name)||{};return d.ReadOnly===true||d.readOnly===true||String(d.ReadOnly).toLowerCase()==='true'||name==='FORMAT_VERSION'||name==='SYSID_SW_MREV'||name.startsWith('STAT_');}};
 })();

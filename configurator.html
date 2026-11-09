@@ -66,7 +66,7 @@
         <button class="cc-nav" type="button" data-tab="firmware"><span class="cc-icon">⬡</span><span data-t="firmware">Прошивка</span><i>04</i></button>
         <a class="cc-nav cc-link-nav" href="faq.html"><span class="cc-icon">?</span><span data-t="faq">Ответы на вопросы</span><i>↗</i></a>
         <a class="cc-nav cc-link-nav" href="changelog.html"><span class="cc-icon">≋</span><span data-t="changelog">Список изменений</span><i>↗</i></a>
-        <a class="cc-nav cc-link-nav" href="index.html#support"><span class="cc-icon">♡</span><span data-t="atlasSupport">Поддержать проект</span><i>↗</i></a>
+        <a class="cc-nav cc-link-nav" href="./index.html#support" aria-label="Поддержать проект — перейти к разделу поддержки"><span class="cc-icon">♡</span><span data-t="atlasSupport">Поддержать проект</span><i>↗</i></a>
       </div>
       <div class="cc-sidebar-foot"><div class="cc-led"></div><span data-t="experimental">RELEASE 1.0 / VERIFIED</span><small>Oleksandr × AI CODEX</small></div>
     </aside>
@@ -78,6 +78,22 @@
           <label class="cc-baud-label" for="baud">BAUD <select id="baud"><option value="115200" selected>115200</option><option value="57600">57600</option><option value="921600">921600</option><option value="230400">230400</option></select></label>
           <button type="button" id="demoBtn" class="cc-button ghost"><span>◇</span> <span data-t="demo">Демо</span></button>
           <button type="button" id="connectBtn" class="cc-button primary"><span>⌁</span> <span id="connectBtnText" data-t="connect">Подключить USB</span></button>
+          <details class="cc-network-settings" id="networkOptions"><summary data-net-t="title">UDP / TCP через локальный мост</summary>
+            <div class="cc-network-fields">
+              <label><span data-net-t="mode">Режим соединения</span><select id="networkMode">
+                <option value="udp-listen">UDP Listen · 14550</option>
+                <option value="udp-target">UDP Target · 14550</option>
+                <option value="tcp-client">TCP Client · 5760</option></select></label>
+              <label><span data-net-t="host">Адрес полётника / прослушивания</span><input id="networkHost" spellcheck="false" value="0.0.0.0" maxlength="253"></label>
+              <label><span data-net-t="port">Порт MAVLink</span><input id="networkPort" type="number" min="1" max="65535" value="14550"></label>
+              <label><span data-net-t="bridge">Локальный WebSocket-мост</span><input id="networkBridge" value="ws://127.0.0.1:8765/mavlink" spellcheck="false"></label>
+              <label><span data-net-t="token">Токен моста (показан в терминале)</span><input id="networkToken" type="password" autocomplete="off" placeholder="token"></label>
+            </div>
+            <p class="cc-network-warning" data-net-t="warning">GitHub Pages не открывает UDP/TCP напрямую. Запусти на ПК: node tools/mavlink-bridge.cjs. Мост требует токен и соединяется по WebSocket. UDP/TCP используют только в доверенной сети/VPN.</p>
+            <p class="cc-network-help"><a href="https://github.com/satteliteofscience/a.t.l.a.s-site/blob/main/MAVLINK-NETWORK-BRIDGE.md" target="_blank" rel="noopener noreferrer">Инструкция по UDP/TCP ↗</a> · <a href="https://github.com/satteliteofscience/a.t.l.a.s-site/blob/main/tools/mavlink-bridge.cjs" target="_blank" rel="noopener noreferrer">Скачать локальный мост ↗</a></p>
+            <button id="networkConnectBtn" class="cc-button ghost" type="button" data-net-t="connect">Подключить UDP/TCP</button>
+            <p id="networkStatus" class="cc-param-load-note" aria-live="polite" role="status"></p>
+          </details>
         </div>
       </section>
       <div class="cc-hintbar"><span class="cc-hint-icon">!</span><span data-t="safety">Рабочий конфигуратор A.T.L.A.S. для поддерживаемых плат. Настраивай контроллер на земле; перед изменениями сними пропеллер. Режим DEMO никогда не записывает параметры в плату.</span></div>
@@ -133,7 +149,7 @@
 
       <!-- PARAMETERS -->
       <section class="cc-tab" data-panel="params" aria-labelledby="parametersTitle">
-        <div class="cc-section-title"><div><p class="cc-overline">03 / PARAMETER LIST</p><h1 id="parametersTitle" data-t="params">Список параметров</h1></div><div class="cc-section-actions"><button class="cc-button ghost" id="refreshParamsBtn" type="button" data-t="load">Загрузить параметры</button><button class="cc-button ghost" id="exportParamsBtn" type="button" data-t="export">Экспорт .param</button></div></div>
+        <div class="cc-section-title"><div><p class="cc-overline">03 / PARAMETER LIST</p><h1 id="parametersTitle" data-t="params">Список параметров</h1></div><div class="cc-section-actions"><button class="cc-button ghost" id="refreshParamsBtn" type="button" data-t="load">Загрузить параметры</button><button class="cc-button outline" id="twoPassParamsBtn" type="button">Прочитать параметры · 2 прохода</button><button class="cc-button ghost" id="exportParamsBtn" type="button" data-t="export">Экспорт .param</button></div></div>
         <div class="cc-param-tools"><div class="cc-input-search"><span>⌕</span><input id="paramSearch" type="search" data-ph="search" placeholder="Поиск по названию параметра..."></div><label for="importParamFile" class="cc-button outline"><span>↥</span><span data-t="import">Импорт .param</span></label><input id="importParamFile" type="file" accept=".param,.txt" hidden></div>
         <div class="cc-param-progress"><div class="cc-progress-track"><i id="paramProgressFill"></i></div><span id="paramProgressLabel">0 / ?</span></div><p id="paramLoadNote" class="cc-param-load-note" role="status" aria-live="polite">—</p>
         <div class="pt-controls"><button type="button" class="cc-button ghost pt-tree-toggle" id="paramTreeToggle">Группы параметров</button>
@@ -148,7 +164,7 @@
         </div>
         <div class="pt-layout" id="paramTreeLayout"><aside class="pt-sidebar"><div class="pt-sidebar-head"><span id="ptTreeLabel">Дерево параметров</span></div><div class="pt-tree" id="paramTree" role="tree" aria-label="Дерево групп параметров"></div></aside>
           <div class="cc-card cc-table-card pt-data"><div class="cc-table-overflow"><table class="cc-param-table pt-param-table"><thead><tr><th data-pth="name">Name</th><th data-pth="value">Value</th><th data-pth="def">Default</th><th data-pth="units">Units</th><th data-pth="opts">Options</th><th data-pth="desc">Desc</th><th data-pth="fav">Fav</th></tr></thead><tbody id="paramsTable"></tbody></table></div><div class="cc-table-foot"><span id="paramsSummary">—</span><button class="cc-button ghost cc-more" type="button" id="moreParamsBtn" data-t="more">Показать ещё</button></div></div></div>
-        <div class="cc-import-view" id="importDiff" hidden><div class="cc-card-title"><strong data-t="importdiff">Сравнение с импортированным файлом</strong><small id="importDiffCount">0</small></div><div id="importDiffRows"></div><p data-t="batchNote">Записываются отличающиеся параметры, которые присутствуют на контроллере. Параметры без совпадения пропускаются. Требуется DISARMED.</p><label class="cc-bulk-consent"><input type="checkbox" id="bulkConsent"><span data-t="confirmBatch">Я проверил изменения и сохранил резервную копию параметров</span></label><div class="cc-bulk-actions"><button id="bulkWriteBtn" class="cc-button primary" type="button" disabled data-t="writeImported">Записать отличия в контроллер</button><button id="bulkCancelBtn" class="cc-button ghost" type="button" hidden data-t="cancelBatch">Остановить запись</button></div><div id="bulkProgress" role="status" aria-live="polite"></div></div>
+        <div class="cc-import-view" id="importDiff" hidden><div class="cc-card-title"><strong data-t="importdiff">Сравнение с импортированным файлом</strong><small id="importDiffCount">0</small></div><div id="importDiffRows"></div><p id="importSkipNote" class="cc-param-load-note" role="status"></p><div id="importSkippedRows" class="cc-skipped-list"></div><button class="cc-button ghost" id="importDownloadSkipped" type="button">Скачать отчёт пропущенных .param</button><p data-t="batchNote">Записываются отличающиеся параметры, которые присутствуют на контроллере. Параметры без совпадения пропускаются. Требуется DISARMED.</p><label class="cc-bulk-consent"><input type="checkbox" id="bulkConsent"><span data-t="confirmBatch">Я проверил изменения и сохранил резервную копию параметров</span></label><div class="cc-bulk-actions"><button id="bulkWriteBtn" class="cc-button primary" type="button" disabled data-t="writeImported">Записать отличия в контроллер</button><button id="bulkCancelBtn" class="cc-button ghost" type="button" hidden data-t="cancelBatch">Остановить запись</button></div><div id="bulkProgress" role="status" aria-live="polite"></div></div>
         <p class="cc-under-panel" data-t="paramnotice">Параметры с пометкой A.T.L.A.S. могут отсутствовать в стандартном ArduPlane. Часть настроек вступает в силу только после перезагрузки.</p>
       </section>
 
@@ -191,6 +207,18 @@
         <p class="cc-section-desc" data-cal-t="batteryIntro">Показания питания и параметры датчика. Коэффициенты напряжения и тока устанавливай по измерениям мультиметра, а не наугад.</p>
         <div class="battery-stats"><article><span>VOLTAGE</span><b id="batteryVoltage">—</b></article><article><span>CURRENT</span><b id="batteryCurrent">—</b></article><article><span>REMAINING</span><b id="batteryPercent">—</b></article><article><span>CONSUMED</span><b id="batteryConsumed">—</b></article></div>
         <div class="cc-card cal-settings"><div class="cc-card-title"><span>⚡</span><strong data-cal-t="batterySettings">Параметры Battery Monitor</strong><small>BATT_ / BATT2_</small></div><div class="cal-param-grid" id="batteryParamGrid"></div></div>
+        <div class="cc-card cal-settings cc-battery-cal" id="batteryCalPanel">
+          <div class="cc-card-title"><span>⚖</span><strong data-cal-t="batteryCalTitle">Калибровка напряжения по мультиметру</strong><small>BATT_VOLT_MULT</small></div>
+          <p data-cal-t="batteryCalDescription">Только для аналогового измерителя BATT_MONITOR=3, 4 или 25. Введи напряжение с мультиметра, подключённого к той же батарее.</p>
+          <div class="cc-battery-cal-fields">
+            <label><span data-cal-t="batteryCalReported">Показание контроллера</span><output id="batteryCalReported">—</output></label>
+            <label><span data-cal-t="batteryCalMeasured">Измерено мультиметром, В</span><input id="batteryCalMeasured" type="number" min="2" max="100" step="0.01" inputmode="decimal" placeholder="25.20"></label>
+            <label><span data-cal-t="batteryCalNew">Новый BATT_VOLT_MULT</span><output id="batteryCalProposed">—</output></label>
+          </div>
+          <p id="batteryCalMessage" role="status" aria-live="polite" class="cc-param-load-note"></p>
+          <label class="cc-bulk-consent"><input type="checkbox" id="batteryCalConsent"><span data-cal-t="batteryCalConfirm">Пропеллер снят, полётник DISARMED, батарея подключена, мультиметр показывает верное напряжение. Согласен записать коэффициент.</span></label>
+          <button class="cc-button primary" id="batteryCalApply" type="button" disabled data-cal-t="batteryCalApply">Записать и подтвердить коэффициент</button>
+        </div>
         <p class="cc-under-panel" data-cal-t="batteryNote">Изменения некоторых типов батарейных мониторов вступают в силу после перезагрузки. Чтение телеметрии не требует ARM.</p>
       </section>
 
@@ -393,5 +421,5 @@
       <div class="cc-modal-actions"><button type="button" class="cc-button ghost" id="servoEditorCancel">Отмена</button><button class="cc-button primary" id="servoEditorSave" type="submit">Записать изменения</button></div>
     </form>
   </dialog>
-  <script src="mavlink.js" defer></script><script src="param-tree.js" defer></script><script src="firmware-access.js" defer></script><script src="configurator.js" defer></script><script src="servo-config-core.js" defer></script><script src="calibration.js" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script><script src="quick-setup-core.js" defer></script><script src="quick-setup.js" defer></script>
+  <script src="mavlink.js" defer></script><script src="param-tree.js" defer></script><script src="firmware-access.js" defer></script><script src="configurator.js" defer></script><script src="servo-config-core.js" defer></script><script src="battery-cal-core.js" defer></script><script src="calibration.js" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script><script src="quick-setup-core.js" defer></script><script src="quick-setup.js" defer></script>
 </body></html>
