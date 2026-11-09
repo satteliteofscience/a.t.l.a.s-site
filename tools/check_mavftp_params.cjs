@@ -38,7 +38,7 @@ function samplePacked(){
   timeoutMs:100,maxRetries:2,
   onProgress:bytes=>assert.ok(bytes>0),
   send:async request=>{
-   requests++;const req=ftp.response(request);
+   requests++;const req={seq:new DataView(request.buffer,request.byteOffset,request.byteLength).getUint16(0,true),opcode:request[3],size:request[4],offset:new DataView(request.buffer,request.byteOffset,request.byteLength).getUint32(8,true),data:request.subarray(12)};
    assert.equal(req.opcode===5?req.size:0,req.opcode===5?239:0);
    let response;
    if(req.opcode===4){
@@ -64,7 +64,7 @@ function samplePacked(){
  failureClient=new ftp.Client({timeoutMs:20,maxRetries:1,
   send:async request=>{
    ftpAttempts++;
-   const req=ftp.response(request);
+   const req={seq:new DataView(request.buffer,request.byteOffset,request.byteLength).getUint16(0,true),opcode:request[3],size:request[4],offset:new DataView(request.buffer,request.byteOffset,request.byteLength).getUint32(8,true),data:request.subarray(12)};
    if(req.opcode===4)setTimeout(()=>failureClient.handle(rawHeader(req.seq,0,129,4,0,Uint8Array.of(10))),1);
   }
  });
