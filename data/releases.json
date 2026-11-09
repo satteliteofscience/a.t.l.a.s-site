@@ -11,7 +11,7 @@
       "id": "cube-orange-plus",
       "name": "Cube Orange Plus",
       "family": "CubePilot / Cube Orange Plus",
-      "description": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Сборка HEX проверена по формату и SHA-256. Перед установкой проверь целевую плату и сохрани параметры; испытания прошивки на физическом контроллере ещё не подтверждены. Встроенный Web-DFU предназначен только для Matek.",
+      "description": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Формат HEX и SHA-256 проверены. Запись через Web-DFU доступна в экспериментальном режиме после проверки платы и карты Flash, но на физическом Cube Orange Plus ещё не испытана. Сохрани параметры и загрузчик перед полной записью.",
       "status": "available",
       "target": "CubeOrangePlus — STM32H757",
       "version": "1.0",
@@ -30,8 +30,8 @@
           "channel": "release"
         }
       ],
-      "description_uk": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Збірку HEX перевірено за форматом та SHA-256. Перед установленням перевір цільову плату й збережи параметри; апаратні випробування прошивки ще не підтверджені. Вбудований Web-DFU призначений лише для Matek.",
-      "description_en": "A.T.L.A.S. Release 1.0 for Cube Orange Plus (STM32H757). HEX integrity and format were checked. Verify the exact target board and back up parameters before installation; hardware flashing has not been verified. Built-in Web-DFU is Matek-only.",
+      "description_uk": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Формат HEX і SHA-256 перевірено. Запис через Web-DFU доступний в експериментальному режимі після перевірки плати та карти Flash, але на фізичному Cube Orange Plus ще не випробуваний. Збережи параметри й завантажувач перед повним записом.",
+      "description_en": "A.T.L.A.S. Release 1.0 for Cube Orange Plus (STM32H757). HEX format and SHA-256 verified. Web-DFU flashing is experimental and gated on board and flash-map checks; not yet validated on a physical Cube Orange Plus. Back up parameters and preserve a recovery path before full erase.",
       "target_uk": "CubeOrangePlus — STM32H757",
       "target_en": "CubeOrangePlus — STM32H757"
     },
