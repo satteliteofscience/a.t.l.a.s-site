@@ -12,6 +12,12 @@
       "object_key": "release/cube-orange-plus-release-1.hex",
       "filename": "ATLAS-Cube-Orange-Plus-release-1.hex",
       "sha256": "44b3c68b52ee75bf8de808275a43aafcbea0b076492f0b200052bb6dc7b427f6"
+    },
+    "uni-ic743-mini-release-1": {
+      "channel": "release",
+      "object_key": "release/uni-ic743-mini-release-1.hex",
+      "filename": "ATLAS-Uni-IC743-Mini-release-1.hex",
+      "sha256": "647029f6835f4af59a5ea32cf081acf67394721341ed8482b4923a99dca1c375"
     }
   }
 }
