@@ -118,7 +118,8 @@
   if(!fresh)return {kind:'unknown',enabled,reason:'No fresh SYS_STATUS magnetometer presence information.'};
   if(sensorStatus.present!==true)return {kind:'absent',enabled,reason:'Autopilot SYS_STATUS reports no magnetometer physically available.'};
   if(!present.length)return {kind:'unknown',enabled,reason:'Magnetometer present but enable parameters have not been read.'};
-  return {kind:'enabled',enabled,healthy:sensorStatus.healthy===true,reason:'Magnetometer presence confirmed by fresh SYS_STATUS.'};
+  if(sensorStatus.healthy!==true)return {kind:'unhealthy',enabled,healthy:false,reason:'SYS_STATUS reports the magnetometer present but not healthy; physical connection and sensor data must still be checked.'};
+  return {kind:'enabled',enabled,healthy:true,reason:'Magnetometer presence and health confirmed by fresh SYS_STATUS.'};
  }
  function verifiedEvent(detail,kind){return !!detail&&detail.kind===kind&&detail.status==='done'&&detail.verified===true;}
  function canMarkManualComplete(confirmed,required){return confirmed===true&&required===true;}
