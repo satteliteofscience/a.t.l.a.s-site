@@ -550,7 +550,7 @@ function renderCompass(box){
     if(qs.compassManualAudio){
      callout(box,t('compassAudioCaution'),'warning');
      button(box,t('compassManualFinish'),()=>{
-      qs.awaitingCalibration=null;qs.compassNeedReboot=true;qs.compassRebootVerified=false;
+      qs.awaitingCalibration=null;qs.compassOffline=false;qs.compassNeedReboot=true;qs.compassRebootVerified=false;
       qs.compassRebootBaseline=qs.compassRebootBaseline||s.lastHeartbeat;qs.compassRebootManual=false;
       qs.compassRebootMessage=t('compassAudioCaution');qs.compassError='';
       window.dispatchEvent(new Event('atlas:mag-manual-finish'));
