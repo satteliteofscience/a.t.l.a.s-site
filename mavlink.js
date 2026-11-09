@@ -97,6 +97,17 @@
     if(id===253 && v.byteLength>=2) return {type:'text',severity:v.getUint8(0),text:asciiText(frame.payload.slice(1,Math.min(51,v.byteLength)))};
     return null;
   }
+  // One flight controller per session: a second vehicle on a UDP/TCP stream must not
+  // silently take over the write target (SYSID) or contaminate telemetry/ACKs.
+  // MAV_TYPE_GCS is 6; a ground station can also emit HEARTBEAT.
+  function belongsToSelectedVehicle(frame,decoded,activeSysId){
+    if(!frame||!decoded||!Number.isInteger(frame.sysid)||frame.sysid<1||frame.sysid>255)return false;
+    if(decoded.type==='heartbeat'){
+      return frame.compid===1 && decoded.vehicleType!==6 &&
+        (activeSysId===null||frame.sysid===activeSysId);
+    }
+    return activeSysId!==null && frame.sysid===activeSysId;
+  }
   function ftpFrame(sysid,compid,header){const payload=new Uint8Array(254);payload[0]=0;payload[1]=sysid;payload[2]=compid;payload.set(header.slice(0,251),3);return payload;}
-  window.AtlasMAV={ftpFrame,Parser,createFrame,parseMessage,heartbeat,paramList,requestDataStream,paramRead,paramReadByIndex,paramSet,commandLong,crcX25};
+  window.AtlasMAV={ftpFrame,Parser,createFrame,parseMessage,belongsToSelectedVehicle,heartbeat,paramList,requestDataStream,paramRead,paramReadByIndex,paramSet,commandLong,crcX25};
 })();
