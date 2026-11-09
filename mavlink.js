@@ -99,8 +99,12 @@
     // logically zero. Preserve raw UTF-8 bytes for cross-chunk reconstruction.
     if(id===253 && v.byteLength>=2){
       const textBytes=frame.payload.slice(1,Math.min(51,v.byteLength));
-      const statustextId=v.byteLength>=53?v.getUint16(51,true):0;
-      const chunkSeq=v.byteLength>=54?v.getUint8(53):0;
+      // A zero-trimmed MAVLink2 frame can contain *only* the low byte
+      // of id (e.g. id=1, chunk_seq=0 => payload length 52).
+      // Decode extension fields byte by byte and default missing bytes to 0.
+      const statustextId=(v.byteLength>51?v.getUint8(51):0)|
+        ((v.byteLength>52?v.getUint8(52):0)<<8);
+      const chunkSeq=v.byteLength>53?v.getUint8(53):0;
       return {type:'text',severity:v.getUint8(0),text:asciiText(textBytes),textBytes,
         statustextId,chunkSeq,terminated:textBytes.length<50||textBytes.indexOf(0)>=0};
     }
