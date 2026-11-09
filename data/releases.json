@@ -89,24 +89,6 @@
       "description_en": "A.T.L.A.S. Release 1.0: tested HEX build for Matek H743-WING V3, ready to install. Before flashing, verify the board marking and revision and back up the current parameters.",
       "target_uk": "Matek H743-WING V3 — STM32H743",
       "target_en": "Matek H743-WING V3 — STM32H743"
-    },
-    {
-      "id": "other-boards",
-      "name": "Другие контроллеры",
-      "family": "Дополнительные платформы",
-      "description": "Поддержка пока не заявлена. Для каждой новой платы нужны отдельная сборка и проверка.",
-      "status": "unverified",
-      "target": "Нет подтверждённых сборок",
-      "version": "—",
-      "downloads": [],
-      "name_uk": "Інші контролери",
-      "name_en": "Other controllers",
-      "family_uk": "Додаткові платформи",
-      "family_en": "Additional platforms",
-      "description_uk": "Підтримку поки не заявлено. Для кожної нової плати потрібні окрема збірка та перевірка.",
-      "description_en": "Support has not been announced. Each new board requires its own build and verification.",
-      "target_uk": "Немає перевірених збірок",
-      "target_en": "No verified builds"
     }
   ]
 }
