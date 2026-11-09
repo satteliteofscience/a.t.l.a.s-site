@@ -73,14 +73,30 @@
   if(!out.length&&!canWrite)out.push('writer');
   return out;
  }
+ // A verified .param profile describes the intended output protocol, not the ESC firmware brand.
+ function readEscProfile(source){
+  const result=new Map();
+  const keys=/^(?:SERVO(?:[1-9]|1[0-6])_FUNCTION|SERVO_BLH_MASK|SERVO_BLH_OTYPE)$/;
+  for(const raw of String(source||'').split(/\r?\n/)){
+   const match=raw.trim().match(/^([A-Z][A-Z0-9_]{0,15})[\s,=]+([+-]?\d+)(?=\s|$|[,;])/);
+   if(!match||!keys.test(match[1]))continue;
+   const n=Number(match[2]);if(Number.isSafeInteger(n)&&n>=0&&n<=4294967295)result.set(match[1],{value:n,type:6});
+  }
+  return result;
+ }
+ function classifyEscFromProfile(liveParams,source,board=''){
+  const merged=new Map(mapOf(liveParams)),overrides=readEscProfile(source);
+  for(const [name,value] of overrides)merged.set(name,value);
+  return {...classifyEscProtocol(merged,board),source:overrides.size?'profile+controller':'controller',overrides:overrides.size};
+ }
  function classifyEscProtocol(liveParams,board=''){
   const params=mapOf(liveParams),channels=[];
   for(let channel=1;channel<=16;channel++){const fn=Number(params.get('SERVO'+channel+'_FUNCTION')?.value);if(THROTTLE_FUNCTIONS.includes(fn))channels.push(channel);}
   if(!channels.length)return {kind:'no-throttle',channels:[],reason:'No SERVOx_FUNCTION 70/73/74 output was found.'};
   const maskParam=params.get('SERVO_BLH_MASK'),typeParam=params.get('SERVO_BLH_OTYPE');
   if(!maskParam||!typeParam)return {kind:'unknown',channels,reason:'SERVO_BLH_MASK or SERVO_BLH_OTYPE is not available in the parameter list.'};
-  const canKeys=[...params.keys()].filter(name=>/^CAN_.*(?:DRIVER|PROTOCOL)$/.test(name));
-  if(canKeys.some(name=>Number(params.get(name)?.value)>0))return {kind:'unknown',channels,reason:'CAN is configured; the physical ESC path cannot be inferred safely from this parameter subset.'};
+  // CAN bus settings do not by themselves imply that the throttle ESC is on CAN.
+  // A motor output selected for DShot stays DShot even when CAN is configured for GPS, peripherals or telemetry.
   const rawMask=Number(maskParam.value),otype=Number(typeParam.value);if(!Number.isFinite(rawMask)||!Number.isInteger(rawMask)||!Number.isFinite(otype)||!Number.isInteger(otype))return {kind:'unknown',channels,reason:'ESC protocol mask/type values are invalid.'};const mask=rawMask>>>0,selected=channels.filter(channel=>(mask&(1<<(channel-1)))!==0);
   if(selected.length){
    if(DSHOT_TYPES.includes(otype)){
@@ -93,13 +109,18 @@
   }
   return {kind:'pwm',channels,otype,reason:'Throttle outputs are not selected by the BLHeli digital-output mask; current Plane parameters indicate normal PWM. Confirm wiring and ESC documentation.'};
  }
- function detectCompass(liveParams){
+ function detectCompass(liveParams,sensorStatus,now=Date.now()){
   const params=mapOf(liveParams),keys=['COMPASS_USE','COMPASS_USE2','COMPASS_USE3'],present=keys.filter(key=>params.has(key));
-  if(!present.length)return {kind:'unknown',enabled:[],reason:'Compass enable parameters were not received.'};
   const enabled=present.filter(key=>Number(params.get(key)?.value)>0);
-  return enabled.length?{kind:'enabled',enabled,reason:'At least one compass instance is enabled.'}:{kind:'disabled',enabled:[],reason:'All received compass instances are disabled.'};
+  if(present.length&&!enabled.length)return {kind:'disabled',enabled:[],reason:'All received compass instances are disabled.'};
+  // MAVLink SYS_STATUS present flag is derived from AP::compass().available(), not configuration.
+  const fresh=sensorStatus&&Number.isFinite(sensorStatus.lastSeen)&&now-sensorStatus.lastSeen>=0&&now-sensorStatus.lastSeen<5500;
+  if(!fresh)return {kind:'unknown',enabled,reason:'No fresh SYS_STATUS magnetometer presence information.'};
+  if(sensorStatus.present!==true)return {kind:'absent',enabled,reason:'Autopilot SYS_STATUS reports no magnetometer physically available.'};
+  if(!present.length)return {kind:'unknown',enabled,reason:'Magnetometer present but enable parameters have not been read.'};
+  return {kind:'enabled',enabled,healthy:sensorStatus.healthy===true,reason:'Magnetometer presence confirmed by fresh SYS_STATUS.'};
  }
  function verifiedEvent(detail,kind){return !!detail&&detail.kind===kind&&detail.status==='done'&&detail.verified===true;}
  function canMarkManualComplete(confirmed,required){return confirmed===true&&required===true;}
- return Object.freeze({THROTTLE_FUNCTIONS,DSHOT_TYPES,INTEGER_TYPES,parseParamText,writeBlockers,classifyEscProtocol,detectCompass,verifiedEvent,canMarkManualComplete});
+ return Object.freeze({THROTTLE_FUNCTIONS,DSHOT_TYPES,INTEGER_TYPES,parseParamText,writeBlockers,readEscProfile,classifyEscFromProfile,classifyEscProtocol,detectCompass,verifiedEvent,canMarkManualComplete});
 });

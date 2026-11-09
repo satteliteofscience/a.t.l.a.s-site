@@ -29,8 +29,9 @@ function status(el,text){$(el).textContent=text;}
 function currentState(){return api.getState();}
 function emit(text,bad=false){api.log('CAL: '+text,bad);}
 function guard(){if(!safe()){emit(tt('need'),true);return false;}if(accel.kind||mag.running){emit(tt('calBusy'),true);return false;}return true;}
+function detectedMagnetometer(){const s=currentState(),m=s.compassStatus;return !!(m&&m.present===true&&Date.now()-m.lastSeen>=0&&Date.now()-m.lastSeen<5500&&['COMPASS_USE','COMPASS_USE2','COMPASS_USE3'].some(key=>Number(s.params.get(key)?.value)>0));}
 function clearAccelTimer(){if(accel.timer)clearTimeout(accel.timer);accel.timer=null;}
-function armAccelTimer(){clearAccelTimer();const duration=accel.kind==='six'&&!accel.firstRequest?60000:accel.kind==='six'?240000:90000;accel.timer=setTimeout(()=>{if(accel.kind){accel.status='timeout';accel.kind=null;accel.requested=null;status('accelStatus',tt('timeout'));status('accelDiagnostic',dd('expired'));renderAccel();emit(dd('expired'),true);}},duration);}
+function armAccelTimer(){clearAccelTimer();const duration=accel.kind==='six'&&!accel.firstRequest?60000:accel.kind==='six'?240000:90000;accel.timer=setTimeout(()=>{if(accel.kind){status('accelDiagnostic',dd('expired'));markAccelResult(false,dd('expired'));}},duration);}
 function markAccelResult(ok,info){const completedKind=accel.kind;clearAccelTimer();accel.kind=null;accel.requested=null;accel.status=ok?'done':'failed';status('accelStatus',info||tt(ok?'done':'failed'));emit(info||tt(ok?'done':'failed'),!ok);renderAccel();window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:completedKind==='six'?'six':completedKind==='level'?'level':'accelerometer',status:ok?'done':'failed',verified:!!ok,info:info||''}}));}
 async function startAccel(kind,p5){if(!guard())return;
  accel.kind=kind;accel.status='waiting';window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:kind==='six'?'six':kind==='level'?'level':'accelerometer',status:'started',verified:false}}));accel.requested=null;accel.lastPos=null;accel.lastConfirmation=0;accel.completed.clear();accel.started=now();accel.firstRequest=false;accel.lastAck=null;accel.lastMessage='';renderAccel();status('accelStatus',dd('startStatus'));status('accelDiagnostic',kind==='six'?dd('init'):tt('sending'));armAccelTimer();
@@ -298,13 +299,13 @@ $('servoDialog').addEventListener('cancel',ev=>{if(servoIsSaving)ev.preventDefau
 for(const id of ['servoEditFunction','servoEditMin','servoEditTrim','servoEditMax','servoEditReverse'])$(id).addEventListener('input',updateServoEditor);
 function renderBattery(){const s=currentState();const demo=s.demo;const v=demo?23.4:s.telemetry.voltage;const curr=demo?4.7:live.current;const pct=demo?78:live.remaining;const consumed=demo?2340:live.consumed;
  status('batteryVoltage',Number.isFinite(v)?v.toFixed(2)+' V':'—');status('batteryCurrent',Number.isFinite(curr)?curr.toFixed(2)+' A':'—');status('batteryPercent',Number.isFinite(pct)?pct+' %':'—');status('batteryConsumed',Number.isFinite(consumed)?Math.round(consumed)+' mAh':'—');status('batteryBadge',demo?tt('fromDemo'):live.batteryTime&&now()-live.batteryTime<10000?'BATTERY_STATUS / LIVE':s.connected?'SYS_STATUS / MAVLINK':'NO MAVLINK');}
-function renderCompass(){const s=currentState();const can=safe()&&!accel.kind;const reportDone=mag.complete;
- $('compassStartBtn').disabled=!can||mag.running;
+function renderCompass(){const s=currentState();const can=safe()&&!accel.kind,physical=detectedMagnetometer();const reportDone=mag.complete;
+ $('compassStartBtn').disabled=!can||!physical||mag.running;
  $('compassAcceptBtn').disabled=!can||!reportDone||mag.autosaved||mag.saving;
  $('compassCancelBtn').disabled=!can||!mag.running;
  $('compassProgressBar').style.width=mag.pct+'%';status('compassProgressValue',Math.round(mag.pct)+'%');status('compassProgressText',mag.running?tt('compassRunning'):mag.complete?(mag.autosaved?tt('done'):tt('notSaved')):mag.lastResult||'NO DATA');status('compassBadge',s.demo?tt('demo'):safe()?'USB / DISARMED':'DISARM REQUIRED');}
-async function startMag(){if(!guard())return;mag.running=true;mag.complete=false;mag.autosaved=false;mag.saving=false;mag.pct=0;mag.reported.clear();mag.results.clear();mag.lastResult=null;window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:'compass',status:'started',verified:false}}));status('compassStatus',tt('sending'));renderCompass();
- try{await api.command(42424,[0,0,0,0,0,0,0]);emit('MAV_CMD_DO_START_MAG_CAL requested');}catch(e){mag.running=false;status('compassStatus',e.message);renderCompass();}}
+async function startMag(){if(!guard()||!detectedMagnetometer()){emit('Magnetometer not confirmed by fresh SYS_STATUS',true);return;}mag.running=true;mag.complete=false;mag.autosaved=false;mag.saving=false;mag.pct=0;mag.reported.clear();mag.results.clear();mag.lastResult=null;window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:'compass',status:'started',verified:false}}));status('compassStatus',tt('sending'));renderCompass();
+ try{await api.command(42424,[0,0,0,0,0,0,0]);emit('MAV_CMD_DO_START_MAG_CAL requested');}catch(e){mag.running=false;status('compassStatus',e.message);window.dispatchEvent(new CustomEvent('atlas:calibration',{detail:{kind:'compass',status:'failed',verified:false,reason:e.message}}));renderCompass();}}
 async function acceptMag(){if(!safe()||!mag.complete||mag.autosaved)return;try{await api.command(42425,[0,0,0,0,0,0,0]);status('compassStatus',tt('sending'));}catch(e){status('compassStatus',e.message);}}
 async function cancelMag(){if(!safe()||!mag.running)return;try{await api.command(42426,[0,0,0,0,0,0,0]);status('compassStatus',tt('sending'));}catch(e){status('compassStatus',e.message);}}
 function magProgress(d){if(!mag.running)return;mag.reported.set(d.compassId,Math.min(100,d.pct));const counts=[...mag.reported.values()];mag.pct=counts.reduce((a,b)=>a+b,0)/counts.length;status('compassStatus',`${tt('compassRunning')} · #${d.compassId} · ${d.pct}%`);renderCompass();}
@@ -352,6 +353,6 @@ for(const b of document.querySelectorAll('.cc-calibration-menu [data-tab]'))b.ad
 setInterval(()=>{const s=currentState();if(s.connected&&s.sysid!==null)requestTelemetry();if(document.querySelector('[data-panel="servos"].active'))renderServo();if(benchActive){if(!benchCanSend())stopBench('link');else if(Date.now()>benchDeadline)stopBench('timeout');}if(document.querySelector('[data-panel="battery"].active'))renderBattery();if(document.querySelector('[data-panel="accelerometer"].active')){
    if(accel.kind==='six'&&!accel.firstRequest&&accel.started>0&&now()-accel.started>18000&&accel.lastAck===null){status('accelDiagnostic',dd('late'));}
    renderAccel();
-  }if(document.querySelector('[data-panel="compass"].active'))renderCompass();},1250);
+  }if(document.querySelector('[data-panel="compass"].active')||$('compassStartBtn').closest('.qs-cal-dock'))renderCompass();},1250);
 changeLanguage();
 })();

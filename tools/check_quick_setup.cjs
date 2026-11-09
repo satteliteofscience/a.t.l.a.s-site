@@ -84,13 +84,27 @@ function escParams({mask=0,otype=0,channels=[3],can=false}={}){
  assert.equal(core.classifyEscProtocol(escParams({mask:1<<2,otype:6,channels:[3,4]})).kind,'mixed');
  assert.equal(core.classifyEscProtocol(escParams({mask:1<<2,otype:1,channels:[3]})).kind,'other-pulse');
  assert.equal(core.classifyEscProtocol(escParams({mask:1<<2,otype:6,channels:[3]}),'cube-orange').kind,'dshot-board-limit');
- assert.equal(core.classifyEscProtocol(escParams({mask:0,otype:0,can:true})).kind,'unknown');
+ assert.equal(core.classifyEscProtocol(escParams({mask:0,otype:0,can:true})).kind,'pwm');
  assert.equal(core.classifyEscProtocol(params([['SERVO3_FUNCTION',70,6]])).kind,'unknown');
  assert.equal(core.classifyEscProtocol(params([])).kind,'no-throttle');
 })();
+(function testEscUsesLoadedProfile(){
+ const live=escParams({mask:0,otype:0,channels:[3],can:true});
+ const profile='SERVO3_FUNCTION 70\nSERVO_BLH_MASK 4\nSERVO_BLH_OTYPE 6\nCAN_P1_DRIVER 1\n';
+ const result=core.classifyEscFromProfile(live,profile,'matek-h743-wing-v3');
+ assert.equal(result.kind,'dshot','CAN peripheral must not mask configured DShot throttle');
+ assert.equal(result.source,'profile+controller');
+ assert.equal(result.channels[0],3);
+ assert.equal(core.classifyEscFromProfile(live,'','matek-h743-wing-v3').kind,'pwm');
+ assert.equal(core.readEscProfile('THR_MAX 100\nSERVO_BLH_MASK 4\n').has('THR_MAX'),false,'only ESC-relevant keys may override assessment');
+})();
 (function testCompassAndCompletionGates(){
- assert.equal(core.detectCompass(params([['COMPASS_USE',1,6],['COMPASS_USE2',0,6]])).kind,'enabled');
- assert.equal(core.detectCompass(params([['COMPASS_USE',0,6],['COMPASS_USE2',0,6]])).kind,'disabled');
+ const now=Date.now(),enabled=params([['COMPASS_USE',1,6],['COMPASS_USE2',0,6]]);
+ assert.equal(core.detectCompass(enabled).kind,'unknown','enable setting does not prove hardware is present');
+ assert.equal(core.detectCompass(enabled,{present:false,healthy:false,lastSeen:now},now).kind,'absent');
+ assert.equal(core.detectCompass(enabled,{present:true,healthy:false,lastSeen:now},now).kind,'enabled');
+ assert.equal(core.detectCompass(enabled,{present:true,healthy:true,lastSeen:now-6000},now).kind,'unknown','stale SYS_STATUS cannot certify presence');
+ assert.equal(core.detectCompass(params([['COMPASS_USE',0,6],['COMPASS_USE2',0,6]]),{present:true,lastSeen:now},now).kind,'disabled');
  assert.equal(core.detectCompass(params([])).kind,'unknown');
  assert.equal(core.verifiedEvent({kind:'six',status:'done',verified:true},'six'),true);
  assert.equal(core.verifiedEvent({kind:'six',status:'done',verified:false},'six'),false);

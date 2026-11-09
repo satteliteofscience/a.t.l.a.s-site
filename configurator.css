@@ -210,3 +210,9 @@
 .qs-skipped>div{padding:3px 0;border-bottom:1px dashed #5c452e;overflow-wrap:anywhere}
 .qs-skipped>div:last-child{border:0}
 @media(max-width:700px){.qs-dfu-dock .dfu-grid{grid-template-columns:1fr}.qs-dfu-dock .dfu-check-column{border-left:0;border-top:1px solid #45502f;padding-left:0;padding-top:14px}}
+
+/* Native calibration widgets are mounted inside Quick Setup without duplicating MAVLink state machines. */
+.qs-cal-dock{margin-top:16px;max-width:100%;min-width:0}
+.qs-cal-dock .cal-wizard,.qs-cal-dock .cal-card{width:100%;max-width:100%;margin:0}
+.qs-cal-dock #compassStartBtn{display:none}
+.qs-cal-dock .cal-wizard-inner{min-width:0}
