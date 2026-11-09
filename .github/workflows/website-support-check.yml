@@ -19,6 +19,8 @@ on:
       - 'MAVLINK-NETWORK-BRIDGE.md'
       - 'tools/check_release_configurator.cjs'
       - 'mavlink.js'
+      - 'ahrs-filter-core.js'
+      - 'tools/check_ahrs_nav_cache.cjs'
       - 'mavftp-param.js'
       - 'tools/check_mavftp_params.cjs'
       - 'servo-config-core.js'
@@ -80,7 +82,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check JavaScript syntax
-        run: node --check support.js && node --check page-meta.js && node --check app.js && node --check contact-support.js && node --check configurator.js && node --check mavlink.js && node --check mavftp-param.js && node --check battery-cal-core.js && node --check tempcal-core.js && node --check tempcal-ui.js && node --check tools/mavlink-bridge.cjs && node --check servo-config-core.js && node --check quick-setup-core.js && node --check quick-setup.js && node --check calibration.js && node --check i18n.js && node --check faq.js && node --check changelog.js && node --check dfu-ui.js && node --check firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
+        run: node --check support.js && node --check page-meta.js && node --check app.js && node --check contact-support.js && node --check configurator.js && node --check mavlink.js && node --check ahrs-filter-core.js && node --check mavftp-param.js && node --check battery-cal-core.js && node --check tempcal-core.js && node --check tempcal-ui.js && node --check tools/mavlink-bridge.cjs && node --check servo-config-core.js && node --check quick-setup-core.js && node --check quick-setup.js && node --check calibration.js && node --check i18n.js && node --check faq.js && node --check changelog.js && node --check dfu-ui.js && node --check firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
       - name: Verify monobank/Tally URLs, labels, privacy, no legacy form
         run: node tools/check_monobank_support.cjs
       - name: Verify link preview Open Graph and Twitter metadata
@@ -93,6 +95,8 @@ jobs:
         run: node tools/check_performance.cjs
       - name: Verify automatic parameter loading and Release 1.0 status
         run: node tools/check_release_ready.cjs
+      - name: Verify live AHRS/DCM estimator, TCP label and parameter cache navigation
+        run: node tools/check_ahrs_nav_cache.cjs
       - name: Verify fast MAVFTP packed-parameter read and fallback
         run: node tools/check_mavftp_params.cjs
       - name: Verify release configurator imports, voltage calibration and local UDP bridge

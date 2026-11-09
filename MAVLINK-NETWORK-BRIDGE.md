@@ -52,6 +52,13 @@ A.T.L.A.S. now attempts **MAVFTP** `@PARAM/param.pck?withdefaults=1` when connec
 
 This fixes a major source of latency on links with thousands of parameters, and avoids sending the padded full 254-byte FTP frame for small requests. Speed depends on RF bandwidth, packet loss, TCP round-trip latency, and any station speed-profile setting. This web application **does not switch the station's RF long-range/high-speed mode**; that is controlled separately by the radio/station. For any unexplained timeout, check whether the user-facing status says `MAVFTP` or `PARAM_REQUEST_LIST fallback`.
 
+### Parameter cache and AHRS estimator status
+
+- The full parameter list is downloaded once when the autopilot first sends a MAVLink heartbeat. Switching between the dashboard and **Parameter List** now shows the current in-memory list immediately instead of downloading it again. Press **Load Parameters / Refresh** explicitly when settings have changed elsewhere and a new live download is required, or use **Two-pass read** to discover parameters revealed after configuration changes.
+- The header's disconnect control is transport-aware: it says **Disconnect TCP/UDP** for the network connector, or **Disconnect USB** for Web Serial.
+- The flight horizon no longer uses a hard-coded EKF3 label. It displays a **confirmed active DCM/EKF2/EKF3 backend only after an ArduPilot AHRS status text** such as `AHRS: EKF3 active` or `AHRS: DCM active` is received from the selected autopilot. If a message was sent *before* connection, the UI shows **EKF3 · CFG** (or DCM · CFG) based on `AHRS_EKF_TYPE` and `AHRS_EKF_USE`, clearly marked as *configured, not confirmed active*. A current MAVLink heartbeat alone does not prove which AHRS backend is supplying attitude; ArduPlane can fall back to DCM. After heartbeat loss the indicator returns to unknown until new evidence arrives.
+- This indicator is informational and is **not** a flight-readiness test or substitute for reviewing the FC log and EKF health.
+
 ### Troubleshooting
 
 - No **bridge ready**: check Node is running, token, localhost port and browser restrictions.
