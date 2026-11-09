@@ -271,7 +271,14 @@ window.addEventListener('atlas:state',()=>{
  const s=getState(),connected=!!s.connected;
  if(connected!==lastConnected){lastConnected=connected;updateAll();announce({type:'connection'});}
 });
-window.addEventListener('atlas:language',updateAll);
+function translateHeader(){
+ const dict=translations[language()]||translations.ru;
+ const nav=document.querySelector('[data-tc-nav]'),heading=document.querySelector('[data-tc-head]'),desc=document.querySelector('[data-tc-description]');
+ if(nav)nav.textContent=dict.title;
+ if(heading)heading.textContent=dict.title;
+ if(desc)desc.textContent=dict.body;
+}
+window.addEventListener('atlas:language',()=>{translateHeader();updateAll();});
 window.addEventListener('atlas:navigate',event=>{
  if(event.detail?.tab==='temperature'){
   const panel=document.getElementById('temperatureWorkspace');
@@ -279,4 +286,7 @@ window.addEventListener('atlas:navigate',event=>{
  }
 });
 window.AtlasTempCal=Object.freeze({mount,report,refresh:refreshParameters});
+translateHeader();
+const firstMount=document.getElementById('temperatureWorkspace');
+if(firstMount){firstMount.replaceChildren();mount(firstMount,{wizard:false});}
 })();
