@@ -475,6 +475,7 @@ function renderFinal(box){
 }
 function render(){
  translateStatic();
+ if(qs.step!==2)restoreDfuPanel();
  const box=$('qsContent');if(!box)return;box.replaceChildren();
  const titles=[t('introTitle'),t('safetyTitle'),t('firmwareTitle'),t('paramsTitle'),t('accelTitle'),t('levelTitle'),t('rebootTitle'),t('escTitle'),t('compassTitle'),t('finalTitle')];
  appendText(box,'div',String(qs.step+1).padStart(2,'0')+' / '+String(stepKeys.length).padStart(2,'0'),'cc-overline');
@@ -538,7 +539,9 @@ setInterval(()=>{
  renderHeader();
 },1000);
 window.addEventListener('atlas:language',render);
-window.addEventListener('atlas:navigate',event=>{if(event.detail?.tab==='quicksetup')render();});
+window.addEventListener('atlas:navigate',event=>{if(event.detail?.tab==='quicksetup')render();else restoreDfuPanel();});
+window.addEventListener('atlas:state',()=>{if(qs.step===1||qs.step===2||qs.step===3)render();});
+window.addEventListener('atlas:board',()=>{if(qs.firmwareBoard&&qs.firmwareBoard!==selectedBoard()){invalidateFrom(2);qs.fileToken++;qs.fileText=null;qs.preview=null;qs.firmwareSource=null;qs.firmwareBoard=null;}render();});
 window.addEventListener('atlas:parameters',render);
 document.querySelectorAll('[data-language]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(render,0)));
 render();
