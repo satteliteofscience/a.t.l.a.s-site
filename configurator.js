@@ -456,11 +456,13 @@ window.AtlasCC = Object.freeze({
   writeAdvancedParams:async (updates,onProgress=()=>{},shouldCancel=()=>false,options={})=>{
     if(!canWrite())throw Error('Live USB + confirmed DISARMED + idle PARAM transfer required');
     const changes=[];
+    const metadata=Object.fromEntries(window.AtlasParamTree?.getMetadata?.()||[]);
     for(const [name,value] of Object.entries(updates)){
       if(!/^[A-Z][A-Z0-9_]{0,15}$/.test(name)||!Number.isFinite(value))throw Error('Invalid parameter: '+name);
       const p=state.params.get(name);
       if(!p)throw Error(name+' not present on flight controller');
-      if((p.type===1||p.type===2||p.type===3||p.type===4||p.type===5||p.type===6||p.type===7||p.type===8)&&!Number.isInteger(value))throw Error(name+': integer required');
+      const report=window.AtlasQuickSetupCore?.parseParamText(name+' '+value+'\n',new Map([[name,p]]),metadata);
+      if(!report?.valid||report.skipped.length||report.errors.length)throw Error(name+': '+(report?.skipped?.[0]?.reason||report?.errors?.[0]?.reason||'unsupported write'));
       if(Math.abs(p.value-value)>Math.max(1e-5,Math.abs(value)*2e-6))changes.push({name,value,type:p.type});
     }
     if(!changes.length)return {done:0,total:0};
