@@ -286,3 +286,13 @@
 .cc-filter-indicator{position:absolute;z-index:2;left:12px;top:12px;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 9px;border:1px solid #7e84518a;background:#121c10d9;color:#e1d293;font:700 12px 'IBM Plex Mono',monospace;pointer-events:auto}
 .cc-filter-indicator[data-verified="true"]{border-color:#88ad68;color:#c8eba7}
 #ahrsFilterDetail{max-width:62%;font-size:10px;line-height:1.45;overflow-wrap:anywhere}
+
+/* Full MAVLink STATUSTEXT log, including normal INFO and DEBUG performance lines. */
+.cc-event-fc{border-left-color:#739e61}
+.cc-event-tag{display:inline-block;vertical-align:baseline;margin-right:5px;padding:1px 4px;border:1px solid #546841;background:#1c2c1a;color:#aacb89;font:700 9px/1.5 'IBM Plex Mono',monospace;white-space:nowrap}
+.cc-event-fc[data-severity="0"],.cc-event-fc[data-severity="1"],.cc-event-fc[data-severity="2"],.cc-event-fc[data-severity="3"]{border-left-color:#e58470;color:#f2c2b4}
+.cc-event-fc[data-severity="4"]{border-left-color:#e4b75e;color:#ebd39d}
+.cc-event-fc[data-severity="5"]{border-left-color:#afa86e}
+.cc-event-fc[data-severity="7"]{border-left-color:#64775c;color:#99a88c}
+.cc-event-fc[data-severity="0"] .cc-event-tag,.cc-event-fc[data-severity="1"] .cc-event-tag,.cc-event-fc[data-severity="2"] .cc-event-tag,.cc-event-fc[data-severity="3"] .cc-event-tag{color:#e8ac98;border-color:#9b5a47}
+.cc-event-fc[data-severity="4"] .cc-event-tag{color:#e4c37e;border-color:#897246}
