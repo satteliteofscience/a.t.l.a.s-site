@@ -24,6 +24,11 @@ function samplePacked(){
  return Buffer.concat(chunks.map(x=>Buffer.from(x)));
 }
 (async()=>{
+ const zeroTrimmed=rawHeader(2,1,128,5,239,Uint8Array.of(1,0,0,0));
+ const trimmed=zeroTrimmed.subarray(0,zeroTrimmed.length-3);
+ const rehydrated=ftp.response(trimmed);
+ assert.equal(rehydrated.data.length,4,'inner FTP data size must survive MAVLink2 zero trimming');
+ assert.deepEqual(Array.from(rehydrated.data),[1,0,0,0]);
  const packed=samplePacked(),items=ftp.decodePacked(packed);
  assert.equal(items.length,4);
  assert.deepEqual(items.map(x=>x.name),['AIRSPEED_MIN','AIRSPEED_MAX','INS_TCAL1_ENABLE','SERVO1_REVERSED']);
