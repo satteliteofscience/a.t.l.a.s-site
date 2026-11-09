@@ -26,6 +26,9 @@ assert.match(html,/id="batteryCalMeasured"/,'measured voltage input is missing')
 assert.match(html,/id="networkMode"/,'UDP/TCP configurator controls must exist');
 assert.match(config,/function connectBridge\(\)/,'MAVLink network transport should be supported');
 assert.match(config,/state\.netSocket\.send\(frame\)/,'bridge should send the same MAVLink frame as USB');
+assert.match(config,/function readParamsTwice\(/,'normal parameter editor needs two-pass read');
+assert.match(config,/if\(!state\.paramLoading&&!startParamLoad\(true\)\)/,'two-pass read must request a fresh second transfer');
+assert.match(config,/const report=window\.AtlasQuickSetupCore\?\.parseParamText\(name\+' '\+value/,'advanced parameter writes must validate type/range/read-only');
 assert.match(script,/ORIGINS\.has\(origin\)/,'local bridge must enforce browser Origin');
 assert.match(script,/url\.searchParams\.get\('token'\)!==TOKEN/,'local bridge must enforce session token');
 assert.match(page,/landAtSupport\(\)/,'support deep link should be aligned after page load');
