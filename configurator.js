@@ -69,6 +69,7 @@ function navigate(tab){
  if(!['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))return;
  const previous=state.selectedTab;
  state.selectedTab=tab;
+ document.body.classList.toggle('cc-quick-setup',tab==='quicksetup');
  window.dispatchEvent(new CustomEvent('atlas:navigate',{detail:{tab}}));
  document.querySelectorAll('.cc-tab').forEach(el=>el.classList.toggle('active',el.dataset.panel===tab));
  document.querySelectorAll('.cc-nav').forEach(el=>{let active=el.dataset.tab===tab;el.classList.toggle('active',active);el.setAttribute('aria-current',active?'page':'false');});
@@ -243,12 +244,12 @@ async function connect(){if(state.connected){await disconnect();return;}
  }catch(err){toast('USB: '+err.message,true);if(state.port)await disconnect();}
  finally{state.connecting=false;updateConnectionUI();}
 }
-function startParamLoad(){if(state.bulk?.running||state.servoConfigBusy){toast(tr('buttonBusy'),true);return;}if(state.paramLoading)return;if(!state.connected||state.sysid===null){toast(tr('needlink'),true);return;}
+function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBusy){toast(tr('buttonBusy'),true);return false;}if(state.paramLoading)return false;if(!state.connected||state.sysid===null){toast(tr('needlink'),true);return false;}
  // Preserve already received parameters if the previous transfer was incomplete.
  const old=state.paramTransfer;
- if(old?.phase==='partial'&&state.paramCount>0&&old.seen.size<state.paramCount){
+ if(!fresh&&old?.phase==='partial'&&state.paramCount>0&&old.seen.size<state.paramCount){
   stopParamRepair();old.attempts.clear();old.lastRequested.clear();old.requests=0;old.lastNew=Date.now()-5000;old.started=Date.now();old.phase='repair';old.repairBusy=false;state.paramLoading=true;
-  state.paramRepairTimer=setInterval(recoverMissingParams,1400);recoverMissingParams();showProgress();toast(tr('resumeLoad')+` · ${state.paramCount-old.seen.size}`);return;
+  state.paramRepairTimer=setInterval(recoverMissingParams,1400);recoverMissingParams();showProgress();toast(tr('resumeLoad')+` · ${state.paramCount-old.seen.size}`);return true;
  }
  stopParamRepair();state.paramLoading=true;state.params.clear();state.paramCount=null;state.tableLimit=150;
  const time=Date.now();state.paramTransfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
@@ -256,11 +257,14 @@ function startParamLoad(){if(state.bulk?.running||state.servoConfigBusy){toast(t
  // Retry every missing index; a one-shot PARAM_REQUEST_LIST is not reliable.
  state.paramRepairTimer=setInterval(recoverMissingParams,1400);
  transmit(21,M.paramList(state.sysid,state.compid)).then(()=>toast(tr('refreshdone'))).catch(err=>{toast(err.message,true);state.paramLoading=false;stopParamRepair();state.paramTransfer.phase='partial';showProgress();});
+ return true;
 }
 function canWrite(){return state.connected&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading;}
 window.AtlasCC = Object.freeze({
   getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
   canWrite:()=>canWrite(),
+  connectUsb:()=>connect(),
+  selectBoard:(id)=>{if(!['matek-h743-wing-v3','cube-orange'].includes(id))return false;state.selectedBoard=id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:id}}));return true;},
   navigate:(tab)=>navigate(tab),
   diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
   canCalibrate:()=>state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait,
@@ -300,7 +304,7 @@ window.AtlasCC = Object.freeze({
       state.servoConfigBusy=false;renderBasic();renderParams();renderImportDiff();
     }
   },
-  requestParameters:()=>{if(state.connected&&!state.paramLoading)return startParamLoad();return false;},
+  requestParameters:(fresh=false)=>{if(state.connected&&!state.paramLoading)return startParamLoad(fresh);return false;},
   writeOSDParams:async (updates,onProgress=()=>{})=>{
     if(!canWrite())throw Error('Live USB, confirmed DISARMED, completed parameter read and idle writer required');
     const valid=/^OSD(?:[1-4]_[A-Z0-9_]+_(?:EN|X|Y)|[1-4]_ENABLE|TYPE|UNITS|CHAN|SW_METHOD)$/;
@@ -337,7 +341,7 @@ window.AtlasCC = Object.freeze({
     await transmit(76,M.commandLong(state.sysid,state.compid,183,[channel,pwm,0,0,0,0,0]));
     return {channel,pwm,submitted:true}; // COMMAND_ACK or SERVO_OUTPUT_RAW required for confirmation.
   },
-  writeAdvancedParams:async (updates,onProgress=()=>{},shouldCancel=()=>false)=>{
+  writeAdvancedParams:async (updates,onProgress=()=>{},shouldCancel=()=>false,options={})=>{
     if(!canWrite())throw Error('Live USB + confirmed DISARMED + idle PARAM transfer required');
     const changes=[];
     for(const [name,value] of Object.entries(updates)){
@@ -348,15 +352,21 @@ window.AtlasCC = Object.freeze({
       if(Math.abs(p.value-value)>Math.max(1e-5,Math.abs(value)*2e-6))changes.push({name,value,type:p.type});
     }
     if(!changes.length)return {done:0,total:0};
-    state.servoConfigBusy=true;let done=0;
+    state.servoConfigBusy=true;let done=0;const skipped=[];
     try{
       for(const c of changes){
         if(shouldCancel())throw Error('Cancelled after '+done+'/'+changes.length);
         if(!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>4000)throw Error('Connection/ARM state changed');
         onProgress({done,total:changes.length,name:c.name});
-        await writeParameterWithAck(c.name,c.value,c.type);done++;
+        try{await writeParameterWithAck(c.name,c.value,c.type);done++;}
+        catch(e){
+          if(options.skipRejected===true&&state.connected&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!shouldCancel()){
+            skipped.push({name:c.name,reason:e.message});continue;
+          }
+          throw e;
+        }
       }
-      onProgress({done,total:changes.length,name:''});return {done,total:changes.length};
+      onProgress({done,total:changes.length,name:'',skipped:skipped.length});return {done,total:changes.length,skipped};
     }catch(e){throw Error('Recorded '+done+'/'+changes.length+': '+e.message);}
     finally{state.servoConfigBusy=false;renderParams();renderBasic();window.dispatchEvent(new Event('atlas:parameters'));}
   },
@@ -459,7 +469,7 @@ async function writeImported(){
  const b=state.bulk;b.running=false;b.message=state.bulkCancel?tr('batchStopped'):b.done===b.total?tr('batchDone'):tr('batchPartial');
  $('bulkConsent').checked=false;renderImportDiff();renderParams();renderBasic();toast(`${b.message} · ${b.done}/${b.total}`+ (b.failed.length?` · ${b.failed.slice(0,8).join(', ')}`:''),b.done!==b.total);
 }
-function renderBoards(){const grid=$('firmwareBoards');grid.replaceChildren();const boards=state.boards.length?state.boards.filter(b=>b.id!=='other-boards'):[{id:'cube-orange',name:'Orange Cube',status:'planned'},{id:'matek-h743-wing-v3',name:'Matek H743-WING V3',status:'planned'}];for(const b of boards){const btn=document.createElement('button');btn.className='cc-board-choice'+(state.selectedBoard===b.id?' selected':'');btn.type='button';const mark=document.createElement('span');mark.textContent=state.selectedBoard===b.id?'✓':'';const name=document.createElement('strong');name.textContent=b.name;const small=document.createElement('small');small.textContent=(b.status==='available'?'HEX':tr('pending').toUpperCase());btn.append(mark,name,small);btn.addEventListener('click',()=>{state.selectedBoard=b.id;renderBoards();});grid.append(btn);}const selected=boards.find(b=>b.id===state.selectedBoard);$('boardSelection').textContent=tr('boardWaiting')+(selected?.name||'—')+' / '+tr('compat');}
+function renderBoards(){const grid=$('firmwareBoards');grid.replaceChildren();const boards=state.boards.length?state.boards.filter(b=>b.id!=='other-boards'):[{id:'cube-orange',name:'Orange Cube',status:'planned'},{id:'matek-h743-wing-v3',name:'Matek H743-WING V3',status:'planned'}];for(const b of boards){const btn=document.createElement('button');btn.className='cc-board-choice'+(state.selectedBoard===b.id?' selected':'');btn.type='button';const mark=document.createElement('span');mark.textContent=state.selectedBoard===b.id?'✓':'';const name=document.createElement('strong');name.textContent=b.name;const small=document.createElement('small');small.textContent=(b.status==='available'?'HEX':tr('pending').toUpperCase());btn.append(mark,name,small);btn.addEventListener('click',()=>{state.selectedBoard=b.id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:b.id}}));});grid.append(btn);}const selected=boards.find(b=>b.id===state.selectedBoard);$('boardSelection').textContent=tr('boardWaiting')+(selected?.name||'—')+' / '+tr('compat');}
 function renderReleases(){
  const container=$('releaseList');container.replaceChildren();
  const boards=state.boards.filter(b=>b.id!=='other-boards');
