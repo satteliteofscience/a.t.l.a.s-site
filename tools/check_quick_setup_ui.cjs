@@ -28,6 +28,7 @@ assert.match(wizard,/pass<=2/,'parameter reading must support a two-pass workflo
 assert.match(wizard,/qs\.preview\.skipped/,'wizard must disclose skipped parameter entries');
 assert.match(wizard,/readback mismatch \/ value not verified/,'mismatched readback must be explicitly reported instead of silently counted as success');
 assert.match(cfg,/selectBoard:\(id\)=>/,'wizard must change board before DFU');
+assert.match(dfu,/atlas:board.*refreshControls/,'DFU firmware gate must refresh when board is changed inside Quick Setup');
 assert.match(wizard,/qs\.awaitingCalibration!==d\.kind/,'calibration events must belong to the active wizard session');
 assert.match(wizard,/safeLink\(result\.state\)/,'post-reboot readback requires a live DISARMED heartbeat');
 assert.match(core,/TYPE_RANGES/,'MAVLink integer type bounds must be enforced');
