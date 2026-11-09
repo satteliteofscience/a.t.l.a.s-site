@@ -72,6 +72,7 @@ The repository cover under `assets/github-social-preview.jpg` may be uploaded in
 ## Repository resources
 
 - [FAQ](faq.html) — modified flight modes and minimum NOAID sensor requirements.
+- [Post-hardware configurator audit](POST-HARDWARE-AUDIT-2026-11-09.md) — actual real-FC checks, MAVLink hardening and software regression coverage.
 - [Changelog](changelog.html) — Release 1.0 and future updates.
 - [Release process](RELEASE-DEPLOYMENT.md) — private R2 uploads, version catalog, keys and matching GPL source.
 - [No-server provider setup](PROVIDER-SETUP.md) — Brevo hosted forms, LiqPay, release notifications and private early testing.
