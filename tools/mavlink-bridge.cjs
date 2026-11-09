@@ -82,7 +82,7 @@ function configure(s,c){
    };
    s.send(1,JSON.stringify({type:'ready',mode,host,port}));
   });
-  try{udp.bind(mode==='udp-listen'?port:0,mode==='udp-listen'?host:'127.0.0.1');}
+  try{udp.bind(mode==='udp-listen'?port:0,mode==='udp-listen'?host:'0.0.0.0');}
   catch(e){fail(e);}
  }
 }
