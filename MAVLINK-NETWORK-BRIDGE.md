@@ -46,6 +46,12 @@ For other TCP addresses, UDP telemetry, or Linux/macOS, use the advanced manual 
 - An HTTPS site may not be allowed to use \`ws://localhost\` on some browsers due to mixed-content/private-network restrictions. In that case, the page displays an error. Use a trusted local HTTPS/WSS reverse proxy for the bridge, or run the configurator locally over HTTP. The site does not fake a connection.
 - Never change critical flight parameters from an uncertain network connection. Perform calibration on a bench with propeller removed; verify system state and power independently.
 
+### Fast parameter download on TCP
+
+A.T.L.A.S. now attempts **MAVFTP** `@PARAM/param.pck?withdefaults=1` when connected through the local TCP/UDP WebSocket bridge. It reads the packed binary parameter file, verifies the header, values, numeric types and **complete parameter count**, and only then replaces the in-browser parameter cache. If the flight controller or station refuses MAVFTP or the download is incomplete, it automatically falls back to the reliable `PARAM_REQUEST_LIST`/`PARAM_REQUEST_READ` path. Parameter **writes remain PARAM_SET with ACK/readback** and are gated by the DISARMED state.
+
+This fixes a major source of latency on links with thousands of parameters, and avoids sending the padded full 254-byte FTP frame for small requests. Speed depends on RF bandwidth, packet loss, TCP round-trip latency, and any station speed-profile setting. This web application **does not switch the station's RF long-range/high-speed mode**; that is controlled separately by the radio/station. For any unexplained timeout, check whether the user-facing status says `MAVFTP` or `PARAM_REQUEST_LIST fallback`.
+
 ### Troubleshooting
 
 - No **bridge ready**: check Node is running, token, localhost port and browser restrictions.

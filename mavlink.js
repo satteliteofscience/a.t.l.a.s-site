@@ -108,6 +108,6 @@
     }
     return activeSysId!==null && frame.sysid===activeSysId;
   }
-  function ftpFrame(sysid,compid,header){const payload=new Uint8Array(254);payload[0]=0;payload[1]=sysid;payload[2]=compid;payload.set(header.slice(0,251),3);return payload;}
+  function ftpFrame(sysid,compid,header){if(header.length>251)throw Error('MAVFTP payload too large');const payload=new Uint8Array(3+header.length);payload[0]=0;payload[1]=sysid;payload[2]=compid;payload.set(header,3);return payload;}
   window.AtlasMAV={ftpFrame,Parser,createFrame,parseMessage,belongsToSelectedVehicle,heartbeat,paramList,requestDataStream,paramRead,paramReadByIndex,paramSet,commandLong,crcX25};
 })();
