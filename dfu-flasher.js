@@ -1,4 +1,4 @@
-/* A.T.L.A.S. STM32 ROM DFU / DfuSe transport — experimental pre-release.
+/* A.T.L.A.S. STM32H7 ROM DFU / DfuSe transport — experimental.
  * Based on STM32 AN3156. Full-chip erase is destructive. Hardware validation required.
  * No requests are made until the user explicitly starts a flashing transaction.
  */
@@ -25,7 +25,7 @@
         const pos=base+off;
         if(first===null)first=pos;
         if(next!==null&&pos!==next)throw Error(`Discontinuous/overlapping flash image at line ${lines}: ${hexAddress(pos)}`);
-        if(pos<FLASH_BASE||pos+n>FLASH_END)throw Error(`Image outside STM32H743 2 MiB internal flash: ${hexAddress(pos)}`);
+        if(pos<FLASH_BASE||pos+n>FLASH_END)throw Error(`Image outside STM32H7 2 MiB internal flash: ${hexAddress(pos)}`);
         image.set(raw.subarray(4,4+n),pos-FLASH_BASE);next=pos+n;total+=n;
       } else if(type===4&&n===2&&off===0) {
         base=((raw[4]<<8)|raw[5])*65536;
@@ -38,10 +38,22 @@
     if(!eof)throw Error('Intel HEX is missing EOF record');
     if(first!==FLASH_BASE||!next||total<65536)throw Error('Expected a full contiguous image starting at 0x08000000 (bootloader included)');
     const length=Math.ceil((next-FLASH_BASE)/WORD)*WORD;
-    return {bytes:image.slice(0,length),dataBytes:total,flashStart:first,flashEndExclusive:next,paddedBytes:length,lines};
+    const bytes=image.slice(0,length);
+    // STM32 ROM DFU identifies the MCU family, not the mounted flight controller.
+    // Keep a target marker check before any potentially destructive operation.
+    const marker=new TextEncoder().encode('CubeOrangePlus');
+    let cubeTarget=false;
+    for(let pos=0;pos<=bytes.length-marker.length;pos++){
+      if(bytes[pos]!==marker[0])continue;
+      let match=true;for(let i=1;i<marker.length;i++)if(bytes[pos+i]!==marker[i]){match=false;break;}
+      if(match){cubeTarget=true;break;}
+    }
+    return {bytes,dataBytes:total,flashStart:first,flashEndExclusive:next,paddedBytes:length,lines,detectedTarget:cubeTarget?'cube-orange-plus':null};
   }
 
   function supportsH743FlashMap(name) {
+    // STM32H743/H757 share a 2 MiB (16 x 128 KiB) ROM DFU flash layout.
+    // A generic DFU descriptor cannot authenticate the actual board model.
     if(typeof name!=='string'||!/@Internal Flash/i.test(name)||!/0x08000000/i.test(name))return false;
     const parts=[...name.matchAll(/(\d+)\s*\*\s*(\d+)\s*K[g\w]?/gi)];
     return parts.length>0&&parts.reduce((sum,m)=>sum+Number(m[1])*Number(m[2]),0)===2048&&parts.every(m=>Number(m[2])===128);
@@ -237,7 +249,7 @@
       return result;
     }
     async massErase() {
-      if(!this.flashMapVerified)throw Error('H743 flash memory map not confirmed by DFU descriptor');
+      if(!this.flashMapVerified)throw Error('STM32H7 2 MiB flash map not confirmed by DFU descriptor');
       this.progress('erase',0,1,'Mass erase: 0x41 (full 2 MiB flash → FF)');
       await this.command(Uint8Array.of(0x41),120000);
       this.progress('erase',1,1,'Mass erase finished');
@@ -276,7 +288,7 @@
       this.progress('done',1,1,'Byte-by-byte flash readback: PASS');
     }
     async flash(image) {
-      if(!this.opened||!this.flashMapVerified||!this.transferSize)throw Error('Need 2MiB H743 flash map AND DFU transfer size before flashing');
+      if(!this.opened||!this.flashMapVerified||!this.transferSize)throw Error('Need verified 2 MiB STM32H7 flash map AND DFU transfer size before flashing');
       await this.massErase();
       await this.checkBlank();
       await this.write(image);
