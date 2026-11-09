@@ -21,9 +21,13 @@
   if(!(bytes instanceof Uint8Array)||bytes.length<12)return null;
   const v=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
   const size=bytes[4];
-  if(size>CHUNK||12+size>bytes.length)return null;
+  if(size>CHUNK)return null;
+  // MAVLink 2 legally trims trailing zeroes from FILE_TRANSFER_PROTOCOL.
+  // The inner FTP size is authoritative: CRC already checked the outer frame.
+  const data=new Uint8Array(size);
+  data.set(bytes.subarray(12,Math.min(bytes.length,12+size)));
   return {seq:v.getUint16(0,true),session:bytes[2],opcode:bytes[3],size,reqOpcode:bytes[5],burstComplete:!!bytes[6],
-   offset:v.getUint32(8,true),data:bytes.subarray(12,12+size)};
+   offset:v.getUint32(8,true),data};
  }
  function decodePacked(bytes){
   if(!(bytes instanceof Uint8Array)||bytes.length<6)throw Error('Missing packed parameter header');
@@ -84,6 +88,7 @@
      holder.timer=setTimeout(()=>{if(this.waiting===holder)this.waiting=null;reject(Error('MAVFTP response timeout'));},this.timeoutMs);
      this.waiting=holder;
     });
+    wait.catch(()=>{}); // absorb timeout if transport send fails before the waiter is awaited
     try{
      await this.send(bytes);
      return await wait;
