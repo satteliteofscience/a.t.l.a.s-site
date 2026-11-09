@@ -21,6 +21,9 @@ assert.match(styles,/\.support-section\{padding-top:34px;padding-bottom:38px;scr
 assert.match(styles,/@media\(max-width:560px\)\{\.support-section\{padding-top:26px;padding-bottom:10px;scroll-margin-top:58px\}/,'mobile support anchor offset must be aligned');
 
 const html=read('configurator.html');
+assert.ok(html.includes('href="https://ardupilot.org/planner/docs/common-loading-firmware-onto-pixhawk.html"'),'Mission Planner must point to verified ArduPilot firmware instructions');
+assert.ok(html.includes('href="https://arduconfigurator.com/"'),'ArduConfigurator link must remain unchanged');
+assert.ok(!html.includes('common-install-firmware.html'),'obsolete Mission Planner URL must not return');
 assert.match(html,/<p class="dfu-postflash-note" data-dfu-t="postflash" role="note">/,'post-flash note must appear in the firmware UI');
 const dfu=read('dfu-ui.js');
 for(const language of [
