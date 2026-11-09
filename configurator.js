@@ -307,9 +307,9 @@ async function readParamsTwice(){
  finally{state.readTwoBusy=false;button.disabled=false;button.textContent=text.button;renderParams();renderImportDiff();}
 }
 const networkLex={
- ru:{title:'UDP / TCP через локальный мост',mode:'Режим соединения',host:'Адрес полётника / прослушивания',port:'Порт MAVLink',bridge:'Локальный WebSocket-мост',token:'Токен из терминала',warning:'GitHub Pages не открывает UDP/TCP напрямую. Запусти на ПК: node tools/mavlink-bridge.cjs. Мост слушает только localhost и требует токен. Для удалённого соединения используй доверенную сеть/VPN.',connect:'Подключить UDP/TCP',disconnect:'Отключить сеть'},
- uk:{title:'UDP / TCP через локальний міст',mode:'Режим з’єднання',host:'Адреса контролера / прослуховування',port:'Порт MAVLink',bridge:'Локальний WebSocket-міст',token:'Токен із термінала',warning:'GitHub Pages не відкриває UDP/TCP напряму. Запусти: node tools/mavlink-bridge.cjs. Міст працює лише на localhost і потребує токен. Для віддаленого з’єднання користуйся VPN.',connect:'Під’єднати UDP/TCP',disconnect:'Від’єднати мережу'},
- en:{title:'UDP / TCP via local bridge',mode:'Connection mode',host:'Remote / listening IP',port:'MAVLink port',bridge:'Local WebSocket bridge',token:'Terminal session token',warning:'GitHub Pages cannot open raw UDP/TCP. Run locally: node tools/mavlink-bridge.cjs. Bridge binds localhost and requires a token. Use a trusted network/VPN for remote MAVLink.',connect:'Connect UDP/TCP',disconnect:'Disconnect network'}
+ ru:{oneClickTitle:'TCP 127.0.0.1:5760 · подключение в один клик',oneClickHelp:'Скачай один файл для Windows и открой двойным щелчком. Он запустит локальный коннектор, откроет сайт и подключит TCP автоматически — без копирования токена. При отсутствии Node.js первый запуск скачает проверенную портативную версию.',oneClickDownload:'Скачать TCP Connector для Windows',oneClickSafety:'Разреши доступ к локальной сети в браузере. Не закрывай окно коннектора во время работы. Если станция допускает только одного TCP-клиента, сначала отключи Mission Planner.',advanced:'Ручные настройки UDP/TCP и других адресов',title:'TCP / UDP · подключение',mode:'Режим соединения',host:'Адрес полётника / прослушивания',port:'Порт MAVLink',bridge:'Локальный WebSocket-мост',token:'Токен из терминала',warning:'GitHub Pages не открывает UDP/TCP напрямую. Запусти на ПК: node tools/mavlink-bridge.cjs. Мост слушает только localhost и требует токен. Для удалённого соединения используй доверенную сеть/VPN.',connect:'Подключить UDP/TCP вручную',disconnect:'Отключить сеть'},
+ uk:{oneClickTitle:'TCP 127.0.0.1:5760 · з’єднання в один клік',oneClickHelp:'Завантаж один файл для Windows і відкрий подвійним клацанням. Він запустить локальний конектор, відкриє сайт і підключить TCP автоматично — без копіювання токена. За відсутності Node.js перший запуск завантажить перевірену портативну версію.',oneClickDownload:'Завантажити TCP Connector для Windows',oneClickSafety:'Дозволь доступ до локальної мережі у браузері. Не закривай вікно конектора. Якщо станція підтримує лише одного TCP-клієнта, відключи Mission Planner.',advanced:'Ручні налаштування UDP/TCP та інших адрес',title:'TCP / UDP · підключення',mode:'Режим з’єднання',host:'Адреса контролера / прослуховування',port:'Порт MAVLink',bridge:'Локальний WebSocket-міст',token:'Токен із термінала',warning:'GitHub Pages не відкриває UDP/TCP напряму. Запусти: node tools/mavlink-bridge.cjs. Міст працює лише на localhost і потребує токен. Для віддаленого з’єднання користуйся VPN.',connect:'Під’єднати UDP/TCP вручну',disconnect:'Від’єднати мережу'},
+ en:{oneClickTitle:'TCP 127.0.0.1:5760 · one-click connection',oneClickHelp:'Download one Windows file and double-click it. It starts the local connector, opens the site and connects to TCP automatically, without pasting a token. If Node.js is missing, the first launch downloads a verified portable copy.',oneClickDownload:'Download TCP Connector for Windows',oneClickSafety:'Allow browser access to the local device. Keep the connector window open. If the TCP station supports only one client, disconnect Mission Planner first.',advanced:'Manual UDP/TCP setup and other addresses',title:'TCP / UDP · connections',mode:'Connection mode',host:'Remote / listening IP',port:'MAVLink port',bridge:'Local WebSocket bridge',token:'Terminal session token',warning:'GitHub Pages cannot open raw UDP/TCP. Run locally: node tools/mavlink-bridge.cjs. Bridge binds localhost and requires a token. Use a trusted network/VPN for remote MAVLink.',connect:'Connect UDP/TCP manually',disconnect:'Disconnect network'}
 };
 function updateNetworkLabels(){
  const text=networkLex[lang]||networkLex.ru;
@@ -317,6 +317,27 @@ function updateNetworkLabels(){
  $('networkConnectBtn').textContent=state.transport==='bridge'&&state.connected?text.disconnect:text.connect;
 }
 function networkStatus(message,isError=false){const e=$('networkStatus');if(e){e.textContent=message;e.style.color=isError?'#e7a388':'#bed096';}if(message)toast(message,isError);}
+// One-click connector passes a short-lived random token in the URL fragment.
+ // Fragments are not transmitted with HTTP requests; erase immediately so they
+ // are not left visible in the address bar or followed by navigation.
+function consumeOneClickTcpToken(){
+ const match=/^#atlas-tcp=([a-f0-9]{40})$/.exec(window.location.hash);
+ if(!match)return null;
+ window.history.replaceState(window.history.state,'',window.location.pathname+window.location.search+'#dashboard');
+ return match[1];
+}
+function startOneClickTcp(token){
+ if(!/^[a-f0-9]{40}$/.test(token))return;
+ $('networkOptions').open=true;
+ $('networkAdvanced').open=false;
+ $('networkMode').value='tcp-client';
+ $('networkHost').value='127.0.0.1';
+ $('networkPort').value='5760';
+ $('networkBridge').value='ws://127.0.0.1:8765/mavlink';
+ $('networkToken').value=token;
+ networkStatus('TCP Connector: подключаюсь к 127.0.0.1:5760…');
+ void connectBridge();
+}
 function syncNetworkDefaults(){
  const mode=$('networkMode').value;
  $('networkHost').value=mode==='udp-listen'?'0.0.0.0':'127.0.0.1';
@@ -343,7 +364,13 @@ async function connectBridge(){
    if(state.netSocket!==ws)return;
    if(typeof event.data==='string'){
     let message;try{message=JSON.parse(event.data);}catch{networkStatus('Unexpected bridge message',true);return;}
-    if(message.type==='error'){networkStatus('MAVLink bridge: '+message.message,true);ws.close();return;}
+    if(message.type==='error'){
+     const failed=String(message.message||'Unknown bridge error');
+     networkStatus(/ECONNREFUSED|ENOTFOUND|EHOSTUNREACH|ETIMEDOUT/.test(failed)?
+       'TCP 127.0.0.1:5760 недоступен. Проверь, что станция запущена, TCP включён и Mission Planner отключён, если допускается только один клиент. '+failed:
+       'MAVLink bridge: '+failed,true);
+     ws.close();return;
+    }
     if(message.type!=='ready')return;
     clearTimeout(handshakeTimer);state.bridgeReady=true;state.transport='bridge';state.connected=true;state.connecting=false;state.rxActive=true;state.seq=0;
     stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;
@@ -722,5 +749,7 @@ function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEve
  document.addEventListener('visibilitychange',scheduleHorizon);
  window.addEventListener('pageshow',ev=>{if(ev.persisted){state.pageLeaving=false;state.hudLoopActive=true;state.lastHeartbeat=0;updateConnectionUI();scheduleHorizon();}});
 }
+const oneClickToken=consumeOneClickTcpToken();
 wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Release 1.0');state.hudLoopActive=true;scheduleHorizon();
+if(oneClickToken)startOneClickTcp(oneClickToken);
 })();

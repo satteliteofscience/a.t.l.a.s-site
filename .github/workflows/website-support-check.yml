@@ -14,6 +14,9 @@ on:
       - 'battery-cal-core.js'
       - 'param-tree.js'
       - 'tools/mavlink-bridge.cjs'
+      - 'tools/A.T.L.A.S.-TCP-Connector.cmd'
+      - 'tools/check_one_click_tcp.cjs'
+      - 'MAVLINK-NETWORK-BRIDGE.md'
       - 'tools/check_release_configurator.cjs'
       - 'mavlink.js'
       - 'servo-config-core.js'
@@ -90,6 +93,8 @@ jobs:
         run: node tools/check_release_ready.cjs
       - name: Verify release configurator imports, voltage calibration and local UDP bridge
         run: node tools/check_release_configurator.cjs
+      - name: Verify Windows one-click TCP connector and secure handoff
+        run: node tools/check_one_click_tcp.cjs
       - name: Verify servo reverse persistence and serialized writes
         run: node tools/check_servo_config.cjs
       - name: Verify configurator apply transition, support anchor and post-flash note
@@ -110,3 +115,25 @@ jobs:
         run: node --test firmware-gateway/tests/*.test.js
       - name: Check temporary gateway diagnostics page
         run: node --check firmware-gateway-check.js && node tools/check_firmware_gateway_diagnostic.cjs
+
+  windows-connector-syntax:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse portable Windows TCP connector bootstrap with native PowerShell
+        shell: powershell
+        run: |
+          $file = 'tools/A.T.L.A.S.-TCP-Connector.cmd'
+          $source = [System.IO.File]::ReadAllText((Resolve-Path $file).Path,[System.Text.Encoding]::UTF8)
+          $marker = ':: ATLAS_POWERSHELL_START'
+          $pos = $source.LastIndexOf($marker,[System.StringComparison]::Ordinal)
+          if($pos -lt 0) { throw 'Embedded PowerShell marker is missing' }
+          $script = $source.Substring($pos+$marker.Length)
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseInput($script,[ref]$tokens,[ref]$errors) | Out-Null
+          if($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            throw 'A.T.L.A.S. Windows launcher contains invalid PowerShell syntax'
+          }
+          Write-Host 'PASS: Native Windows PowerShell syntax of portable one-click TCP launcher'

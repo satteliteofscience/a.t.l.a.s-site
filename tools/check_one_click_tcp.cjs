@@ -1,0 +1,42 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),crypto=require('node:crypto');
+const read=path=>fs.readFileSync(path,'utf8');
+const cmd=read('tools/A.T.L.A.S.-TCP-Connector.cmd'),bridge=fs.readFileSync('tools/mavlink-bridge.cjs');
+const js=read('configurator.js'),html=read('configurator.html'),css=read('configurator.css');
+const sourceHash=crypto.createHash('sha1')
+ .update(Buffer.from('blob '+bridge.length+'\0','ascii')).update(bridge).digest('hex');
+const expected=cmd.match(/\$bridgeGitSha\s*=\s*'([a-f0-9]{40})'/);
+assert.ok(expected,'Windows launcher must verify a pinned Git blob SHA');
+assert.equal(expected[1],sourceHash,'the Windows launcher must pin the actual checked-in bridge implementation');
+assert.match(cmd,/\$bridgeUrl\s*=\s*'https:\/\/raw\.githubusercontent\.com\/satteliteofscience\/a\.t\.l\.a\.s-site\/[0-9a-f]{40}\/tools\/mavlink-bridge\.cjs'/,
+ 'portable launcher must download an immutable Git revision');
+assert.match(cmd,/nodejs\.org\/dist\//,'portable Node must be sourced from the official project');
+assert.match(cmd,/\$nodeVersion\s*=\s*'v24\.22\.2'/,'Node version must be pinned for verifiable SHA-256 checks');
+assert.match(cmd,/\$nodeChecksums\s*=/,'Node runtime SHA checksums must be pinned');
+assert.match(cmd,/Get-FileHash -LiteralPath \$target -Algorithm SHA256/,'portable Node binary must be SHA256-verified');
+assert.match(cmd,/Get-GitBlobHash \$target/,'downloaded bridge must be checked against its Git object hash');
+assert.match(cmd,/\$env:ATLAS_BRIDGE_TOKEN = \$token/,'launcher must pass an ephemeral strong token to the bridge');
+assert.match(cmd,/\$env:ATLAS_BRIDGE_PORT = '8765'/,'launcher should use the documented localhost bridge port');
+assert.match(cmd,/\$site \+ '#atlas-tcp=' \+ \$token/,'token must be passed in fragment not as URL query to GitHub Pages');
+assert.match(cmd,/Start-Process \$url/,'launcher must open the configurator without manual typing');
+assert.match(cmd,/\$child\.WaitForExit\(\)/,'launcher should stay running until the local bridge exits');
+assert.doesNotMatch(cmd,/Invoke-Expression|irm .*iex|iwr .*iex/i,'must not execute downloaded PowerShell from the network');
+const begin=cmd.indexOf(':: ATLAS_POWERSHELL_START');
+assert.ok(begin>0,'standalone Windows CMD launcher must embed its bootstrap PowerShell');
+assert.match(js,/function consumeOneClickTcpToken\(\)/,'configurator must consume one-click token');
+assert.match(js,/^ const match=\/\^#atlas-tcp=\(\[a-f0-9\]\{40\}\)\$\//m,'token fragment must have strict fixed-length syntax');
+assert.match(js,/window\.history\.replaceState\(window\.history\.state,'',window\.location\.pathname\+window\.location\.search\+'#dashboard'\)/,
+ 'one-click token must be removed immediately from browser URL and history');
+assert.match(js,/function startOneClickTcp\(token\)/,'configurator must offer automatic socket connection');
+assert.match(js,/\$\('networkMode'\)\.value='tcp-client'/,'one click should select TCP');
+assert.match(js,/\$\('networkHost'\)\.value='127\.0\.0\.1'/,'one click should target user station localhost');
+assert.match(js,/\$\('networkPort'\)\.value='5760'/,'one click should target station TCP 5760');
+assert.match(js,/if\(oneClickToken\)startOneClickTcp\(oneClickToken\)/,'page should connect automatically after load');
+assert.match(html,/href="\.\/tools\/A\.T\.L\.A\.S\.-TCP-Connector\.cmd" download=/,'site must offer one direct launcher download');
+assert.match(html,/<option value="tcp-client" selected>/,'manual dialog should default to TCP mode');
+assert.match(html,/id="networkHost"[^>]*value="127\.0\.0\.1"/,'manual dialog should default to localhost');
+assert.match(html,/id="networkPort"[^>]*value="5760"/,'manual dialog should default to 5760');
+assert.match(html,/id="networkAdvanced"/,'advanced UDP/TCP settings should remain accessible');
+assert.match(css,/\.cc-tcp-one-click/,'one click must have visible UI placement');
+console.log('PASS: trusted portable Windows launcher, token handoff, TCP 127.0.0.1:5760 defaults and original UDP/TCP controls.');
