@@ -2,7 +2,7 @@
 setlocal
 title A.T.L.A.S. TCP Connector - 127.0.0.1:5760
 set "ATLAS_SELF=%~f0"
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $source = [System.IO.File]::ReadAllText($env:ATLAS_SELF, [System.Text.Encoding]::UTF8); $marker = ':: ATLAS_POWERSHELL_START'; $index = $source.IndexOf($marker, [StringComparison]::Ordinal); if ($index -lt 0) { throw 'Launcher source marker missing' }; & ([ScriptBlock]::Create($source.Substring($index + $marker.Length)))"
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $source = [System.IO.File]::ReadAllText($env:ATLAS_SELF, [System.Text.Encoding]::UTF8); $marker = ':: ATLAS_POWERSHELL_START'; $index = $source.LastIndexOf($marker, [StringComparison]::Ordinal); if ($index -lt 0) { throw 'Launcher source marker missing' }; & ([ScriptBlock]::Create($source.Substring($index + $marker.Length)))"
 if errorlevel 1 (
   echo.
   echo A.T.L.A.S. TCP Connector failed. Read the error above.
