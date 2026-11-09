@@ -33,7 +33,14 @@
           if(expected===calculated){
             this.valid++;
             try{this.onMessage({id:msgid,sysid:raw[i+(v2?5:3)],compid:raw[i+(v2?6:4)],payload:raw.slice(i+header,crcAt),signed});}catch(err){console.warn('MAVLink frame processing',err);}
-          }else this.invalid++;
+          }else{
+            // A corrupted MAVLink length/header can swallow a subsequent
+            // valid heartbeat. Slide one byte on bad CRC and search for the
+            // next frame marker instead of discarding the claimed frame size.
+            this.invalid++;
+            i++;
+            continue;
+          }
         }
         i+=size;
       }
