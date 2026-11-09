@@ -80,7 +80,7 @@ function samplePacked(){
  assert.match(full,/if\(!startFastParamStream\(transfer\)\)startLegacyParamStream\(transfer\)/,'unsupported mode must keep the legacy path');
  assert.match(full,/startLegacyParamStream\(transfer\);\s*\}\);/,'failed FTP must fall back automatically');
  assert.match(full,/state\.params=new Map\(rows\.map/,'parameter cache must be replaced only after a fully valid packed download');
- assert.match(full,/else if\(data\.type==='mavftp'\)\{state\.ftpClient\?\.handle\(data\.data\);\}/,'MAVFTP replies must enter the active client');
+ assert.match(full,/else if\(data\.type==='mavftp'&&message\.compid===state\.compid\)\{state\.ftpClient\?\.handle\(data\.data\);\}/,'only selected autopilot component may satisfy FTP parameter requests');
  assert.match(full,/state\.ftpClient\?\.cancel\(\)/,'session must be cancelled on disconnect');
  assert.match(mav,/new Uint8Array\(3\+header\.length\)/,'MAVLink2 outbound FTP must not waste 240 zero bytes on read requests');
  console.log('PASS: packed MAVFTP decode, type mapping, full read with unreliable file estimate, unsupported fallback and release integration.');
