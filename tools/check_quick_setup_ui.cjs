@@ -20,7 +20,7 @@ assert.match(wizard,/api\.writeAdvancedParams\(updates/,'custom parameter file m
 assert.match(wizard,/api\.requestParameters\(\)/,'parameter verification must use live parameter readback');
 assert.match(wizard,/qs\.rebootSawDisconnect/,'custom parameter flow must require controller disconnect/reconnect');
 assert.match(wizard,/!api\.requestParameters\(true\)/,'readback must request a new full parameter transfer');
-assert.match(wizard,/qs\.previewBoard!==s\.selectedBoard/,'profile preview must belong to the selected board');
+assert.match(core,/qs\.previewBoard!==s\?\.selectedBoard/,'profile preview must belong to the selected board');
 assert.match(wizard,/dfuPanel\)dock\.append\(dfuPanel\)/,'DFU panel must live inside firmware step');
 assert.match(wizard,/restoreDfuPanel\(\)/,'DFU panel must be restored on exiting wizard');
 assert.match(wizard,/t\('usbConnect'\)/,'wizard must provide inline USB connection');
@@ -44,9 +44,17 @@ assert.match(wizard,/Для проверенной конфигурации/,'RU
 assert.match(wizard,/Для перевіреної конфігурації/,'UA scope text missing');
 assert.match(wizard,/For a verified configuration/,'EN scope text missing');
 
-assert.ok(wizard.includes("button(box,t('start'),()=>{if(!qs.completed[0])return;"),'wizard Start must require the scope confirmation');
+assert.doesNotMatch(wizard,/button\(box,t\('start'\)/,'intro must not render an inert Start button');
+assert.match(wizard,/checkbox\(box,t\('introAck'\)/,'scope acknowledgement must remain required');
+assert.match(wizard,/core\.writeBlockers\(s,qs,api\.canWrite\(\)\)/,'Apply button and handler must use the same readiness gate');
+assert.match(wizard,/try\{downloadBackup\(\);\}catch\(error\)/,'backup should be offered on Write, not a hidden disabled-button prerequisite');
+assert.doesNotMatch(wizard,/qs\.previewBoard===s\.selectedBoard&&qs\.backupDownloaded/,'Apply must not depend on hidden backup flag');
+assert.match(wizard,/qsWriteGate/,'disabled Write button must have an actionable reason');
 assert.ok(wizard.includes("safety:[false,false,false,false,false,false]"),'preflash safety checks must include backup confirmation');
-assert.ok(wizard.includes("button(actions,t('preflashBackup')"),'backup must be available before DFU mass erase');
+const safetyBody=wizard.slice(wizard.indexOf('function renderSafety(box){'),wizard.indexOf('const dfuPanel='));
+assert.doesNotMatch(safetyBody,/api\.connectUsb\(|loadParams|downloadBackup|button\(actions/,'safety step must contain only its acknowledgement checklist and warning');
+assert.match(wizard,/button\(actions,t\('backup'\)/,'backup must remain available at the parameter step');
+assert.match(wizard,/preflashBackupHint/,'pre-flash backup warning must remain present');
 assert.ok(wizard.includes("'# Board not verified: '"),'backup must not falsely claim a verified board identity');
 assert.ok(wizard.includes("function invalidateFrom(step)"),'profile changes must invalidate downstream completion');
 assert.ok(wizard.includes("invalidateFrom(3);qs.compatConfirmed=false;qs.keepConfirmed=false;qs.preview=null;"),'a new profile must invalidate stale imported values');
