@@ -3,16 +3,52 @@
   'use strict';
   const $=id=>document.getElementById(id);
   if(!$('dfuPanel')||!window.AtlasDFU)return;
-  const basePath=new URL('Firmware/Matek Wing H743-V3/',document.baseURI);
+  const MANIFESTS=Object.freeze({
+    'matek-h743-wing-v3':'Firmware/Matek Wing H743-V3/manifest.json',
+    'cube-orange-plus':'Firmware/Cube Orange Plus/manifest.json'
+  });
+  const supportedBoard=id=>Object.prototype.hasOwnProperty.call(MANIFESTS,id);
   const T={
     ru:{title:'STM32 DFU · ПОЛНАЯ ЗАПИСЬ HEX',mode:'DFU-подключение (не MAVLink)',howdfu:'Удерживай BOOT на USB-переходнике Matek и подключи USB к ПК. Затем нажми «Подключить DFU». Закрой Mission Planner и другие программы, занявшие USB.',detect:'Подключить DFU',disconnect:'Отключить DFU',getLatest:'Загрузить последний .hex',chooseLocal:'Выбрать локальный .hex',notloaded:'Файл не загружен',waiting:'DFU не подключён',ready:'Устройство DFU обнаружено',unsupported:'WebUSB недоступен. Требуется Chrome / Edge, HTTPS или localhost.',manifestEmpty:'В каталоге нет опубликованного HEX. Выбери локальный файл или добавь его в приватную папку Firmware.',unsafeBoard:'Выбери Matek H743-WING V3 в карточках выше.',flash:'СТЕРЕТЬ И ЗАПИСАТЬ HEX',erasing:'Выполняется...',backup:'Я сохранил параметры и знаю, что стирание удалит загрузчик и все данные Flash.',model:'Я проверил маркировку платы: это Matek H743-WING V3 (STM32H743). USB DFU не подтверждает модель платы.',confirm:'Для подтверждения введи ERASE',warning:'ВНИМАНИЕ: полный Mass Erase 2 MiB (до 0xFF), затем запись и побайтовая проверка. При обрыве питания понадобится восстановление через DFU/STM32CubeProgrammer. Проверено только на уровне кода, не на физической плате.',nohardware:'Никаких операций ERASE/WRITE без нажатия кнопки не выполняется.',meta:'Источник · SHA-256 · диапазон памяти',complete:'Готово: запись проверена побайтово. Выйди из DFU вручную и проверь работу платы.',postflash:'После успешной записи дождись полной загрузки контроллера. Если COM-порт не появился, отключи и подключи USB ещё два раза. По наблюдениям на Matek H743-WING V3 порт может определиться только при третьем подключении.',chipUnknown:'Режим DFU найден, но карту 2 MiB / 16×128 KiB или wTransferSize определить не удалось. Прошивка заблокирована.',progress:'ПРОГРЕСС',stError:'ОШИБКА',fileIssue:'Ошибка HEX',private:'Удалённая прошивка загружается из приватного R2 после проверки PIN.',slow:'Запись может занять некоторое время. Не отключай USB и питание.'},
     uk:{title:'STM32 DFU · ПОВНИЙ ЗАПИС HEX',mode:'DFU-з’єднання (не MAVLink)',howdfu:'Утримуй BOOT на USB-перехіднику Matek і під’єднай USB до ПК. Потім натисни «Під’єднати DFU». Закрий Mission Planner та інші програми, що займають USB.',detect:'Під’єднати DFU',disconnect:'Від’єднати DFU',getLatest:'Завантажити останній .hex',chooseLocal:'Вибрати локальний .hex',notloaded:'Файл не завантажений',waiting:'DFU не під’єднано',ready:'DFU-пристрій виявлено',unsupported:'WebUSB недоступний. Потрібні Chrome / Edge, HTTPS або localhost.',manifestEmpty:'У каталозі немає опублікованого HEX. Вибери локальний файл або додай його до приватної папки Firmware.',unsafeBoard:'Вибери Matek H743-WING V3 у картках вище.',flash:'СТЕРТИ Й ЗАПИСАТИ HEX',erasing:'Виконується...',backup:'Я зберіг параметри та знаю, що стирання видалить завантажувач і всю Flash.',model:'Я перевірив маркування плати: Matek H743-WING V3 (STM32H743). USB DFU не підтверджує модель плати.',confirm:'Для підтвердження введи ERASE',warning:'УВАГА: повне Mass Erase 2 MiB (до 0xFF), потім запис та побайтова перевірка. У разі втрати живлення потрібне відновлення через DFU/STM32CubeProgrammer. Ще не перевірено на фізичній платі.',nohardware:'ERASE/WRITE не виконується без натискання кнопки.',meta:'Джерело · SHA-256 · адреси',complete:'Готово: запис перевірено побайтно. Вийди з DFU вручну та перевір роботу плати.',postflash:'Після успішного запису дочекайся повного завантаження контролера. Якщо COM-порт не з’явився, від’єднай і під’єднай USB ще двічі. За спостереженнями на Matek H743-WING V3 порт може визначитися лише з третього підключення.',chipUnknown:'DFU знайдено, але карту 2 MiB / 16×128 KiB або wTransferSize не визначено. Прошивання заблоковано.',progress:'ПРОГРЕС',stError:'ПОМИЛКА',fileIssue:'Помилка HEX',private:'Віддалена прошивка завантажується з приватного R2 після перевірки PIN.',slow:'Не вимикай живлення та USB до завершення.'},
     en:{title:'STM32 DFU · FULL HEX FLASH',mode:'DFU connection (not MAVLink)',howdfu:'Hold BOOT on the Matek USB adapter while connecting USB to the PC. Then select Connect DFU. Close Mission Planner and other programs using the USB interface.',detect:'Connect DFU',disconnect:'Disconnect DFU',getLatest:'Load latest .hex',chooseLocal:'Choose local .hex',notloaded:'No firmware loaded',waiting:'DFU not connected',ready:'DFU device detected',unsupported:'WebUSB unavailable. Use Chrome / Edge on HTTPS or localhost.',manifestEmpty:'No HEX published in the catalog. Select a local file or add it to the private Firmware folder.',unsafeBoard:'Select Matek H743-WING V3 in the board list above.',flash:'ERASE + PROGRAM HEX',erasing:'Working...',backup:'I backed up parameters and understand that erasing removes the bootloader and all Flash data.',model:'I checked the board label: Matek H743-WING V3 (STM32H743). USB DFU cannot identify the board model.',confirm:'Type ERASE to confirm',warning:'WARNING: full-chip Mass Erase 2 MiB (to 0xFF), then program and byte-for-byte verify. Power loss may require recovery via DFU/STM32CubeProgrammer. Code only; not yet hardware-tested.',nohardware:'No ERASE/WRITE operation runs without clicking the flash button.',meta:'Source · SHA-256 · flash range',complete:'Done: byte-for-byte readback matched. Exit DFU manually and validate the board.',postflash:'After a successful flash, wait for the flight controller to finish booting. If the COM port does not appear, disconnect and reconnect USB two more times. On the Matek H743-WING V3, the port has been observed to appear only on the third connection.',chipUnknown:'DFU found, but 2 MiB / 16×128 KiB map or wTransferSize is unknown. Flashing locked.',progress:'PROGRESS',stError:'ERROR',fileIssue:'Invalid HEX',private:'Remote firmware loads from private R2 after a valid PIN.',slow:'Do not disconnect power or USB until complete.'}
   };
-  const tr=key=>(T[window.AtlasLanguage?.()||'ru']||T.ru)[key]||key;
+  const CUBE_T={
+    ru:{
+      howdfu:'Cube Orange Plus (STM32H757): обычное обновление через загрузчик ArduPilot и .apj предпочтительнее. Для записи полного HEX требуется ROM DFU (STM32 BOOTLOADER), который на Cube может требовать аппаратного доступа. Не замыкай контакты без инструкции производителя.',
+      unsafeBoard:'Выбери именно Cube Orange Plus.',
+      model:'Я проверил надпись на контроллере: Cube Orange Plus (STM32H757), а не Cube Orange. USB DFU не определяет модель платы.',
+      warning:'ОПАСНО: полный Mass Erase 2 MiB на STM32H757 удаляет загрузчик и прошивку. Возможна необходимость восстановления через ST-LINK/STM32CubeProgrammer. Веб-запись на реальном Cube Orange Plus пока не проверена.',
+      postflash:'После записи переподключи USB и проверь запуск Cube Orange Plus. Если не стартует, используй STM32CubeProgrammer или аппаратный отладчик. До калибровок пропеллеры должны быть сняты.'
+    },
+    uk:{
+      howdfu:'Cube Orange Plus (STM32H757): звичайне оновлення через завантажувач ArduPilot та .apj є кращим варіантом. Для повного HEX потрібен ROM DFU (STM32 BOOTLOADER), на Cube може знадобитися фізичний доступ. Не замикай контакти без інструкції виробника.',
+      unsafeBoard:'Обери саме Cube Orange Plus.',
+      model:'Я перевірив маркування контролера: Cube Orange Plus (STM32H757), а не Cube Orange. USB DFU не визначає модель плати.',
+      warning:'НЕБЕЗПЕКА: повний Mass Erase 2 MiB на STM32H757 видаляє завантажувач і прошивку. Може знадобитися відновлення через ST-LINK/STM32CubeProgrammer. Веб-запис на реальному Cube Orange Plus ще не перевірено.',
+      postflash:'Після запису повторно підключи USB і перевір запуск Cube Orange Plus. Якщо не стартує, використовуй STM32CubeProgrammer або апаратний відладчик. До калібрувань зніми пропелери.'
+    },
+    en:{
+      howdfu:'Cube Orange Plus (STM32H757): normal updates through the ArduPilot bootloader with .apj are preferred. Full HEX requires STM32 ROM DFU, which may need physical board access. Do not bridge pins without official hardware instructions.',
+      unsafeBoard:'Select Cube Orange Plus.',
+      model:'I verified the physical board label: Cube Orange Plus (STM32H757), NOT Cube Orange. Generic USB DFU cannot identify the board model.',
+      warning:'DANGER: full 2 MiB Mass Erase on STM32H757 removes the bootloader and firmware. ST-LINK/STM32CubeProgrammer recovery may be required. Browser flashing has NOT been tested on a real Cube Orange Plus.',
+      postflash:'After flashing, reconnect USB and verify Cube Orange Plus starts. If not, use STM32CubeProgrammer or a hardware debug probe. Remove propellers before calibrations.'
+    }
+  };
+  const tr=key=>{
+    const lang=window.AtlasLanguage?.()||'ru';
+    return (selectedBoard()==='cube-orange-plus'?CUBE_T[lang]?.[key]:null)||(T[lang]||T.ru)[key]||key;
+  };
   let current=null, image=null, fileInfo=null, busy=false, lastPhase='', usbSupported=!!(navigator.usb&&window.isSecureContext);
    window.AtlasDfuUi=Object.freeze({isBusy:()=>busy});
   function selectedBoard(){return window.AtlasSelectedBoard?.()||'cube-orange-plus';}
+  function imageMatchesBoard(){
+    if(!image||!supportedBoard(selectedBoard()))return false;
+    return selectedBoard()==='cube-orange-plus'
+      ? image.detectedTarget==='cube-orange-plus'
+      : image.detectedTarget!=='cube-orange-plus';
+  }
   function log(message,kind='info'){
     const box=$('dfuLog'),row=document.createElement('div');row.className='dfu-log-line'+(kind==='error'?' error':'');const tm=document.createElement('time');tm.textContent=new Date().toLocaleTimeString('en-GB',{hour12:false});const txt=document.createElement('span');txt.textContent=message;row.append(tm,txt);box.prepend(row);while(box.children.length>70)box.lastChild.remove();
   }
@@ -35,7 +71,8 @@
     if(!current?.opened)return 'usb';
     if(!current.flashMapVerified||!current.transferSize)return 'map';
     if(!image)return 'file';
-    if(selectedBoard()!=='matek-h743-wing-v3')return 'board';
+    if(!supportedBoard(selectedBoard()))return 'board';
+    if(!imageMatchesBoard())return 'target';
     if(!$('dfuConfirmBoard').checked)return 'model';
     if(!$('dfuConfirmBackup').checked)return 'backup';
     if($('dfuConfirmText').value.trim()!=='ERASE')return 'erase';
@@ -44,10 +81,15 @@
   function updateGateStatus(){
     const el=$('dfuGateStatus');if(!el)return;
     const lang=window.AtlasLanguage?.()||'ru';const key=blockedBy();
-    el.textContent=(G[lang]||G.ru)[key];
+    const targetMessages={
+      ru:'HEX не соответствует выбранной плате: Cube Orange Plus требует маркер CubeOrangePlus. Запись заблокирована.',
+      uk:'HEX не відповідає обраній платі: Cube Orange Plus потребує маркера CubeOrangePlus. Запис заблоковано.',
+      en:'HEX does not match the selected board: Cube Orange Plus requires the CubeOrangePlus target marker. Flashing locked.'
+    };
+    el.textContent=key==='target'?targetMessages[lang]:(G[lang]||G.ru)[key];
     el.dataset.ready=key==='ready'?'true':'false';
   }
-  function readyToFlash(){return !busy&&current?.opened&&current?.flashMapVerified&&!!current?.transferSize&&image&&selectedBoard()==='matek-h743-wing-v3'&&$('dfuConfirmBoard').checked&&$('dfuConfirmBackup').checked&&$('dfuConfirmText').value.trim()==='ERASE';}
+  function readyToFlash(){return !busy&&current?.opened&&current?.flashMapVerified&&!!current?.transferSize&&image&&supportedBoard(selectedBoard())&&imageMatchesBoard()&&$('dfuConfirmBoard').checked&&$('dfuConfirmBackup').checked&&$('dfuConfirmText').value.trim()==='ERASE';}
   function refreshControls(){
     $('dfuFlashBtn').disabled=!readyToFlash();$('dfuConnectBtn').disabled=busy||!usbSupported;$('dfuLatestBtn').disabled=busy;$('dfuLocalInput').disabled=busy;$('dfuLoadReleaseBtn').disabled=busy||$('dfuReleaseSelect').disabled;
     $('dfuConfirmBoard').disabled=busy;$('dfuConfirmBackup').disabled=busy;$('dfuConfirmText').disabled=busy;
@@ -69,14 +111,20 @@
     if(info.bytes&&bytes.byteLength!==info.bytes)throw Error('Manifest size mismatch. File rejected.');
     const hex=new TextDecoder('ascii',{fatal:true}).decode(bytes);
     const parsed=window.AtlasDFU.parseIntelHex(hex);
+    if(selectedBoard()==='cube-orange-plus'&&parsed.detectedTarget!=='cube-orange-plus')
+      throw Error('Cube Orange Plus firmware marker missing. Never flash a Cube Orange or Matek HEX to Orange Plus.');
+    if(selectedBoard()==='matek-h743-wing-v3'&&parsed.detectedTarget==='cube-orange-plus')
+      throw Error('Cube Orange Plus HEX cannot be flashed to a Matek controller.');
     image=parsed;fileInfo={...info,sha256:hash};meta();refreshControls();status(`${info.filename} · ${image.dataBytes} image bytes · SHA-256 OK`);
   }
   async function loadManifest(){
     if(location.protocol==='file:')throw Error('Open the site over HTTPS or localhost to load the firmware catalog.');
-    const response=await fetch(new URL('manifest.json',basePath),{cache:'no-store'});
+    const board=selectedBoard();
+    if(!supportedBoard(board))throw Error('Unsupported board');
+    const response=await fetch(new URL(MANIFESTS[board],document.baseURI),{cache:'no-store'});
     if(!response.ok)throw Error(`HTTP ${response.status}: manifest.json`);
     const manifest=await response.json();
-    if(manifest.board_id!=='matek-h743-wing-v3'||!Array.isArray(manifest.files)||!manifest.files.length)throw Error(tr('manifestEmpty'));
+    if(manifest.board_id!==board||board!==selectedBoard()||!Array.isArray(manifest.files)||!manifest.files.length)throw Error(tr('manifestEmpty'));
     const select=$('dfuReleaseSelect');
     select.replaceChildren();
     manifest.files.forEach((entry,index)=>{
@@ -90,6 +138,7 @@
   }
   async function latest(requestedIndex=null){
     if(busy)return;
+    const expectedBoard=selectedBoard();
     try{
       $('dfuLatestBtn').disabled=true;$('dfuLoadReleaseBtn').disabled=true;
       const manifest=await loadManifest();
@@ -101,6 +150,7 @@
         throw Error('Protected build ID is required for server-hosted firmware.');
       // Verified protected download. No public HEX link fallback.
       const blob=await window.AtlasFirmwareAccess.requestBlob(info);
+      if(selectedBoard()!==expectedBoard)throw Error('Board selection changed while loading firmware.');
       await loadHex(blob,{...info,source:'A.T.L.A.S. Secure R2 · PIN'});
     }catch(error){image=null;fileInfo=null;meta();status(error.message||String(error),true);}finally{refreshControls();}
   }
@@ -126,6 +176,7 @@
   async function flash(){
     if(!readyToFlash())return;
     const expected=fileInfo?.filename;
+    if(!imageMatchesBoard())return;
     const words=[tr('warning'),`Controller: ${selectedBoard()}`,`File: ${expected}`,`SHA256: ${fileInfo?.sha256}`,`Start: 0x08000000`, 'ERASE ALL INTERNAL FLASH (2 MiB)?'];
     if(!confirm(words.join('\n\n')))return;
     busy=true;refreshControls();$('dfuProgress').style.width='0%';
@@ -153,7 +204,18 @@
   [$('dfuConfirmBoard'),$('dfuConfirmBackup')].forEach(e=>e.addEventListener('change',refreshControls));
   $('dfuConfirmText').addEventListener('input',refreshControls);
   $('firmwareBoards').addEventListener('click',()=>queueMicrotask(refreshControls));
-   window.addEventListener('atlas:board',refreshControls);
+   window.addEventListener('atlas:board',()=>{refreshControls();
+     // A board selection is NOT a board identification. Invalidate the previous
+     // downloaded/local image and destructive-operation confirmations.
+     image=null;fileInfo=null;
+     $('dfuConfirmBoard').checked=false;
+     $('dfuConfirmBackup').checked=false;
+     $('dfuConfirmText').value='';
+     $('dfuReleaseSelect').replaceChildren();
+     $('dfuReleaseSelect').disabled=true;
+     translate();meta();refreshControls();
+     if(location.protocol!=='file:')loadManifest().catch(e=>status(e.message,true));
+   });
   document.querySelectorAll('[data-language]').forEach(e=>e.addEventListener('click',()=>queueMicrotask(()=>{translate();translatePicker();})));
   const P={ru:['Версия для установки / отката','Загрузить выбранную'],uk:['Версія для встановлення / повернення','Завантажити вибрану'],en:['Firmware version / rollback','Load selected version']};
   function translatePicker(){const lang=window.AtlasLanguage?.()||'ru';const labels=P[lang]||P.ru;$('dfuReleaseSelectLabel').textContent=labels[0];$('dfuLoadReleaseBtn').textContent=labels[1];}
