@@ -9,9 +9,9 @@ assert.ok(ui.includes("'cube-orange-plus':'Firmware/Cube Orange Plus/manifest.js
 assert.ok(ui.includes("image.detectedTarget==='cube-orange-plus'"),'Cube requires embedded target marker');
 assert.ok(ui.includes("if(!imageMatchesBoard())return 'target'"),'wrong target must block destructive action');
 assert.ok(ui.includes("image=null;fileInfo=null;"),'changing the board must discard stale HEX');
-assert.ok(ui.includes("if(!readyToFlash())return;"),'erase must be guarded');
+assert.ok(ui.includes("if(releaseLoadBusy||localLoadBusy||!readyToFlash())return;"),'erase must be guarded');
 assert.ok(ui.includes("dfuConfirmBoard")&&ui.includes("dfuConfirmBackup")&&ui.includes("dfuConfirmText"));
-assert.ok(quick.includes('if(matek||cube)'),'Quick Setup must embed the same DFU panel for Cube');
+assert.ok(quick.includes('if(matek||cube||uni)'),'Quick Setup must embed the same DFU panel for Cube');
 assert.ok(quick.includes("d.board===selectedBoard()"),'Quick Setup must only accept a verified flash for selected board');
 assert.ok(flasher.includes("new TextEncoder().encode('CubeOrangePlus')"));
 const context={window:{},Uint8Array,DataView,TextEncoder,TextDecoder,console,setTimeout};

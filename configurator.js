@@ -505,7 +505,7 @@ window.AtlasCC = Object.freeze({
   canWrite:()=>canWrite(),
   connectUsb:()=>connect(),
   connectBridge:()=>connectBridge(),
-  selectBoard:(id)=>{if(window.AtlasDfuUi?.isBusy()||!['matek-h743-wing-v3','cube-orange-plus'].includes(id))return false;state.selectedBoard=id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:id}}));return true;},
+  selectBoard:(id)=>{if(window.AtlasDfuUi?.isBusy()||!['matek-h743-wing-v3','cube-orange-plus','uni-ic743-mini'].includes(id))return false;state.selectedBoard=id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:id}}));return true;},
   navigate:(tab)=>navigate(tab),
   diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
   canCalibrate:()=>state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait,
@@ -747,11 +747,11 @@ async function writeImported(){
  const b=state.bulk;b.running=false;b.message=state.bulkCancel?tr('batchStopped'):b.done===b.total?tr('batchDone'):tr('batchPartial');
  $('bulkConsent').checked=false;renderImportDiff();renderParams();renderBasic();toast(`${b.message} · ${b.done}/${b.total}`+ (b.failed.length?` · ${b.failed.slice(0,8).join(', ')}`:''),b.done!==b.total);
 }
-function renderBoards(){const grid=$('firmwareBoards');grid.replaceChildren();const boards=state.boards.length?state.boards.filter(b=>b.id!=='other-boards'):[{id:'cube-orange-plus',name:'Cube Orange Plus',status:'planned'},{id:'matek-h743-wing-v3',name:'Matek H743-WING V3',status:'planned'}];for(const b of boards){const btn=document.createElement('button');btn.className='cc-board-choice'+(state.selectedBoard===b.id?' selected':'');btn.type='button';const mark=document.createElement('span');mark.textContent=state.selectedBoard===b.id?'✓':'';const name=document.createElement('strong');name.textContent=b.name;const small=document.createElement('small');small.textContent=b.status==='available'?'HEX':b.id==='cube-orange-plus'?'HEX · LOCAL':tr('pending').toUpperCase();btn.append(mark,name,small);btn.addEventListener('click',()=>{if(window.AtlasDfuUi?.isBusy())return;state.selectedBoard=b.id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:b.id}}));});grid.append(btn);}const selected=boards.find(b=>b.id===state.selectedBoard);$('boardSelection').textContent=tr('boardWaiting')+(selected?.name||'—')+' / '+tr('compat');}
+function renderBoards(){const grid=$('firmwareBoards');grid.replaceChildren();const boards=state.boards.length?state.boards.filter(b=>b.id!=='other-boards'):[{id:'cube-orange-plus',name:'Cube Orange Plus',status:'planned'},{id:'matek-h743-wing-v3',name:'Matek H743-WING V3',status:'planned'},{id:'uni-ic743-mini',name:'Uni-IC743 Mini',status:'planned'}];for(const b of boards){const btn=document.createElement('button');btn.className='cc-board-choice'+(state.selectedBoard===b.id?' selected':'');btn.type='button';const mark=document.createElement('span');mark.textContent=state.selectedBoard===b.id?'✓':'';const name=document.createElement('strong');name.textContent=b.name;const small=document.createElement('small');small.textContent=b.status==='available'?'HEX':['cube-orange-plus','uni-ic743-mini'].includes(b.id)?'HEX · LOCAL':tr('pending').toUpperCase();btn.append(mark,name,small);btn.addEventListener('click',()=>{if(window.AtlasDfuUi?.isBusy())return;state.selectedBoard=b.id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:b.id}}));});grid.append(btn);}const selected=boards.find(b=>b.id===state.selectedBoard);$('boardSelection').textContent=tr('boardWaiting')+(selected?.name||'—')+' / '+tr('compat');}
 function renderReleases(){
  const container=$('releaseList');container.replaceChildren();
  const boards=state.boards.filter(b=>b.id!=='other-boards');
- if(!boards.length)boards.push({name:'Cube Orange Plus',downloads:[]},{name:'Matek H743-WING V3',downloads:[]});
+ if(!boards.length)boards.push({name:'Cube Orange Plus',downloads:[]},{name:'Matek H743-WING V3',downloads:[]},{name:'Uni-IC743 Mini',downloads:[]});
  for(const board of boards){
   const box=document.createElement('div');box.className='cc-release-item';
   const title=document.createElement('strong');title.textContent=board.name;

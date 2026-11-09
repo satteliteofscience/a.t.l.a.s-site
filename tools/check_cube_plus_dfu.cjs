@@ -29,11 +29,11 @@ assert.ok(dfu.includes('selectedBoard()===expectedBoard')||dfu.includes('selecte
 assert.ok(dfu.includes("image.detectedTarget==='cube-orange-plus'"));
 assert.ok(dfu.includes("if(!imageMatchesBoard())return 'target'"));
 assert.ok(dfu.includes("image=null;fileInfo=null;"));
-assert.ok(dfu.includes("if(!readyToFlash())return;"));
+assert.ok(dfu.includes("if(releaseLoadBusy||localLoadBusy||!readyToFlash())return;"));
 assert.ok(dfu.includes("dfuConfirmBoard")&&dfu.includes("dfuConfirmText"));
 assert.ok(transport.includes('function supportsH743FlashMap(name)'));
 assert.ok(transport.includes("new TextEncoder().encode('CubeOrangePlus')"));
-assert.ok(quick.includes('if(matek||cube)'));
+assert.ok(quick.includes('if(matek||cube||uni)'));
 assert.ok(quick.includes("qs.firmwareSource='dfu'")&&quick.includes('d.board===selectedBoard()'));
 const context={window:{},Uint8Array,DataView,TextEncoder,TextDecoder,console,setTimeout};
 vm.runInNewContext(transport,context,{filename:'dfu-flasher.js'});
