@@ -11,13 +11,27 @@
       "id": "cube-orange-plus",
       "name": "Cube Orange Plus",
       "family": "CubePilot / Cube Orange Plus",
-      "description": "Cube Orange Plus (STM32H757): отдельная сборка A.T.L.A.S. подготовлена к публикации. Загрузка появится после размещения в закрытом хранилище и проверки; прошивка на реальном контроллере пока не подтверждена.",
-      "status": "planned",
+      "description": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Формат HEX и SHA-256 проверены. Запись через Web-DFU доступна в экспериментальном режиме после проверки платы и карты Flash, но на физическом Cube Orange Plus ещё не испытана. Сохрани параметры и загрузчик перед полной записью.",
+      "status": "available",
       "target": "CubeOrangePlus — STM32H757",
-      "version": "4.7.2",
-      "downloads": [],
-      "description_uk": "Cube Orange Plus (STM32H757): окрему збірку A.T.L.A.S. підготовлено до публікації. Завантаження з’явиться після розміщення у приватному сховищі й перевірки; прошивання на реальному контролері поки не підтверджено.",
-      "description_en": "Cube Orange Plus (STM32H757): a separate A.T.L.A.S. build is prepared for publication. Download will be enabled only after private storage upload and verification; hardware flashing has not yet been confirmed.",
+      "version": "1.0",
+      "downloads": [
+        {
+          "filename": "ATLAS-Cube-Orange-Plus-release-1.hex",
+          "label": "A.T.L.A.S. Release 1.0 · ArduPlane 4.7.2 · Cube Orange Plus",
+          "version": "1.0",
+          "sha256": "44b3c68b52ee75bf8de808275a43aafcbea0b076492f0b200052bb6dc7b427f6",
+          "bytes": 5102076,
+          "timestamp": 1794242098,
+          "release_id": "44b3c68b52ee75bf",
+          "source_url": "",
+          "source_verified": false,
+          "secure_id": "cube-orange-plus-release-1",
+          "channel": "release"
+        }
+      ],
+      "description_uk": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Формат HEX і SHA-256 перевірено. Запис через Web-DFU доступний в експериментальному режимі після перевірки плати та карти Flash, але на фізичному Cube Orange Plus ще не випробуваний. Збережи параметри й завантажувач перед повним записом.",
+      "description_en": "A.T.L.A.S. Release 1.0 for Cube Orange Plus (STM32H757). HEX format and SHA-256 verified. Web-DFU flashing is experimental and gated on board and flash-map checks; not yet validated on a physical Cube Orange Plus. Back up parameters and preserve a recovery path before full erase.",
       "target_uk": "CubeOrangePlus — STM32H757",
       "target_en": "CubeOrangePlus — STM32H757"
     },
