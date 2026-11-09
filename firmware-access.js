@@ -49,40 +49,48 @@
   dialog.querySelector('.atlas-access-cancel').textContent=t('cancel');
   submit.textContent=t('send');
   dialog.querySelector('.atlas-access-note').textContent=t('note');
-  field.value='';status.textContent='';submit.disabled=false;active=true;
+  field.value='';field.disabled=false;status.textContent='';submit.disabled=false;active=true;
   return new Promise((resolve,reject)=>{
-   let finished=false;
+   let finished=false,abortController=null;
    function finish(err,blob){
     if(finished)return;finished=true;
+    if(abortController)abortController.abort();
     dialog.removeEventListener('cancel',cancel);
     dialog.removeEventListener('close',cancel);
     form.removeEventListener('submit',attempt);
     dialog.querySelector('.atlas-access-cancel').removeEventListener('click',cancel);
-    field.value='';active=false;if(dialog.open)dialog.close();
+    field.value='';field.disabled=false;active=false;if(dialog.open)dialog.close();
     if(err)reject(err);else resolve(blob);
    }
    function cancel(ev){if(ev?.type==='cancel')ev.preventDefault();finish(new Error('Access cancelled'));}
    async function attempt(event){
     event.preventDefault();
+    if(finished)return;
     const pin=field.value;
     if(pin.length<8||pin.length>128){status.textContent=t('invalid');return;}
     submit.disabled=true;field.disabled=true;status.textContent=t('working');
+    abortController=new AbortController();
     try{
      const response=await fetch(base+'/api/firmware/'+encodeURIComponent(id),{
-      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin}),cache:'no-store',credentials:'omit'
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin}),cache:'no-store',credentials:'omit',signal:abortController.signal
      });
+     if(finished)return;
      if(!response.ok){
       status.textContent=response.status===401?t('invalid'):response.status===429?t('limited'):t('error');
       return;
      }
      const blob=await response.blob();
-     const expected=String(entry.sha256||'').toLowerCase();
-     if(!/^[a-f0-9]{64}$/.test(expected)||await sha256(blob)!==expected){
+     if(finished)return;
+     if(Number.isSafeInteger(entry.bytes)&&entry.bytes>0&&blob.size!==entry.bytes){
       status.textContent=t('mismatch');return;
      }
-     finish(null,blob);
-    }catch(error){status.textContent=t('error');}
-    finally{submit.disabled=false;field.disabled=false;field.value='';field.focus();}
+     const expected=String(entry.sha256||'').toLowerCase();
+     if(!/^[a-f0-9]{64}$/.test(expected)||await sha256(blob)!==expected){
+      if(!finished)status.textContent=t('mismatch');return;
+     }
+     if(!finished)finish(null,blob);
+    }catch(error){if(!finished)status.textContent=t('error');}
+    finally{if(!finished){submit.disabled=false;field.disabled=false;field.value='';field.focus();}abortController=null;}
    }
    dialog.addEventListener('cancel',cancel);
    dialog.addEventListener('close',cancel);
