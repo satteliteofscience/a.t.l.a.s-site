@@ -14,6 +14,8 @@ assert.match(cfg,/if\(shouldCancel\(\)\)throw Error\('Cancelled after '/,'cancel
 assert.match(cal,/kind:completedKind==='six'\?'six'/,'accelerometer calibration must emit verified events');
 assert.match(cal,/kind:'compass',status:failed\?'failed':ok\?\(mag\.autosaved\?'done':'awaiting-save'\)/,'compass completion must wait for saved report');
 assert.ok(dfu.includes("new CustomEvent('atlas:dfu'"),'DFU must notify Quick Setup after verified flash');
+assert.match(dfu,/new Event\('atlas:dfu-idle'\)/,'DFU must unblock USB controls after the hardware session ends');
+assert.match(wizard,/atlas:dfu-idle/,'wizard must refresh USB buttons when flashing finishes');
 assert.match(wizard,/api\.writeAdvancedParams\(updates/,'custom parameter file must use existing acknowledged writer');
 assert.match(wizard,/api\.requestParameters\(\)/,'parameter verification must use live parameter readback');
 assert.match(wizard,/qs\.rebootSawDisconnect/,'custom parameter flow must require controller disconnect/reconnect');
