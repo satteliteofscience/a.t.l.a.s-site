@@ -9,8 +9,22 @@
  };
  const lang=()=>window.AtlasLanguage?.()||window.AtlasI18n?.lang||document.documentElement.lang||'ru';
  const t=k=>(wording[lang()]||wording.ru)[k];
- const configPromise=fetch(new URL('data/firmware-access.json',document.baseURI),{cache:'no-store'})
-  .then(r=>r.ok?r.json():null).catch(()=>null);
+ // Read the public gateway configuration on demand. A single temporary network
+ // failure must not permanently disable protected downloads until page reload.
+ // Cache successful configuration, but retry failed/disabled responses on the next click.
+ let configPromise=null;
+ function loadAccessConfig(){
+  if(!configPromise){
+   configPromise=fetch(new URL('data/firmware-access.json',document.baseURI),{cache:'no-store'})
+    .then(r=>r.ok?r.json():null)
+    .catch(()=>null)
+    .then(config=>{
+     if(config?.enabled!==true||!safeAPI(config?.gateway_url))configPromise=null;
+     return config;
+    });
+  }
+  return configPromise;
+ }
  let modal=null,active=false;
  function safeAPI(raw){
   try{const u=new URL(raw);if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/')return null;return u.origin;}catch{return null;}
@@ -34,7 +48,7 @@
  async function requestBlob(entry){
   const id=buildId(entry);
   if(!id)throw Error('This firmware is not configured for protected access.');
-  const config=await configPromise;
+  const config=await loadAccessConfig();
   const base=safeAPI(config?.gateway_url);
   if(config?.enabled!==true||!base)throw Error(t('offline'));
   if(active)throw Error(t('error'));
