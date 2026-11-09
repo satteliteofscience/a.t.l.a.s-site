@@ -31,7 +31,7 @@ const translations={
   startHint:'Выбор режима 2 сразу записывает INS_TCALn_ENABLE=2 с подтверждением и автоматически перечитывает полный список. Других подтверждений на этом шаге не требуется.',
   noFields:'Диапазон будет доступен после обновления параметров, иногда только после перезагрузки.',
   imuReady:'IMU с температурной компенсацией: ',idle:'Ожидается команда.',reloadButton:'Обновить после перепитания',
-  invalidValue:'Некорректное значение температуры.',noHardware:'Без физического контроллера завершение обучения подтвердить нельзя.'
+  invalidValue:'Некорректное значение температуры.',noHardware:'Фактическое завершение обучения проверяется после нового полного чтения INS_TCAL. Режим 1 сам по себе не гарантирует точности.',base:'Температура базовой калибровки',accel:'Акселерометр',gyro:'Гироскоп',coefficients:'Коэффициенты температурных смещений',coeffCount:'Коэффициентов прочитано',coefInfo:'ACC/GYR — полиномы 1–3 порядка по X, Y и Z; показаны только реальные значения INS_TCAL из контроллера.',noneCoefficients:'Коэффициенты ещё не переданы контроллером.',recorded:'Записанный диапазон',pendingTraining:'Предыдущее самообучение было запущено в этой сессии. После переподключения контроллер вернул ENABLE=1; это признак завершения по ArduPilot, проверь диапазон и коэффициенты.',pendingUnfinished:'Повторное считывание показало ENABLE=2. Обучение ещё включено либо было прервано.',baselineMissing:'Отсутствует действительная температура базовой калибровки INS_ACC/GYR_CALTEMP. Проверь калибровку IMU.',cached:'Значения считываются с контроллера автоматически при MAVLink-подключении; если список неполный, используй повторное чтение.'
  },
  uk:{
   title:'Температурне калібрування INS',body:'Налаштовуй кожен IMU окремо. Це температурна компенсація гіроскопа та акселерометра, не звичайне шестипозиційне калібрування.',
@@ -53,7 +53,7 @@ const translations={
   prep:'До запуску потрібні чинні INS_ACCn_CALTEMP та INS_GYRn_CALTEMP. Для журналу корисний LOG_DISARMED=1 із картою пам’яті.',
   caltemp:'Не знайдено чинні температури початкового калібрування. Виконай калібрування акселерометра й гіроскопа.',
   disconnect:'Немає актуального з’єднання.',startHint:'Вибір 2 одразу записує ENABLE=2 і зчитує параметри без додаткових підтверджень.',noFields:'Діапазон може з’явитися після перезапуску.',imuReady:'IMU з компенсацією: ',idle:'Очікування.',reloadButton:'Оновити після перезапуску',
-  invalidValue:'Неправильна температура.',noHardware:'Без контролера не можна підтвердити навчання.'
+  invalidValue:'Неправильна температура.',noHardware:'Завершення навчання перевіряється після нового зчитування INS_TCAL. Режим 1 не гарантує точності.',base:'Температура базового калібрування',accel:'Акселерометр',gyro:'Гіроскоп',coefficients:'Коефіцієнти температурних зміщень',coeffCount:'Зчитано коефіцієнтів',coefInfo:'ACC/GYR — поліноми 1–3 порядку для X, Y та Z; показано тільки отримані INS_TCAL.',noneCoefficients:'Коефіцієнти ще не надійшли від контролера.',recorded:'Збережений діапазон',pendingTraining:'Навчання було запущене в цій сесії. Після повторного зчитування ENABLE=1 — ознака завершення; перевір діапазон і коефіцієнти.',pendingUnfinished:'Після зчитування ENABLE=2. Навчання ще активне або було перерване.',baselineMissing:'Не знайдено дійсної температури INS_ACC/GYR_CALTEMP. Перевір калібрування IMU.',cached:'Параметри зчитуються автоматично після MAVLink-підключення. Якщо список неповний, перечитай його.'
  },
  en:{
   title:'INS temperature calibration',body:'Configure each IMU separately. This is gyro/accelerometer temperature compensation, not a six-position calibration.',
@@ -76,11 +76,12 @@ const translations={
   caltemp:'Baseline INS_ACC/GYR_CALTEMP missing or invalid. Calibrate gyro and accelerometer first.',
   disconnect:'No fresh MAVLink link.',startHint:'Selecting 2 writes ENABLE=2 with readback, then automatically rereads all parameters without extra confirmation.',
   noFields:'Temperature fields may become available after a reboot.',imuReady:'IMUs with compensation: ',idle:'Waiting.',reloadButton:'Refresh after reboot',
-  invalidValue:'Invalid temperature range.',noHardware:'Physical controller required to verify learning completion.'
+  invalidValue:'Invalid temperature range.',noHardware:'After reconnect, inspect genuine INS_TCAL values. Mode 1 alone does not prove calibration accuracy.',base:'Baseline calibration temperature',accel:'Accelerometer',gyro:'Gyroscope',coefficients:'Temperature offset coefficients',coeffCount:'Coefficients received',coefInfo:'ACC/GYR are first- to third-order X/Y/Z polynomials; only values actually reported by the FC are displayed.',noneCoefficients:'No coefficients received yet.',recorded:'Stored temperature interval',pendingTraining:'Learning was started in this session. After reconnect ENABLE=1, which normally indicates completion; inspect the coefficients and range.',pendingUnfinished:'After reread ENABLE is still 2; learning is active or was interrupted.',baselineMissing:'Valid INS_ACC/GYR_CALTEMP was not received. Check basic IMU calibration.',cached:'INS temperature parameters are read automatically on MAVLink connect. Retry if the full list is incomplete.'
  }
 };
 const roots=new Set(),drafts=new Map(),messages=new Map();
 let busy=false,reading=false,readToken=0,lastEvent='',lastSensors='',lastConnected=false;
+const startedLearning=new Map();const completedLearning=new Map();
 const t=k=>(translations[language()]||translations.ru)[k]??translations.ru[k]??k;
 const e=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const getState=()=>api.getState();
@@ -89,6 +90,14 @@ function report(){
  const s=getState(),list=core.readSensors(s.params);
  return {sensors:list,connected:s.connected,complete:s.paramComplete===true,busy:busy||reading,learning:list.some(i=>i.mode===2),
   configured:list.length>0&&list.every(i=>i.mode!==2),supported:list.length>0};
+}
+function rememberLearning(sensor){startedLearning.set(sensor.prefix,{start:core.snapshot(getState().params).find(x=>x.prefix===sensor.prefix)||null,time:Date.now()});completedLearning.delete(sensor.prefix);}
+function watchLearning(sensors,fullyRead){
+ if(!fullyRead)return;
+ for(const sensor of sensors){
+  if(!startedLearning.has(sensor.prefix))continue;
+  if(sensor.mode===1){completedLearning.set(sensor.prefix,{previous:startedLearning.get(sensor.prefix),current:sensor});startedLearning.delete(sensor.prefix);}
+ }
 }
 function announce(detail={}){
  const snapshot=report();
@@ -139,6 +148,7 @@ async function chooseMode(sensor,mode){
   messages.set(sensor.prefix,t(mode===2?'reload':'written'));
   announce({type:'mode',sensor:sensor.index,mode,verified:true});
   if(mode===2){
+   rememberLearning(sensor);
    // When ENABLE=2, firmware may reveal TMIN/TMAX only after a fresh transfer.
    // Force the second complete list automatically, without a confirm dialog.
    busy=false;
@@ -176,6 +186,7 @@ function draw(root){
  const s=getState(),sensors=core.readSensors(s.params);
  const opts=root.dataset.wizard==='1';
  if(!opts){root.append(e('h2','',t('title')));addInfo(root,t('body'));}
+ addInfo(root,t('cached'));
  addInfo(root,t('prep'));
  if(!s.connected||s.demo||!s.params?.size){addInfo(root,t('noLink'),true);
   const refresh=e('button','cc-button ghost',t('read'));refresh.type='button';refresh.disabled=!s.connected||busy||reading;
@@ -195,6 +206,24 @@ function draw(root){
   selector.disabled=busy||reading||!safe()||!s.paramComplete;
   selector.addEventListener('change',()=>{void chooseMode(sensor,Number(selector.value));});
   card.append(label(t('mode'),selector),desc);
+  const formatTemp=value=>value===null?'—':Number(value).toFixed(1)+' °C';
+  const info=e('div','tc-detail');
+  info.append(e('div','tc-detail-row',t('recorded')+' · '+formatTemp(sensor.min)+' → '+formatTemp(sensor.max)));
+  info.append(e('div','tc-detail-row',t('base')+' · '+t('accel')+': '+formatTemp(sensor.baseline.accel)+' / '+t('gyro')+': '+formatTemp(sensor.baseline.gyro)));
+  info.append(e('div','tc-detail-row',t('coeffCount')+' · '+sensor.coefficientCount+'/18'));
+  card.append(info);
+  if(!sensor.baselineReady)addInfo(card,t('baselineMissing'),true);
+  const done=completedLearning.get(sensor.prefix);
+  if(done)addInfo(card,t('pendingTraining'),!sensor.calibratedRange||!sensor.coefficientCount);
+  else if(startedLearning.has(sensor.prefix))addInfo(card,t('pendingUnfinished'),true);
+  const details=e('details','tc-coeff-list'),summary=e('summary','',t('coefficients')+' · '+sensor.coefficientCount);details.append(summary);
+  addInfo(details,t('coefInfo'));
+  if(sensor.coefficients.length){
+   const table=e('table','tc-coeff-table');
+   for(const x of sensor.coefficients){const tr=e('tr');tr.append(e('td','',x.name),e('td','',Number(x.value).toPrecision(7)));table.append(tr);}
+   details.append(table);
+  }else addInfo(details,t('noneCoefficients'));
+  card.append(details);
   const note=messages.get(sensor.prefix);
   if(note)addInfo(card,note);
   if(sensor.mode===2||sensor.mode===1){
@@ -234,7 +263,8 @@ function mount(parent,options={}){
 }
 window.addEventListener('atlas:parameters',()=>{
  const s=getState(),sensorInfo=core.readSensors(s.params);
- const summary=sensorInfo.map(i=>i.prefix+':'+i.mode+':'+i.min+':'+i.max).join('|')+'|'+s.paramComplete;
+ watchLearning(sensorInfo,!s.paramLoading&&s.paramComplete===true);
+ const summary=sensorInfo.map(i=>i.prefix+':'+i.mode+':'+i.min+':'+i.max+':'+i.coefficientCount+':'+i.coefficients.map(x=>x.value).join(',')).join('|')+'|'+s.paramComplete;
  if(!s.paramLoading&&summary!==lastSensors){lastSensors=summary;updateAll();announce({type:'parameters'});}
 });
 window.addEventListener('atlas:state',()=>{
