@@ -36,7 +36,7 @@
    if(INTEGER_TYPES.includes(type)&&!Number.isSafeInteger(value)){skip(index+1,name,'integer');continue;}
    if(TYPE_RANGES[type]&&(value<TYPE_RANGES[type][0]||value>TYPE_RANGES[type][1])){skip(index+1,name,'type-range',value);continue;}
    const definition=metadata?.[name]||{};
-   if(definition.ReadOnly===true||definition.readOnly===true){skip(index+1,name,'readonly');continue;}
+   if(definition.ReadOnly===true||definition.readOnly===true||String(definition.ReadOnly).toLowerCase()==='true'||String(definition.readOnly).toLowerCase()==='true'){skip(index+1,name,'readonly');continue;}
    const range=definition.Range||definition.range;
    if(range){
     const low=Number(range.low),high=Number(range.high);
