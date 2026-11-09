@@ -7,12 +7,20 @@ const ids=catalog.boards.map(b=>b.id);
 assert.equal(new Set(ids).size,ids.length,'catalog has duplicate board identifiers');
 const uni=catalog.boards.find(b=>b.id==='uni-ic743-mini');
 assert.ok(uni&&uni.name==='Uni-IC743 Mini');
-assert.equal(uni.status,'planned','do not advertise R2 before binary is actually present');
-assert.deepEqual(uni.downloads,[],'do not enable protected download before uploading the HEX to private R2');
+assert.ok(['planned','available'].includes(uni.status),'invalid Uni release state');
+if(uni.status==='planned'){
+ assert.deepEqual(uni.downloads,[],'do not enable protected download before uploading the HEX to private R2');
+}else{
+ assert.equal(uni.downloads.length,1);
+ assert.equal(uni.downloads[0].secure_id,'uni-ic743-mini-release-1');
+ assert.equal(uni.downloads[0].sha256,'647029f6835f4af59a5ea32cf081acf67394721341ed8482b4923a99dca1c375');
+ assert.equal(uni.downloads[0].source_verified,false);
+}
 assert.ok(uni.target.includes('Uni_IC743Mini'));
 const miniManifest=JSON.parse(read('Firmware/Uni-IC743 Mini/manifest.json'));
 assert.equal(miniManifest.board_id,'uni-ic743-mini');
-assert.equal(miniManifest.files.length,0,'placeholder manifest must not offer a broken URL');
+if(uni.status==='planned')assert.equal(miniManifest.files.length,0,'placeholder manifest must not offer a broken URL');
+else assert.equal(miniManifest.files[0].secure_id,'uni-ic743-mini-release-1');
 const cfg=read('configurator.js'),quick=read('quick-setup.js'),dfu=read('dfu-ui.js'),flash=read('dfu-flasher.js');
 assert.ok(cfg.includes("'uni-ic743-mini'"),'configurator needs a new controller');
 assert.ok(cfg.includes("HEX · LOCAL"),'local HEX must be clearly labelled');

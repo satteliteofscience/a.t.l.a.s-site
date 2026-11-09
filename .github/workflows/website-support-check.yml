@@ -58,6 +58,7 @@ on:
       - 'tools/check_cube_plus_local_dfu.cjs'
       - 'tools/check_cube_plus_dfu.cjs'
       - 'tools/check_uni_mini_and_transport.cjs'
+      - 'tools/check_uni_release_metadata.cjs'
       - 'Firmware/Uni-IC743 Mini/manifest.json'
       - 'firmware-access.js'
       - 'firmware-access.css'
@@ -90,7 +91,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check JavaScript syntax
-        run: node --check support.js && node --check page-meta.js && node --check app.js && node --check contact-support.js && node --check configurator.js && node --check mavlink.js && node --check mavlink-status-core.js && node --check ahrs-filter-core.js && node --check mavftp-param.js && node --check battery-cal-core.js && node --check tempcal-core.js && node --check tempcal-ui.js && node --check tools/mavlink-bridge.cjs && node --check servo-config-core.js && node --check quick-setup-core.js && node --check quick-setup.js && node --check calibration.js && node --check i18n.js && node --check faq.js && node --check changelog.js && node --check dfu-ui.js && node --check dfu-flasher.js && node --check tools/check_cube_plus_local_dfu.cjs && node --check tools/check_cube_plus_dfu.cjs && node --check tools/check_uni_mini_and_transport.cjs && node --check firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
+        run: node --check support.js && node --check page-meta.js && node --check app.js && node --check contact-support.js && node --check configurator.js && node --check mavlink.js && node --check mavlink-status-core.js && node --check ahrs-filter-core.js && node --check mavftp-param.js && node --check battery-cal-core.js && node --check tempcal-core.js && node --check tempcal-ui.js && node --check tools/mavlink-bridge.cjs && node --check servo-config-core.js && node --check quick-setup-core.js && node --check quick-setup.js && node --check calibration.js && node --check i18n.js && node --check faq.js && node --check changelog.js && node --check dfu-ui.js && node --check dfu-flasher.js && node --check tools/check_cube_plus_local_dfu.cjs && node --check tools/check_cube_plus_dfu.cjs && node --check tools/check_uni_mini_and_transport.cjs && node --check tools/check_uni_release_metadata.cjs && node --check firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
       - name: Verify monobank/Tally URLs, labels, privacy, no legacy form
         run: node tools/check_monobank_support.cjs
       - name: Verify link preview Open Graph and Twitter metadata
@@ -103,6 +104,8 @@ jobs:
         run: node tools/check_cube_plus_local_dfu.cjs
       - name: Verify Uni-IC743 Mini firmware selection and MAVLink CRC resynchronization
         run: node tools/check_uni_mini_and_transport.cjs
+      - name: Verify staged private Uni-IC743 Mini release metadata
+        run: node tools/check_uni_release_metadata.cjs
       - name: Verify firmware notice cleanup and support contact modal
         run: node tools/check_support_contact.cjs
       - name: Check render performance and animation scheduling
