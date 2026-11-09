@@ -126,7 +126,7 @@ jobs:
           $file = 'tools/A.T.L.A.S.-TCP-Connector.cmd'
           $source = [System.IO.File]::ReadAllText((Resolve-Path $file).Path,[System.Text.Encoding]::UTF8)
           $marker = ':: ATLAS_POWERSHELL_START'
-          $pos = $source.IndexOf($marker,[System.StringComparison]::Ordinal)
+          $pos = $source.LastIndexOf($marker,[System.StringComparison]::Ordinal)
           if($pos -lt 0) { throw 'Embedded PowerShell marker is missing' }
           $script = $source.Substring($pos+$marker.Length)
           $tokens = $null
