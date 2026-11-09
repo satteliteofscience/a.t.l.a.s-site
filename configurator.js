@@ -37,7 +37,7 @@ function parameterCategory(name){
 
 let lang='ru';try{let saved=localStorage.getItem('atlas-language');if(words[saved])lang=saved;}catch{}
 const tr=(k)=>words[lang]?.[k]||words.ru[k]||k;
-const state={demo:false,connected:false,connecting:false,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
+const state={demo:false,connected:false,connecting:false,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
 window.AtlasLanguage=()=>lang;
 window.AtlasSelectedBoard=()=>state.selectedBoard;
 const settingDefs=[
@@ -179,7 +179,7 @@ async function disconnect(){state.bulkCancel=true;stopParamRepair();state.paramT
  try{if(reader)await reader.cancel();}catch{}
  try{if(reader)reader.releaseLock();}catch{}
  const port=state.port;state.port=null;try{if(port)await port.close();}catch(e){console.warn(e);}
- state.connected=false;state.sysid=null;state.lastHeartbeat=0;state.armed=null;state.mode=null;state.params.clear();state.paramCount=null;state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramLoading=false;
+ state.connected=false;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.armed=null;state.mode=null;state.params.clear();state.paramCount=null;state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramLoading=false;
  if(state.writeWait){clearTimeout(state.writeWait.timer);state.writeWait.reject(Error('Connection closed'));state.writeWait=null;}
  updateConnectionUI();renderBasic();renderParams();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));toast('USB disconnected');}
 async function transmit(messageId,payload){if(!state.port||!state.connected)throw Error(tr('needlink'));
@@ -199,7 +199,7 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
    if(first){toast(`MAVLink HEARTBEAT · sys=${state.sysid} comp=${state.compid}`);requestStreams();updateConnectionUI();startParamLoad();window.dispatchEvent(new Event('atlas:state'));}
  }else if(data.type==='attitude'){state.telemetry.roll=data.roll*180/Math.PI;state.telemetry.pitch=data.pitch*180/Math.PI;state.telemetry.yaw=data.yaw*180/Math.PI;state.lastAttitude=Date.now();}
  else if(data.type==='vfr'){state.telemetry.airspeed=data.airspeed*3.6;state.telemetry.altitude=data.altitude;state.telemetry.throttle=data.throttle;}
- else if(data.type==='sys'){state.telemetry.voltage=data.voltage===65535?null:data.voltage/1000;}
+ else if(data.type==='sys'){state.telemetry.voltage=data.voltage===65535?null:data.voltage/1000;if(message.sysid===state.sysid&&message.compid===state.compid){const magBit=4;state.compassStatus={present:!!(data.sensorsPresent&magBit),enabled:!!(data.sensorsEnabled&magBit),healthy:!!(data.sensorsHealthy&magBit),lastSeen:Date.now()};}}
  else if(data.type==='text'){if(data.text && data.severity<=5)toast(`FC: ${data.text}`,data.severity<=3);}
  else if(data.type==='param'){
   if(!data.name||message.sysid!==state.sysid||message.compid!==state.compid)return;
@@ -233,7 +233,7 @@ async function connect(){if(state.connected){await disconnect();return;}
  try{
   const port=await navigator.serial.requestPort();
   await port.open({baudRate:Number($('baud').value),bufferSize:8192});
-  state.port=port;state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.lastHeartbeat=0;state.mode=null;
+  state.port=port;state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.mode=null;
   updateConnectionUI();log('USB CDC open · '+$('baud').value+' bps');
   const parser=new M.Parser(handleMessage);state.rxParser=parser;
   state.rxPositions=0;state.rxCommands=0;state.rxAcks=0;state.rxTexts=0;
@@ -261,7 +261,7 @@ function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBu
 }
 function canWrite(){return state.connected&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading;}
 window.AtlasCC = Object.freeze({
-  getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
+  getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,compassStatus:state.compassStatus,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
   canWrite:()=>canWrite(),
   connectUsb:()=>connect(),
   selectBoard:(id)=>{if(window.AtlasDfuUi?.isBusy()||!['matek-h743-wing-v3','cube-orange'].includes(id))return false;state.selectedBoard=id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:id}}));return true;},
