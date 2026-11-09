@@ -109,7 +109,7 @@ async function runIntegration(){
   client.send(2,outgoing);
   assert.deepEqual(await reply,outgoing,'WebSocket MAVLink bytes should reach UDP peer');
   // Reconfigure through new authenticated sessions: UDP target and TCP client.
-  client.close();client=null;await new Promise(resolve=>setTimeout(resolve,120));
+  client.close();client=null;await new Promise(resolve=>setTimeout(resolve,700));
   const udpTarget=dgram.createSocket('udp4');
   await new Promise(resolve=>udpTarget.bind(0,'127.0.0.1',resolve));
   try{
@@ -120,7 +120,7 @@ async function runIntegration(){
    client.send(2,Buffer.from([11,22,33]));
    assert.deepEqual((await client.wait(x=>x.opcode===2)).payload,Buffer.from([11,22,33]),'UDP target must pass MAVLink both ways');
   }finally{client?.close();client=null;udpTarget.close();}
-  await new Promise(resolve=>setTimeout(resolve,120));
+  await new Promise(resolve=>setTimeout(resolve,700));
   const tcpServer=net.createServer(socket=>socket.on('data',data=>socket.write(data)));
   await new Promise(resolve=>tcpServer.listen(0,'127.0.0.1',resolve));
   try{
