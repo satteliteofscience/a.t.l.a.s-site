@@ -420,7 +420,7 @@ function mountCalibrationWidget(box,widget){
 }
 function startCalibration(kind){
  if(!api.canCalibrate()){setGlobal(t('accelNeedLink'),true);return;}
- if(kind==='compass'&&core.detectCompass(state().params,state().compassStatus).kind!=='enabled'){setGlobal(t('compassNotConfirmed'),true);return;}
+ if(kind==='compass'&&!['enabled','unhealthy'].includes(core.detectCompass(state().params,state().compassStatus).kind)){setGlobal(t('compassNotConfirmed'),true);return;}
  const target={six:'accSixBtn',level:'accLevelBtn',compass:'compassStartBtn'}[kind];
  if(!target)return;
  const control=$(target);if(!control||control.disabled){setGlobal(t('accelNeedLink'),true);return;}
@@ -520,14 +520,14 @@ function renderCompass(box){
  addHeading(box,t('compassTitle'),t('compassBody'));
  const s=state();if(!paramReady(s)&&!qs.compassNeedReboot){callout(box,t('readWaiting'),'warning');return;}
  const result=core.detectCompass(s.params,s.compassStatus);
- if(result.kind==='enabled'||qs.awaitingCalibration==='compass'||qs.compassNeedReboot){
+ if(['enabled','unhealthy'].includes(result.kind)||qs.awaitingCalibration==='compass'||qs.compassNeedReboot){
   if(result.kind==='enabled')callout(box,t('compassEnabled'),'success');
   else callout(box,t('compassNotConfirmed'),'warning');
   if(result.healthy===false)callout(box,t('compassUnhealthy'),'warning');
   if(qs.compassAwaitingSave)callout(box,t('compassAwaitSave'),'warning');
   if(qs.compassError)callout(box,qs.compassError,'danger');
   if(!qs.compassNeedReboot){
-   button(box,t('startCompass'),()=>startCalibration('compass'),'cc-button primary').disabled=!api.canCalibrate()||result.kind!=='enabled'||qs.awaitingCalibration==='compass';
+   button(box,t('startCompass'),()=>startCalibration('compass'),'cc-button primary').disabled=!api.canCalibrate()||!['enabled','unhealthy'].includes(result.kind)||qs.awaitingCalibration==='compass';
    mountCalibrationWidget(box,compassWidget);
   }
   if(qs.completed[8])callout(box,t('compassDone'),'success');
