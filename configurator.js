@@ -156,7 +156,7 @@ function updateTelemetryUI(){const t=state.telemetry;
  $('yawReadout').textContent=Number.isFinite(t.yaw)?`${cleanNum((t.yaw+360)%360,1)}°`:'---.-°';
  const freshAirspeed=state.demo||(Number.isFinite(state.lastVfr)&&Date.now()-state.lastVfr<6500);
  $('speedReadout').innerHTML=freshAirspeed&&Number.isFinite(t.airspeed)&&t.airspeed>=0?`${Math.round(t.airspeed)} <em>km/h</em>`:'--- <em>km/h</em>';
- $('speedReadout').title=freshAirspeed?'MAVLink VFR_HUD · true airspeed display based on reported indicated airspeed':'Нет свежего VFR_HUD · проверь отправку телеметрии и работу датчика Пито';
+ $('speedReadout').title=freshAirspeed?'MAVLink VFR_HUD · воздушная скорость по данным автопилота':'Нет свежего VFR_HUD · проверь отправку телеметрии и работу датчика Пито';
  $('voltageReadout').textContent=Number.isFinite(t.voltage)?`${cleanNum(t.voltage,2)} V`:'—';
  $('altReadout').textContent=Number.isFinite(t.altitude)?`${cleanNum(t.altitude,1)} m`:'—';
  $('vehicleModel').textContent=state.demo?'SIM / ArduPlane':state.connected?`MAVLink SYS ${state.sysid??'?'}`:'—';
