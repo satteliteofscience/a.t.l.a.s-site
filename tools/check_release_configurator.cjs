@@ -66,7 +66,7 @@ async function webSocket(port,token){
        const obj={predicate,resolve:res,timer:setTimeout(()=>{const i=waiting.indexOf(obj);if(i>=0)waiting.splice(i,1);rej(Error('WebSocket response timeout'));},timeout)};
        waiting.push(obj);
       });
-     },close(){socket.destroy();}});
+     },close(){if(!socket.destroyed){socket.write(maskedFrame(8,Buffer.alloc(0)));socket.end();}}});
    }
    while(buffer.length>=2){
     const opcode=buffer[0]&15,len=buffer[1]&127;let pos=2,n=len;
