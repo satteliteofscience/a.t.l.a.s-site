@@ -26,7 +26,7 @@ $nodeChecksums = @{
 $bridgeUrl = 'https://raw.githubusercontent.com/satteliteofscience/a.t.l.a.s-site/7450a4eeb9cc333865292b7b1850233291d7b383/tools/mavlink-bridge.cjs'
 $bridgeGitSha = '6f349f597c4ca5a72d2385d6443cc86f6dc3788a'
 $site = 'https://satteliteofscience.github.io/a.t.l.a.s-site/configurator.html'
-$workDir = Join-Path $env:LOCALAPPDATA 'A.T.L.A.S.\TCP-Connector'
+$workDir = Join-Path $env:LOCALAPPDATA 'ATLAS-TCP-Connector'
 New-Item -ItemType Directory -Path $workDir -Force | Out-Null
 
 function Get-GitBlobHash([string]$file) {
@@ -43,19 +43,30 @@ function Download-Checked([string]$url,[string]$target,[string]$expected,[string
  $check = if ($kind -eq 'sha256') { (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant() } else { Get-GitBlobHash $target }
  if($check -ne $expected) { throw ('Integrity check failed for ' + $target + '. Expected ' + $expected + ', got ' + $check) }
 }
+# Windows cannot reliably use directory components ending in a period.
+# Cleanup must never obscure the original download or integrity error.
+function Remove-DownloadedFile([string]$path) {
+ if([System.IO.File]::Exists($path)) { [System.IO.File]::Delete($path) }
+}
 function Fetch-OfficialFile([string]$url,[string]$target,[string]$hash,[string]$kind) {
- if(Test-Path -LiteralPath $target) {
-  try { Download-Checked $url $target $hash $kind;return } catch { Remove-Item -LiteralPath $target -Force -ErrorAction SilentlyContinue }
+ if([System.IO.File]::Exists($target)) {
+  try { Download-Checked $url $target $hash $kind; return }
+  catch { Remove-DownloadedFile $target }
  }
- $temp = $target + '.download'
- Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue
+ $downloadPath = $target + '.download'
+ Remove-DownloadedFile $downloadPath
  try {
   [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
   Write-Host ('Downloading verified component from ' + $url)
-  Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $temp -MaximumRedirection 3
-  Download-Checked $url $temp $hash $kind
-  Move-Item -LiteralPath $temp -Destination $target -Force
- } finally { Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue }
+  Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $downloadPath -MaximumRedirection 3 -TimeoutSec 120
+  Download-Checked $url $downloadPath $hash $kind
+  Move-Item -LiteralPath $downloadPath -Destination $target -Force
+ } catch {
+  $message = $_.Exception.Message
+  throw ('Unable to download or verify ' + $url + ': ' + $message)
+ } finally {
+  Remove-DownloadedFile $downloadPath
+ }
 }
 Write-Host ''
 Write-Host 'A.T.L.A.S. TCP Connector - one-click launcher' -ForegroundColor Green
@@ -66,7 +77,7 @@ Write-Host ''
 
 $node = $null
 $existing = Get-Command node.exe -ErrorAction SilentlyContinue
-if($existing) {
+if($existing -and $env:ATLAS_CONNECTOR_FORCE_PORTABLE -ne '1') {
  try {
   $versionText = (& $existing.Source --version 2>$null | Select-Object -First 1)
   if($versionText -match '^v([0-9]+)\.' -and [int]$Matches[1] -ge 20) { $node = $existing.Source }
@@ -84,6 +95,12 @@ if(!$node) {
 $bridge = Join-Path $workDir 'mavlink-bridge.cjs'
 Fetch-OfficialFile $bridgeUrl $bridge $bridgeGitSha 'gitblob'
 Write-Host 'A.T.L.A.S. MAVLink bridge verified against pinned Git source.'
+# Test-mode exercises the actual first-launch download and checksum verification
+# on Windows CI without opening a browser or a TCP endpoint.
+if($env:ATLAS_CONNECTOR_SELFTEST -eq '1') {
+ Write-Host 'PASS: Portable Node download/cache, official SHA-256 and verified MAVLink bridge.'
+ return
+}
 
 # Prevent unintentionally opening a browser attached to an unrelated process on 8765.
 $probe = New-Object System.Net.Sockets.TcpClient
