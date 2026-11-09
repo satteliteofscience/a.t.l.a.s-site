@@ -90,6 +90,7 @@
               <label><span data-net-t="token">Токен моста (показан в терминале)</span><input id="networkToken" type="password" autocomplete="off" placeholder="token"></label>
             </div>
             <p class="cc-network-warning" data-net-t="warning">GitHub Pages не открывает UDP/TCP напрямую. Запусти на ПК: node tools/mavlink-bridge.cjs. Мост требует токен и соединяется по WebSocket. UDP/TCP используют только в доверенной сети/VPN.</p>
+            <p class="cc-network-help"><a href="https://github.com/satteliteofscience/a.t.l.a.s-site/blob/main/MAVLINK-NETWORK-BRIDGE.md" target="_blank" rel="noopener noreferrer">Инструкция по UDP/TCP ↗</a> · <a href="https://github.com/satteliteofscience/a.t.l.a.s-site/blob/main/tools/mavlink-bridge.cjs" target="_blank" rel="noopener noreferrer">Скачать локальный мост ↗</a></p>
             <button id="networkConnectBtn" class="cc-button ghost" type="button" data-net-t="connect">Подключить UDP/TCP</button>
             <p id="networkStatus" class="cc-param-load-note" aria-live="polite" role="status"></p>
           </details>
