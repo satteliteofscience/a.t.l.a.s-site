@@ -241,7 +241,7 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
  else if(data.type==='vfr'&&message.sysid===state.sysid){state.lastVfr=Date.now();state.telemetry.airspeed=Number.isFinite(data.airspeed)&&data.airspeed>=0?data.airspeed*3.6:null;state.telemetry.altitude=data.altitude;state.telemetry.throttle=data.throttle;}
  else if(data.type==='sys'){state.telemetry.voltage=data.voltage===65535?null:data.voltage/1000;if(data.voltage!==65535&&message.sysid===state.sysid)state.lastVoltageTelemetry=Date.now();if(message.sysid===state.sysid&&message.compid===state.compid){const magBit=4;state.compassStatus={present:!!(data.sensorsPresent&magBit),enabled:!!(data.sensorsEnabled&magBit),healthy:!!(data.sensorsHealthy&magBit),lastSeen:Date.now()};}}
  else if(data.type==='text'){if(data.text && data.severity<=5)toast(`FC: ${data.text}`,data.severity<=3);}
- else if(data.type==='mavftp'){state.ftpClient?.handle(data.data);}
+ else if(data.type==='mavftp'&&message.compid===state.compid){state.ftpClient?.handle(data.data);}
  else if(data.type==='param'){
   if(!data.name||message.sysid!==state.sysid||message.compid!==state.compid)return;
   state.params.set(data.name,{value:data.value,type:data.paramType,index:data.index});
