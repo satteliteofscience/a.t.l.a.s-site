@@ -185,8 +185,8 @@ function renderAhrsFilter(){
  const info=core.indication({connected:state.connected,live:heartbeatLive(),demo:state.demo,
    announced:state.activeFilter,params:state.params,language:lang});
  const badge=$('ahrsFilterBadge'),detail=$('ahrsFilterDetail');
- if(badge){badge.textContent=info.label;badge.title=info.detail;badge.dataset.verified=String(info.verified);}
- if(detail){detail.textContent=info.detail;detail.title=info.label+' — '+info.detail;}
+ if(badge){if(badge.textContent!==info.label)badge.textContent=info.label;if(badge.title!==info.detail)badge.title=info.detail;badge.dataset.verified=String(info.verified);}
+ if(detail){if(detail.textContent!==info.detail)detail.textContent=info.detail;const title=info.label+' — '+info.detail;if(detail.title!==title)detail.title=title;}
 }
 function updateTelemetryUI(){const t=state.demo||heartbeatLive()?state.telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};
  $('rollReadout').textContent=Number.isFinite(t.roll)?`${t.roll>=0?'+':''}${cleanNum(t.roll,1)}°`:'--.-°';
@@ -201,7 +201,7 @@ function updateTelemetryUI(){const t=state.demo||heartbeatLive()?state.telemetry
  const armed=heartbeatLive()?state.armed:null;
  $('armedState').textContent=state.demo?tr('disarmed'):armed===true?tr('armed'):armed===false?tr('disarmed'):tr('unknown');
  $('armedState').style.color=armed===true?'#efae7f':'#c4d685';
- $('flightMode').textContent=state.demo?'FBWA / SIM':heartbeatLive()&&state.mode!==null?(modes[state.mode]||`CUSTOM ${state.mode}`):'—';renderAhrsFilter();showProgress();
+ $('flightMode').textContent=state.demo?'FBWA / SIM':heartbeatLive()&&state.mode!==null?(modes[state.mode]||`CUSTOM ${state.mode}`):'—';renderAhrsFilter();
 }
 function enterDemo(){if(state.connected||state.connecting){toast(tr('needlink'),true);return;}state.demo=!state.demo;stopParamRepair();state.paramTransfer=null;state.params.clear();state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramCount=null;state.armed=null;
  if(state.demo){const demo={'ROLL_LIMIT_DEG':45,'PITCH_MAX':2000,'PITCH_MIN':-1500,'AIRSPEED_MIN':16,'AIRSPEED_MAX':45,'TRIM_ARSPD_CM':2200,'THR_MIN':0,'THR_MAX':100,'STALL_PREVENTION':1,'FS_LONG_ACTN':0,'ARSPD_USE':1,'RUD_LIMIT_DEG':30,'EK3_PRIMARY':0,'EK3_IMU_MASK':3,'TECS_SPDWEIGHT':1,'TKOFF_ALT':150,'SERVO1_FUNCTION':4,'SERVO2_FUNCTION':19,'SERVO3_FUNCTION':70,'OSD_TYPE':1,'OSD_UNITS':0,'OSD1_ENABLE':1,'OSD1_ALTITUDE_EN':1,'OSD1_ALTITUDE_X':24,'OSD1_ALTITUDE_Y':2,'OSD1_ASPEED_EN':1,'OSD1_ASPEED_X':1,'OSD1_ASPEED_Y':3,'OSD1_BAT_VOLT_EN':1,'OSD1_BAT_VOLT_X':2,'OSD1_BAT_VOLT_Y':13,'OSD1_HORIZON_EN':1,'OSD1_HORIZON_X':15,'OSD1_HORIZON_Y':8,'OSD1_RSSI_EN':1,'OSD1_RSSI_X':2,'OSD1_RSSI_Y':1,'OSD1_MESSAGE_EN':0,'OSD1_MESSAGE_X':1,'OSD1_MESSAGE_Y':12};for(const [name,value]of Object.entries(demo))state.params.set(name,{value,type:Number.isInteger(value)?6:9,index:state.params.size});state.paramCount=state.params.size;toast('SIM DEMO · no USB hardware connected');}else toast('Demo exited');
@@ -251,7 +251,7 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
  if(data.type==='text')state.rxTexts=(state.rxTexts||0)+1;
  if(data.type==='heartbeat' && data.compid===1){const first=state.sysid===null,recovered=state.heartbeatStale;state.sysid=data.sysid;state.compid=data.compid;state.lastHeartbeat=Date.now();state.heartbeatStale=false;state.armed=data.armed;state.mode=data.mode;
    if(first){state.streamStart=Date.now();toast(`MAVLink HEARTBEAT · sys=${state.sysid} comp=${state.compid}`);requestStreams();updateConnectionUI();startParamLoad();window.dispatchEvent(new Event('atlas:state'));}
-   else if(recovered){state.activeFilter=null;updateConnectionUI();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));}
+   else if(recovered){updateConnectionUI();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));}
  }else if(data.type==='attitude'){state.telemetry.roll=data.roll*180/Math.PI;state.telemetry.pitch=data.pitch*180/Math.PI;state.telemetry.yaw=data.yaw*180/Math.PI;state.lastAttitude=Date.now();}
  else if(data.type==='vfr'&&message.sysid===state.sysid){state.lastVfr=Date.now();state.telemetry.airspeed=Number.isFinite(data.airspeed)&&data.airspeed>=0?data.airspeed*3.6:null;state.telemetry.altitude=data.altitude;state.telemetry.throttle=data.throttle;}
  else if(data.type==='sys'){state.telemetry.voltage=data.voltage===65535?null:data.voltage/1000;if(data.voltage!==65535&&message.sysid===state.sysid)state.lastVoltageTelemetry=Date.now();if(message.sysid===state.sysid&&message.compid===state.compid){const magBit=4;state.compassStatus={present:!!(data.sensorsPresent&magBit),enabled:!!(data.sensorsEnabled&magBit),healthy:!!(data.sensorsHealthy&magBit),lastSeen:Date.now()};}}
