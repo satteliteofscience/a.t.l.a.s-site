@@ -125,17 +125,21 @@
  // Do not claim digital calibration success from parameters alone.
  function snapshotCompassOffsets(liveParams){
   const params=mapOf(liveParams),out={};
-  for(const axis of ['X','Y','Z']){
-   const name='COMPASS_OFS_'+axis,value=Number(params.get(name)?.value);
-   if(params.has(name)&&Number.isFinite(value))out[name]=value;
+  // ArduPilot may store a CAN/external compass as instance 2 or 3.
+  for(const prefix of ['COMPASS_OFS_','COMPASS_OFS2_','COMPASS_OFS3_']){
+   for(const axis of ['X','Y','Z']){
+    const name=prefix+axis,value=Number(params.get(name)?.value);
+    if(params.has(name)&&Number.isFinite(value))out[name]=value;
+   }
   }
   return out;
  }
  function assessPostCompassCalibration(before,after,sensorStatus,now=Date.now()){
   const old=before||{},newValues=snapshotCompassOffsets(after);
-  const keys=['COMPASS_OFS_X','COMPASS_OFS_Y','COMPASS_OFS_Z'];
-  if(keys.some(k=>!Number.isFinite(old[k])||!Number.isFinite(newValues[k])))return {kind:'unverified',reason:'missing-offsets',changed:[]};
-  const changed=keys.filter(k=>Math.abs(newValues[k]-old[k])>0.1);
+  const sets=['COMPASS_OFS_','COMPASS_OFS2_','COMPASS_OFS3_'].map(prefix=>['X','Y','Z'].map(axis=>prefix+axis));
+  const valid=sets.filter(keys=>keys.every(k=>Number.isFinite(old[k])&&Number.isFinite(newValues[k])));
+  if(!valid.length)return {kind:'unverified',reason:'missing-offsets',changed:[]};
+  const changed=valid.flatMap(keys=>keys.filter(k=>Math.abs(newValues[k]-old[k])>0.1));
   const fresh=sensorStatus&&sensorStatus.present===true&&sensorStatus.healthy===true&&Number.isFinite(sensorStatus.lastSeen)&&now-sensorStatus.lastSeen>=0&&now-sensorStatus.lastSeen<5500;
   if(!fresh)return {kind:'unverified',reason:'magnetometer-not-healthy',changed};
   if(!changed.length)return {kind:'unverified',reason:'offsets-unchanged',changed};
