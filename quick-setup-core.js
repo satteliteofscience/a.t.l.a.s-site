@@ -11,38 +11,45 @@
  const PARAM_RE=/^([A-Za-z][A-Za-z0-9_]{0,15})[\s,=]+([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)(?:\s*(?:#|\/\/|;).*)?$/;
  function mapOf(value){if(value instanceof Map)return value;if(Array.isArray(value))return new Map(value);return new Map(Object.entries(value||{}));}
  function parseParamText(source,liveParams,metadata={},context={}){
-  const params=mapOf(liveParams),entries=new Map(),errors=[],warnings=[],duplicates=[];
+  const params=mapOf(liveParams),entries=new Map(),errors=[],warnings=[],skipped=[],seen=new Set();
+  let metadataMissingCount=0;
   const lines=String(source||'').split(/\r?\n/);
   const boardComment=lines.find(line=>/^\s*#\s*Board\s*:/i.test(line));
   const claimedBoard=boardComment?.replace(/^\s*#\s*Board\s*:\s*/i,'').trim();
   if(claimedBoard&&context.boardLabel&&claimedBoard!==context.boardLabel)errors.push({reason:'board',sourceBoard:claimedBoard,selectedBoard:context.boardLabel});
   else if(!claimedBoard&&context.boardLabel)warnings.push({reason:'board-unverified'});
-
+  const skip=(line,name,reason,value)=>{const item={line,name,reason};if(value!==undefined)item.value=value;skipped.push(item);};
   for(let index=0;index<lines.length;index++){
    const line=lines[index].trim();if(!line||line.startsWith('#')||line.startsWith('//'))continue;
-   const match=line.match(PARAM_RE);if(!match){errors.push({line:index+1,reason:'format',text:line});continue;}
-   const name=match[1],value=Number(match[2]);if(entries.has(name)){duplicates.push(name);continue;}
-   // Never replay persistent storage format or uptime/status counters from older backups.
-   if(PROTECTED_NAMES.has(name)||name.startsWith('STAT_')){warnings.push({name,reason:'protected-skipped'});continue;}
-
-   if(!Number.isFinite(value)){errors.push({line:index+1,name,reason:'number'});continue;}
-   const current=params.get(name);if(!current){errors.push({line:index+1,name,reason:'unknown'});continue;}
+   const match=line.match(PARAM_RE);
+   if(!match){skip(index+1,null,'format');continue;}
+   const name=match[1],value=Number(match[2]);
+   if(seen.has(name)){skip(index+1,name,'duplicate');continue;}
+   seen.add(name);
+   // Only present, writable, well-typed parameters are eligible for PARAM_SET.
+   if(PROTECTED_NAMES.has(name)||name.startsWith('STAT_')){skip(index+1,name,'protected-skipped');continue;}
+   if(!Number.isFinite(value)){skip(index+1,name,'number');continue;}
+   const current=params.get(name);
+   if(!current){skip(index+1,name,'unknown');continue;}
    const type=Number(current.type);
-   if(![1,2,3,4,5,6,9].includes(type)){errors.push({line:index+1,name,reason:'type'});continue;}
-   if(INTEGER_TYPES.includes(type)&&!Number.isSafeInteger(value)){errors.push({line:index+1,name,reason:'integer'});continue;}
-   if(TYPE_RANGES[type]&&(value<TYPE_RANGES[type][0]||value>TYPE_RANGES[type][1])){errors.push({line:index+1,name,reason:'type-range',type,value});continue;}
-   if(type===7||type===8){errors.push({line:index+1,name,reason:'int64-unsupported'});continue;}
+   if(![1,2,3,4,5,6,9].includes(type)){skip(index+1,name,'type');continue;}
+   if(INTEGER_TYPES.includes(type)&&!Number.isSafeInteger(value)){skip(index+1,name,'integer');continue;}
+   if(TYPE_RANGES[type]&&(value<TYPE_RANGES[type][0]||value>TYPE_RANGES[type][1])){skip(index+1,name,'type-range',value);continue;}
    const definition=metadata?.[name]||{};
-   if(definition.ReadOnly===true||definition.readOnly===true){errors.push({line:index+1,name,reason:'readonly'});continue;}
+   if(definition.ReadOnly===true||definition.readOnly===true){skip(index+1,name,'readonly');continue;}
    const range=definition.Range||definition.range;
-   if(range){const low=Number(range.low),high=Number(range.high);if((Number.isFinite(low)&&value<low)||(Number.isFinite(high)&&value>high)){errors.push({line:index+1,name,reason:'range',low:Number.isFinite(low)?low:null,high:Number.isFinite(high)?high:null,value});continue;}}
-   else warnings.push({name,reason:'range-not-in-local-metadata'});
+   if(range){
+    const low=Number(range.low),high=Number(range.high);
+    if((Number.isFinite(low)&&value<low)||(Number.isFinite(high)&&value>high)){skip(index+1,name,'range',value);continue;}
+   }else metadataMissingCount++;
    entries.set(name,value);
   }
-  for(const name of duplicates)errors.push({name,reason:'duplicate'});
   const changes=[];
-  for(const [name,value] of entries){const current=Number(params.get(name)?.value),tolerance=Math.max(1e-5,Math.abs(value)*2e-6);if(!Number.isFinite(current)||Math.abs(current-value)>tolerance)changes.push([name,value]);}
-  return {entries,changes,errors,warnings,valid:entries.size>0&&errors.length===0};
+  for(const [name,value] of entries){
+   const current=Number(params.get(name)?.value),tolerance=Math.max(1e-5,Math.abs(value)*2e-6);
+   if(!Number.isFinite(current)||Math.abs(current-value)>tolerance)changes.push([name,value]);
+  }
+  return {entries,changes,errors,warnings,skipped,metadataMissingCount,valid:entries.size>0&&errors.length===0};
  }
  function classifyEscProtocol(liveParams,board=''){
   const params=mapOf(liveParams),channels=[];

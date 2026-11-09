@@ -13,8 +13,8 @@ ru:{
  statusPending:'ОЖИДАЕТ',statusDone:'ГОТОВО',statusManual:'ПОДТВЕРЖДЕНО',statusSkipped:'НЕ ТРЕБУЕТСЯ',statusFailed:'ОШИБКА',statusCurrent:'ТЕКУЩИЙ ЭТАП',
  introTitle:'Для проверенной конфигурации',introBody:'Этот мастер предназначен для самолёта, у которого уже выбраны планер, мотор, регулятор, сервоприводы и разводка. Предполагается, что у тебя есть проверенный набор параметров именно для этого оборудования.',introWarn:'Не используй мастер для сборки новой конфигурации, подбора функций выходов или первого запуска неизвестного оборудования. Для этого открой полный конфигуратор и выполняй настройку вручную.',introAck:'Я понимаю назначение и ограничения Quick Setup.',
  safetyTitle:'Перед началом',safetyBody:'Сначала обеспечь безопасное состояние самолёта. Мастер не включает ARM и не подаёт тестовые сигналы на двигатель или сервоприводы.',safetyChecks:['Пропеллер снят; при работах с ESC двигатель физически безопасен.','Контроллер находится в DISARMED; перед калибровками есть свежая USB/MAVLink-связь.','Питание ESC/двигателя отключено на этапах настройки и калибровки, где оно не требуется.','RC-калибровка, сервоприводы, механика и существующая схема самолёта уже настроены и проверены.','Я знаю точную модель контроллера, прошивку и установленное оборудование.','До перепрошивки я сохранил проверенный .param-файл отдельно от контроллера и смогу восстановить настройки.'],
- preflashBackupHint:'Перед полной записью DFU сохрани параметры СТАРОЙ прошивки на компьютер: после Mass Erase получить их с платы уже нельзя.',preflashBackup:'Скачать .param до прошивки', firmwareTitle:'Проверь прошивку',firmwareBody:'Встроенная полная HEX-запись через STM32 DFU в текущей версии доступна только для Matek H743-WING V3. Для Orange Cube используй поддерживаемый внешний способ установки ArduPlane.',board:'Выбранная плата',openFirmware:'Открыть раздел прошивки',firmwareReady:'Прошивка уже установлена и проверена',firmwareManual:'Я подтвердил совместимость прошивки с выбранной платой и целевой версией ArduPlane.',firmwareDfuWait:'После успешной DFU-записи мастер получит подтверждение побайтовой проверки. Затем дождись полной загрузки и повторно подключи USB согласно заметке DFU.',firmwareSuccess:'DFU завершён и контрольное чтение совпало.',firmwareFailure:'DFU не завершился успешно. Повтори процедуру в разделе прошивки.',firmwareExternal:'Для этой платы встроенный DFU-писатель HEX не используется. Установи совместимую ArduPlane-прошивку через официальный инструмент производителя/ArduPilot, затем подтверди результат вручную.',firmwareConfirm:'Подтвердить установленную прошивку',
- paramsTitle:'Выбери источник параметров',paramsBody:'После прошивки подключись к контроллеру по MAVLink и загрузи полный список параметров. Можно оставить текущие значения ArduPlane или применить заранее проверенный .param-файл.',paramsKeep:'Оставить текущие параметры ArduPlane',paramsCustom:'Загрузить проверенный .param-файл',paramsKeepWarn:'Стандартные значения ArduPlane не являются готовой настройкой конкретного самолёта. Они подходят только как исходная база, если это подтверждено для твоей конфигурации.',readParams:'Считать параметры с контроллера',readWaiting:'Ожидается полное чтение параметров.',readComplete:'Полный список параметров получен.',readPartial:'Список параметров неполный. Повтори чтение и проверь связь.',readNoLink:'Подключи контроллер по USB/MAVLink и подтверди DISARMED.',readCount:'Получено параметров',backup:'Скачать резервную копию .param',backupDone:'Резервная копия скачана.',file:'Выбрать .param-файл',fileName:'Файл не выбран',compatConfirm:'Я проверил, что этот .param предназначен для этой платы, этой версии ArduPlane и именно этого самолёта.',preview:'Предварительный просмотр изменений',changed:'Изменений',warnings:'Без локального диапазона в метаданных',errors:'Ошибок проверки',apply:'Записать проверенные параметры',applying:'Запись параметров',cancelApply:'Остановить после текущего подтверждения',applyDone:'Все параметры подтверждены PARAM_VALUE и повторно считаны.',applyPartial:'Запись остановлена или завершилась частично. Проверь параметры и повтори оставшиеся изменения.',applyConfirm:'Будут записаны только показанные изменения. Продолжить?',keepConfirm:'Я понимаю, что текущие/стандартные параметры не являются готовой конфигурацией для полёта этого самолёта.',paramNoChanges:'Файл совпадает с текущими значениями. Запись не требуется.',paramInvalid:'Файл не прошёл проверку. Ничего не записано.',paramBoard:'Файл параметров создан для другой модели контроллера. Импорт заблокирован.',paramType:'Неподдерживаемый тип параметра.',paramUnknown:'Параметр отсутствует в полном списке контроллера.',paramDuplicate:'Повторяющееся имя параметра.',paramRange:'Значение вне диапазона локальных метаданных.',paramFormat:'Не удалось разобрать строку .param.',paramInteger:'Для этого параметра требуется целое число.',paramReadonly:'Параметр помечен как доступный только для чтения.',paramInt64:'64-битный целочисленный параметр не поддерживается этим безопасным импортёром.',paramWarning:'Локальные метаданные неполные. Для параметров без описанного диапазона проверь значения по документации своей версии ArduPlane.',
+ preflashBackupHint:'Перед полной записью DFU сохрани параметры СТАРОЙ прошивки на компьютер: после Mass Erase получить их с платы уже нельзя.',preflashBackup:'Скачать .param до прошивки', firmwareTitle:'Проверь прошивку',firmwareBody:'Встроенная полная HEX-запись через STM32 DFU в текущей версии доступна только для Matek H743-WING V3. Для Orange Cube используй поддерживаемый внешний способ установки ArduPlane.',board:'Выбранная плата',openFirmware:'Открыть раздел прошивки',firmwareReady:'Прошивка уже установлена и проверена',firmwareManual:'Я подтвердил совместимость прошивки с выбранной платой и целевой версией ArduPlane.',firmwareDfuWait:'После успешной DFU-записи мастер получит подтверждение побайтовой проверки. Затем дождись полной загрузки и повторно подключи USB согласно заметке DFU.',firmwareSuccess:'DFU завершён и контрольное чтение совпало.',firmwareFailure:'DFU не завершился успешно. Повтори процедуру в разделе прошивки.',firmwareExternal:'Для этой платы встроенный DFU-писатель HEX не используется. Установи совместимую ArduPlane-прошивку через официальный инструмент производителя/ArduPilot, затем подтверди результат вручную.',firmwareConfirm:'Подтвердить установленную прошивку',usbConnect:'Подключить USB / MAVLink',usbDisconnect:'Отключить USB',dfuInline:'Встроенная DFU-прошивка: выбери устройство STM32, прошивку и подтверди стирание ниже.',dfuNeedDisconnect:'Перед входом в DFU отключи обычный MAVLink USB и переведи плату в BOOT.',firmwareAfterUsb:'После прошивки выйди из DFU, перезагрузи плату и подключи USB/MAVLink здесь.',boardPick:'Выбрать модель контроллера',readTwice:'Считать параметры · 2 прохода',readPass:'Чтение параметров',readBusy:'Выполняется считывание. Можно повторить его после завершения.',readPartialOk:'Часть параметров не получена: доступные будут использованы для предпросмотра. Повтори чтение позже.',filePending:'Файл выбран. Считай параметры контроллера, чтобы увидеть допустимые изменения.',skipped:'Пропущено',metaMissing:'Нет локального диапазона (не ошибка)',skippedInfo:'Несовместимые, отсутствующие и доступные только для чтения параметры пропущены. Остальные можно записать.',skippedDownload:'Скачать список пропущенных',applySkipped:'Не подтверждены контроллером',retryAfterParam:'После записи появились новые доступные значения. Проверь изменения и повтори применение.',fileTooBig:'Файл параметров слишком большой (максимум 5 МБ).',
+ paramsTitle:'Выбери источник параметров',paramsBody:'После прошивки подключись к контроллеру по MAVLink и загрузи полный список параметров. Можно оставить текущие значения ArduPlane или применить заранее проверенный .param-файл.',paramsKeep:'Оставить текущие параметры ArduPlane',paramsCustom:'Загрузить проверенный .param-файл',paramsKeepWarn:'Стандартные значения ArduPlane не являются готовой настройкой конкретного самолёта. Они подходят только как исходная база, если это подтверждено для твоей конфигурации.',readParams:'Считать параметры с контроллера',readWaiting:'Ожидается полное чтение параметров.',readComplete:'Полный список параметров получен.',readPartial:'Список параметров неполный. Повтори чтение и проверь связь.',readNoLink:'Подключи контроллер по USB/MAVLink и подтверди DISARMED.',readCount:'Получено параметров',backup:'Скачать резервную копию .param',backupDone:'Резервная копия скачана.',file:'Выбрать .param-файл',fileName:'Файл не выбран',compatConfirm:'Я проверил, что этот .param предназначен для этой платы, этой версии ArduPlane и именно этого самолёта.',preview:'Предварительный просмотр изменений',changed:'Изменений',warnings:'Без локального диапазона в метаданных',errors:'Ошибок проверки',apply:'Записать проверенные параметры',applying:'Запись параметров',cancelApply:'Остановить после текущего подтверждения',applyDone:'Записанные параметры подтверждены повторным чтением. Пропущенные или неподтверждённые значения проверь отдельно.',applyPartial:'Запись остановлена или завершилась частично. Проверь параметры и повтори оставшиеся изменения.',applyConfirm:'Будут записаны только показанные изменения. Продолжить?',keepConfirm:'Я понимаю, что текущие/стандартные параметры не являются готовой конфигурацией для полёта этого самолёта.',paramNoChanges:'Файл совпадает с текущими значениями. Запись не требуется.',paramInvalid:'Файл не прошёл проверку. Ничего не записано.',paramBoard:'Файл параметров создан для другой модели контроллера. Импорт заблокирован.',paramType:'Неподдерживаемый тип параметра.',paramUnknown:'Параметр отсутствует в полном списке контроллера.',paramDuplicate:'Повторяющееся имя параметра.',paramRange:'Значение вне диапазона локальных метаданных.',paramFormat:'Не удалось разобрать строку .param.',paramInteger:'Для этого параметра требуется целое число.',paramReadonly:'Параметр помечен как доступный только для чтения.',paramInt64:'64-битный целочисленный параметр не поддерживается этим безопасным импортёром.',paramWarning:'Локальные метаданные неполные. Для параметров без описанного диапазона проверь значения по документации своей версии ArduPlane.',
  accelTitle:'Шестипозиционная калибровка',accelBody:'Используется существующий MAVLink-мастер ArduPlane. Контроллер сам запрашивает каждое положение; подтверждение доступно только после запроса автопилота.',startAccel:'Открыть и начать калибровку',accelWaiting:'Ожидается завершение по результату автопилота.',accelDone:'Шестипозиционная калибровка подтверждена контроллером.',accelFail:'Калибровка не завершилась. Проверь сообщения и повтори процедуру.',accelNeedLink:'Для запуска требуется реальная USB/MAVLink-связь и DISARMED.',
  levelTitle:'Установка горизонта',levelBody:'Установи самолёт в положение, соответствующее горизонтальному полёту. Команда будет отправлена только после отдельного нажатия.',startLevel:'Открыть и установить уровень',levelDone:'Команда установки уровня подтверждена автопилотом.',levelFail:'Установка уровня не подтверждена. Повтори процедуру.',
  rebootTitle:'Перезапуск после пользовательских параметров',rebootNotNeeded:'Пользовательские параметры не записывались — отдельный перезапуск этим мастером не требуется.',rebootBody:'После применения пользовательского .param-файла выполни обычный цикл питания контроллера. Отключи USB/питание, дождись выключения, подключи снова и дождись нового MAVLink heartbeat.',rebootStatus:'Ожидается отключение и повторное подключение контроллера.',rebootDone:'Обнаружено отключение, повторное подключение и новый heartbeat. Повторно считай параметры.',rebootRead:'Перечитать параметры после перезапуска',rebootNeed:'Перезапусти контроллер физически и переподключи USB/MAVLink. Мастер не отправляет команду ARM или reboot автоматически.',rebootAck:'Подтверждаю: я выполнил полный цикл выключения и включения именно этого полётного контроллера.',
@@ -31,8 +31,8 @@ uk:{
  statusPending:'ОЧІКУЄ',statusDone:'ГОТОВО',statusManual:'ПІДТВЕРДЖЕНО',statusSkipped:'НЕ ПОТРІБНО',statusFailed:'ПОМИЛКА',statusCurrent:'ПОТОЧНИЙ ЕТАП',
  introTitle:'Для перевіреної конфігурації',introBody:'Майстер призначений для літака, у якого вже вибрані планер, мотор, регулятор, сервоприводи та схема підключення. Передбачається, що в тебе є перевірений набір параметрів саме для цього обладнання.',introWarn:'Не використовуй майстер для складання нової конфігурації, вибору функцій виходів або першого запуску невідомого обладнання. Для цього відкрий повний конфігуратор.',introAck:'Я розумію призначення та обмеження Quick Setup.',
  safetyTitle:'Перед початком',safetyBody:'Спочатку забезпеч безпечний стан літака. Майстер не вмикає ARM і не подає тестові сигнали на двигун чи сервоприводи.',safetyChecks:['Пропелер знято; під час робіт з ESC двигун фізично безпечний.','Контролер у DISARMED; перед калібруванням є свіже USB/MAVLink-з’єднання.','Живлення ESC/двигуна відключене на етапах, де воно не потрібне.','RC-калібрування, сервоприводи, механіка та наявна схема літака вже налаштовані й перевірені.','Я знаю точну модель контролера, прошивку та встановлене обладнання.','До перепрошивання я зберіг перевірений .param-файл окремо від контролера для відновлення налаштувань.'],
- preflashBackupHint:'Перед повним записом DFU збережи параметри СТАРОЇ прошивки на комп’ютер: після Mass Erase отримати їх із плати вже не можна.',preflashBackup:'Завантажити .param до прошивання', firmwareTitle:'Перевір прошивку',firmwareBody:'Вбудований повний HEX-запис через STM32 DFU у поточній версії доступний лише для Matek H743-WING V3. Для Orange Cube використовуй підтримуваний зовнішній спосіб встановлення ArduPlane.',board:'Вибрана плата',openFirmware:'Відкрити розділ прошивки',firmwareReady:'Прошивка вже встановлена й перевірена',firmwareManual:'Я підтвердив сумісність прошивки з вибраною платою та цільовою версією ArduPlane.',firmwareDfuWait:'Після успішного DFU-запису майстер отримає підтвердження побайтової перевірки. Дочекайся повного завантаження та повторно під’єднай USB згідно з приміткою DFU.',firmwareSuccess:'DFU завершено, контрольне читання збігається.',firmwareFailure:'DFU не завершився успішно. Повтори процедуру в розділі прошивки.',firmwareExternal:'Для цієї плати вбудований DFU-записувач HEX не використовується. Встанови сумісну ArduPlane-прошивку офіційним інструментом, потім підтверди результат вручну.',firmwareConfirm:'Підтвердити встановлену прошивку',
- paramsTitle:'Обери джерело параметрів',paramsBody:'Після прошивки під’єднайся до контролера через MAVLink і завантаж повний список параметрів. Можна залишити поточні значення ArduPlane або застосувати заздалегідь перевірений .param-файл.',paramsKeep:'Залишити поточні параметри ArduPlane',paramsCustom:'Завантажити перевірений .param-файл',paramsKeepWarn:'Стандартні значення ArduPlane не є готовим налаштуванням конкретного літака. Це лише початкова база, якщо її придатність підтверджена для твоєї конфігурації.',readParams:'Зчитати параметри з контролера',readWaiting:'Очікується повне зчитування параметрів.',readComplete:'Повний список параметрів отримано.',readPartial:'Список неповний. Повтори зчитування та перевір з’єднання.',readNoLink:'Під’єднай контролер через USB/MAVLink і підтверди DISARMED.',readCount:'Отримано параметрів',backup:'Завантажити резервну копію .param',backupDone:'Резервну копію завантажено.',file:'Вибрати .param-файл',fileName:'Файл не вибрано',compatConfirm:'Я перевірив, що цей .param призначений для цієї плати, версії ArduPlane та саме цього літака.',preview:'Попередній перегляд змін',changed:'Змін',warnings:'Без локального діапазону в метаданих',errors:'Помилок перевірки',apply:'Записати перевірені параметри',applying:'Запис параметрів',cancelApply:'Зупинити після поточного підтвердження',applyDone:'Усі параметри підтверджено PARAM_VALUE та повторно зчитано.',applyPartial:'Запис зупинено або завершився частково. Перевір параметри та повтори решту змін.',applyConfirm:'Буде записано лише показані зміни. Продовжити?',keepConfirm:'Я розумію, що поточні/стандартні параметри не є готовою конфігурацією для польоту цього літака.',paramNoChanges:'Файл збігається з поточними значеннями. Запис не потрібен.',paramInvalid:'Файл не пройшов перевірку. Нічого не записано.',paramBoard:'Файл параметрів створено для іншої моделі контролера. Імпорт заблоковано.',paramType:'Непідтримуваний тип параметра.',paramUnknown:'Параметр відсутній у повному списку контролера.',paramDuplicate:'Повторюване ім’я параметра.',paramRange:'Значення поза діапазоном локальних метаданих.',paramFormat:'Не вдалося розібрати рядок .param.',paramInteger:'Для цього параметра потрібне ціле число.',paramReadonly:'Параметр доступний лише для читання.',paramInt64:'64-бітний цілочисельний параметр не підтримується цим імпортером.',paramWarning:'Локальні метадані неповні. Для параметрів без описаного діапазону перевір значення за документацією своєї версії ArduPlane.',
+ preflashBackupHint:'Перед повним записом DFU збережи параметри СТАРОЇ прошивки на комп’ютер: після Mass Erase отримати їх із плати вже не можна.',preflashBackup:'Завантажити .param до прошивання', firmwareTitle:'Перевір прошивку',firmwareBody:'Вбудований повний HEX-запис через STM32 DFU у поточній версії доступний лише для Matek H743-WING V3. Для Orange Cube використовуй підтримуваний зовнішній спосіб встановлення ArduPlane.',board:'Вибрана плата',openFirmware:'Відкрити розділ прошивки',firmwareReady:'Прошивка вже встановлена й перевірена',firmwareManual:'Я підтвердив сумісність прошивки з вибраною платою та цільовою версією ArduPlane.',firmwareDfuWait:'Після успішного DFU-запису майстер отримає підтвердження побайтової перевірки. Дочекайся повного завантаження та повторно під’єднай USB згідно з приміткою DFU.',firmwareSuccess:'DFU завершено, контрольне читання збігається.',firmwareFailure:'DFU не завершився успішно. Повтори процедуру в розділі прошивки.',firmwareExternal:'Для цієї плати вбудований DFU-записувач HEX не використовується. Встанови сумісну ArduPlane-прошивку офіційним інструментом, потім підтверди результат вручну.',firmwareConfirm:'Підтвердити встановлену прошивку',usbConnect:'Під’єднати USB / MAVLink',usbDisconnect:'Від’єднати USB',dfuInline:'Вбудоване DFU-прошивання: вибери STM32-пристрій, прошивку та підтвердь стирання нижче.',dfuNeedDisconnect:'Перед переходом до DFU від’єднай звичайний MAVLink USB та переведи плату в BOOT.',firmwareAfterUsb:'Після прошивання вийди з DFU, перезапусти плату й під’єднай USB/MAVLink тут.',boardPick:'Обрати модель контролера',readTwice:'Зчитати параметри · 2 проходи',readPass:'Зчитування параметрів',readBusy:'Триває зчитування. За потреби повтори його після завершення.',readPartialOk:'Частину параметрів не отримано: доступні буде використано для перегляду. Зчитай ще раз пізніше.',filePending:'Файл обрано. Зчитай параметри контролера, щоб побачити допустимі зміни.',skipped:'Пропущено',metaMissing:'Немає локального діапазону (не помилка)',skippedInfo:'Несумісні, відсутні та доступні лише для читання параметри пропущено. Інші можна записати.',skippedDownload:'Завантажити список пропущених',applySkipped:'Не підтверджені контролером',retryAfterParam:'Після запису з’явилися нові доступні значення. Перевір зміни й повтори застосування.',fileTooBig:'Файл параметрів завеликий (до 5 МБ).',
+ paramsTitle:'Обери джерело параметрів',paramsBody:'Після прошивки під’єднайся до контролера через MAVLink і завантаж повний список параметрів. Можна залишити поточні значення ArduPlane або застосувати заздалегідь перевірений .param-файл.',paramsKeep:'Залишити поточні параметри ArduPlane',paramsCustom:'Завантажити перевірений .param-файл',paramsKeepWarn:'Стандартні значення ArduPlane не є готовим налаштуванням конкретного літака. Це лише початкова база, якщо її придатність підтверджена для твоєї конфігурації.',readParams:'Зчитати параметри з контролера',readWaiting:'Очікується повне зчитування параметрів.',readComplete:'Повний список параметрів отримано.',readPartial:'Список неповний. Повтори зчитування та перевір з’єднання.',readNoLink:'Під’єднай контролер через USB/MAVLink і підтверди DISARMED.',readCount:'Отримано параметрів',backup:'Завантажити резервну копію .param',backupDone:'Резервну копію завантажено.',file:'Вибрати .param-файл',fileName:'Файл не вибрано',compatConfirm:'Я перевірив, що цей .param призначений для цієї плати, версії ArduPlane та саме цього літака.',preview:'Попередній перегляд змін',changed:'Змін',warnings:'Без локального діапазону в метаданих',errors:'Помилок перевірки',apply:'Записати перевірені параметри',applying:'Запис параметрів',cancelApply:'Зупинити після поточного підтвердження',applyDone:'Записані параметри підтверджено повторним читанням. Пропущені або непідтверджені значення перевір окремо.',applyPartial:'Запис зупинено або завершився частково. Перевір параметри та повтори решту змін.',applyConfirm:'Буде записано лише показані зміни. Продовжити?',keepConfirm:'Я розумію, що поточні/стандартні параметри не є готовою конфігурацією для польоту цього літака.',paramNoChanges:'Файл збігається з поточними значеннями. Запис не потрібен.',paramInvalid:'Файл не пройшов перевірку. Нічого не записано.',paramBoard:'Файл параметрів створено для іншої моделі контролера. Імпорт заблоковано.',paramType:'Непідтримуваний тип параметра.',paramUnknown:'Параметр відсутній у повному списку контролера.',paramDuplicate:'Повторюване ім’я параметра.',paramRange:'Значення поза діапазоном локальних метаданих.',paramFormat:'Не вдалося розібрати рядок .param.',paramInteger:'Для цього параметра потрібне ціле число.',paramReadonly:'Параметр доступний лише для читання.',paramInt64:'64-бітний цілочисельний параметр не підтримується цим імпортером.',paramWarning:'Локальні метадані неповні. Для параметрів без описаного діапазону перевір значення за документацією своєї версії ArduPlane.',
  accelTitle:'Шестипозиційне калібрування',accelBody:'Використовується наявний MAVLink-майстер ArduPlane. Контролер сам запитує кожне положення; підтвердження доступне лише після запиту автопілота.',startAccel:'Відкрити й почати калібрування',accelWaiting:'Очікується завершення за результатом автопілота.',accelDone:'Шестипозиційне калібрування підтверджено контролером.',accelFail:'Калібрування не завершилося. Перевір повідомлення та повтори процедуру.',accelNeedLink:'Для запуску потрібне реальне USB/MAVLink-з’єднання та DISARMED.',
  levelTitle:'Встановлення горизонту',levelBody:'Встанови літак у положення, що відповідає горизонтальному польоту. Команду буде надіслано лише після окремого натискання.',startLevel:'Відкрити й встановити рівень',levelDone:'Команду встановлення рівня підтверджено автопілотом.',levelFail:'Встановлення рівня не підтверджено. Повтори процедуру.',
  rebootTitle:'Перезапуск після користувацьких параметрів',rebootNotNeeded:'Користувацькі параметри не записувалися — окремий перезапуск цим майстром не потрібен.',rebootBody:'Після застосування користувацького .param-файлу виконай звичайний цикл живлення контролера. Від’єднай USB/живлення, дочекайся вимкнення, під’єднай знову та дочекайся нового MAVLink heartbeat.',rebootStatus:'Очікується від’єднання та повторне підключення контролера.',rebootDone:'Виявлено від’єднання, повторне підключення та новий heartbeat. Повторно зчитай параметри.',rebootRead:'Перечитати параметри після перезапуску',rebootNeed:'Перезапусти контролер фізично та перепід’єднай USB/MAVLink. Майстер не надсилає ARM або reboot автоматично.',rebootAck:'Підтверджую: я виконав повний цикл вимкнення й увімкнення саме цього польотного контролера.',
@@ -49,8 +49,8 @@ en:{
  statusPending:'PENDING',statusDone:'DONE',statusManual:'CONFIRMED',statusSkipped:'NOT REQUIRED',statusFailed:'FAILED',statusCurrent:'CURRENT',
  introTitle:'For a verified configuration',introBody:'This wizard is for an aircraft whose airframe, motor, ESC, servos and wiring are already selected. It assumes you have a parameter file verified for this exact hardware.',introWarn:'Do not use this wizard to build a new configuration, choose output functions or bring unknown hardware online for the first time. Use the full configurator for that.',introAck:'I understand the purpose and limitations of Quick Setup.',
  safetyTitle:'Before you begin',safetyBody:'First make the aircraft safe. The wizard never arms the vehicle or sends test signals to the motor or servos.',safetyChecks:['Propeller removed; motor physically safe during ESC work.','Flight controller is DISARMED; a fresh USB/MAVLink link is available before calibration.','ESC/motor power is isolated during setup steps where it is not required.','RC calibration, servos, mechanics and the existing aircraft configuration are already set up and checked.','I know the exact flight-controller model, firmware and installed hardware.','Before flashing, I saved a verified .param backup outside the controller for recovery.'],
- preflashBackupHint:'Before full DFU flashing, save the OLD firmware parameters to your computer. Mass Erase makes the old values unrecoverable from the board.',preflashBackup:'Download .param before flashing', firmwareTitle:'Verify firmware',firmwareBody:'The built-in full HEX STM32 DFU writer currently supports Matek H743-WING V3 only. For Orange Cube, use a supported external ArduPlane installation method.',board:'Selected board',openFirmware:'Open firmware section',firmwareReady:'Firmware is already installed and verified',firmwareManual:'I verified firmware compatibility with this board and the target ArduPlane version.',firmwareDfuWait:'After successful DFU programming, the wizard receives byte-for-byte verification. Wait for full boot and reconnect USB as described in the DFU note.',firmwareSuccess:'DFU completed and readback matched.',firmwareFailure:'DFU did not complete successfully. Retry in the firmware section.',firmwareExternal:'The built-in HEX DFU writer is not used for this board. Install compatible ArduPlane firmware using an approved external tool, then confirm manually.',firmwareConfirm:'Confirm installed firmware',
- paramsTitle:'Choose parameter source',paramsBody:'After flashing, connect to the controller over MAVLink and load the full parameter list. Keep current ArduPlane values or apply a previously verified .param file.',paramsKeep:'Keep current ArduPlane parameters',paramsCustom:'Load a verified .param file',paramsKeepWarn:'ArduPlane defaults are not a ready-to-fly setup for a specific aircraft. They are only a baseline when confirmed suitable for your configuration.',readParams:'Read parameters from controller',readWaiting:'Waiting for a complete parameter read.',readComplete:'Full parameter list received.',readPartial:'Parameter list is incomplete. Retry and check the link.',readNoLink:'Connect the controller over USB/MAVLink and confirm DISARMED.',readCount:'Parameters received',backup:'Download .param backup',backupDone:'Backup downloaded.',file:'Choose .param file',fileName:'No file selected',compatConfirm:'I verified this .param is intended for this board, this ArduPlane version and this exact aircraft.',preview:'Preview changes',changed:'Changes',warnings:'No local metadata range',errors:'Validation errors',apply:'Write verified parameters',applying:'Writing parameters',cancelApply:'Stop after current acknowledgment',applyDone:'All parameters were acknowledged by PARAM_VALUE and read back.',applyPartial:'Write stopped or partially completed. Review parameters and retry the remaining changes.',applyConfirm:'Only the changes shown will be written. Continue?',keepConfirm:'I understand current/default parameters are not a flight-ready configuration for this aircraft.',paramNoChanges:'The file matches current values. No write is needed.',paramInvalid:'The file failed validation. Nothing was written.',paramBoard:'This parameter file declares a different flight-controller model. Import is blocked.',paramType:'Unsupported parameter type.',paramUnknown:'Parameter is not present in the controller’s complete list.',paramDuplicate:'Duplicate parameter name.',paramRange:'Value is outside the local metadata range.',paramFormat:'Could not parse this .param line.',paramInteger:'This parameter requires an integer.',paramReadonly:'Parameter is marked read-only.',paramInt64:'64-bit integer parameters are not supported by this safe importer.',paramWarning:'Local metadata is partial. For parameters without a described range, verify values against the documentation for your ArduPlane version.',
+ preflashBackupHint:'Before full DFU flashing, save the OLD firmware parameters to your computer. Mass Erase makes the old values unrecoverable from the board.',preflashBackup:'Download .param before flashing', firmwareTitle:'Verify firmware',firmwareBody:'The built-in full HEX STM32 DFU writer currently supports Matek H743-WING V3 only. For Orange Cube, use a supported external ArduPlane installation method.',board:'Selected board',openFirmware:'Open firmware section',firmwareReady:'Firmware is already installed and verified',firmwareManual:'I verified firmware compatibility with this board and the target ArduPlane version.',firmwareDfuWait:'After successful DFU programming, the wizard receives byte-for-byte verification. Wait for full boot and reconnect USB as described in the DFU note.',firmwareSuccess:'DFU completed and readback matched.',firmwareFailure:'DFU did not complete successfully. Retry in the firmware section.',firmwareExternal:'The built-in HEX DFU writer is not used for this board. Install compatible ArduPlane firmware using an approved external tool, then confirm manually.',firmwareConfirm:'Confirm installed firmware',usbConnect:'Connect USB / MAVLink',usbDisconnect:'Disconnect USB',dfuInline:'Built-in DFU flashing: choose the STM32 device, firmware image and explicitly confirm erase below.',dfuNeedDisconnect:'Disconnect regular MAVLink USB and enter BOOT mode before connecting DFU.',firmwareAfterUsb:'After flashing, exit DFU, reboot the controller and connect USB/MAVLink here.',boardPick:'Select flight controller',readTwice:'Read parameters · 2 passes',readPass:'Reading parameters',readBusy:'Parameter reading is in progress. You can repeat after it finishes.',readPartialOk:'Some parameters were not received; available parameters are still used for the preview. Retry the read later.',filePending:'File selected. Read controller parameters to preview supported changes.',skipped:'Skipped',metaMissing:'No local range metadata (not an error)',skippedInfo:'Unsupported, absent and read-only parameters are skipped. Remaining entries can be written.',skippedDownload:'Download skipped-parameter report',applySkipped:'Not acknowledged by controller',retryAfterParam:'New writable parameters became available after upload. Review and apply the remaining changes.',fileTooBig:'Parameter file is too large (5 MB maximum).',
+ paramsTitle:'Choose parameter source',paramsBody:'After flashing, connect to the controller over MAVLink and load the full parameter list. Keep current ArduPlane values or apply a previously verified .param file.',paramsKeep:'Keep current ArduPlane parameters',paramsCustom:'Load a verified .param file',paramsKeepWarn:'ArduPlane defaults are not a ready-to-fly setup for a specific aircraft. They are only a baseline when confirmed suitable for your configuration.',readParams:'Read parameters from controller',readWaiting:'Waiting for a complete parameter read.',readComplete:'Full parameter list received.',readPartial:'Parameter list is incomplete. Retry and check the link.',readNoLink:'Connect the controller over USB/MAVLink and confirm DISARMED.',readCount:'Parameters received',backup:'Download .param backup',backupDone:'Backup downloaded.',file:'Choose .param file',fileName:'No file selected',compatConfirm:'I verified this .param is intended for this board, this ArduPlane version and this exact aircraft.',preview:'Preview changes',changed:'Changes',warnings:'No local metadata range',errors:'Validation errors',apply:'Write verified parameters',applying:'Writing parameters',cancelApply:'Stop after current acknowledgment',applyDone:'Written parameters were confirmed by readback. Check skipped or unverified entries separately.',applyPartial:'Write stopped or partially completed. Review parameters and retry the remaining changes.',applyConfirm:'Only the changes shown will be written. Continue?',keepConfirm:'I understand current/default parameters are not a flight-ready configuration for this aircraft.',paramNoChanges:'The file matches current values. No write is needed.',paramInvalid:'The file failed validation. Nothing was written.',paramBoard:'This parameter file declares a different flight-controller model. Import is blocked.',paramType:'Unsupported parameter type.',paramUnknown:'Parameter is not present in the controller’s complete list.',paramDuplicate:'Duplicate parameter name.',paramRange:'Value is outside the local metadata range.',paramFormat:'Could not parse this .param line.',paramInteger:'This parameter requires an integer.',paramReadonly:'Parameter is marked read-only.',paramInt64:'64-bit integer parameters are not supported by this safe importer.',paramWarning:'Local metadata is partial. For parameters without a described range, verify values against the documentation for your ArduPlane version.',
  accelTitle:'Six-position accelerometer calibration',accelBody:'Uses the existing ArduPlane MAVLink calibration wizard. The controller requests each pose; confirmation is available only after the autopilot requests it.',startAccel:'Open and start calibration',accelWaiting:'Waiting for the autopilot result.',accelDone:'Six-position calibration was confirmed by the controller.',accelFail:'Calibration did not complete. Check messages and retry.',accelNeedLink:'A real USB/MAVLink connection and DISARMED state are required.',
  levelTitle:'Level horizon',levelBody:'Place the aircraft in its level-flight attitude. The command is sent only after a separate user click.',startLevel:'Open and set level',levelDone:'Level command was acknowledged by the autopilot.',levelFail:'Level setting was not confirmed. Retry.',
  rebootTitle:'Reboot after custom parameters',rebootNotNeeded:'No custom parameters were written, so this wizard does not require a separate reboot.',rebootBody:'After applying a custom .param file, perform a normal controller power cycle. Disconnect USB/power, wait for shutdown, reconnect and wait for a new MAVLink heartbeat.',rebootStatus:'Waiting for controller disconnect and reconnect.',rebootDone:'Disconnect, reconnect and a new heartbeat were detected. Read parameters again.',rebootRead:'Read parameters after reboot',rebootNeed:'Power-cycle the controller and reconnect USB/MAVLink. The wizard does not send ARM or reboot automatically.',rebootAck:'I confirm that I fully powered off and restarted this same flight controller.',
@@ -65,7 +65,7 @@ const stepNames=['intro','safety','firmware','params','accel','level','reboot','
 const saved=(()=>{try{return JSON.parse(localStorage.getItem('atlas.quicksetup.v1')||'null');}catch{return null;}})();
 const qs={
  step:0,completed:{},safety:[false,false,false,false,false,false],firmwareSource:null,firmwareError:'',
- paramsMode:'keep',fileName:'',preview:null,previewBoard:null,fileToken:0,awaitingCalibration:null,metadata:{},metadataReady:false,backupDownloaded:false,compatConfirmed:false,keepConfirmed:false,applyBusy:false,cancelApply:false,paramsMessage:'',paramsApplied:false,
+ paramsMode:'keep',fileName:'',fileText:null,preview:null,previewBoard:null,fileToken:0,awaitingCalibration:null,readBusy:false,readPass:0,applySkipped:[],metadata:{},metadataReady:false,backupDownloaded:false,compatConfirmed:false,keepConfirmed:false,applyBusy:false,cancelApply:false,paramsMessage:'',paramsApplied:false,
  accelError:'',levelError:'',rebootBaseline:0,rebootSawDisconnect:false,rebootReady:false,rebootReading:false,rebootUserConfirmed:false,firmwareBoard:null,escConfirmed:false,compassAwaitingSave:false,compassError:'',finalChecks:[false,false,false,false,false,false,false,false],
  resumeFrom:saved&&Number.isInteger(saved.step)?saved.step:0
 };
@@ -83,7 +83,7 @@ function radio(parent,text,value,checked,onChange){
 }
 function link(parent,text,url){const a=el('a','');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=text;parent.append(a);return a;}
 function state(){return api.getState();}
-function paramReady(s){return !!s.connected&&s.paramComplete===true&&s.params instanceof Map&&s.params.size>0;}
+function paramReady(s){return !!s.connected&&!s.demo&&!s.paramLoading&&s.params instanceof Map&&s.params.size>0;}
 function safeLink(s){return !!s.connected&&s.armed===false&&Date.now()-s.lastHeartbeat<4000&&!s.demo;}
 function persist(){try{localStorage.setItem('atlas.quicksetup.v1',JSON.stringify({step:qs.step,paramsMode:qs.paramsMode,updated:Date.now()}));}catch{}}
 function translateStatic(){document.querySelectorAll('[data-qs-t]').forEach(node=>{const key=node.dataset.qsT;if(t(key)!==key)node.textContent=t(key);});}
@@ -98,11 +98,11 @@ function invalidateFrom(step){
  }
  persist();
 }
-function setStep(index){if(qs.applyBusy||index<0||index>=stepKeys.length)return;qs.step=index;if(index===6&&qs.paramsApplied&&!qs.rebootBaseline)qs.rebootBaseline=state().lastHeartbeat||Date.now();persist();render();}
+function setStep(index){if(qs.applyBusy||qs.readBusy||window.AtlasDfuUi?.isBusy()||index<0||index>=stepKeys.length)return;qs.step=index;if(index===6&&qs.paramsApplied&&!qs.rebootBaseline)qs.rebootBaseline=state().lastHeartbeat||Date.now();persist();render();}
 function canNext(){
  if(qs.step===6&&!qs.paramsApplied)return true;
  if(qs.step===9)return false;
- return !!qs.completed[qs.step]&&!qs.applyBusy;
+ return !!qs.completed[qs.step]&&!qs.applyBusy&&!qs.readBusy&&!window.AtlasDfuUi?.isBusy();
 }
 function setGlobal(message,bad=false){$('qsGlobalStatus').textContent=message||'—';$('qsGlobalStatus').style.color=bad?'#e9a17f':'#aeb88d';}
 function stepStatus(i){if(qs.completed[i]==='done')return t('statusDone');if(qs.completed[i]==='manual')return t('statusManual');if(qs.completed[i]==='skipped')return t('statusSkipped');if(qs.completed[i]==='failed')return t('statusFailed');return i===qs.step?t('statusCurrent'):t('statusPending');}
@@ -123,11 +123,11 @@ function renderHeader(){
  $('qsProgressLabel').textContent=t('progress')+' · '+(qs.step+1)+' / '+stepKeys.length;
  $('qsProgressState').textContent=qs.completed[qs.step]?stepStatus(qs.step):t('statusPending');
  $('qsConnectionBadge').textContent=state().connected?t('connected')+' · '+(state().armed===false?t('disarmed'):'ARM / UNKNOWN'):t('disconnected');
- $('qsBackBtn').disabled=qs.step===0||qs.applyBusy;
+ $('qsBackBtn').disabled=qs.step===0||qs.applyBusy||qs.readBusy||!!window.AtlasDfuUi?.isBusy();
  $('qsNextBtn').hidden=qs.step===9;
  $('qsNextBtn').disabled=!canNext();
  $('qsNextBtn').textContent=qs.step===8?t('finish'):t('next');
- $('qsExitBtn').disabled=qs.applyBusy;
+ $('qsExitBtn').disabled=qs.applyBusy||qs.readBusy||!!window.AtlasDfuUi?.isBusy();
 }
 function addHeading(parent,title,body){
  appendText(parent,'h2',title);
@@ -139,7 +139,7 @@ function renderIntro(box){
  checkbox(box,t('introAck'),!!qs.completed[0],checked=>{if(checked)complete(0,'manual');else{delete qs.completed[0];render();}});
  if(qs.resumeFrom>0){
   const notice=el('div','qs-resume',t('resume')+' '+qs.resumeFrom+' / '+stepKeys.length+'. '+t('resumeBody'));box.append(notice);
-  button(box,t('reset'),()=>{qs.resumeFrom=0;qs.step=0;invalidateFrom(0);qs.safety.fill(false);qs.paramsMode='keep';qs.preview=null;qs.fileName='';qs.compatConfirmed=false;qs.keepConfirmed=false;qs.backupDownloaded=false;qs.firmwareSource=null;qs.firmwareBoard=null;qs.firmwareError='';persist();render();});
+  button(box,t('reset'),()=>{qs.resumeFrom=0;qs.step=0;invalidateFrom(0);qs.safety.fill(false);qs.paramsMode='keep';qs.preview=null;qs.fileName='';qs.fileText=null;qs.fileToken++;qs.compatConfirmed=false;qs.keepConfirmed=false;qs.backupDownloaded=false;qs.firmwareSource=null;qs.firmwareBoard=null;qs.firmwareError='';persist();render();});
  }
  button(box,t('start'),()=>{if(!qs.completed[0])return;qs.resumeFrom=0;render();}).disabled=!qs.completed[0];
 }
@@ -150,29 +150,63 @@ function renderSafety(box){
  box.append(group);
  callout(box,t('preflashBackupHint'),'warning');
  const actions=el('div','qs-inline-actions');
- button(actions,t('readParams'),loadParams,'cc-button ghost').disabled=!state().connected;
+ button(actions,state().connected?t('usbDisconnect'):t('usbConnect'),()=>api.connectUsb(),'cc-button primary').disabled=!!window.AtlasDfuUi?.isBusy();
+ button(actions,t('readTwice'),loadParams,'cc-button ghost').disabled=!safeLink(state())||qs.readBusy;
  button(actions,t('preflashBackup'),()=>{try{downloadBackup();}catch(e){setGlobal(e.message,true);}},'cc-button outline').disabled=!paramReady(state());
  box.append(actions);
  if(qs.backupDownloaded)callout(box,t('backupDone'),'success');
+ if(paramReady(state())&&state().paramComplete!==true)callout(box,t('readPartialOk'),'warning');
+}
+const dfuPanel=$('dfuPanel');
+const dfuAnchor=dfuPanel?document.createComment('DFU panel original position'):null;
+if(dfuPanel&&dfuPanel.parentNode)dfuPanel.parentNode.insertBefore(dfuAnchor,dfuPanel);
+function restoreDfuPanel(){if(dfuPanel&&dfuAnchor?.parentNode)dfuAnchor.parentNode.insertBefore(dfuPanel,dfuAnchor.nextSibling);}
+function addUsbButton(parent,visibleOnlyAfterFlash=false){
+ const s=state();if(visibleOnlyAfterFlash&&!qs.firmwareSource&&!s.connected)return;
+ const actions=el('div','qs-inline-actions');
+ button(actions,s.connected?t('usbDisconnect'):t('usbConnect'),()=>api.connectUsb(),'cc-button primary').disabled=qs.applyBusy||qs.readBusy||!!window.AtlasDfuUi?.isBusy();
+ parent.append(actions);
 }
 function selectedBoard(){const s=state();return s.selectedBoard||'unknown';}
 function boardLabel(id){return id==='matek-h743-wing-v3'?'Matek H743-WING V3':id==='cube-orange'?'Orange Cube':id;}
 function renderFirmware(box){
  const board=selectedBoard(),matek=board==='matek-h743-wing-v3';
- if(qs.firmwareBoard&&qs.firmwareBoard!==board){qs.firmwareSource=null;qs.firmwareBoard=null;qs.firmwareError='';for(let i=2;i<10;i++)delete qs.completed[i];qs.preview=null;qs.paramsApplied=false;qs.backupDownloaded=false;qs.compatConfirmed=false;qs.rebootReady=false;qs.rebootSawDisconnect=false;}
+ if(qs.firmwareBoard&&qs.firmwareBoard!==board){
+  qs.firmwareSource=null;qs.firmwareBoard=null;qs.firmwareError='';
+  for(let i=2;i<10;i++)delete qs.completed[i];
+  qs.preview=null;qs.fileText=null;qs.fileToken++;qs.paramsApplied=false;qs.backupDownloaded=false;qs.compatConfirmed=false;qs.rebootReady=false;qs.rebootSawDisconnect=false;
+ }
  addHeading(box,t('firmwareTitle'),t('firmwareBody'));
- const kv=el('div','qs-kv');const item=el('div');item.append(el('small','',t('board')),el('strong','',boardLabel(board)));kv.append(item);box.append(kv);
- if(matek)callout(box,t('firmwareDfuWait'),'warning');else callout(box,t('firmwareExternal'),'warning');
- if(qs.firmwareSource==='dfu')callout(box,t('firmwareSuccess'),'success');
- if(qs.firmwareError)callout(box,t('firmwareFailure'),'danger');
- const actions=el('div','qs-inline-actions');
- button(actions,t('openFirmware'),()=>api.navigate('firmware'),'cc-button ghost');
- box.append(actions);
+ const label=el('label','',t('boardPick'));
+ const select=el('select','qs-board-select');
+ for(const [id,name] of [['matek-h743-wing-v3','Matek H743-WING V3'],['cube-orange','Orange Cube']]){
+  const opt=el('option','',name);opt.value=id;select.append(opt);
+ }
+ select.value=board;
+ select.disabled=!!window.AtlasDfuUi?.isBusy();
+ select.addEventListener('change',()=>{api.selectBoard(select.value);});
+ label.append(select);box.append(label);
+ if(matek){
+  callout(box,t('dfuInline'),'warning');
+  if(state().connected)callout(box,t('dfuNeedDisconnect'),'warning');
+  const dock=el('div','qs-dfu-dock');
+  box.append(dock);
+  if(dfuPanel)dock.append(dfuPanel);
+  else callout(box,t('firmwareFailure'),'danger');
+ }else{
+  callout(box,t('firmwareExternal'),'warning');
+  button(box,t('openFirmware'),()=>api.navigate('firmware'),'cc-button ghost');
+ }
+ if(qs.firmwareError)callout(box,qs.firmwareError,'danger');
  checkbox(box,t('firmwareManual'),qs.firmwareSource==='manual',checked=>{
   if(checked){qs.firmwareSource='manual';qs.firmwareBoard=board;complete(2,'manual');}
   else{qs.firmwareSource=null;delete qs.completed[2];render();}
  });
- if(qs.firmwareSource==='dfu'||qs.firmwareSource==='manual')callout(box,qs.firmwareSource==='dfu'?t('firmwareSuccess'):t('firmwareReady'),'success');
+ if(qs.firmwareSource){
+  callout(box,qs.firmwareSource==='dfu'?t('firmwareSuccess'):t('firmwareReady'),'success');
+  callout(box,t('firmwareAfterUsb'));
+ }
+ addUsbButton(box,true);
 }
 let metadataPromise=null;
 async function getMetadata(){
@@ -184,64 +218,128 @@ function currentParamState(){return state();}
 function downloadBackup(){
  const s=currentParamState();if(!paramReady(s))throw Error(t('readWaiting'));
  const boardHeader=qs.firmwareBoard===s.selectedBoard?'# Board: '+boardLabel(s.selectedBoard):'# Board not verified: '+boardLabel(s.selectedBoard);
- const lines=['# A.T.L.A.S. Quick Setup backup',boardHeader,'# Generated: '+new Date().toISOString()];
+ const lines=['# A.T.L.A.S. Quick Setup backup',boardHeader,'# Read status: '+(s.paramComplete===true?'COMPLETE':'PARTIAL / NOT ALL PARAMETERS RECEIVED'),'# Generated: '+new Date().toISOString()];
  [...s.params.entries()].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([name,p])=>lines.push(name+' '+Number(p.value)));
  const blob=new Blob([lines.join('\n')+'\n'],{type:'text/plain'}),url=URL.createObjectURL(blob),a=el('a');
  a.href=url;a.download='ATLAS-backup-'+new Date().toISOString().slice(0,10)+'.param';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
  qs.backupDownloaded=true;qs.paramsMessage=t('backupDone');if(qs.paramsMode==='keep'&&qs.keepConfirmed&&paramReady(state()))qs.completed[3]='manual';persist();render();
 }
-async function waitForParams(timeout=90000){
+async function waitForParams(timeout=180000){
  return new Promise(resolve=>{
-  const start=Date.now(),timer=setInterval(()=>{
+  const started=Date.now(),timer=setInterval(()=>{
    const s=state();
-   if(paramReady(s)){clearInterval(timer);resolve({ok:true,state:s});}
-   else if(!s.connected){clearInterval(timer);resolve({ok:false,reason:'disconnected'});}
-   else if(!s.paramLoading&&(s.paramPhase==='partial'||s.paramPhase==='noReply')){clearInterval(timer);resolve({ok:false,reason:s.paramPhase});}
-   else if(Date.now()-start>timeout){clearInterval(timer);resolve({ok:false,reason:'timeout'});}
-  },500);
+   if(!s.connected){clearInterval(timer);resolve({ok:false,reason:'disconnected',state:s});}
+   else if(!s.paramLoading){
+    clearInterval(timer);
+    resolve({ok:paramReady(s)&&safeLink(s),complete:s.paramComplete===true,state:s,reason:s.paramPhase});
+   }else if(Date.now()-started>timeout){
+    clearInterval(timer);resolve({ok:false,reason:'timeout',state:s});
+   }
+  },450);
  });
 }
-async function loadParams(){
- const s=state();if(!safeLink(s)){qs.paramsMessage=t('readNoLink');render();return;}
- qs.paramsMessage=t('readWaiting');render();
- api.requestParameters();
- if(!state().paramLoading){qs.paramsMessage=t('readPartial');render();return;}
- const result=await waitForParams();
- qs.paramsMessage=result.ok?t('readComplete'):result.reason==='partial'||result.reason==='noReply'?t('readPartial'):t('readNoLink');
+async function refreshProfile(preserveConfirmation=false){
+ if(!qs.fileText||!paramReady(state()))return;
+ const token=qs.fileToken,board=selectedBoard(),metadata=await getMetadata();
+ const live=state();
+ if(token!==qs.fileToken||selectedBoard()!==board||!paramReady(live))return;
+ qs.preview=core.parseParamText(qs.fileText,live.params,metadata,{boardLabel:boardLabel(board)});
+ qs.previewBoard=board;
+ if(!preserveConfirmation)qs.compatConfirmed=false;
+ qs.paramsMessage=qs.preview.valid?t('preview'):t('paramInvalid');
  render();
 }
+async function loadParams(){
+ if(qs.readBusy||qs.applyBusy||!safeLink(state())){if(!qs.readBusy)setGlobal(t('readNoLink'),true);return;}
+ qs.readBusy=true;qs.readPass=0;qs.paramsMessage=t('readWaiting');render();
+ let result=null;
+ try{
+  for(let pass=1;pass<=2;pass++){
+   if(!safeLink(state()))throw Error(t('readNoLink'));
+   const alreadyLoading=pass===1&&state().paramLoading;
+   if(!alreadyLoading&&!api.requestParameters(true))throw Error(t('readPartial'));
+   qs.readPass=pass;qs.paramsMessage=t('readPass')+' '+pass+'/2';render();
+   result=await waitForParams();
+   if(!result.ok)throw Error(t('readPartial')+' · '+(result.reason||''));
+  }
+  qs.paramsMessage=result?.complete?t('readComplete'):t('readPartialOk');
+ }catch(error){qs.paramsMessage=error.message||t('readPartial');setGlobal(qs.paramsMessage,true);}
+ finally{
+  qs.readBusy=false;qs.readPass=0;
+  if(qs.fileText&&paramReady(state()))await refreshProfile();
+  else render();
+ }
+}
 function paramErrorText(error){
- const keys={board:'paramBoard',unknown:'paramUnknown',duplicate:'paramDuplicate',range:'paramRange',format:'paramFormat',integer:'paramInteger',readonly:'paramReadonly','int64-unsupported':'paramInt64',type:'paramType'};
+ const keys={board:'paramBoard',unknown:'paramUnknown',duplicate:'paramDuplicate',range:'paramRange',format:'paramFormat',integer:'paramInteger',readonly:'paramReadonly','int64-unsupported':'paramInt64',type:'paramType','type-range':'paramRange','protected-skipped':'paramReadonly',number:'paramInvalid'};
  return t(keys[error.reason]||'paramInvalid')+(error.name?' · '+error.name:'')+(error.line?' · line '+error.line:'');
 }
 async function onParamFile(file){
- if(!file||qs.applyBusy)return;
+ if(!file||qs.applyBusy||qs.readBusy)return;
  const token=++qs.fileToken;
- invalidateFrom(3);qs.compatConfirmed=false;qs.keepConfirmed=false;qs.preview=null;qs.previewBoard=null;
- const s=state(),board=s.selectedBoard;
- if(!paramReady(s)){qs.paramsMessage=t('readWaiting');render();return;}
+ invalidateFrom(3);qs.compatConfirmed=false;qs.keepConfirmed=false;qs.preview=null;qs.previewBoard=null;qs.fileText=null;qs.applySkipped=[];
  qs.fileName=file.name;qs.paramsMessage=t('readWaiting');render();
- const metadata=await getMetadata(),result=core.parseParamText(await file.text(),s.params,metadata,{boardLabel:boardLabel(board)});
- if(token!==qs.fileToken||selectedBoard()!==board||!paramReady(state()))return;
- qs.preview=result;qs.previewBoard=board;qs.paramsMessage=result.valid?t('preview'):t('paramInvalid');render();
+ try{
+  if(file.size>5*1024*1024)throw Error(t('fileTooBig'));
+  const contents=await file.text();
+  if(token!==qs.fileToken)return;
+  qs.fileText=contents;
+  if(paramReady(state()))await refreshProfile();
+  else{qs.paramsMessage=t('filePending');render();}
+ }catch(error){if(token===qs.fileToken){qs.paramsMessage=error.message||t('paramInvalid');setGlobal(qs.paramsMessage,true);render();}}
+}
+function downloadSkippedReport(){
+ const skipped=[...(qs.preview?.skipped||[]),...qs.applySkipped.map(item=>({name:item.name,line:'',reason:'write-rejected: '+item.reason}))];
+ if(!skipped.length)return;
+ const rows=['# A.T.L.A.S. Quick Setup: skipped entries','# '+new Date().toISOString(),'# '+qs.fileName];
+ for(const item of skipped)rows.push([item.line??'',item.name??'',item.reason??'',item.value??''].join('\t'));
+ const blob=new Blob([rows.join('\n')+'\n'],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=el('a');
+ a.href=url;a.download='ATLAS-skipped-parameters.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 async function applyCustomParams(){
  const s=state();
- if(!qs.preview?.valid||qs.previewBoard!==s.selectedBoard||!qs.backupDownloaded||!qs.compatConfirmed||!paramReady(s)||!safeLink(s)){qs.paramsMessage=t('paramInvalid');render();return;}
+ if(!qs.preview?.valid||qs.previewBoard!==s.selectedBoard||!qs.backupDownloaded||!qs.compatConfirmed||!paramReady(s)||!safeLink(s)||qs.readBusy){qs.paramsMessage=t('paramInvalid');render();return;}
+ const fresh=core.parseParamText(qs.fileText,s.params,qs.metadata,{boardLabel:boardLabel(s.selectedBoard)});
+ if(!fresh.valid||JSON.stringify(fresh.changes)!==JSON.stringify(qs.preview.changes)){
+  qs.preview=fresh;qs.compatConfirmed=false;qs.paramsMessage=t('retryAfterParam');render();return;
+ }
  if(!qs.preview.changes.length){qs.paramsApplied=false;qs.paramsMessage=t('paramNoChanges');complete(3,'manual');return;}
- if(!window.confirm(t('applyConfirm')+'\n\n'+qs.preview.changes.length+' '+t('changed')))return;
- invalidateFrom(3);qs.applyBusy=true;qs.cancelApply=false;qs.paramsMessage=t('applying');render();
+ if(!window.confirm(t('applyConfirm')+'\n\n'+qs.preview.changes.length+' '+t('changed')+' / '+qs.preview.skipped.length+' '+t('skipped')))return;
+ const expected=qs.preview.changes.slice(),board=s.selectedBoard;
+ invalidateFrom(3);qs.applyBusy=true;qs.cancelApply=false;qs.applySkipped=[];qs.paramsMessage=t('applying');render();
  try{
-  const updates=Object.fromEntries(qs.preview.changes);
-  const result=await api.writeAdvancedParams(updates,p=>{qs.paramsMessage=t('applying')+' · '+p.done+'/'+p.total+' · '+(p.name||'');setGlobal(qs.paramsMessage);},()=>qs.cancelApply);
-  if(result.done!==result.total)throw Error('Incomplete PARAM_VALUE acknowledgements');
-  qs.paramsMessage=t('readWaiting');api.requestParameters();
-  const readback=await waitForParams();
-  if(!readback.ok)throw Error(t('readPartial'));
-  const live=readback.state.params;
-  const mismatches=qs.preview.changes.filter(([name,value])=>{const actual=Number(live.get(name)?.value);return !Number.isFinite(actual)||Math.abs(actual-value)>Math.max(1e-5,Math.abs(value)*2e-6);});
-  if(mismatches.length)throw Error('Readback mismatch: '+mismatches.map(x=>x[0]).join(', '));
-  qs.paramsApplied=true;qs.paramsMessage=t('applyDone');complete(3,'done');
+  const updates=Object.fromEntries(expected);
+  const result=await api.writeAdvancedParams(updates,p=>{qs.paramsMessage=t('applying')+' · '+p.done+'/'+p.total+' · '+(p.name||'');setGlobal(qs.paramsMessage);},()=>qs.cancelApply,{skipRejected:true});
+  qs.applySkipped=result.skipped||[];
+  if(!result.done)throw Error(t('applyPartial'));
+  qs.paramsApplied=true;
+  let readback=null;
+  for(let pass=1;pass<=2;pass++){
+   qs.paramsMessage=t('readPass')+' '+pass+'/2';render();
+   if(!api.requestParameters(true))throw Error(t('readPartial'));
+   readback=await waitForParams();
+   if(!readback.ok)throw Error(t('readPartial'));
+  }
+  const live=readback.state.params,rejected=new Set(qs.applySkipped.map(item=>item.name));
+  const mismatches=expected.filter(([name,value])=>{
+   if(rejected.has(name))return false;
+   const actual=Number(live.get(name)?.value);
+   return !Number.isFinite(actual)||Math.abs(actual-value)>Math.max(1e-5,Math.abs(value)*2e-6);
+  });
+  if(mismatches.length){
+   qs.applySkipped.push(...mismatches.map(([name])=>({name,reason:'readback mismatch / value not verified'})));
+   for(const [name] of mismatches)rejected.add(name);
+  }
+  if(result.done<=mismatches.length)throw Error('No updated parameters were verified by readback');
+  const parsed=core.parseParamText(qs.fileText,live,qs.metadata,{boardLabel:boardLabel(board)});
+  parsed.changes=parsed.changes.filter(([name])=>!rejected.has(name));
+  qs.preview=parsed;qs.previewBoard=board;
+  if(parsed.changes.length){
+   qs.compatConfirmed=false;qs.paramsMessage=t('retryAfterParam');setGlobal(qs.paramsMessage,true);
+  }else{
+   qs.paramsMessage=t('applyDone')+(qs.applySkipped.length?' · '+qs.applySkipped.length+' '+t('applySkipped'):'');
+   complete(3,'done');
+  }
  }catch(error){qs.paramsMessage=t('applyPartial')+' · '+error.message;setGlobal(qs.paramsMessage,true);}
  finally{qs.applyBusy=false;qs.cancelApply=false;render();}
 }
@@ -252,30 +350,43 @@ function renderParams(box){
  const a=el('div');a.append(el('small','',t('live')),el('strong','',s.connected?(s.armed===false?t('disarmed'):'ARM / UNKNOWN'):t('disconnected')));
  const b=el('div');b.append(el('small','',t('readCount')),el('strong','',String(s.params?.size||0)+' / '+(s.paramCount??'?')));
  status.append(a,b);box.append(status);
- const actions=el('div','qs-inline-actions');button(actions,t('readParams'),loadParams,'cc-button ghost').disabled=qs.applyBusy;button(actions,t('backup'),()=>{try{downloadBackup();}catch(e){setGlobal(e.message,true);}},'cc-button outline').disabled=qs.applyBusy;box.append(actions);
+ const actions=el('div','qs-inline-actions');
+ button(actions,s.connected?t('usbDisconnect'):t('usbConnect'),()=>api.connectUsb(),'cc-button primary').disabled=qs.applyBusy||qs.readBusy;
+ button(actions,t('readTwice'),loadParams,'cc-button ghost').disabled=qs.applyBusy||qs.readBusy||!safeLink(s);
+ button(actions,t('backup'),()=>{try{downloadBackup();}catch(e){setGlobal(e.message,true);}},'cc-button outline').disabled=qs.applyBusy||qs.readBusy||!ready;
+ box.append(actions);
+ if(qs.readBusy)callout(box,t('readBusy'),'warning');
+ if(ready&&s.paramComplete!==true)callout(box,t('readPartialOk'),'warning');
  if(ready&&qs.backupDownloaded)callout(box,t('backupDone'),'success');
  if(qs.paramsMessage)callout(box,qs.paramsMessage,qs.paramsMessage.includes(t('applyPartial'))||qs.paramsMessage===t('paramInvalid')?'danger':'');
- radio(box,t('paramsKeep'), 'keep',qs.paramsMode==='keep',value=>{if(qs.applyBusy)return;invalidateFrom(3);qs.paramsMode=value;qs.preview=null;qs.fileName='';qs.compatConfirmed=false;qs.keepConfirmed=false;render();});
- radio(box,t('paramsCustom'),'custom',qs.paramsMode==='custom',value=>{if(qs.applyBusy)return;invalidateFrom(3);qs.paramsMode=value;qs.keepConfirmed=false;qs.compatConfirmed=false;render();});
+ radio(box,t('paramsKeep'),'keep',qs.paramsMode==='keep',value=>{if(qs.applyBusy||qs.readBusy)return;qs.fileToken++;invalidateFrom(3);qs.paramsMode=value;qs.preview=null;qs.fileText=null;qs.fileName='';qs.compatConfirmed=false;qs.keepConfirmed=false;render();});
+ radio(box,t('paramsCustom'),'custom',qs.paramsMode==='custom',value=>{if(qs.applyBusy||qs.readBusy)return;qs.fileToken++;invalidateFrom(3);qs.paramsMode=value;qs.keepConfirmed=false;qs.compatConfirmed=false;render();});
  if(qs.paramsMode==='keep'){
   callout(box,t('paramsKeepWarn'),'warning');
   if(ready)checkbox(box,t('keepConfirm'),qs.keepConfirmed,value=>{qs.keepConfirmed=value;if(value&&qs.backupDownloaded&&ready){qs.completed[3]='manual';persist();}else delete qs.completed[3];render();});
  }else{
-  const fileInput=el('input','qs-input');fileInput.type='file';fileInput.accept='.param,.txt';fileInput.disabled=qs.applyBusy;fileInput.addEventListener('change',event=>onParamFile(event.target.files?.[0]));box.append(el('label','',t('file')),fileInput);
+  const fileInput=el('input','qs-input');fileInput.type='file';fileInput.accept='.param,.txt';fileInput.disabled=qs.applyBusy||qs.readBusy;fileInput.addEventListener('change',event=>onParamFile(event.target.files?.[0]));box.append(el('label','',t('file')),fileInput);
   appendText(box,'p',qs.fileName||t('fileName'),'qs-global-status');
   if(qs.preview){
    const summary=el('div','qs-kv');
-   [[t('changed'),String(qs.preview.changes.length)],[t('errors'),String(qs.preview.errors.length)],[t('warnings'),String(qs.preview.warnings.length)]].forEach(pair=>{const cell=el('div');cell.append(el('small','',pair[0]),el('strong','',pair[1]));summary.append(cell);});
+   [[t('changed'),String(qs.preview.changes.length)],[t('skipped'),String(qs.preview.skipped.length+qs.applySkipped.length)],[t('errors'),String(qs.preview.errors.length)],[t('metaMissing'),String(qs.preview.metadataMissingCount)]].forEach(pair=>{const cell=el('div');cell.append(el('small','',pair[0]),el('strong','',pair[1]));summary.append(cell);});
    box.append(summary);
    if(qs.preview.errors.length){const list=el('div','qs-callout danger');qs.preview.errors.slice(0,20).forEach(err=>list.append(el('div','',paramErrorText(err))));box.append(list);}
-   if(qs.preview.warnings.length)callout(box,t('paramWarning'),'warning');
+   const skipped=[...qs.preview.skipped,...qs.applySkipped.map(item=>({name:item.name,reason:'write-rejected: '+item.reason}))];
+   if(skipped.length){
+    callout(box,t('skippedInfo'),'warning');
+    const list=el('div','qs-skipped');skipped.slice(0,30).forEach(item=>list.append(el('div','',paramErrorText(item))));if(skipped.length>30)list.append(el('div','', '+ '+(skipped.length-30)));
+    box.append(list);button(box,t('skippedDownload'),downloadSkippedReport,'cc-button outline');
+   }
+   if(qs.preview.warnings.length||qs.preview.metadataMissingCount>0)callout(box,t('paramWarning'),'warning');
    const diff=el('div','qs-diff');qs.preview.changes.slice(0,100).forEach(([name,value])=>{const row=el('div','qs-diff-row');row.append(el('code','',name));row.append(el('span','',(s.params.get(name)?.value??'—')+' → '+value));diff.append(row);});if(qs.preview.changes.length>100)diff.append(el('p','', '+ '+(qs.preview.changes.length-100)));box.append(diff);
    checkbox(box,t('compatConfirm'),qs.compatConfirmed,value=>{qs.compatConfirmed=value;render();});
-   const canApply=ready&&qs.previewBoard===s.selectedBoard&&qs.backupDownloaded&&qs.preview.valid&&qs.compatConfirmed&&safeLink(s)&&!qs.applyBusy;
+   const canApply=ready&&qs.previewBoard===s.selectedBoard&&qs.backupDownloaded&&qs.preview.valid&&qs.compatConfirmed&&safeLink(s)&&!qs.applyBusy&&!qs.readBusy&&qs.preview.changes.length>0;
    const applyRow=el('div','qs-inline-actions');
    button(applyRow,qs.applyBusy?t('applying'):t('apply'),applyCustomParams,'cc-button primary').disabled=!canApply;
    if(qs.applyBusy)button(applyRow,t('cancelApply'),()=>{qs.cancelApply=true;setGlobal(t('cancelled'));},'cc-button outline');
    box.append(applyRow);
+   if(qs.preview.valid&&qs.preview.changes.length===0&&qs.compatConfirmed&&ready&&qs.backupDownloaded&&!qs.completed[3])button(box,t('confirm'),()=>{qs.paramsMessage=t('paramNoChanges');complete(3,'manual');},'cc-button ghost');
   }
  }
  if(!ready&&s.paramPhase==='partial')callout(box,t('readPartial'),'warning');
@@ -369,6 +480,7 @@ function renderFinal(box){
 }
 function render(){
  translateStatic();
+ if(qs.step!==2)restoreDfuPanel();
  const box=$('qsContent');if(!box)return;box.replaceChildren();
  const titles=[t('introTitle'),t('safetyTitle'),t('firmwareTitle'),t('paramsTitle'),t('accelTitle'),t('levelTitle'),t('rebootTitle'),t('escTitle'),t('compassTitle'),t('finalTitle')];
  appendText(box,'div',String(qs.step+1).padStart(2,'0')+' / '+String(stepKeys.length).padStart(2,'0'),'cc-overline');
@@ -398,6 +510,7 @@ $('qsContent').addEventListener('click',event=>{
  if(anchor){event.preventDefault();api.navigate('basic');}
 });
 document.querySelector('[data-qs-t="fullConfigurator"]')?.addEventListener('click',event=>{event.preventDefault();api.navigate('basic');});
+window.addEventListener('atlas:dfu-idle',()=>{if(qs.step===2)render();});
 window.addEventListener('atlas:dfu',event=>{
  const d=event.detail||{};
  if(d.success&&d.verified&&d.board===selectedBoard()){qs.firmwareSource='dfu';qs.firmwareBoard=d.board;qs.firmwareError='';complete(2,'done');setGlobal(t('firmwareSuccess'));}
@@ -432,7 +545,9 @@ setInterval(()=>{
  renderHeader();
 },1000);
 window.addEventListener('atlas:language',render);
-window.addEventListener('atlas:navigate',event=>{if(event.detail?.tab==='quicksetup')render();});
+window.addEventListener('atlas:navigate',event=>{if(event.detail?.tab==='quicksetup')render();else restoreDfuPanel();});
+window.addEventListener('atlas:state',()=>{if(qs.step===1||qs.step===2||qs.step===3)render();});
+window.addEventListener('atlas:board',()=>{if(qs.firmwareBoard&&qs.firmwareBoard!==selectedBoard()){invalidateFrom(2);qs.fileToken++;qs.fileText=null;qs.preview=null;qs.firmwareSource=null;qs.firmwareBoard=null;}render();});
 window.addEventListener('atlas:parameters',render);
 document.querySelectorAll('[data-language]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(render,0)));
 render();

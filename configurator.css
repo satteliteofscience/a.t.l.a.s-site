@@ -199,3 +199,14 @@
 .qs-step-list button:focus-visible,.qs-actions button:focus-visible,.qs-inline-actions button:focus-visible,.qs-check input:focus-visible,.qs-radio input:focus-visible{outline:2px solid #e1cd6b;outline-offset:2px}
 @media(max-width:900px){.qs-layout{grid-template-columns:1fr}.qs-step-list{grid-template-columns:repeat(2,minmax(0,1fr))}.qs-step-button{min-height:44px}}
 @media(max-width:560px){.qs-step-list{grid-template-columns:1fr}.qs-step-button{min-height:42px}.qs-content{padding:15px;min-height:0}.qs-content h2{font-size:18px}.qs-kv{grid-template-columns:1fr}.qs-diff-row{grid-template-columns:1fr}.qs-diff-row span{text-align:left}.qs-actions{display:grid;grid-template-columns:1fr 1fr}.qs-actions #qsExitBtn{grid-column:1/-1}.qs-scope-note{padding:12px}.qs-progress-head{font-size:9px}}
+
+/* Quick Setup owns transport controls while active; DFU widget is mounted in-place. */
+.cc-quick-setup .cc-toolbar{display:none}
+.qs-dfu-dock{margin:15px 0}
+.qs-dfu-dock .dfu-panel{margin:0;max-width:100%}
+.qs-dfu-dock .dfu-grid{padding:12px;gap:12px}
+.qs-board-select{display:block;width:100%;max-width:340px;padding:10px 12px;border:1px solid #637144;background:#111b0f;color:#eee1a8;font:600 12px 'IBM Plex Mono',monospace;margin:8px 0 14px}
+.qs-skipped{max-height:230px;overflow:auto;margin:10px 0;padding:12px 14px;border:1px solid #786443;background:#20190f;color:#edc8a9;font:12px/1.65 'IBM Plex Mono',monospace}
+.qs-skipped>div{padding:3px 0;border-bottom:1px dashed #5c452e;overflow-wrap:anywhere}
+.qs-skipped>div:last-child{border:0}
+@media(max-width:700px){.qs-dfu-dock .dfu-grid{grid-template-columns:1fr}.qs-dfu-dock .dfu-check-column{border-left:0;border-top:1px solid #45502f;padding-left:0;padding-top:14px}}

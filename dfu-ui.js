@@ -11,6 +11,7 @@
   };
   const tr=key=>(T[window.AtlasLanguage?.()||'ru']||T.ru)[key]||key;
   let current=null, image=null, fileInfo=null, busy=false, lastPhase='', usbSupported=!!(navigator.usb&&window.isSecureContext);
+   window.AtlasDfuUi=Object.freeze({isBusy:()=>busy});
   function selectedBoard(){return window.AtlasSelectedBoard?.()||'cube-orange';}
   function log(message,kind='info'){
     const box=$('dfuLog'),row=document.createElement('div');row.className='dfu-log-line'+(kind==='error'?' error':'');const tm=document.createElement('time');tm.textContent=new Date().toLocaleTimeString('en-GB',{hour12:false});const txt=document.createElement('span');txt.textContent=message;row.append(tm,txt);box.prepend(row);while(box.children.length>70)box.lastChild.remove();
@@ -25,9 +26,9 @@
   // Show which independent safety gate is keeping the flash action disabled.
   // Never bypass or auto-select a board: the operator must select the exact hardware.
   const G={
-    ru:{busy:'Операция DFU уже выполняется.',usb:'Сначала подключите STM32 DFU.',map:'Карта Flash или размер передачи не подтверждены. Стирание заблокировано.',file:'Сначала загрузите и проверьте HEX-файл.',board:'Выбрана другая плата. Прокрутите вверх и выберите Matek H743-WING V3 в разделе «Полётный контроллер».',model:'Подтвердите маркировку платы.',backup:'Подтвердите резервную копию и риск стирания.',erase:'Введите ERASE точно, латинскими заглавными буквами.',ready:'Все условия выполнены. ВНИМАНИЕ: WebUSB-прошивальщик ещё не испытан на реальном Matek.'},
-    uk:{busy:'Операція DFU вже виконується.',usb:'Спочатку під’єднайте STM32 DFU.',map:'Карту Flash або розмір передачі не підтверджено. Стирання заблоковано.',file:'Спочатку завантажте та перевірте HEX-файл.',board:'Обрано іншу плату. Прокрутіть угору й виберіть Matek H743-WING V3 у розділі «Польотний контролер».',model:'Підтвердьте маркування плати.',backup:'Підтвердьте резервну копію та ризик стирання.',erase:'Введіть ERASE точно, великими латинськими літерами.',ready:'Усі умови виконано. УВАГА: WebUSB-прошивач ще не перевірено на реальному Matek.'},
-    en:{busy:'DFU operation already in progress.',usb:'Connect the STM32 DFU device first.',map:'Flash map or transfer size has not been verified. Erase is blocked.',file:'Load and verify a HEX file first.',board:'Another board is selected. Scroll up and select Matek H743-WING V3 in Flight Controller.',model:'Confirm the board marking.',backup:'Confirm your backup and understand the erase risk.',erase:'Enter ERASE in uppercase letters.',ready:'All conditions met. WARNING: WebUSB flashing is still untested on a real Matek controller.'}
+    ru:{busy:'Операция DFU уже выполняется.',usb:'Сначала подключите STM32 DFU.',map:'Карта Flash или размер передачи не подтверждены. Стирание заблокировано.',file:'Сначала загрузите и проверьте HEX-файл.',board:'Выбери Matek H743-WING V3 в шаге Quick Setup или разделе «Полётный контроллер».',model:'Подтвердите маркировку платы.',backup:'Подтвердите резервную копию и риск стирания.',erase:'Введите ERASE точно, латинскими заглавными буквами.',ready:'Все условия выполнены. ВНИМАНИЕ: WebUSB-прошивальщик ещё не испытан на реальном Matek.'},
+    uk:{busy:'Операція DFU вже виконується.',usb:'Спочатку під’єднайте STM32 DFU.',map:'Карту Flash або розмір передачі не підтверджено. Стирання заблоковано.',file:'Спочатку завантажте та перевірте HEX-файл.',board:'Обери Matek H743-WING V3 у кроці Quick Setup або розділі «Польотний контролер».',model:'Підтвердьте маркування плати.',backup:'Підтвердьте резервну копію та ризик стирання.',erase:'Введіть ERASE точно, великими латинськими літерами.',ready:'Усі умови виконано. УВАГА: WebUSB-прошивач ще не перевірено на реальному Matek.'},
+    en:{busy:'DFU operation already in progress.',usb:'Connect the STM32 DFU device first.',map:'Flash map or transfer size has not been verified. Erase is blocked.',file:'Load and verify a HEX file first.',board:'Select Matek H743-WING V3 in the Quick Setup step or the Flight Controller section.',model:'Confirm the board marking.',backup:'Confirm your backup and understand the erase risk.',erase:'Enter ERASE in uppercase letters.',ready:'All conditions met. WARNING: WebUSB flashing is still untested on a real Matek controller.'}
   };
   function blockedBy(){
     if(busy)return 'busy';
@@ -137,7 +138,7 @@
       $('dfuProgressLabel').textContent='VERIFIED · 100%';
       window.dispatchEvent(new CustomEvent('atlas:dfu',{detail:{success:true,board:selectedBoard(),filename:expected,sha256:fileInfo?.sha256||null,verified:true}}));
     }catch(error){status(`DFU ${tr('stError')}: ${error.message} — Leave board in DFU; recover/reflash via STM32CubeProgrammer if needed.`,true);window.dispatchEvent(new CustomEvent('atlas:dfu',{detail:{success:false,board:selectedBoard(),reason:error.message}}));}finally{
-      window.removeEventListener('beforeunload',unload);busy=false;refreshControls();
+      window.removeEventListener('beforeunload',unload);busy=false;refreshControls();window.dispatchEvent(new Event('atlas:dfu-idle'));
     }
   }
   function translate(){
@@ -152,6 +153,7 @@
   [$('dfuConfirmBoard'),$('dfuConfirmBackup')].forEach(e=>e.addEventListener('change',refreshControls));
   $('dfuConfirmText').addEventListener('input',refreshControls);
   $('firmwareBoards').addEventListener('click',()=>queueMicrotask(refreshControls));
+   window.addEventListener('atlas:board',refreshControls);
   document.querySelectorAll('[data-language]').forEach(e=>e.addEventListener('click',()=>queueMicrotask(()=>{translate();translatePicker();})));
   const P={ru:['Версия для установки / отката','Загрузить выбранную'],uk:['Версія для встановлення / повернення','Завантажити вибрану'],en:['Firmware version / rollback','Load selected version']};
   function translatePicker(){const lang=window.AtlasLanguage?.()||'ru';const labels=P[lang]||P.ru;$('dfuReleaseSelectLabel').textContent=labels[0];$('dfuLoadReleaseBtn').textContent=labels[1];}
