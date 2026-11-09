@@ -37,7 +37,7 @@ function parameterCategory(name){
 
 let lang='ru';try{let saved=localStorage.getItem('atlas-language');if(words[saved])lang=saved;}catch{}
 const tr=(k)=>words[lang]?.[k]||words.ru[k]||k;
-const state={demo:false,connected:false,connecting:false,transport:null,netSocket:null,bridgeReady:false,lastVoltageTelemetry:0,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
+const state={demo:false,connected:false,connecting:false,transport:null,netSocket:null,bridgeReady:false,lastVoltageTelemetry:0,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,readTwoBusy:false,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
 window.AtlasLanguage=()=>lang;
 window.AtlasSelectedBoard=()=>state.selectedBoard;
 const settingDefs=[
@@ -63,6 +63,7 @@ function toast(message,warning=false){log(message,warning);}
 function setLang(next){if(!words[next])return;lang=next;try{localStorage.setItem('atlas-language',lang);}catch{};document.documentElement.lang=next;
  document.querySelectorAll('[data-t]').forEach(el=>{let k=el.dataset.t;if(words[lang][k])el.textContent=tr(k);});document.querySelectorAll('[data-ph]').forEach(el=>el.placeholder=tr(el.dataset.ph));
  document.querySelectorAll('[data-language]').forEach(el=>{el.classList.toggle('active',el.dataset.language===next);el.setAttribute('aria-pressed',String(el.dataset.language===next));});
+ $('twoPassParamsBtn').textContent=(readTwoLex[next]||readTwoLex.ru).button;
  updateNetworkLabels();
  updateConnectionUI();renderBasic();renderParams();renderBoards();renderReleases();updateTelemetryUI();renderImportDiff();renderCategoryNav();showProgress();window.dispatchEvent(new Event('atlas:language'));
 }
@@ -261,6 +262,29 @@ async function connect(){if(state.connected){await disconnect();return;}
   (async()=>{try{while(state.rxActive&&state.port){const reader=state.port.readable.getReader();state.reader=reader;try{while(state.rxActive){const {value,done}=await reader.read();if(done)break;if(value)parser.push(value);}}finally{reader.releaseLock();state.reader=null;}}}catch(err){if(state.rxActive)toast('USB RX: '+err.message,true);}finally{if(state.rxActive)disconnect().catch(console.error);}})();
  }catch(err){toast('USB: '+err.message,true);if(state.port)await disconnect();}
  finally{state.connecting=false;updateConnectionUI();}
+}
+const readTwoLex={
+ ru:{start:'Читаю параметры',done:'Два прохода завершены',incomplete:'Загрузка неполная: можно повторить',busy:'Ожидается завершение предыдущего чтения',button:'Прочитать параметры · 2 прохода'},
+ uk:{start:'Зчитую параметри',done:'Два проходи завершено',incomplete:'Не всі параметри отримано: повтори зчитування',busy:'Читання вже триває',button:'Зчитати параметри · 2 проходи'},
+ en:{start:'Reading parameters',done:'Two passes completed',incomplete:'Read incomplete: retry if needed',busy:'Another transfer is in progress',button:'Read parameters · 2 passes'}
+};
+async function readParamsTwice(){
+ if(state.readTwoBusy||!state.connected||state.sysid===null||state.bulk?.running||state.servoConfigBusy){toast((readTwoLex[lang]||readTwoLex.ru).busy,true);return;}
+ const text=readTwoLex[lang]||readTwoLex.ru;
+ state.readTwoBusy=true;const button=$('twoPassParamsBtn');button.disabled=true;
+ try{
+  for(let pass=1;pass<=2;pass++){
+   if(!state.connected||state.sysid===null)throw Error(tr('needlink'));
+   if(!state.paramLoading&&!startParamLoad(true))throw Error(text.busy);
+   button.textContent=text.start+' '+pass+'/2';
+   const started=Date.now();
+   while(state.connected&&state.paramLoading&&Date.now()-started<75000)await new Promise(resolve=>setTimeout(resolve,300));
+   if(state.paramLoading)throw Error(text.incomplete+' · timeout');
+   if(!state.connected)throw Error(tr('needlink'));
+  }
+  toast(state.paramTransfer?.phase==='complete'?text.done:text.incomplete,state.paramTransfer?.phase!=='complete');
+ }catch(e){toast(e.message,true);}
+ finally{state.readTwoBusy=false;button.disabled=false;button.textContent=text.button;renderParams();renderImportDiff();}
 }
 const networkLex={
  ru:{title:'UDP / TCP через локальный мост',mode:'Режим соединения',host:'Адрес полётника / прослушивания',port:'Порт MAVLink',bridge:'Локальный WebSocket-мост',token:'Токен из терминала',warning:'GitHub Pages не открывает UDP/TCP напрямую. Запусти на ПК: node tools/mavlink-bridge.cjs. Мост слушает только localhost и требует токен. Для удалённого соединения используй доверенную сеть/VPN.',connect:'Подключить UDP/TCP',disconnect:'Отключить сеть'},
@@ -658,7 +682,7 @@ function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEve
    window.location.assign(href);
  }));
  $('networkMode').addEventListener('change',syncNetworkDefaults);$('networkConnectBtn').addEventListener('click',connectBridge);
- $('connectBtn').addEventListener('click',connect);$('demoBtn').addEventListener('click',enterDemo);$('readBasicsBtn').addEventListener('click',startParamLoad);$('refreshParamsBtn').addEventListener('click',startParamLoad);$('exportParamsBtn').addEventListener('click',exportParams);$('paramSearch').addEventListener('input',()=>{state.tableLimit=150;renderParams();});$('moreParamsBtn').addEventListener('click',()=>{state.tableLimit+=180;renderParams();});$('paramModifiedOnly').addEventListener('change',renderParams);$('paramNoDefaultOnly').addEventListener('change',renderParams);
+ $('connectBtn').addEventListener('click',connect);$('demoBtn').addEventListener('click',enterDemo);$('readBasicsBtn').addEventListener('click',()=>startParamLoad(false));$('refreshParamsBtn').addEventListener('click',()=>startParamLoad(true));$('twoPassParamsBtn').addEventListener('click',readParamsTwice);$('exportParamsBtn').addEventListener('click',exportParams);$('paramSearch').addEventListener('input',()=>{state.tableLimit=150;renderParams();});$('moreParamsBtn').addEventListener('click',()=>{state.tableLimit+=180;renderParams();});$('paramModifiedOnly').addEventListener('change',renderParams);$('paramNoDefaultOnly').addEventListener('change',renderParams);
  window.addEventListener('atlas:metadata',()=>{if(state.importedText)prepareImported();renderParams();renderImportDiff();});
  window.AtlasParamTree?.initialize({render:renderParams,langGetter:()=>lang});
  $('importParamFile').addEventListener('change',ev=>importParams(ev.target.files[0]));$('bulkConsent').addEventListener('change',renderImportDiff);$('bulkWriteBtn').addEventListener('click',writeImported);$('importDownloadSkipped').addEventListener('click',downloadImportReport);$('bulkCancelBtn').addEventListener('click',()=>{state.bulkCancel=true;$('bulkProgress').textContent=tr('batchStopped')+' — '+tr('pending');});$('apjInput').addEventListener('change',ev=>parseApj(ev.target.files[0]));
