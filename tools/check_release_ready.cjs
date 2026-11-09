@@ -14,9 +14,13 @@ assert.ok(!firstHeartbeat.includes('selectedTab'),'parameter loading must not de
 const loaderAt=configurator.indexOf('function startParamLoad(');
 const loaderEnd=configurator.indexOf('function canWrite()',loaderAt);
 const loader=configurator.slice(loaderAt,loaderEnd);
+const fastAt=configurator.indexOf('function startFastParamStream(');
+const fallbackAt=configurator.indexOf('function startLegacyParamStream(');
 assert.ok(loader.includes('if(state.paramLoading)return false'),'parameter loader must be idempotent');
-assert.ok(loader.includes('transmit(21,M.paramList(state.sysid,state.compid))'),'parameter loader must request the complete MAVLink parameter list');
-assert.ok(loader.includes('setInterval(recoverMissingParams,1400)'),'missing parameter recovery must remain enabled');
+assert.ok(fastAt>=0&&fallbackAt>=0,'fast reader and reliable list fallback must exist');
+assert.ok(configurator.includes('transmit(21,M.paramList(state.sysid,state.compid))'),'legacy parameter recovery must request the complete MAVLink parameter list');
+assert.ok(configurator.includes('setInterval(recoverMissingParams,1400)'),'legacy missing-parameter recovery must remain enabled');
+assert.ok(loader.includes('startFastParamStream(transfer)')&&loader.includes('startLegacyParamStream(transfer)'),'fast MAVFTP failure must fall back to standard parameter streaming');
 const connectAt=configurator.indexOf('async function connect()');
 const connectEnd=configurator.indexOf('function startParamLoad(',connectAt);
 assert.ok(configurator.slice(connectAt,connectEnd).includes('state.paramLoading=false'),'new USB session must clear stale loading state');
