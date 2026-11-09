@@ -191,6 +191,18 @@
         <p class="cc-section-desc" data-cal-t="batteryIntro">Показания питания и параметры датчика. Коэффициенты напряжения и тока устанавливай по измерениям мультиметра, а не наугад.</p>
         <div class="battery-stats"><article><span>VOLTAGE</span><b id="batteryVoltage">—</b></article><article><span>CURRENT</span><b id="batteryCurrent">—</b></article><article><span>REMAINING</span><b id="batteryPercent">—</b></article><article><span>CONSUMED</span><b id="batteryConsumed">—</b></article></div>
         <div class="cc-card cal-settings"><div class="cc-card-title"><span>⚡</span><strong data-cal-t="batterySettings">Параметры Battery Monitor</strong><small>BATT_ / BATT2_</small></div><div class="cal-param-grid" id="batteryParamGrid"></div></div>
+        <div class="cc-card cal-settings cc-battery-cal" id="batteryCalPanel">
+          <div class="cc-card-title"><span>⚖</span><strong data-cal-t="batteryCalTitle">Калибровка напряжения по мультиметру</strong><small>BATT_VOLT_MULT</small></div>
+          <p data-cal-t="batteryCalDescription">Только для аналогового измерителя BATT_MONITOR=3, 4 или 25. Введи напряжение с мультиметра, подключённого к той же батарее.</p>
+          <div class="cc-battery-cal-fields">
+            <label><span data-cal-t="batteryCalReported">Показание контроллера</span><output id="batteryCalReported">—</output></label>
+            <label><span data-cal-t="batteryCalMeasured">Измерено мультиметром, В</span><input id="batteryCalMeasured" type="number" min="2" max="100" step="0.01" inputmode="decimal" placeholder="25.20"></label>
+            <label><span data-cal-t="batteryCalNew">Новый BATT_VOLT_MULT</span><output id="batteryCalProposed">—</output></label>
+          </div>
+          <p id="batteryCalMessage" role="status" aria-live="polite" class="cc-param-load-note"></p>
+          <label class="cc-bulk-consent"><input type="checkbox" id="batteryCalConsent"><span data-cal-t="batteryCalConfirm">Пропеллер снят, полётник DISARMED, батарея подключена, мультиметр показывает верное напряжение. Согласен записать коэффициент.</span></label>
+          <button class="cc-button primary" id="batteryCalApply" type="button" disabled data-cal-t="batteryCalApply">Записать и подтвердить коэффициент</button>
+        </div>
         <p class="cc-under-panel" data-cal-t="batteryNote">Изменения некоторых типов батарейных мониторов вступают в силу после перезагрузки. Чтение телеметрии не требует ARM.</p>
       </section>
 
@@ -393,5 +405,5 @@
       <div class="cc-modal-actions"><button type="button" class="cc-button ghost" id="servoEditorCancel">Отмена</button><button class="cc-button primary" id="servoEditorSave" type="submit">Записать изменения</button></div>
     </form>
   </dialog>
-  <script src="mavlink.js" defer></script><script src="param-tree.js" defer></script><script src="firmware-access.js" defer></script><script src="configurator.js" defer></script><script src="servo-config-core.js" defer></script><script src="calibration.js" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script><script src="quick-setup-core.js" defer></script><script src="quick-setup.js" defer></script>
+  <script src="mavlink.js" defer></script><script src="param-tree.js" defer></script><script src="firmware-access.js" defer></script><script src="configurator.js" defer></script><script src="servo-config-core.js" defer></script><script src="battery-cal-core.js" defer></script><script src="calibration.js" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script><script src="quick-setup-core.js" defer></script><script src="quick-setup.js" defer></script>
 </body></html>
