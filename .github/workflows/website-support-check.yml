@@ -142,3 +142,14 @@ jobs:
             throw 'A.T.L.A.S. Windows launcher contains invalid PowerShell syntax'
           }
           Write-Host 'PASS: Native Windows PowerShell syntax of portable one-click TCP launcher'
+      - name: Test real first-run portable Node download and connector integrity
+        shell: powershell
+        timeout-minutes: 6
+        run: |
+          $env:ATLAS_CONNECTOR_FORCE_PORTABLE='1'
+          $env:ATLAS_CONNECTOR_SELFTEST='1'
+          & cmd.exe /d /c 'tools\A.T.L.A.S.-TCP-Connector.cmd'
+          if($LASTEXITCODE -ne 0) { throw ('Real Windows portable bootstrap failed: exit '+$LASTEXITCODE) }
+          $expected = Join-Path $env:LOCALAPPDATA 'ATLAS-TCP-Connector\node-v24.22.2-win-x64.exe'
+          if(-not (Test-Path -LiteralPath $expected)) { throw ('Verified Node binary not found at: '+$expected) }
+          Write-Host 'PASS: Full launcher first run downloaded and verified portable Node.js and pinned bridge'
