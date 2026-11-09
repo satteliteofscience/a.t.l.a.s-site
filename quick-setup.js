@@ -571,21 +571,25 @@ function renderCompass(box){
  }
 }
 
-async function verifyFinalSetup(){
- if(qs.step!==9||qs.finalPhase==='reading')return;
+async function verifyFinalSetup(force=false){
+ if(qs.step!==9||(qs.finalPhase==='reading'&&!force))return;
  const token=++qs.finalToken,allPrior=Array.from({length:9},(_,i)=>qs.completed[i]&&qs.completed[i]!=='failed').every(Boolean);
  qs.finalPhase='reading';qs.finalMessage=t('finalChecking');render();
  try{
-  if(!allPrior||!safeLink(state()))throw Error(t('finalError'));
-  if(!api.requestParameters(true))throw Error(t('readPartial'));
-  const result=await waitForParams();
+  if(!allPrior)throw Error(t('finalError')+' · 1–9');
+  if(!safeLink(state()))throw Error(t('readNoLink'));
+  // USB reconnect automatically triggers a parameter download on first HEARTBEAT.
+  // Do not reject it or start a competing transfer: wait for the already-running list.
+  if(!state().paramLoading&&!api.requestParameters(true))throw Error(t('readPartial'));
+  if(token===qs.finalToken)qs.finalMessage=t('finalReadingNow');
+  const result=await waitForParams(55000);
   if(token!==qs.finalToken||qs.step!==9)return;
-  if(!result.ok||!result.complete||!safeLink(result.state))throw Error(t('readPartial'));
+  if(!result.ok||!result.complete||!safeLink(result.state))throw Error(result.reason==='timeout'?t('finalReadTimeout'):t('readPartial'));
   qs.finalPhase='success';qs.finalMessage=t('finalSuccess');qs.completed[9]='done';persist();render();
   qs.finalTimer=setTimeout(()=>{if(qs.step===9&&qs.finalPhase==='success')api.navigate('dashboard');},4500);
  }catch(error){
   if(token!==qs.finalToken||qs.step!==9)return;
-  qs.finalPhase='failed';qs.finalMessage=t('finalError')+' '+error.message;
+  qs.finalPhase='failed';qs.finalMessage=t('finalError')+' '+(error.message||error);
   delete qs.completed[9];persist();render();
  }
 }
@@ -594,17 +598,23 @@ function renderFinal(box){
  const panel=el('div','qs-finish-card');
  const isDone=qs.finalPhase==='success';
  callout(panel,qs.finalMessage||t('finalChecking'),isDone?'success':qs.finalPhase==='failed'?'danger':'');
+ const s=state();
  if(isDone){
-  const s=state();
   appendText(panel,'p',String(s.params?.size??0)+' / '+String(s.paramCount??'?')+' · MAVLink '+t('disarmed'),'qs-global-status');
   callout(panel,t('finalComplete'),'warning');
   button(panel,t('finalHome'),()=>{if(qs.finalTimer)clearTimeout(qs.finalTimer);api.navigate('dashboard');},'cc-button primary');
   appendText(panel,'p',t('finalReturning'),'qs-global-status');
- }else if(qs.finalPhase==='failed'){
-  button(panel,t('finalRetry'),()=>verifyFinalSetup(),'cc-button primary');
+ }else{
+  const progress=appendText(panel,'p','','qs-global-status');
+  progress.id='qsFinalProgress';
+  progress.textContent=t('finalReadProgress')+' · '+String(s.params?.size??0)+' / '+String(s.paramCount??'?');
+  if(!s.connected)button(panel,t('finalUsbReconnect'),()=>api.connectUsb(),'cc-button ghost');
+  button(panel,qs.finalPhase==='reading'?t('finalRestartRead'):t('finalRetry'),()=>verifyFinalSetup(true),'cc-button primary');
+  if(qs.finalPhase==='reading')appendText(panel,'p',t('finalReadingNow'),'qs-global-status');
  }
  box.append(panel);
 }
+
 function render(){
  translateStatic();
  restoreCalWidgets();
@@ -623,7 +633,7 @@ function render(){
  else if(qs.step===8)renderCompass(box);
  else renderFinal(box);
  renderStepList();renderHeader();
- if(qs.step===9&&qs.finalChecks.every(Boolean))$('qsNextBtn').hidden=true;
+ // The compact final screen no longer has a checklist (renderHeader controls Next visibility).
 }
 $('qsBackBtn').addEventListener('click',()=>setStep(qs.step-1));
 $('qsNextBtn').addEventListener('click',()=>{
@@ -695,6 +705,10 @@ setInterval(()=>{
  }
  renderHeader();
  if(qs.step===3)updateWriteGate();
+ if(qs.step===9&&qs.finalPhase==='reading'){
+  const progress=$('qsFinalProgress'),s=state();
+  if(progress)progress.textContent=t('finalReadProgress')+' · '+String(s.params?.size??0)+' / '+String(s.paramCount??'?');
+ }
  if(qs.step===8&&(!safeLink(state()))&&(qs.compassNeedReboot||qs.awaitingCalibration==='compass'))qs.compassSawDisconnect=true;
 },1000);
 window.addEventListener('atlas:language',render);
