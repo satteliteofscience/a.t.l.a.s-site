@@ -1,0 +1,9 @@
+{
+  "schema": 3,
+  "board_id": "uni-ic743-mini",
+  "board_name": "Uni-IC743 Mini",
+  "flash_type": "STM32H743 internal 2 MiB",
+  "format": "intel-hex",
+  "latest": null,
+  "files": []
+}
