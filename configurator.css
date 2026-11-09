@@ -216,3 +216,13 @@
 .qs-cal-dock .cal-wizard,.qs-cal-dock .cal-card{width:100%;max-width:100%;margin:0}
 .qs-cal-dock #compassStartBtn{display:none}
 .qs-cal-dock .cal-wizard-inner{min-width:0}
+
+/* Quick Setup compass retry settings, post-calibration restart and compact finish */
+.qs-compass-settings{margin:12px 0 15px;padding:12px 14px;border:1px solid #506140;background:#10190f}
+.qs-compass-settings>label{display:block;margin:0 0 8px;color:#e3dda3;font-weight:650}
+.qs-compass-settings .qs-board-select{max-width:100%;margin:0 0 8px}
+.qs-compass-settings p{line-height:1.6}
+.qs-reboot-card,.qs-finish-card{margin:14px 0;padding:18px;border:1px solid #56683d;background:#111a10;max-width:750px}
+.qs-reboot-card h2{font-size:17px;margin:0 0 10px}
+.qs-finish-card{max-width:600px}
+.qs-finish-card .cc-button{margin-top:12px}
