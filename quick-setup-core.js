@@ -51,6 +51,28 @@
   }
   return {entries,changes,errors,warnings,skipped,metadataMissingCount,valid:entries.size>0&&errors.length===0};
  }
+ // Return explicit reasons for a disabled write button. Backup is created on the write click,
+ // not a hidden prerequisite. The hardware writer remains the final safety gate.
+ function writeBlockers(s,qs={},canWrite=false,now=Date.now()){
+  const out=[];
+  if(!s?.connected||s.demo)out.push('usb');
+  else{
+   if(s.armed!==false)out.push('disarmed');
+   if(!Number.isFinite(s.lastHeartbeat)||Math.abs(now-s.lastHeartbeat)>4000)out.push('heartbeat');
+  }
+  if(s?.paramLoading)out.push('loading');
+  if(!(s?.params instanceof Map)||s.params.size===0)out.push('empty');
+  if(!qs.preview)out.push('file');
+  else{
+   if(!qs.preview.valid)out.push('invalid');
+   if(qs.previewBoard!==s?.selectedBoard)out.push('board');
+   if(!Array.isArray(qs.preview.changes)||qs.preview.changes.length===0)out.push('unchanged');
+  }
+  if(!qs.compatConfirmed)out.push('compat');
+  if(qs.applyBusy||qs.readBusy)out.push('busy');
+  if(!out.length&&!canWrite)out.push('writer');
+  return out;
+ }
  function classifyEscProtocol(liveParams,board=''){
   const params=mapOf(liveParams),channels=[];
   for(let channel=1;channel<=16;channel++){const fn=Number(params.get('SERVO'+channel+'_FUNCTION')?.value);if(THROTTLE_FUNCTIONS.includes(fn))channels.push(channel);}
@@ -79,5 +101,5 @@
  }
  function verifiedEvent(detail,kind){return !!detail&&detail.kind===kind&&detail.status==='done'&&detail.verified===true;}
  function canMarkManualComplete(confirmed,required){return confirmed===true&&required===true;}
- return Object.freeze({THROTTLE_FUNCTIONS,DSHOT_TYPES,INTEGER_TYPES,parseParamText,classifyEscProtocol,detectCompass,verifiedEvent,canMarkManualComplete});
+ return Object.freeze({THROTTLE_FUNCTIONS,DSHOT_TYPES,INTEGER_TYPES,parseParamText,writeBlockers,classifyEscProtocol,detectCompass,verifiedEvent,canMarkManualComplete});
 });
