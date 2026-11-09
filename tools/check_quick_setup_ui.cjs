@@ -21,9 +21,12 @@ assert.match(html,/id="compassFitness"/,'compass accuracy selection must be show
 assert.match(cfg,/rebootController:\(\)=>/,'controller API must offer DISARMED-only reboot');
 assert.match(cfg,/commandLong\(state\.sysid,state\.compid,246/,'autopilot reboot command must be 246');
 assert.match(wizard,/compassRestartControls\(box\)/,'compass stage must offer in-place reboot and USB reconnect');
-assert.match(wizard,/compassRebootManual&&/,'only verified post-reboot read may unlock the next stage');
+assert.match(wizard,/qs\.compassRebootManual\|\|!safeLink\(state\(\)\)/,'reread must require user reboot confirmation and a fresh DISARMED USB link');
 assert.match(wizard,/if\(qs\.step===8&&qs\.completed\[8\]==='done'&&!qs\.compassRebootVerified\)/,'compass post-reboot verification is required before Next');
 assert.match(wizard,/function verifyFinalSetup\(/,'final stage must initiate a fresh full parameter read');
+assert.match(wizard,/if\(!allPrior\|\|!safeLink\(state\(\)\)\)/,'final must check previous steps and active USB before reading');
+assert.match(wizard,/if\(token!==qs\.finalToken\|\|qs\.step!==9\)return/,'final completion must discard stale reads after navigation');
+assert.match(wizard,/if\(qs\.step===8&&qs\.completed\[8\]==='done'&&!qs\.compassRebootVerified\)/,'Next must stay disabled before compass restart verification');
 assert.match(wizard,/if\(!result\.ok\|\|!result\.complete\|\|!safeLink\(result\.state\)\)/,'final success requires complete live parameter read');
 assert.match(wizard,/api\.navigate\('dashboard'\)/,'final stage should return to the horizon dashboard after successful verification');
 assert.ok(dfu.includes("new CustomEvent('atlas:dfu'"),'DFU must notify Quick Setup after verified flash');
