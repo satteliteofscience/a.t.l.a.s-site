@@ -120,6 +120,11 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate official Node portable binary SHA-256 reference
+        shell: powershell
+        run: |
+          $manifest = (Invoke-WebRequest -UseBasicParsing -Uri 'https://nodejs.org/dist/v24.22.2/SHASUMS256.txt').Content
+          $manifest -split "`n" | Where-Object { $_ -match 'win-(x64|arm64)/node.exe' } | ForEach-Object { Write-Host $_ }
       - name: Parse portable Windows TCP connector bootstrap with native PowerShell
         shell: powershell
         run: |
