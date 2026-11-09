@@ -51,7 +51,7 @@ function escParams({mask=0,otype=0,channels=[3],can=false}={}){
 })();
 (function testPartialImportContinuesWithSkips(){
  const live=params([['THR_MAX',100,6],['CAN_P1_BITRATE',1000000,6],['SERVO3_MIN',1000,3]]);
- const file='THR_MAX 95\nBARO1_WCF_BCK 1\nCAN_P1_BITRATE 250000\nSERVO3_MIN 50000\n';
+ const file='THR_MAX 95\nBARO1_WCF_BCK 1\nCAN_P1_BITRATE 250000\nSERVO3_MIN 70000\n';
  const result=core.parseParamText(file,live,{CAN_P1_BITRATE:{ReadOnly:true}});
  assert.equal(result.valid,true);
  assert.deepEqual(result.changes,[['THR_MAX',95]]);
