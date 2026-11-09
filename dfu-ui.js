@@ -12,7 +12,7 @@
   const tr=key=>(T[window.AtlasLanguage?.()||'ru']||T.ru)[key]||key;
   let current=null, image=null, fileInfo=null, busy=false, lastPhase='', usbSupported=!!(navigator.usb&&window.isSecureContext);
    window.AtlasDfuUi=Object.freeze({isBusy:()=>busy});
-  function selectedBoard(){return window.AtlasSelectedBoard?.()||'cube-orange';}
+  function selectedBoard(){return window.AtlasSelectedBoard?.()||'cube-orange-plus';}
   function log(message,kind='info'){
     const box=$('dfuLog'),row=document.createElement('div');row.className='dfu-log-line'+(kind==='error'?' error':'');const tm=document.createElement('time');tm.textContent=new Date().toLocaleTimeString('en-GB',{hour12:false});const txt=document.createElement('span');txt.textContent=message;row.append(tm,txt);box.prepend(row);while(box.children.length>70)box.lastChild.remove();
   }
