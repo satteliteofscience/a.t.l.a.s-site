@@ -108,7 +108,29 @@ async function runIntegration(){
   const reply=new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('UDP roundtrip timeout')),5000);peer.once('message',data=>{clearTimeout(timeout);resolve(data);});});
   client.send(2,outgoing);
   assert.deepEqual(await reply,outgoing,'WebSocket MAVLink bytes should reach UDP peer');
-  console.log('PASS: authenticated local bridge, live UDP RX/TX, parameter and analog battery checks');
+  // Reconfigure through new authenticated sessions: UDP target and TCP client.
+  client.close();client=null;await new Promise(resolve=>setTimeout(resolve,120));
+  const udpTarget=dgram.createSocket('udp4');
+  await new Promise(resolve=>udpTarget.bind(0,'127.0.0.1',resolve));
+  try{
+   udpTarget.on('message',(bytes,rinfo)=>udpTarget.send(bytes,rinfo.port,rinfo.address));
+   client=await webSocket(wsPort,token);
+   client.send(1,JSON.stringify({mode:'udp-target',host:'127.0.0.1',port:udpTarget.address().port}));
+   assert.equal(JSON.parse((await client.wait(x=>x.opcode===1)).payload.toString()).type,'ready');
+   client.send(2,Buffer.from([11,22,33]));
+   assert.deepEqual((await client.wait(x=>x.opcode===2)).payload,Buffer.from([11,22,33]),'UDP target must pass MAVLink both ways');
+  }finally{client?.close();client=null;udpTarget.close();}
+  await new Promise(resolve=>setTimeout(resolve,120));
+  const tcpServer=net.createServer(socket=>socket.on('data',data=>socket.write(data)));
+  await new Promise(resolve=>tcpServer.listen(0,'127.0.0.1',resolve));
+  try{
+   client=await webSocket(wsPort,token);
+   client.send(1,JSON.stringify({mode:'tcp-client',host:'127.0.0.1',port:tcpServer.address().port}));
+   assert.equal(JSON.parse((await client.wait(x=>x.opcode===1)).payload.toString()).type,'ready');
+   client.send(2,Buffer.from([0xfd,0xab,0x03]));
+   assert.deepEqual((await client.wait(x=>x.opcode===2)).payload,Buffer.from([0xfd,0xab,0x03]),'TCP client must pass MAVLink both ways');
+  }finally{client?.close();client=null;tcpServer.close();}
+  console.log('PASS: authenticated bridge, UDP listen, UDP target, TCP client, full imports and battery math');
  }finally{
   client?.close();peer.close();child.kill('SIGTERM');
  }
