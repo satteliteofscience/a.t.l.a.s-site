@@ -20,7 +20,7 @@ assert.match(wizard,/api\.writeAdvancedParams\(updates/,'custom parameter file m
 assert.match(wizard,/api\.requestParameters\(\)/,'parameter verification must use live parameter readback');
 assert.match(wizard,/qs\.rebootSawDisconnect/,'custom parameter flow must require controller disconnect/reconnect');
 assert.match(wizard,/!api\.requestParameters\(true\)/,'readback must request a new full parameter transfer');
-assert.match(wizard,/qs\.previewBoard!==s\.selectedBoard/,'profile preview must belong to the selected board');
+assert.match(core,/qs\.previewBoard!==s\?\.selectedBoard/,'profile preview must belong to the selected board');
 assert.match(wizard,/dfuPanel\)dock\.append\(dfuPanel\)/,'DFU panel must live inside firmware step');
 assert.match(wizard,/restoreDfuPanel\(\)/,'DFU panel must be restored on exiting wizard');
 assert.match(wizard,/t\('usbConnect'\)/,'wizard must provide inline USB connection');
