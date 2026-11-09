@@ -52,7 +52,7 @@ assert.doesNotMatch(wizard,/qs\.previewBoard===s\.selectedBoard&&qs\.backupDownl
 assert.match(wizard,/qsWriteGate/,'disabled Write button must have an actionable reason');
 assert.ok(wizard.includes("safety:[false,false,false,false,false,false]"),'preflash safety checks must include backup confirmation');
 const safetyBody=wizard.slice(wizard.indexOf('function renderSafety(box){'),wizard.indexOf('const dfuPanel='));
-assert.doesNotMatch(safetyBody,/api\.connectUsb\(|loadParams|downloadBackup|preflashBackup/,'safety step must contain only its acknowledgement checklist and warning');
+assert.doesNotMatch(safetyBody,/api\.connectUsb\(|loadParams|downloadBackup|button\(actions/,'safety step must contain only its acknowledgement checklist and warning');
 assert.match(wizard,/button\(actions,t\('backup'\)/,'backup must remain available at the parameter step');
 assert.match(wizard,/preflashBackupHint/,'pre-flash backup warning must remain present');
 assert.ok(wizard.includes("'# Board not verified: '"),'backup must not falsely claim a verified board identity');
