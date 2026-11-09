@@ -17,6 +17,23 @@
       "source_url": "",
       "secure_id": "matek-h743-v3-release-1",
       "channel": "release"
+    },
+    {
+      "id": "44b3c68b52ee75bf",
+      "board_id": "cube-orange-plus",
+      "filename": "ATLAS-Cube-Orange-Plus-release-1.hex",
+      "bytes": 5102076,
+      "image_bytes": 1855124,
+      "address_start": "0x08000000",
+      "address_end_exclusive": "0x081C4E94",
+      "sha256": "44b3c68b52ee75bf8de808275a43aafcbea0b076492f0b200052bb6dc7b427f6",
+      "timestamp": 1794242098,
+      "version": "1.0",
+      "label": "A.T.L.A.S. Release 1.0 · ArduPlane 4.7.2 · Cube Orange Plus",
+      "source_url": "",
+      "source_verified": false,
+      "secure_id": "cube-orange-plus-release-1",
+      "channel": "release"
     }
   ]
 }

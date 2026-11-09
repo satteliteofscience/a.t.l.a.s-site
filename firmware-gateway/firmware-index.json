@@ -6,6 +6,12 @@
       "object_key": "release/matek-h743-v3-release-1.hex",
       "filename": "ATLAS-Matek-H743-V3-release-1.hex",
       "sha256": "db18bb8cda5805508a4834ee40388c8f493ceaa4498a3c778d37c600b24bcda9"
+    },
+    "cube-orange-plus-release-1": {
+      "channel": "release",
+      "object_key": "release/cube-orange-plus-release-1.hex",
+      "filename": "ATLAS-Cube-Orange-Plus-release-1.hex",
+      "sha256": "44b3c68b52ee75bf8de808275a43aafcbea0b076492f0b200052bb6dc7b427f6"
     }
   }
 }
