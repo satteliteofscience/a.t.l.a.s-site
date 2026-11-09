@@ -36,6 +36,20 @@
       "target_en": "CubeOrangePlus — STM32H757"
     },
     {
+      "id": "uni-ic743-mini",
+      "name": "Uni-IC743 Mini",
+      "family": "Custom / Uni-IC743 Mini",
+      "description": "A.T.L.A.S. ArduPlane 4.7.2 для кастомного Uni-IC743 Mini (STM32H743). Подтверждены формат Intel HEX и строка цели Uni_IC743Mini. Запись через STM32 ROM DFU доступна локально в экспериментальном режиме, без проверки на физической плате. Защищённый релиз появится после загрузки HEX в R2.",
+      "status": "planned",
+      "target": "Uni_IC743Mini — STM32H743",
+      "version": "1.0",
+      "downloads": [],
+      "description_uk": "A.T.L.A.S. ArduPlane 4.7.2 для кастомного Uni-IC743 Mini (STM32H743). Перевірено формат Intel HEX і рядок цілі Uni_IC743Mini. Локальний запис через STM32 ROM DFU доступний в експериментальному режимі; фізичні випробування ще не підтверджені. Захищений реліз з’явиться після завантаження HEX у R2.",
+      "description_en": "A.T.L.A.S. ArduPlane 4.7.2 for the custom Uni-IC743 Mini (STM32H743). Intel HEX structure and Uni_IC743Mini target marker verified. Local STM32 ROM DFU flashing is experimental and not hardware-validated. Protected release download will activate after R2 upload.",
+      "target_uk": "Uni_IC743Mini — STM32H743",
+      "target_en": "Uni_IC743Mini — STM32H743"
+    },
+    {
       "id": "matek-h743-wing-v3",
       "name": "Matek H743-WING V3",
       "family": "Matek Systems / H743",
