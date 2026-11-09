@@ -98,6 +98,18 @@ function escParams({mask=0,otype=0,channels=[3],can=false}={}){
  assert.equal(core.classifyEscFromProfile(live,'','matek-h743-wing-v3').kind,'pwm');
  assert.equal(core.readEscProfile('THR_MAX 100\nSERVO_BLH_MASK 4\n').has('THR_MAX'),false,'only ESC-relevant keys may override assessment');
 })();
+(function testPostCompassCalibrationEvidenceAcrossInstances(){
+ const now=Date.now(),healthy={present:true,healthy:true,lastSeen:now};
+ const before=params([['COMPASS_OFS_X',2],['COMPASS_OFS_Y',3],['COMPASS_OFS_Z',4],['COMPASS_OFS2_X',10],['COMPASS_OFS2_Y',12],['COMPASS_OFS2_Z',13]]);
+ const after=params([['COMPASS_OFS_X',2],['COMPASS_OFS_Y',3],['COMPASS_OFS_Z',4],['COMPASS_OFS2_X',22],['COMPASS_OFS2_Y',14],['COMPASS_OFS2_Z',13]]);
+ const baseline=core.snapshotCompassOffsets(before);
+ const result=core.assessPostCompassCalibration(baseline,after,healthy,now);
+ assert.equal(result.kind,'evidence','second/external compass offset updates must be detected');
+ assert.ok(result.changed.includes('COMPASS_OFS2_X'));
+ assert.equal(core.assessPostCompassCalibration(baseline,before,healthy,now).kind,'unverified','unchanged offsets do not prove new calibration');
+ assert.equal(core.assessPostCompassCalibration(baseline,after,{present:true,healthy:false,lastSeen:now},now).kind,'unverified','unhealthy compass does not prove success');
+ assert.equal(core.assessPostCompassCalibration(baseline,after,{present:true,healthy:true,lastSeen:now-6000},now).kind,'unverified','stale sensor status is not evidence');
+})();
 (function testCompassAndCompletionGates(){
  const now=Date.now(),enabled=params([['COMPASS_USE',1,6],['COMPASS_USE2',0,6]]);
  assert.equal(core.detectCompass(enabled).kind,'unknown','enable setting does not prove hardware is present');

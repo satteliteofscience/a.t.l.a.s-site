@@ -4,6 +4,7 @@ const fs=require('node:fs');
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('configurator.html'),css=read('configurator.css'),cfg=read('configurator.js');
 const core=read('quick-setup-core.js'),wizard=read('quick-setup.js'),cal=read('calibration.js'),dfu=read('dfu-ui.js');
+const vm=require('node:vm');
 assert.match(html,/data-tab="quicksetup"/,'Quick Setup navigation entry missing');
 assert.match(html,/data-panel="quicksetup"/,'Quick Setup panel missing');
 assert.match(html,/<script src="dfu-ui\.js" defer><\/script><script src="quick-setup-core\.js" defer><\/script><script src="quick-setup\.js" defer>/,'Quick Setup scripts must load after DFU and calibration modules');
@@ -99,4 +100,35 @@ assert.match(wizard,/delete qs\.completed\[9\];persist\(\);render\(\)/,'final co
 const finalStage=wizard.slice(wizard.indexOf('function renderFinal(box){'),wizard.indexOf('function render(){'));
 assert.doesNotMatch(finalStage,/finalChecks\.every|t\('finalChecks'\)/,'final stage should be compact instead of a second lengthy checklist');
 assert.match(css,/@media\(max-width:560px\)\{\.qs-step-list/,'mobile wizard layout missing');
-console.log('PASS: Quick Setup navigation, API gates, DFU/calibration events, parameter ACK/readback, ESC protocol branches, safety limits, localization and responsive UI.');
+// Decode real MAVLink2 frames with legal zero-truncated VFR_HUD payloads.
+(function testVfrHudZeroTruncationAndStreamFallback(){
+ const context={window:{},TextEncoder,TextDecoder,Uint8Array,DataView,console};
+ vm.runInNewContext(read('mavlink.js'),context,{filename:'mavlink.js'});
+ const mav=context.window.AtlasMAV,packets=[],parser=new mav.Parser(frame=>packets.push(mav.parseMessage(frame)));
+ const full=new Uint8Array(20),view=new DataView(full.buffer);
+ view.setFloat32(0,12.5,true);view.setInt16(16,14,true); // throttle and trailing bytes are zero
+ const trimmed=full.subarray(0,17); // MAVLink2 removes zero-filled tail, including throttle
+ parser.push(mav.createFrame(74,trimmed));
+ assert.equal(packets.length,1);
+ assert.equal(packets[0].type,'vfr');
+ assert.equal(packets[0].airspeed,12.5);
+ assert.equal(packets[0].heading,14);
+ assert.equal(packets[0].throttle,0);
+ parser.push(mav.createFrame(74,Uint8Array.of(0))); // aircraft stationary: all fields zero
+ assert.equal(packets.length,2);
+ assert.equal(packets[1].airspeed,0,'zero is real telemetry, not absent data');
+ const request=mav.requestDataStream(1,1,11,3);
+ assert.deepEqual(Array.from(request),[3,0,1,1,11,1],'EXTRA2/3Hz legacy fallback packet layout');
+})();
+assert.match(cfg,/vfrFallbackSent/,'airspeed should request EXTRA2 when VFR_HUD does not arrive');
+assert.match(cfg,/data\.airspeed\*3\.6/,'VFR_HUD airspeed must be converted from m\/s to km\/h');
+assert.match(cfg,/state\.lastVfr=Date\.now\(\)/,'speed display should only claim live values after a real VFR_HUD frame');
+assert.match(cal,/void releaseCompassUsb\('MAV_CMD_DO_START_MAG_CAL ack '/,'automatic USB release must wait for successful calibration ACK');
+assert.match(cal,/d\.result===0\|\|d\.result===5/,'only an accepted or in-progress ACK may trigger automatic release');
+assert.match(cal,/api\.connectUsb\(\)/,'automatic release must use existing WebSerial disconnect');
+assert.match(wizard,/startCalibration\('compass',true\)/,'wizard must offer battery-powered auto-release calibration');
+assert.match(wizard,/startCalibration\('compass',false\)/,'wizard must preserve wired calibration');
+assert.match(wizard,/compassUsbPowerWarning/,'wizard must explain that software disconnect does not cut USB 5V');
+assert.match(wizard,/verifyCompassBatteryResult/,'quick setup must check post-reboot compass offsets');
+assert.match(wizard,/assessPostCompassCalibration\(qs\.compassBefore/,'post-reboot evidence should compare pre/post offsets, not claim MAG_CAL_REPORT success');
+console.log('PASS: Quick Setup navigation, API gates, DFU/calibration events, zero-trimmed VFR_HUD, battery compass and post-reboot evidence checks.');

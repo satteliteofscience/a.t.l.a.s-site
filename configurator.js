@@ -37,7 +37,7 @@ function parameterCategory(name){
 
 let lang='ru';try{let saved=localStorage.getItem('atlas-language');if(words[saved])lang=saved;}catch{}
 const tr=(k)=>words[lang]?.[k]||words.ru[k]||k;
-const state={demo:false,connected:false,connecting:false,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
+const state={demo:false,connected:false,connecting:false,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,selectedBoard:'cube-orange',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
 window.AtlasLanguage=()=>lang;
 window.AtlasSelectedBoard=()=>state.selectedBoard;
 const settingDefs=[
@@ -154,7 +154,9 @@ function updateTelemetryUI(){const t=state.telemetry;
  $('rollReadout').textContent=Number.isFinite(t.roll)?`${t.roll>=0?'+':''}${cleanNum(t.roll,1)}°`:'--.-°';
  $('pitchReadout').textContent=Number.isFinite(t.pitch)?`${t.pitch>=0?'+':''}${cleanNum(t.pitch,1)}°`:'--.-°';
  $('yawReadout').textContent=Number.isFinite(t.yaw)?`${cleanNum((t.yaw+360)%360,1)}°`:'---.-°';
- $('speedReadout').innerHTML=Number.isFinite(t.airspeed)?`${Math.round(t.airspeed)} <em>km/h</em>`:'--- <em>km/h</em>';
+ const freshAirspeed=state.demo||(Number.isFinite(state.lastVfr)&&Date.now()-state.lastVfr<6500);
+ $('speedReadout').innerHTML=freshAirspeed&&Number.isFinite(t.airspeed)&&t.airspeed>=0?`${Math.round(t.airspeed)} <em>km/h</em>`:'--- <em>km/h</em>';
+ $('speedReadout').title=freshAirspeed?'MAVLink VFR_HUD · воздушная скорость по данным автопилота':'Нет свежего VFR_HUD · проверь отправку телеметрии и работу датчика Пито';
  $('voltageReadout').textContent=Number.isFinite(t.voltage)?`${cleanNum(t.voltage,2)} V`:'—';
  $('altReadout').textContent=Number.isFinite(t.altitude)?`${cleanNum(t.altitude,1)} m`:'—';
  $('vehicleModel').textContent=state.demo?'SIM / ArduPlane':state.connected?`MAVLink SYS ${state.sysid??'?'}`:'—';
@@ -179,7 +181,7 @@ async function disconnect(){state.bulkCancel=true;stopParamRepair();state.paramT
  try{if(reader)await reader.cancel();}catch{}
  try{if(reader)reader.releaseLock();}catch{}
  const port=state.port;state.port=null;try{if(port)await port.close();}catch(e){console.warn(e);}
- state.connected=false;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.armed=null;state.mode=null;state.params.clear();state.paramCount=null;state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramLoading=false;
+ state.connected=false;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.lastVfr=0;state.vfrFallbackSent=false;state.armed=null;state.mode=null;state.params.clear();state.paramCount=null;state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramLoading=false;
  if(state.writeWait){clearTimeout(state.writeWait.timer);state.writeWait.reject(Error('Connection closed'));state.writeWait=null;}
  updateConnectionUI();renderBasic();renderParams();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));toast('USB disconnected');}
 async function transmit(messageId,payload){if(!state.port||!state.connected)throw Error(tr('needlink'));
@@ -196,9 +198,9 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
  if(data.type==='ack')state.rxAcks=(state.rxAcks||0)+1;
  if(data.type==='text')state.rxTexts=(state.rxTexts||0)+1;
  if(data.type==='heartbeat' && data.compid===1){const first=state.sysid===null;state.sysid=data.sysid;state.compid=data.compid;state.lastHeartbeat=Date.now();state.armed=data.armed;state.mode=data.mode;
-   if(first){toast(`MAVLink HEARTBEAT · sys=${state.sysid} comp=${state.compid}`);requestStreams();updateConnectionUI();startParamLoad();window.dispatchEvent(new Event('atlas:state'));}
+   if(first){state.streamStart=Date.now();toast(`MAVLink HEARTBEAT · sys=${state.sysid} comp=${state.compid}`);requestStreams();updateConnectionUI();startParamLoad();window.dispatchEvent(new Event('atlas:state'));}
  }else if(data.type==='attitude'){state.telemetry.roll=data.roll*180/Math.PI;state.telemetry.pitch=data.pitch*180/Math.PI;state.telemetry.yaw=data.yaw*180/Math.PI;state.lastAttitude=Date.now();}
- else if(data.type==='vfr'){state.telemetry.airspeed=data.airspeed*3.6;state.telemetry.altitude=data.altitude;state.telemetry.throttle=data.throttle;}
+ else if(data.type==='vfr'&&message.sysid===state.sysid){state.lastVfr=Date.now();state.telemetry.airspeed=Number.isFinite(data.airspeed)&&data.airspeed>=0?data.airspeed*3.6:null;state.telemetry.altitude=data.altitude;state.telemetry.throttle=data.throttle;}
  else if(data.type==='sys'){state.telemetry.voltage=data.voltage===65535?null:data.voltage/1000;if(message.sysid===state.sysid&&message.compid===state.compid){const magBit=4;state.compassStatus={present:!!(data.sensorsPresent&magBit),enabled:!!(data.sensorsEnabled&magBit),healthy:!!(data.sensorsHealthy&magBit),lastSeen:Date.now()};}}
  else if(data.type==='text'){if(data.text && data.severity<=5)toast(`FC: ${data.text}`,data.severity<=3);}
  else if(data.type==='param'){
@@ -233,11 +235,21 @@ async function connect(){if(state.connected){await disconnect();return;}
  try{
   const port=await navigator.serial.requestPort();
   await port.open({baudRate:Number($('baud').value),bufferSize:8192});
-  state.port=port;state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.mode=null;
+  state.port=port;state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
   updateConnectionUI();log('USB CDC open · '+$('baud').value+' bps');
   const parser=new M.Parser(handleMessage);state.rxParser=parser;
   state.rxPositions=0;state.rxCommands=0;state.rxAcks=0;state.rxTexts=0;
-  state.streamTimer=setInterval(()=>{if(state.connected){transmit(0,M.heartbeat()).catch(()=>{});if(state.sysid&&Date.now()-state.lastHeartbeat>7000){$('connectionLabel').textContent='MAVLINK TIMEOUT';}}},1000);
+  state.streamTimer=setInterval(()=>{
+    if(!state.connected)return;
+    transmit(0,M.heartbeat()).catch(()=>{});
+    if(state.sysid!==null&&Date.now()-state.lastHeartbeat>7000)$('connectionLabel').textContent='MAVLINK TIMEOUT';
+    // Some custom ArduPlane builds do not honor SET_MESSAGE_INTERVAL(74). One legacy
+    // EXTRA2 stream request is allowed per connection, only when VFR_HUD never arrived.
+    if(state.sysid!==null&&!state.vfrFallbackSent&&state.streamStart>0&&state.lastVfr===0&&Date.now()-state.streamStart>7000&&Date.now()-state.lastHeartbeat<4000){
+      state.vfrFallbackSent=true;
+      transmit(66,M.requestDataStream(state.sysid,state.compid,11,3)).catch(err=>log('VFR_HUD fallback: '+err.message));
+    }
+   },1000);
   transmit(0,M.heartbeat()).catch(()=>{});
   // Avoid blocking the UI by running the receive loop as an async task.
   (async()=>{try{while(state.rxActive&&state.port){const reader=state.port.readable.getReader();state.reader=reader;try{while(state.rxActive){const {value,done}=await reader.read();if(done)break;if(value)parser.push(value);}}finally{reader.releaseLock();state.reader=null;}}}catch(err){if(state.rxActive)toast('USB RX: '+err.message,true);}finally{if(state.rxActive)disconnect().catch(console.error);}})();

@@ -3,7 +3,7 @@
    No auto-arming, motor output or firmware-writing commands are implemented. */
 (() => {
   'use strict';
-  const CRC_EXTRA = Object.freeze({0:50,1:124,20:214,21:159,22:220,23:168,30:39,74:20,76:152,77:143,36:222,65:118,110:84,147:154,191:92,192:36,253:83});
+  const CRC_EXTRA = Object.freeze({0:50,1:124,20:214,21:159,22:220,23:168,30:39,66:148,74:20,76:152,77:143,36:222,65:118,110:84,147:154,191:92,192:36,253:83});
   const enc = new TextEncoder();
   const decoder = new TextDecoder('ascii');
   function crcX25(data, extra) {
@@ -57,6 +57,11 @@
   function putName(target,offset,name) { const chars=enc.encode(name.slice(0,16));target.set(chars,offset); }
   function heartbeat() {const b=new Uint8Array(9);const v=view(b);v.setUint32(0,0,true);b.set([6,8,0,4,3],4);return b;}
   function paramList(sysid,compid) {return Uint8Array.of(sysid,compid);}
+  // Legacy stream-group fallback for flight controllers not honoring SET_MESSAGE_INTERVAL.
+  function requestDataStream(sysid,compid,streamId,rateHz) {
+    if(!Number.isInteger(streamId)||streamId<0||streamId>12||!Number.isInteger(rateHz)||rateHz<1||rateHz>25)throw Error('Invalid MAVLink stream request');
+    const b=new Uint8Array(6);view(b).setUint16(0,rateHz,true);b[2]=sysid;b[3]=compid;b[4]=streamId;b[5]=1;return b;
+  }
   function paramRead(sysid,compid,name) {const b=new Uint8Array(20);const v=view(b);v.setInt16(0,-1,true);b[2]=sysid;b[3]=compid;putName(b,4,name);return b;}
   // A PARAM_REQUEST_LIST is a stream, not a reliable transaction. Re-request lost entries
   // individually by their 0-based index according to the MAVLink PARAM protocol.
@@ -73,7 +78,9 @@
     const v=view(frame.payload),id=frame.id;
     if(id===0 && v.byteLength>=9) return {type:'heartbeat',sysid:frame.sysid,compid:frame.compid,mode:v.getUint32(0,true),vehicleType:v.getUint8(4),autopilot:v.getUint8(5),baseMode:v.getUint8(6),systemStatus:v.getUint8(7),armed:!!(v.getUint8(6)&128)};
     if(id===30 && v.byteLength>=28) return {type:'attitude',roll:v.getFloat32(4,true),pitch:v.getFloat32(8,true),yaw:v.getFloat32(12,true)};
-    if(id===74 && v.byteLength>=20) return {type:'vfr',airspeed:v.getFloat32(0,true),groundspeed:v.getFloat32(4,true),altitude:v.getFloat32(8,true),climb:v.getFloat32(12,true),heading:v.getInt16(16,true),throttle:v.getUint16(18,true)};
+    // MAVLink 2 strips trailing zero bytes. With throttle=0, VFR_HUD can be shorter than 20 bytes;
+    // this is normal at rest, and missing bytes represent zero, not missing telemetry.
+    if(id===74 && v.byteLength>=1){const bytes=new Uint8Array(20);bytes.set(frame.payload.subarray(0,20));const hud=view(bytes);return {type:'vfr',airspeed:hud.getFloat32(0,true),groundspeed:hud.getFloat32(4,true),altitude:hud.getFloat32(8,true),climb:hud.getFloat32(12,true),heading:hud.getInt16(16,true),throttle:hud.getUint16(18,true)};}
     if(id===1 && v.byteLength>=19) return {type:'sys',sensorsPresent:v.getUint32(0,true),sensorsEnabled:v.getUint32(4,true),sensorsHealthy:v.getUint32(8,true),voltage:v.getUint16(14,true),remaining:v.getInt8(18)};
     if(id===22 && v.byteLength>=25) return {type:'param',value:v.getFloat32(0,true),count:v.getUint16(4,true),index:v.getUint16(6,true),name:ascii16(frame.payload.slice(8,24)),paramType:v.getUint8(24)};
     // MAVLink 2 trims trailing zero bytes. COMMAND_LONG sent to target 0/0 with confirmation 0
@@ -91,5 +98,5 @@
     return null;
   }
   function ftpFrame(sysid,compid,header){const payload=new Uint8Array(254);payload[0]=0;payload[1]=sysid;payload[2]=compid;payload.set(header.slice(0,251),3);return payload;}
-  window.AtlasMAV={ftpFrame,Parser,createFrame,parseMessage,heartbeat,paramList,paramRead,paramReadByIndex,paramSet,commandLong,crcX25};
+  window.AtlasMAV={ftpFrame,Parser,createFrame,parseMessage,heartbeat,paramList,requestDataStream,paramRead,paramReadByIndex,paramSet,commandLong,crcX25};
 })();
