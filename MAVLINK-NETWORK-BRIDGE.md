@@ -2,7 +2,23 @@
 
 The public A.T.L.A.S. site is hosted by GitHub Pages. **A browser cannot directly open raw UDP/TCP sockets**. This optional, user-run local helper securely exposes MAVLink as WebSocket frames to the browser. It needs Node.js 20+ and no npm dependencies.
 
-## Run
+## Windows: one click for TCP 127.0.0.1:5760 (recommended)
+
+The default setup matches a local TCP station used by Mission Planner.
+
+1. Open the [A.T.L.A.S. Configurator](https://satteliteofscience.github.io/a.t.l.a.s-site/configurator.html), expand **TCP / UDP · connections** and choose **Download TCP Connector for Windows**. This downloads just one file: `A.T.L.A.S.-TCP-Connector.cmd`.
+2. Double-click that file. No administrator rights, command line, token copying or manual Node.js installation are required.
+3. The connector checks for a compatible installed Node.js. If none is found, it **downloads a pinned portable Node.js 24.22.2 executable from nodejs.org**, verifies the official SHA-256 checksum, and stores it in the current user's LocalAppData folder. It also downloads the pinned bridge source from an immutable GitHub commit and validates its Git blob hash. Nothing is installed system-wide.
+4. The connector starts the bridge on `127.0.0.1:8765` with a random session token and opens the official configurator. The token is passed through a URL fragment (not sent to GitHub Pages) and immediately removed from the browser address bar; the configurator automatically chooses **TCP Client · 127.0.0.1:5760** and connects.
+5. If Chrome asks for permission to access a local device/network, **allow it**. Wait for a **real MAVLink heartbeat** and a parameter list, not merely the message that the WebSocket bridge is ready. Keep the Windows connector console window open while using the site.
+
+**Important:** The station must already be serving TCP on 127.0.0.1:5760. Some stations support only one TCP client at a time; close the Mission Planner connection before starting A.T.L.A.S. If the port is not reachable, the page reports the error without claiming the flight controller is online.
+
+The first launch needs internet access to download the helper components. Subsequent launches use verified cached files. Windows Defender SmartScreen may warn about an unfamiliar downloaded script; review the source before running it. Close the console to stop the local bridge. The installer does not ask for admin access.
+
+For other TCP addresses, UDP telemetry, or Linux/macOS, use the advanced manual setup below.
+
+## Manual setup
 
 1. Download the project code (or at least \`tools/mavlink-bridge.cjs\`) and install Node.js 20 or later.
 2. Open a terminal at the project root and run:
