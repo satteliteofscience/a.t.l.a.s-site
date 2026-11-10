@@ -143,15 +143,20 @@ function showProgress(){
  $('paramCount').textContent=`${known} / ${total??'?'}`;
  const note=$('paramLoadNote');if(!note)return;$('refreshParamsBtn').textContent=x?.phase==='partial'?tr('resumeLoad'):tr('load');
  const status=x?.phase||'idle';
- if(status==='ftp'){const kb=((x.bytes||0)/1024).toFixed(1);note.textContent=`MAVFTP BURST · ${kb} kB · @PARAM/param.pck`; $('paramProgressLabel').textContent=`MAVFTP · ${kb} kB`; $('paramCount').textContent='MAVFTP';return;}
+ if(status==='ftp'){
+   const kb=((x.bytes||0)/1024).toFixed(1),stage=x.ftpStage||'OPEN';
+   note.textContent=`MAVFTP ${stage} · ${kb} kB received`;
+   $('paramProgressLabel').textContent=`MAVFTP · ${kb} kB`;
+   $('paramCount').textContent='MAVFTP';return;
+  }
  note.classList.toggle('is-warning',status==='partial'||status==='noReply');
  if(!x){note.textContent=pl('idle');return;}
- if(status==='complete'){note.textContent=`✓ ${pl('done')} · ${known}/${total}${x.reader?' · '+x.reader:''}`;return;}
+ if(status==='complete'){note.textContent=`✓ ${pl('done')} · ${known}/${total}${x.reader?' · '+x.reader:''}${x.ftpBurstError?' · Burst→READ: '+x.ftpBurstError:''}`;return;}
  if(status==='partial'){note.textContent=`⚠ ${pl('partial')} · ${known}/${total} · missing ${Math.max(0,total-known)}`;return;}
  if(status==='noReply'){note.textContent=`⚠ ${pl('noReply')}`;return;}
  if(status==='retry'){note.textContent=pl('retry');return;}
  if(total&&x.phase==='repair'){note.textContent=`${pl('repair')} · ${Math.max(0,total-known)} missing · ${x.requests} requests`;return;}
- note.textContent=total?`${pl('receiving')} · ${percent}%${x.reader?' · '+x.reader:''}` : pl('waiting');
+ note.textContent=total?`${pl('receiving')} · ${percent}%${x.reader?' · '+x.reader:''}${x.ftpError?' · FTP: '+x.ftpError:''}` : pl('waiting');
 }
 function stopParamRepair(){if(state.paramRepairTimer){clearInterval(state.paramRepairTimer);state.paramRepairTimer=null;}}
 function finishParamTransfer(complete){
@@ -300,7 +305,10 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
   state.params.set(data.name,{value:data.value,type:data.paramType,index:data.index});
   if(data.count>0&&data.count<=32767)state.paramCount=data.count;
   const transfer=state.paramTransfer;
-  if(transfer&&state.paramLoading){
+  // Unsolicited PARAM_VALUE must not steal the active FTP phase or finish
+  // its transfer prematurely via a competing legacy parameter stream.
+  const ftpActive=transfer?.phase==='ftp';
+  if(transfer&&state.paramLoading&&!ftpActive){
     const idx=data.index;
     if(Number.isInteger(idx)&&idx>=0&&idx<state.paramCount){
       if(!transfer.seen.has(idx))transfer.lastNew=Date.now();
@@ -313,7 +321,7 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
    const tolerance=Math.max(0.00001,Math.abs(w.value)*1e-5);
    if(Math.abs(data.value-w.value)<=tolerance){clearTimeout(w.timer);state.writeWait=null;w.resolve(data.value);}
   }
-  if(state.paramLoading && state.paramCount>0 && transfer&&transfer.seen.size>=state.paramCount){finishParamTransfer(true);}
+  if(state.paramLoading && state.paramCount>0 && transfer&&!ftpActive&&transfer.seen.size>=state.paramCount){finishParamTransfer(true);}
   scheduleParameterRerender();
  }
  window.dispatchEvent(new CustomEvent('atlas:message',{detail:{...data,sourceSysid:message.sysid,sourceCompid:message.compid}}));
@@ -473,6 +481,12 @@ function startFastParamStream(transfer){
  transfer.phase='ftp';transfer.reader='MAVFTP BURST';transfer.bytes=0;showProgress();
  const client=new window.AtlasMavFtpParams.Client({
   preferBurst:true,
+  onStage:(stage,reason)=>{
+   if(state.paramTransfer!==transfer||!state.paramLoading)return;
+   transfer.ftpStage=stage;
+   if(stage==='BURST-FAILED')transfer.ftpBurstError=reason||'unknown';
+   showProgress();
+  },
   send:packet=>transmit(110,M.ftpFrame(state.sysid,state.compid,packet)),
   onProgress:bytes=>{
    if(state.paramTransfer!==transfer||!state.paramLoading)return;
@@ -480,17 +494,20 @@ function startFastParamStream(transfer){
   }
  });
  state.ftpClient=client;
+ toast('MAVFTP · OPEN @PARAM/param.pck · BurstReadFile attempt');
  void client.download().then(rows=>{
   if(state.ftpClient!==client||state.paramTransfer!==transfer||!state.paramLoading||!state.connected)return;
   // Commit only fully decoded/validated sets. No partial list is presented as complete.
   state.params=new Map(rows.map(row=>[row.name,{value:row.value,type:row.type,index:row.index}]));
   state.paramCount=rows.length;transfer.seen=new Set(rows.map(row=>row.index));transfer.reader=client.lastMethod||'MAVFTP';
   transfer.lastNew=Date.now();state.ftpClient=null;
+  toast('MAVFTP success · '+transfer.reader+' · '+rows.length+' params'+(client.lastFallback?' · burst fallback: '+client.lastFallback:''));
   finishParamTransfer(true);
  }).catch(error=>{
   if(state.ftpClient!==client||state.paramTransfer!==transfer||!state.paramLoading||!state.connected)return;
   state.ftpClient=null;
-  toast('MAVFTP unavailable: '+error.message+' · PARAM_REQUEST_LIST fallback',true);
+  transfer.ftpError=error.message;
+  toast('MAVFTP failed · '+(transfer.ftpStage||'OPEN')+' · '+error.message+' · '+client.responses+' replies · PARAM_REQUEST_LIST fallback',true);
   startLegacyParamStream(transfer);
  });
  return true;
@@ -503,7 +520,7 @@ function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBu
  }
  state.ftpClient?.cancel();state.ftpClient=null;stopParamRepair();
  state.paramLoading=true;state.params.clear();state.paramCount=null;state.tableLimit=150;
- const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',reader:null,started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
+ const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',reader:null,ftpStage:null,ftpError:null,ftpBurstError:null,started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
  state.paramTransfer=transfer;renderParams();renderBasic();showProgress();
  if(!startFastParamStream(transfer))startLegacyParamStream(transfer);
  return true;
@@ -516,7 +533,7 @@ window.AtlasCC = Object.freeze({
   connectBridge:()=>connectBridge(),
   selectBoard:(id)=>{if(window.AtlasDfuUi?.isBusy()||!['matek-h743-wing-v3','cube-orange-plus','uni-ic743-mini'].includes(id))return false;state.selectedBoard=id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:id}}));return true;},
   navigate:(tab)=>navigate(tab),
-  diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,paramReader:state.paramTransfer?.reader||null,paramPhase:state.paramTransfer?.phase||'idle',positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
+  diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,paramReader:state.paramTransfer?.reader||null,paramPhase:state.paramTransfer?.phase||'idle',paramFtpStage:state.paramTransfer?.ftpStage||null,paramFtpError:state.paramTransfer?.ftpError||null,paramFtpBurstError:state.paramTransfer?.ftpBurstError||null,positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
   canCalibrate:()=>state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait,
   rebootController:()=>{
     if(!state.connected||state.demo||state.sysid===null||state.armed!==false||Date.now()-state.lastHeartbeat>=4000||state.writeWait||state.servoConfigBusy||state.paramLoading||state.bulk?.running)throw Error('Reboot blocked: live USB, DISARMED and idle writes required');
