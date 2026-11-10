@@ -70,7 +70,7 @@ function samplePacked(withDefaults=true){
  assert.equal(client.session,null);
  assert.deepEqual(items.map(x=>x.value),downloaded.map(x=>x.value));
  let failureClient,ftpAttempts=0;
- failureClient=new ftp.Client({timeoutMs:20,maxRetries:1,
+ failureClient=new ftp.Client({readSize:110,timeoutMs:20,maxRetries:1,
   send:async request=>{
    ftpAttempts++;
    const req={seq:new DataView(request.buffer,request.byteOffset,request.byteLength).getUint16(0,true),opcode:request[3],size:request[4],offset:new DataView(request.buffer,request.byteOffset,request.byteLength).getUint32(8,true),data:request.subarray(12)};
