@@ -65,13 +65,14 @@
   return out;
  }
  class Client{
-  constructor({send,onProgress,onStage,timeoutMs=6000,maxRetries=3,maxTimeMs=110000,preferBurst=false,burstIdleMs=900}){
+  constructor({send,onProgress,onStage,timeoutMs=6000,maxRetries=3,maxTimeMs=110000,preferBurst=false,burstIdleMs=900,readSize=CHUNK}){
    if(typeof send!=='function')throw Error('MAVFTP send callback required');
+    if(![CHUNK,160,220].includes(readSize))throw Error('Unsupported experimental MAVFTP read block size');
    this.send=send;this.onProgress=onProgress||(()=>{});this.onStage=onStage||(()=>{});this.timeoutMs=timeoutMs;
    // ArduPilot can silently stop a burst when link TX buffers fill.
    // A short burst-idle detector must not use the long ReadFile reply timeout.
    this.burstIdleMs=Math.max(20,Math.min(5000,burstIdleMs));this.pausedBursts=0;
-   this.maxRetries=maxRetries;this.maxTimeMs=maxTimeMs;this.seq=1;this.waiting=null;this.burst=null;this.closed=false;this.session=null;this.preferBurst=preferBurst;this.lastMethod=null;this.lastFallback=null;this.responses=0;this.burstFrames=0;this.burstReceivedBytes=0;this.lastProgressAt=0;this.stage='idle';this.lastBytes=0;this.lastDefaults=null;this.lastCompactError=null;this.lastDurationMs=0;
+   this.maxRetries=maxRetries;this.maxTimeMs=maxTimeMs;this.seq=1;this.waiting=null;this.burst=null;this.closed=false;this.session=null;this.preferBurst=preferBurst;this.lastMethod=null;this.lastFallback=null;this.responses=0;this.burstFrames=0;this.burstReceivedBytes=0;this.lastProgressAt=0;this.stage='idle';this.lastBytes=0;this.lastDefaults=null;this.lastCompactError=null;this.lastDurationMs=0;this.readSize=readSize;this.requestedReadSize=readSize;this.lastReadSize=null;this.lastSizeFallback=null;
   }
   handle(raw){
    const result=response(raw);
@@ -107,7 +108,7 @@
     // AP_Filesystem_Param returns a short ACK at the real end of the stream.
     // Like Mission Planner, use it as authoritative EOF; an additional EOF
     // NAK may never be forwarded through a telemetry bridge.
-    if(result.size<CHUNK)burst.finish(null,result.offset+result.size);
+    if(result.size<this.readSize)burst.finish(null,result.offset+result.size);
     else if(result.burstComplete)burst.finish(null,null);
     else burst.watchdog();
     return true;
@@ -174,7 +175,7 @@
      },this.burstIdleMs);
     };
     this.burst=burst;burst.watchdog();
-    Promise.resolve(this.send(packet(seq,15,session,offset,CHUNK))).catch(error=>burst.finish(error));
+    Promise.resolve(this.send(packet(seq,15,session,offset,this.readSize))).catch(error=>burst.finish(error));
    });
   }
   async readSequential(session,started){
@@ -184,16 +185,16 @@
     if(this.closed)throw Error('MAVFTP cancelled');
     if(Date.now()-started>this.maxTimeMs)throw Error('MAVFTP full read timeout · offset='+offset+' · replies='+this.responses+' · burstPauses='+this.pausedBursts);
     if(offset>MAX_BYTES)throw Error('Oversized MAVFTP parameter file');
-    const reply=await this.request(5,{session,offset,size:CHUNK});
+    const reply=await this.request(5,{session,offset,size:this.readSize});
     if(reply.opcode===129){
      if(reply.data[0]!==6)throw Error('MAVFTP read failed · offset='+offset+' · NAK '+reply.data[0]);
      break;
     }
-    if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP read block');
+    if(reply.size<1||reply.size>this.readSize)throw Error('Invalid MAVFTP read block');
     chunks.push(reply.data.slice());offset+=reply.size;this.onProgress(offset,'MAVFTP READ');
     // A short successful packed-file read is the last data block. The
     // estimated size from OpenFileRO must not be treated as exact.
-    if(reply.size<CHUNK)break;
+    if(reply.size<this.readSize)break;
    }
    return Client.joinChunks(chunks,offset);
   }
@@ -215,7 +216,7 @@
     const future=[...saved.keys()].some(k=>k>offset);
     const mergeBurst=batch=>{
      for(const [position,bytes] of batch.frames){
-      if(position<offset||position+bytes.length>MAX_BYTES||bytes.length>CHUNK)throw Error('Invalid MAVFTP burst offset/size');
+      if(position<offset||position+bytes.length>MAX_BYTES||bytes.length>this.readSize)throw Error('Invalid MAVFTP burst offset/size');
       const old=saved.get(position);
       if(old&&(old.length!==bytes.length||old.some((b,i)=>b!==bytes[i])))throw Error('Conflicting MAVFTP burst data');
       saved.set(position,bytes);
@@ -228,16 +229,16 @@
     if(future||eofOffset!==null){
      try{
       // Recover an isolated missing block first, using the same 110-byte size.
-      const reply=await this.request(5,{session,offset,size:CHUNK,retries:1});
+      const reply=await this.request(5,{session,offset,size:this.readSize,retries:1});
       if(reply.opcode===129){
        if(reply.data[0]!==6)throw Error('MAVFTP gap repair failed · offset='+offset+' · NAK '+reply.data[0]);
        eofOffset=offset;
       }else{
-       if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP gap block');
+       if(reply.size<1||reply.size>this.readSize)throw Error('Invalid MAVFTP gap block');
        saved.set(offset,reply.data.slice());
        // ReadFile gap repair can itself return the terminal short block.
        // Record its true end rather than waiting for another EOF NAK.
-       if(reply.size<CHUNK){
+       if(reply.size<this.readSize){
         const trueEnd=offset+reply.size;
         if(eofOffset!==null&&eofOffset!==trueEnd)throw Error('Conflicting MAVFTP short-read EOF');
         eofOffset=trueEnd;
@@ -317,24 +318,38 @@
   async download(){
    if(this.closed)throw Error('MAVFTP cancelled');
    const started=Date.now();
-   this.lastBytes=0;this.lastDefaults=null;this.lastCompactError=null;this.lastDurationMs=0;
+   this.lastBytes=0;this.lastDefaults=null;this.lastCompactError=null;this.lastSizeFallback=null;
+   this.lastDurationMs=0;this.lastReadSize=null;
+   const resetProgress=()=>{
+    this.lastMethod=null;this.lastFallback=null;
+    this.burstFrames=0;this.burstReceivedBytes=0;this.pausedBursts=0;this.lastProgressAt=0;
+    this.onProgress(0,'MAVFTP BURST');
+   };
    try{
-    let rows;
+    let rows,compactError=null;
     try{
-     // Request only parameter names, types and current values. The UI
-     // obtains displayed defaults from pdef metadata, not from this stream.
+     // Keep all verified parameter values/types exactly as before.
      rows=await this.downloadFile(0);
     }catch(error){
      if(this.closed)throw error;
-     this.lastCompactError=error.message;
-     this.onStage('COMPACT-FAILED',error.message);
-     this.onProgress(0,'MAVFTP BURST');
-     // Fully close the first FTP session before reopening the original
-     // known-good format. Both attempts are checked before any UI commit.
-     this.lastMethod=null;this.lastFallback=null;
-     this.burstFrames=0;this.burstReceivedBytes=0;this.pausedBursts=0;
-     rows=await this.downloadFile(1);
+     if(this.readSize!==CHUNK){
+      // Each read size is used in a fresh FTP session. On experimental
+      // failure, retry the proven compact 110-byte path before defaults=1.
+      this.lastSizeFallback=error.message;
+      this.onStage('SIZE-FAILED','block='+this.readSize+' · '+error.message);
+      this.readSize=CHUNK;resetProgress();
+      try{rows=await this.downloadFile(0);}
+      catch(stableError){compactError=stableError;}
+     }else compactError=error;
+     if(compactError){
+      if(this.closed)throw compactError;
+      this.lastCompactError=compactError.message;
+      this.onStage('COMPACT-FAILED',compactError.message);
+      resetProgress();
+      rows=await this.downloadFile(1);
+     }
     }
+    this.lastReadSize=this.readSize;
     this.lastDurationMs=Date.now()-started;
     return rows;
    }catch(error){
