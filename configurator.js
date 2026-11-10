@@ -19,6 +19,9 @@ Object.assign(words.uk,{
 Object.assign(words.en,{
  categoryAll:'All parameters',categoryCore:'System / board',categoryFlight:'Flight control',categorySpeed:'Airspeed and TECS',categoryNav:'Navigation / missions',categoryTakeoff:'Takeoff / landing',categorySensors:'Sensors / EKF',categoryServo:'RC and servo outputs',categoryPower:'Power / motors',categorySafety:'Failsafes / safety',categoryComms:'Telemetry / serial ports',categoryOther:'Other',categoryLabel:'Parameter categories',writeImported:'Write differences to controller',cancelBatch:'Stop writing',confirmBatch:'I reviewed the changes and saved a parameter backup',batchNote:'Writes all differing parameters that exist in the current vehicle parameter list. Unknown parameters are skipped and reported. DISARMED required.',batchEmpty:'No changes to write',batchStart:'Batch parameter write started',batchDone:'Write complete',batchStopped:'Write stopped',batchPartial:'Partially written — see report',batchNoLink:'Connect USB, load parameters and confirm backup',batchReadFirst:'Read vehicle parameters first',batchProgress:'Writing parameters',batchUnsupported:'Not available on this controller',batchFailed:'Could not write',batchSaved:'Confirmed',batchConsent:'Confirm review before writing',resumeLoad:'Fetch missing entries',servoTitle:'Servo Outputs',batteryTitle:'Battery Monitor',compassTitle:'Compass',
 });
+Object.assign(words.ru,{perfTime:'Время чтения',perfSpeed:'Скорость',perfBytes:'Передано',perfPauses:'Burst-паузы'});
+Object.assign(words.uk,{perfTime:'Час читання',perfSpeed:'Швидкість',perfBytes:'Передано',perfPauses:'Burst-паузи'});
+Object.assign(words.en,{perfTime:'Read duration',perfSpeed:'Throughput',perfBytes:'Transferred',perfPauses:'Burst pauses'});
 const categoryDefs=[['all','categoryAll'],['core','categoryCore'],['flight','categoryFlight'],['speed','categorySpeed'],['nav','categoryNav'],['takeoff','categoryTakeoff'],['sensors','categorySensors'],['servo','categoryServo'],['power','categoryPower'],['safety','categorySafety'],['comms','categoryComms'],['other','categoryOther']];
 // Categories reflect parameter names, not authoritative metadata; preserve full list and search.
 function parameterCategory(name){
@@ -134,8 +137,21 @@ const paramLex={
  en:{waiting:'Waiting for first PARAM_VALUE…',receiving:'Downloading parameters',repair:'Recovering missing parameters',done:'Full parameter list received',partial:'Incomplete parameter list. Retry or check USB connection.',idle:'Click Load Parameters after connecting.',retry:'Retrying parameter list request…',noReply:'No PARAM_VALUE response from controller.'}
 };
 const pl=(k)=>(paramLex[lang]||paramLex.ru)[k]||k;
+function showParamPerf(x){
+ const panel=$('paramPerf');if(!panel)return;
+ const perf=x?.perf;
+ panel.hidden=!perf;
+ if(!perf)return;
+ const seconds=Math.max(.001,perf.durationMs/1000),kilobytes=perf.bytes/1024;
+ $('paramPerfTime').textContent=seconds.toFixed(2)+' s';
+ $('paramPerfSpeed').textContent=(kilobytes/seconds).toFixed(1)+' KiB/s';
+ $('paramPerfBytes').textContent=kilobytes.toFixed(1)+' KiB';
+ $('paramPerfPauses').textContent=String(perf.pauses);
+ $('paramPerfMode').textContent=perf.reader+' · WITHDEFAULTS='+perf.withDefaults+(perf.compactFallback?' · FALLBACK':'');
+}
 function showProgress(){
  const x=state.paramTransfer,total=state.paramCount;
+ showParamPerf(x);
  const known=x&&Number.isInteger(total)?x.seen.size:state.params.size;
  const percent=total?Math.min(100,Math.round(100*known/total)):0;
  $('paramProgressFill').style.width=percent+'%';
@@ -485,6 +501,7 @@ function startFastParamStream(transfer){
    if(state.paramTransfer!==transfer||!state.paramLoading)return;
    transfer.ftpStage=stage;
    if(stage==='BURST-FAILED')transfer.ftpBurstError=reason||'unknown';
+   if(stage==='COMPACT-FAILED')transfer.ftpCompactError=reason||'unknown';
    showProgress();
   },
   send:packet=>transmit(110,M.ftpFrame(state.sysid,state.compid,packet)),
@@ -500,8 +517,9 @@ function startFastParamStream(transfer){
   // Commit only fully decoded/validated sets. No partial list is presented as complete.
   state.params=new Map(rows.map(row=>[row.name,{value:row.value,type:row.type,index:row.index}]));
   state.paramCount=rows.length;transfer.seen=new Set(rows.map(row=>row.index));transfer.reader=client.lastMethod||'MAVFTP';
+  transfer.perf={durationMs:client.lastDurationMs,bytes:client.lastBytes,pauses:client.pausedBursts,withDefaults:client.lastDefaults,reader:transfer.reader,compactFallback:!!client.lastCompactError};
   transfer.lastNew=Date.now();state.ftpClient=null;
-  toast('MAVFTP success · '+transfer.reader+' · '+rows.length+' params · burst pauses='+client.pausedBursts+(client.lastFallback?' · burst fallback: '+client.lastFallback:''));
+  toast('MAVFTP success · '+transfer.reader+' · '+rows.length+' params · '+(client.lastDurationMs/1000).toFixed(2)+' s · '+(client.lastBytes/1024).toFixed(1)+' KiB · defaults='+client.lastDefaults+' · burst pauses='+client.pausedBursts+(client.lastCompactError?' · compact fallback: '+client.lastCompactError:'')+(client.lastFallback?' · burst fallback: '+client.lastFallback:''));
   finishParamTransfer(true);
  }).catch(error=>{
   if(state.ftpClient!==client||state.paramTransfer!==transfer||!state.paramLoading||!state.connected)return;
@@ -520,14 +538,14 @@ function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBu
  }
  state.ftpClient?.cancel();state.ftpClient=null;stopParamRepair();
  state.paramLoading=true;state.params.clear();state.paramCount=null;state.tableLimit=150;
- const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',reader:null,ftpStage:null,ftpError:null,ftpBurstError:null,started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
+ const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',reader:null,ftpStage:null,ftpError:null,ftpBurstError:null,ftpCompactError:null,perf:null,started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
  state.paramTransfer=transfer;renderParams();renderBasic();showProgress();
  if(!startFastParamStream(transfer))startLegacyParamStream(transfer);
  return true;
 }
 function canWrite(){return state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading&&!state.readTwoBusy;}
 window.AtlasCC = Object.freeze({
-  getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,lastVoltageTelemetry:state.lastVoltageTelemetry,transport:state.transport,compassStatus:state.compassStatus,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramReader:state.paramTransfer?.reader||null,paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
+  getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,lastVoltageTelemetry:state.lastVoltageTelemetry,transport:state.transport,compassStatus:state.compassStatus,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramReader:state.paramTransfer?.reader||null,paramPerf:state.paramTransfer?.perf||null,paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
   canWrite:()=>canWrite(),
   connectUsb:()=>connect(),
   connectBridge:()=>connectBridge(),
