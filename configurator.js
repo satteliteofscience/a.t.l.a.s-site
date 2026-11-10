@@ -43,7 +43,7 @@ function parameterCategory(name){
 
 let lang='ru';try{let saved=localStorage.getItem('atlas-language');if(words[saved])lang=saved;}catch{}
 const tr=(k)=>words[lang]?.[k]||words.ru[k]||k;
-const state={demo:false,connected:false,connecting:false,transport:null,netSocket:null,bridgeReady:false,lastVoltageTelemetry:0,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,heartbeatStale:false,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,ftpClient:null,activeFilter:null,selectedBoard:'cube-orange-plus',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,readTwoBusy:false,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,statusTextAssembler:null,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
+const state={demo:false,connected:false,connecting:false,transport:null,netSocket:null,bridgeReady:false,lastVoltageTelemetry:0,lastAttitude:0,port:null,reader:null,rxActive:false,sysid:null,compid:1,seq:0,armed:null,lastHeartbeat:0,heartbeatStale:false,lastVfr:0,streamStart:0,vfrFallbackSent:false,telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null},mode:null,compassStatus:null,params:new Map(),paramCount:null,paramLoading:false,paramTransfer:null,paramRepairTimer:null,ftpClient:null,activeFilter:null,selectedBoard:'cube-orange-plus',boards:[],selectedTab:'dashboard',group:'all',paramCategory:'all',treeSelection:'ALL',tableLimit:150,imported:null,importedText:null,importReport:null,readTwoBusy:false,bulk:null,bulkCancel:false,servoConfigBusy:false,editName:null,writeWait:null,streamTimer:null,renderTimer:0,txPromise:Promise.resolve(),logCount:0,statusTextAssembler:null,apj:null,apjFilename:null,pageLeaving:false,hudLoopActive:true,hudRaf:0};
 state.statusTextAssembler=new window.AtlasStatusTextCore.Assembler();
 window.AtlasLanguage=()=>lang;
 window.AtlasSelectedBoard=()=>state.selectedBoard;
@@ -151,6 +151,7 @@ function showParamPerf(x){
  $('paramPerfBytes').textContent=kilobytes.toFixed(1)+' KiB';
  $('paramPerfPauses').textContent=String(perf.pauses);
  $('paramPerfMode').textContent=perf.reader+' · BLOCK='+perf.blockSize+' B'+(perf.sizeFallback?' (110 FALLBACK)':'')+' · WITHDEFAULTS='+perf.withDefaults+(perf.compactFallback?' · FORMAT FALLBACK':'');
+ $('paramPerfMode').title='First connection: '+(perf.firstConnection?'yes':'no')+'; competing PARAM_VALUE packets: '+(perf.concurrentParamValues||0);
 }
 function showProgress(){
  const x=state.paramTransfer,total=state.paramCount;
@@ -182,6 +183,9 @@ function stopParamRepair(){if(state.paramRepairTimer){clearInterval(state.paramR
 function finishParamTransfer(complete){
  const x=state.paramTransfer;if(!x||!state.paramLoading)return;
  state.paramLoading=false;x.phase=complete?'complete':'partial';stopParamRepair();showProgress();
+ if(state.transport==='bridge'){
+  setTimeout(()=>{if(state.connected&&!state.paramLoading)void requestBridgeMissingStreams();},600);
+ }
  window.dispatchEvent(new CustomEvent('atlas:parameters',{detail:{complete:!!complete,count:x.seen.size,total:state.paramCount,phase:x.phase}}));
  toast(complete?`${tr('saved')} · ${x.seen.size}/${state.paramCount}`:`${pl('partial')} · ${x.seen.size}/${state.paramCount}`,!complete);
  // Rendering thousands of rows during the stream blocks the serial RX loop.
@@ -296,12 +300,33 @@ async function requestStreams(){if(!state.connected||state.sysid===null)return;
    try{await transmit(76,M.commandLong(state.sysid,state.compid,511,[id,rate,0,0,0,0,0]));}catch(e){toast('Stream request: '+e.message,true);}
  }
 }
+// An existing TCP ground station already negotiates MAVLink stream rates.
+// Do not change all four rates on the initial heartbeat while 239-byte
+// MAVFTP is about to saturate the same telemetry/radio channel.
+// After the parameter read, request only *missing* attitude/VFR data.
+async function requestBridgeMissingStreams(){
+ if(state.transport!=='bridge'||!state.connected||state.paramLoading||state.sysid===null)return;
+ const now=Date.now();
+ const missing=[[30,state.lastAttitude,200000],[74,state.lastVfr,333333]]
+  .filter(([,last])=>!last||now-last>3000);
+ for(const [id,,interval] of missing){
+  if(!state.connected||state.paramLoading||state.sysid===null)break;
+  try{await transmit(76,M.commandLong(state.sysid,state.compid,511,[id,interval,0,0,0,0,0]));}
+  catch(error){log('Bridge telemetry recovery '+id+': '+error.message);}
+ }
+}
 function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMessage(message);if(!data||!M.belongsToSelectedVehicle(message,data,state.sysid))return;
  if(data.type==='command_long'){state.rxCommands=(state.rxCommands||0)+1;if(data.command===42429)state.rxPositions=(state.rxPositions||0)+1;}
  if(data.type==='ack')state.rxAcks=(state.rxAcks||0)+1;
  if(data.type==='text')state.rxTexts=(state.rxTexts||0)+1;
  if(data.type==='heartbeat' && data.compid===1){const first=state.sysid===null,recovered=state.heartbeatStale;state.sysid=data.sysid;state.compid=data.compid;state.lastHeartbeat=Date.now();state.heartbeatStale=false;state.armed=data.armed;state.mode=data.mode;
-   if(first){state.streamStart=Date.now();toast(`MAVLink HEARTBEAT · sys=${state.sysid} comp=${state.compid}`);requestStreams();updateConnectionUI();startParamLoad();window.dispatchEvent(new Event('atlas:state'));}
+   if(first){
+    state.streamStart=Date.now();toast(`MAVLink HEARTBEAT · sys=${state.sysid} comp=${state.compid}`);
+    // Direct USB has its own fast link. TCP shares the station's radio
+    // transport: avoid racing initial stream-rate commands against MAVFTP.
+    if(state.transport!=='bridge')void requestStreams();
+    updateConnectionUI();startParamLoad();window.dispatchEvent(new Event('atlas:state'));
+   }
    else if(recovered){updateConnectionUI();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));}
  }else if(data.type==='attitude'){state.telemetry.roll=data.roll*180/Math.PI;state.telemetry.pitch=data.pitch*180/Math.PI;state.telemetry.yaw=data.yaw*180/Math.PI;state.lastAttitude=Date.now();}
  else if(data.type==='vfr'&&message.sysid===state.sysid){state.lastVfr=Date.now();state.telemetry.airspeed=Number.isFinite(data.airspeed)&&data.airspeed>=0?data.airspeed*3.6:null;state.telemetry.altitude=data.altitude;state.telemetry.throttle=data.throttle;}
@@ -328,6 +353,7 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
   // Unsolicited PARAM_VALUE must not steal the active FTP phase or finish
   // its transfer prematurely via a competing legacy parameter stream.
   const ftpActive=transfer?.phase==='ftp';
+  if(ftpActive&&state.paramLoading)transfer.concurrentParamValues=(transfer.concurrentParamValues||0)+1;
   if(transfer&&state.paramLoading&&!ftpActive){
     const idx=data.index;
     if(Number.isInteger(idx)&&idx>=0&&idx<state.paramCount){
@@ -342,7 +368,9 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
    if(Math.abs(data.value-w.value)<=tolerance){clearTimeout(w.timer);state.writeWait=null;w.resolve(data.value);}
   }
   if(state.paramLoading && state.paramCount>0 && transfer&&!ftpActive&&transfer.seen.size>=state.paramCount){finishParamTransfer(true);}
-  scheduleParameterRerender();
+  // Unsolicited PARAM_VALUE during active FTP is already superseded by the
+  // final decoded packed list. Avoid unnecessary DOM / metadata rerenders.
+  if(!ftpActive)scheduleParameterRerender();
  }
  window.dispatchEvent(new CustomEvent('atlas:message',{detail:{...data,sourceSysid:message.sysid,sourceCompid:message.compid}}));
 }
@@ -355,7 +383,7 @@ async function connect(){if(state.connecting)return;if(state.connected){await di
  try{
   const port=await navigator.serial.requestPort();
   await port.open({baudRate:Number($('baud').value),bufferSize:8192});
-  state.port=port;state.transport='usb';state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.activeFilter=null;state.statusTextAssembler.reset();state.ftpClient?.cancel();state.ftpClient=null;state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
+  state.port=port;state.transport='usb';state.rxActive=true;state.connected=true;state.seq=0;stopParamRepair();state.activeFilter=null;state.statusTextAssembler.reset();state.ftpClient?.cancel();state.ftpClient=null;state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;state.armed=null;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVfr=0;state.lastAttitude=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
   updateConnectionUI();log('USB CDC open · '+$('baud').value+' bps');
   const parser=new M.Parser(handleMessage);state.rxParser=parser;
   state.rxPositions=0;state.rxCommands=0;state.rxAcks=0;state.rxTexts=0;
@@ -458,7 +486,7 @@ async function connectBridge(){
     clearTimeout(handshakeTimer);state.bridgeReady=true;state.transport='bridge';state.connected=true;state.connecting=false;state.rxActive=true;state.seq=0;
     stopParamRepair();state.activeFilter=null;state.statusTextAssembler.reset();state.ftpClient?.cancel();state.ftpClient=null;state.paramTransfer=null;state.params.clear();state.paramCount=null;state.paramLoading=false;
     state.armed=null;state.sysid=null;state.compassStatus=null;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVoltageTelemetry=0;
-    state.lastVfr=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
+    state.lastVfr=0;state.lastAttitude=0;state.streamStart=0;state.vfrFallbackSent=false;state.mode=null;
     const parser=new M.Parser(handleMessage);state.rxParser=parser;
     state.rxPositions=0;state.rxCommands=0;state.rxAcks=0;state.rxTexts=0;
     state.streamTimer=setInterval(heartbeatTick,1000);
@@ -478,7 +506,7 @@ function heartbeatTick(){
  if(state.sysid!==null&&!heartbeatLive()&&!state.heartbeatStale){
   state.heartbeatStale=true;state.activeFilter=null;state.statusTextAssembler.reset();updateConnectionUI();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));
  }
- if(state.sysid!==null&&!state.vfrFallbackSent&&state.streamStart>0&&state.lastVfr===0&&Date.now()-state.streamStart>7000&&Date.now()-state.lastHeartbeat<4000){
+ if(state.sysid!==null&&!state.paramLoading&&!state.vfrFallbackSent&&state.streamStart>0&&state.lastVfr===0&&Date.now()-state.streamStart>7000&&Date.now()-state.lastHeartbeat<4000){
   state.vfrFallbackSent=true;
   transmit(66,M.requestDataStream(state.sysid,state.compid,11,3)).catch(err=>log('VFR_HUD fallback: '+err.message));
  }
@@ -524,9 +552,9 @@ function startFastParamStream(transfer){
   // Commit only fully decoded/validated sets. No partial list is presented as complete.
   state.params=new Map(rows.map(row=>[row.name,{value:row.value,type:row.type,index:row.index}]));
   state.paramCount=rows.length;transfer.seen=new Set(rows.map(row=>row.index));transfer.reader=client.lastMethod||'MAVFTP';
-  transfer.perf={durationMs:client.lastDurationMs,bytes:client.lastBytes,pauses:client.pausedBursts,withDefaults:client.lastDefaults,reader:transfer.reader,compactFallback:!!client.lastCompactError,blockSize:client.lastReadSize,sizeFallback:!!client.lastSizeFallback};
+  transfer.perf={durationMs:client.lastDurationMs,bytes:client.lastBytes,pauses:client.pausedBursts,withDefaults:client.lastDefaults,reader:transfer.reader,compactFallback:!!client.lastCompactError,blockSize:client.lastReadSize,sizeFallback:!!client.lastSizeFallback,firstConnection:transfer.firstConnection,concurrentParamValues:transfer.concurrentParamValues};
   transfer.lastNew=Date.now();state.ftpClient=null;
-  toast('MAVFTP success · '+transfer.reader+' · '+rows.length+' params · '+(client.lastDurationMs/1000).toFixed(2)+' s · '+(client.lastBytes/1024).toFixed(1)+' KiB · defaults='+client.lastDefaults+' · burst pauses='+client.pausedBursts+' · block='+client.lastReadSize+' B'+(client.lastSizeFallback?' · size fallback: '+client.lastSizeFallback:'')+(client.lastCompactError?' · compact fallback: '+client.lastCompactError:'')+(client.lastFallback?' · burst fallback: '+client.lastFallback:''));
+  toast('MAVFTP success · '+transfer.reader+' · '+rows.length+' params · '+(client.lastDurationMs/1000).toFixed(2)+' s · '+(client.lastBytes/1024).toFixed(1)+' KiB · defaults='+client.lastDefaults+' · burst pauses='+client.pausedBursts+' · block='+client.lastReadSize+' B · parallel PARAM_VALUE='+transfer.concurrentParamValues+(client.lastSizeFallback?' · size fallback: '+client.lastSizeFallback:'')+(client.lastCompactError?' · compact fallback: '+client.lastCompactError:'')+(client.lastFallback?' · burst fallback: '+client.lastFallback:''));
   finishParamTransfer(true);
  }).catch(error=>{
   if(state.ftpClient!==client||state.paramTransfer!==transfer||!state.paramLoading||!state.connected)return;
@@ -545,7 +573,7 @@ function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBu
  }
  state.ftpClient?.cancel();state.ftpClient=null;stopParamRepair();
  state.paramLoading=true;state.params.clear();state.paramCount=null;state.tableLimit=150;
- const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',reader:null,ftpStage:null,ftpError:null,ftpBurstError:null,ftpCompactError:null,ftpBlockError:null,perf:null,started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
+ const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),firstConnection:state.paramTransfer===null,concurrentParamValues:0,phase:'receiving',reader:null,ftpStage:null,ftpError:null,ftpBurstError:null,ftpCompactError:null,ftpBlockError:null,perf:null,started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
  state.paramTransfer=transfer;renderParams();renderBasic();showProgress();
  if(!startFastParamStream(transfer))startLegacyParamStream(transfer);
  return true;
@@ -558,7 +586,7 @@ window.AtlasCC = Object.freeze({
   connectBridge:()=>connectBridge(),
   selectBoard:(id)=>{if(window.AtlasDfuUi?.isBusy()||!['matek-h743-wing-v3','cube-orange-plus','uni-ic743-mini'].includes(id))return false;state.selectedBoard=id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:id}}));return true;},
   navigate:(tab)=>navigate(tab),
-  diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,paramReader:state.paramTransfer?.reader||null,paramPhase:state.paramTransfer?.phase||'idle',paramFtpStage:state.paramTransfer?.ftpStage||null,paramFtpError:state.paramTransfer?.ftpError||null,paramFtpBurstError:state.paramTransfer?.ftpBurstError||null,positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
+  diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,paramReader:state.paramTransfer?.reader||null,paramPhase:state.paramTransfer?.phase||'idle',concurrentParamValues:state.paramTransfer?.concurrentParamValues||0,paramFtpStage:state.paramTransfer?.ftpStage||null,paramFtpError:state.paramTransfer?.ftpError||null,paramFtpBurstError:state.paramTransfer?.ftpBurstError||null,positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
   canCalibrate:()=>state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait,
   rebootController:()=>{
     if(!state.connected||state.demo||state.sysid===null||state.armed!==false||Date.now()-state.lastHeartbeat>=4000||state.writeWait||state.servoConfigBusy||state.paramLoading||state.bulk?.running)throw Error('Reboot blocked: live USB, DISARMED and idle writes required');
