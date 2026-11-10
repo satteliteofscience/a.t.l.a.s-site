@@ -62,7 +62,7 @@
   return out;
  }
  class Client{
-  constructor({send,onProgress,onStage,timeoutMs=1600,maxRetries=4,maxTimeMs=110000,preferBurst=false}){
+  constructor({send,onProgress,onStage,timeoutMs=6000,maxRetries=3,maxTimeMs=110000,preferBurst=false}){
    if(typeof send!=='function')throw Error('MAVFTP send callback required');
    this.send=send;this.onProgress=onProgress||(()=>{});this.onStage=onStage||(()=>{});this.timeoutMs=timeoutMs;
    this.maxRetries=maxRetries;this.maxTimeMs=maxTimeMs;this.seq=1;this.waiting=null;this.burst=null;this.closed=false;this.session=null;this.preferBurst=preferBurst;this.lastMethod=null;this.lastFallback=null;this.responses=0;this.burstFrames=0;this.burstReceivedBytes=0;this.lastProgressAt=0;this.stage='idle';
@@ -118,7 +118,7 @@
     if(this.closed)throw Error('MAVFTP cancelled');
     const wait=new Promise((resolve,reject)=>{
      const holder={opcode,session:opcode===4?null:session,offset,seq,resolve,reject,timer:null};
-     holder.timer=setTimeout(()=>{if(this.waiting===holder)this.waiting=null;reject(Error('MAVFTP response timeout'));},this.timeoutMs);
+     holder.timer=setTimeout(()=>{if(this.waiting===holder)this.waiting=null;reject(Error(`MAVFTP response timeout · opcode=${opcode} · offset=${offset} · session=${session} · replies=${this.responses}`));},this.timeoutMs);
      this.waiting=holder;
     });
     wait.catch(()=>{}); // absorb timeout if transport send fails before the waiter is awaited
@@ -172,7 +172,7 @@
     if(offset>MAX_BYTES)throw Error('Oversized MAVFTP parameter file');
     const reply=await this.request(5,{session,offset,size:CHUNK});
     if(reply.opcode===129){
-     if(reply.data[0]!==6)throw Error('MAVFTP read failed (NAK '+reply.data[0]+')');
+     if(reply.data[0]!==6)throw Error('MAVFTP read failed · offset='+offset+' · NAK '+reply.data[0]);
      break;
     }
     if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP read block');
@@ -199,7 +199,7 @@
     if(future||eofOffset!==null){
      const reply=await this.request(5,{session,offset,size:CHUNK});
      if(reply.opcode===129){
-      if(reply.data[0]!==6)throw Error('MAVFTP gap repair failed (NAK '+reply.data[0]+')');
+      if(reply.data[0]!==6)throw Error('MAVFTP gap repair failed · offset='+offset+' · NAK '+reply.data[0]);
       eofOffset=offset;
      }else{
       if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP gap block');
@@ -253,7 +253,7 @@
       this.onStage('BURST-FAILED',error.message);
       // Some firmware/bridges reject bursts or throttle them too heavily.
       // Retry with the known-good sequential read on the same file session.
-      this.onProgress(0);
+      this.onProgress(0,'MAVFTP READ');
       bytes=await this.readSequential(session,started);
       this.lastMethod='MAVFTP READ';
      }
