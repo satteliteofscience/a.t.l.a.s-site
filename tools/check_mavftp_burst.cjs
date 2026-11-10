@@ -4,8 +4,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
 const ftp=require('../mavftp-param.js');
 const read=p=>fs.readFileSync(p,'utf8');
 const CHUNK=110;
-function packedParams(count=180,shortNames=false){
- const header=Buffer.alloc(6);header.writeUInt16LE(0x671c,0);header.writeUInt16LE(count,2);header.writeUInt16LE(count,4);
+function packedParams(count=180,shortNames=false,withDefaults=false){
+ const header=Buffer.alloc(6);header.writeUInt16LE(withDefaults?0x671c:0x671b,0);header.writeUInt16LE(count,2);header.writeUInt16LE(count,4);
  const parts=[header];
  for(let i=0;i<count;i++){
   const name=Buffer.from(shortNames?'P'+String(i).padStart(4,'0'):'PARAM_'+String(i).padStart(4,'0'),'ascii');
@@ -26,8 +26,8 @@ function parseRequest(raw){
  const v=new DataView(raw.buffer,raw.byteOffset,raw.byteLength);
  return {seq:v.getUint16(0,true),session:raw[2],opcode:raw[3],size:raw[4],offset:v.getUint32(8,true),data:raw.slice(12)};
 }
-function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBackpressure=false,count=180,shortNames=false,omitEofNak=false}={}){
- const data=packedParams(count,shortNames);
+function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBackpressure=false,count=180,shortNames=false,omitEofNak=false,rejectCompact=false}={}){
+ const data=packedParams(count,shortNames,rejectCompact);
  const counters={open:0,burst:0,read:0,missingRepaired:false},progress=[],stages=[];
  const delayed=[];
  let client;
@@ -36,7 +36,12 @@ function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBa
   const q=parseRequest(raw),seq=(q.seq+1)&65535;
   if(q.opcode===4){
    counters.open++;
-   assert.equal(Buffer.from(q.data).toString(),'@PARAM/param.pck?withdefaults=1');
+   const filename=Buffer.from(q.data).toString();
+   assert.ok(['@PARAM/param.pck?withdefaults=0','@PARAM/param.pck?withdefaults=1'].includes(filename),'MAVFTP must only open compact or stable packed formats');
+   if(rejectCompact&&filename.endsWith('=0')){
+    schedule(reply(seq,0,129,4,0,[7]));return;
+   }
+   assert.equal(filename,'@PARAM/param.pck?withdefaults='+(rejectCompact?'1':'0'));
    // The real ArduPilot virtual file returns a size ESTIMATE: param_count*12.
    // For a short-name 1338-param file the true payload is smaller.
    const estimate=Buffer.alloc(4);estimate.writeUInt32LE(count*12);
@@ -80,12 +85,27 @@ async function testBurst(){
   assert.equal(rows.length,180);
   assert.equal(rows[179].value,179.5);
   assert.equal(s.client.lastMethod,'MAVFTP BURST');
+  assert.equal(s.client.lastDefaults,0);
+  assert.equal(s.client.lastBytes,s.data.length,'record exactly the downloaded packed bytes');
+  assert.ok(s.client.lastDurationMs>0,'record real download time');
   assert.ok(s.counters.burst>=2);
   assert.equal(s.counters.read,0,'healthy burst uses zero sequential per-block reads');
   assert.ok(s.progress.some(x=>x.bytes>0&&x.method==='MAVFTP BURST'),
    'progress must be reported as soon as burst packets arrive, before a whole file completes');
   assert.ok(s.stages.some(x=>x.stage==='OPEN')&&s.stages.some(x=>x.stage==='BURST')&&s.stages.some(x=>x.stage==='DONE'),
    'OPEN, BURST and DONE stages must be observable');
+ }finally{s.dispose();}
+}
+async function testCompactUnavailableUsesStableFullFormat(){
+ const s=makeServer({rejectCompact:true});
+ try{
+  const rows=await s.client.download();
+  assert.equal(rows.length,180,'fallback must still decode all parameters');
+  assert.equal(s.client.lastDefaults,1,'fallback should use the previous withdefaults=1 source');
+  assert.equal(s.client.lastMethod,'MAVFTP BURST');
+  assert.equal(s.counters.open,2,'compact attempt then known-good format');
+  assert.ok(s.client.lastCompactError?.includes('unsupported'),'reason for compact fallback must be recorded');
+  assert.equal(s.client.lastBytes,s.data.length);
  }finally{s.dispose();}
 }
 async function testShortFinalBlockWithoutEofNak(){
@@ -199,9 +219,15 @@ async function testUnsupportedBurstFallback(){
  }finally{s.dispose();}
 }
 (async()=>{
- await testBurst();await testShortFinalBlockWithoutEofNak();await testSequentialShortFinalBlockWithoutEofNak();testPartialDecodeIsRejected();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
+ await testBurst();await testCompactUnavailableUsesStableFullFormat();await testShortFinalBlockWithoutEofNak();await testSequentialShortFinalBlockWithoutEofNak();testPartialDecodeIsRejected();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
  const ui=read('configurator.js'),tests=read('tools/check_ahrs_nav_cache.cjs');
  assert.ok(ui.includes('preferBurst:true'),'TCP should request burst client');
+ assert.ok(ui.includes('transfer.perf={durationMs:client.lastDurationMs'),'successful FTP reads should record measured performance');
+ assert.ok(ui.includes('showParamPerf(x)'),'performance panel should update with actual transfer stats');
+ const html=read('configurator.html'),css=read('configurator.css');
+ for(const id of ['paramPerf','paramPerfTime','paramPerfSpeed','paramPerfBytes','paramPerfPauses','paramPerfMode'])
+  assert.ok(html.includes('id="'+id+'"'),'missing visual performance metric '+id);
+ assert.ok(css.includes('.cc-param-perf[hidden]'),'metrics must be invisible before a successful FTP read');
  assert.ok(ui.includes("transfer.reader='MAVLink PARAM_VALUE'"),'fallback must identify real legacy mode');
  assert.ok(ui.includes("transfer.reader=client.lastMethod"),'finished mode should show actual method');
  assert.ok(ui.includes("const visible=info.label.endsWith(' · CFG')"),'AHRS status row should be concise');
