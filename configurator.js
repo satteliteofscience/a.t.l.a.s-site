@@ -501,13 +501,13 @@ function startFastParamStream(transfer){
   state.params=new Map(rows.map(row=>[row.name,{value:row.value,type:row.type,index:row.index}]));
   state.paramCount=rows.length;transfer.seen=new Set(rows.map(row=>row.index));transfer.reader=client.lastMethod||'MAVFTP';
   transfer.lastNew=Date.now();state.ftpClient=null;
-  toast('MAVFTP success · '+transfer.reader+' · '+rows.length+' params'+(client.lastFallback?' · burst fallback: '+client.lastFallback:''));
+  toast('MAVFTP success · '+transfer.reader+' · '+rows.length+' params · burst pauses='+client.pausedBursts+(client.lastFallback?' · burst fallback: '+client.lastFallback:''));
   finishParamTransfer(true);
  }).catch(error=>{
   if(state.ftpClient!==client||state.paramTransfer!==transfer||!state.paramLoading||!state.connected)return;
   state.ftpClient=null;
   transfer.ftpError=error.message;
-  toast('MAVFTP failed · '+(transfer.ftpStage||'OPEN')+' · '+error.message+' · '+client.responses+' replies · PARAM_REQUEST_LIST fallback',true);
+  toast('MAVFTP failed · '+(transfer.ftpStage||'OPEN')+' · '+error.message+' · '+client.responses+' replies · burst pauses='+client.pausedBursts+' · PARAM_REQUEST_LIST fallback',true);
   startLegacyParamStream(transfer);
  });
  return true;

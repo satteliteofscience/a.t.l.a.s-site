@@ -26,7 +26,7 @@ function parseRequest(raw){
  const v=new DataView(raw.buffer,raw.byteOffset,raw.byteLength);
  return {seq:v.getUint16(0,true),session:raw[2],opcode:raw[3],size:raw[4],offset:v.getUint32(8,true),data:raw.slice(12)};
 }
-function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false}={}){
+function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBackpressure=false}={}){
  const data=packedParams();
  const counters={open:0,burst:0,read:0,missingRepaired:false},progress=[],stages=[];
  const delayed=[];
@@ -46,7 +46,7 @@ function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false}={}){
    if(disableBurst){schedule(reply(seq,1,129,15,q.offset,[7]));return;}
    if(q.offset>=data.length){schedule(reply(seq,1,129,15,q.offset,[6]));return;}
    let sent=0,replySeq=seq,p=q.offset;
-   while(p<data.length&&sent<3){
+   while(p<data.length&&sent<(silentBackpressure?2:3)){
     const bytes=data.subarray(p,p+CHUNK);
     const skip=dropOnce!==null&&p===dropOnce&&!counters.missingRepaired;
     // Even when a block is dropped, the server advances to the next offset.
@@ -54,7 +54,7 @@ function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false}={}){
     if(!skip)schedule(reply(replySeq,1,128,15,p,bytes,isLast),sent*2);
     p+=bytes.length;replySeq++;sent++;
    }
-   if(p>=data.length)schedule(reply(replySeq,1,129,15,p,[6]),sent*2);
+   if(p>=data.length&&!silentBackpressure)schedule(reply(replySeq,1,129,15,p,[6]),sent*2);
    return;
   }
   if(q.opcode===5){
@@ -68,7 +68,7 @@ function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false}={}){
   if(q.opcode===1)return;
   throw Error('Unexpected MAVFTP operation '+q.opcode);
  };
- client=new ftp.Client({send,preferBurst:true,timeoutMs:500,maxRetries:1,maxTimeMs:15000,onProgress:(bytes,method)=>progress.push({bytes,method}),onStage:(stage,reason)=>stages.push({stage,reason})});
+ client=new ftp.Client({send,preferBurst:true,timeoutMs:500,burstIdleMs:silentBackpressure?30:900,maxRetries:1,maxTimeMs:15000,onProgress:(bytes,method)=>progress.push({bytes,method}),onStage:(stage,reason)=>stages.push({stage,reason})});
  return {client,counters,data,progress,stages,dispose:()=>delayed.forEach(clearTimeout)};
 }
 async function testBurst(){
@@ -84,6 +84,22 @@ async function testBurst(){
    'progress must be reported as soon as burst packets arrive, before a whole file completes');
   assert.ok(s.stages.some(x=>x.stage==='OPEN')&&s.stages.some(x=>x.stage==='BURST')&&s.stages.some(x=>x.stage==='DONE'),
    'OPEN, BURST and DONE stages must be observable');
+ }finally{s.dispose();}
+}
+async function testSilentBurstBackpressure(){
+ // ArduPilot's GCS_FTP can stop pushing a burst without NAK, EOF, or
+ // burst_complete when TX buffers fill. This is what 12s watchdogs hid.
+ const s=makeServer({silentBackpressure:true});
+ const started=Date.now();
+ try{
+  const rows=await s.client.download();
+  assert.equal(rows.length,180,'must finish the complete packed file despite silent burst stops');
+  assert.equal(s.client.lastMethod,'MAVFTP BURST');
+  assert.ok(s.counters.burst>=10,'partial bursts must be resumed from the next offset');
+  assert.equal(s.counters.read,0,'a contiguous silently stopped burst needs no individual ReadFile repairs');
+  assert.ok(s.client.pausedBursts>=8,'short idle should detect repeated backpressure stops');
+  assert.ok(s.stages.some(x=>x.stage==='BURST-PAUSE'));
+  assert.ok(Date.now()-started<3000,'must not burn the overall 110s timer waiting 12s per partial burst');
  }finally{s.dispose();}
 }
 async function testLostBurstBlock(){
@@ -150,7 +166,7 @@ async function testUnsupportedBurstFallback(){
  }finally{s.dispose();}
 }
 (async()=>{
- await testBurst();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
+ await testBurst();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
  const ui=read('configurator.js'),tests=read('tools/check_ahrs_nav_cache.cjs');
  assert.ok(ui.includes('preferBurst:true'),'TCP should request burst client');
  assert.ok(ui.includes("transfer.reader='MAVLink PARAM_VALUE'"),'fallback must identify real legacy mode');
