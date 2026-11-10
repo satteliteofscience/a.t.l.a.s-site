@@ -9,10 +9,13 @@
  if(root)root.AtlasMavFtpParams=exposed;
 })(typeof window!=='undefined'?window:null,function(){
  'use strict';
- const MAGIC_VALUES=0x671b,MAGIC_DEFAULTS=0x671c,CHUNK=239,MAX_BYTES=1024*1024,MAX_PARAMS=8192;
+ // Mission Planner uses 110-byte burst/read blocks for @PARAM/param.pck.
+ // Keep the MAVFTP wire payload maximum (239) separate from the chosen read size.
+ // ArduPilot requires the same block size for every read on one open @PARAM handle.
+ const MAGIC_VALUES=0x671b,MAGIC_DEFAULTS=0x671c,MAX_PAYLOAD=239,CHUNK=110,MAX_BYTES=1024*1024,MAX_PARAMS=8192;
  const enc=new TextEncoder(),dec=new TextDecoder('ascii',{fatal:true});
  function packet(seq,opcode,session=0,offset=0,size=0,data=new Uint8Array()){
-  if(data.length>CHUNK||!Number.isInteger(seq)||!Number.isInteger(offset)||offset<0)throw Error('Invalid MAVFTP request');
+  if(data.length>MAX_PAYLOAD||!Number.isInteger(seq)||!Number.isInteger(offset)||offset<0)throw Error('Invalid MAVFTP request');
   const b=new Uint8Array(12+data.length),v=new DataView(b.buffer);
   v.setUint16(0,seq&65535,true);b[2]=session&255;b[3]=opcode;b[4]=size;b[5]=0;b[6]=0;b[7]=0;
   v.setUint32(8,offset,true);b.set(data,12);return b;
@@ -21,7 +24,7 @@
   if(!(bytes instanceof Uint8Array)||bytes.length<12)return null;
   const v=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
   const size=bytes[4];
-  if(size>CHUNK)return null;
+  if(size>MAX_PAYLOAD)return null;
   // MAVLink 2 legally trims trailing zeroes from FILE_TRANSFER_PROTOCOL.
   // The inner FTP size is authoritative: CRC already checked the outer frame.
   const data=new Uint8Array(size);
@@ -58,7 +61,7 @@
    out.push({name,value,type:paramType,index:i});names.add(name);prior=name;
   }
   // Some ArduPilot versions pad trailing entries to the read boundary.
-  if(bytes.length-offset>CHUNK||bytes.subarray(offset).some(b=>b!==0))throw Error('Unexpected packed parameter tail');
+  if(bytes.length-offset>MAX_PAYLOAD||bytes.subarray(offset).some(b=>b!==0))throw Error('Unexpected packed parameter tail');
   return out;
  }
  class Client{
