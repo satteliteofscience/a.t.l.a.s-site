@@ -147,6 +147,7 @@
    if(this.closed)throw Error('MAVFTP cancelled');
    if(this.waiting||this.burst)throw Error('Overlapping MAVFTP requests');
    const seq=(this.seq++&65535);
+   this.onStage('BURST','offset='+offset+' · pauses='+this.pausedBursts);
    return new Promise((resolve,reject)=>{
     const burst={session,offset,seq,frames:new Map(),timer:null};
     burst.finish=(error,eofOffset=null)=>{
@@ -176,7 +177,7 @@
    const chunks=[];let offset=0;
    for(;;){
     if(this.closed)throw Error('MAVFTP cancelled');
-    if(Date.now()-started>this.maxTimeMs)throw Error('MAVFTP full read timeout');
+    if(Date.now()-started>this.maxTimeMs)throw Error('MAVFTP full read timeout · offset='+offset+' · replies='+this.responses+' · burstPauses='+this.pausedBursts);
     if(offset>MAX_BYTES)throw Error('Oversized MAVFTP parameter file');
     const reply=await this.request(5,{session,offset,size:CHUNK});
     if(reply.opcode===129){
@@ -200,7 +201,7 @@
    // ReadFile fills gaps if a burst packet is lost or the server stalls.
    while(true){
     if(this.closed)throw Error('MAVFTP cancelled');
-    if(Date.now()-started>this.maxTimeMs)throw Error('MAVFTP full read timeout');
+    if(Date.now()-started>this.maxTimeMs)throw Error('MAVFTP full read timeout · offset='+offset+' · replies='+this.responses+' · burstPauses='+this.pausedBursts);
     if(offset>=MAX_BYTES)throw Error('Oversized MAVFTP parameter file');
     const before=offset;
     const future=[...saved.keys()].some(k=>k>offset);
