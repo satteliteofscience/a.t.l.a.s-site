@@ -4,9 +4,9 @@
   'use strict';
   const pages = {
     'index.html': {
-      ru: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 и конфигуратор', description:'A.T.L.A.S. Release 1.0 для Matek H743-WING V3, Cube Orange Plus и Uni-IC743 Mini: PIN-загрузки прошивок, EKF3 NOAID без GPS и веб-конфигуратор, проверенный на реальном контроллере.'},
-      uk: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 та конфігуратор', description:'A.T.L.A.S. Release 1.0 для Matek H743-WING V3, Cube Orange Plus і Uni-IC743 Mini: прошивки з PIN-захистом, EKF3 NOAID без GPS і вебконфігуратор, перевірений на реальному контролері.'},
-      en: {title:'A.T.L.A.S. — ArduPlane 4.7.2 Release 1.0 & Configurator', description:'A.T.L.A.S. Release 1.0 builds for Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini; PIN-protected HEX downloads, EKF3 NOAID GPS-denied modes, and a browser configurator bench-tested with a real flight controller.'}
+      ru: {title:'Конфигуратор A.T.L.A.S. — ArduPlane 4.7.2', description:'A.T.L.A.S. Release 1.0 для Matek H743-WING V3, Cube Orange Plus и Uni-IC743 Mini: PIN-загрузки прошивок, EKF3 NOAID без GPS и веб-конфигуратор, проверенный на реальном контроллере.'},
+      uk: {title:'Конфігуратор A.T.L.A.S. — ArduPlane 4.7.2', description:'A.T.L.A.S. Release 1.0 для Matek H743-WING V3, Cube Orange Plus і Uni-IC743 Mini: прошивки з PIN-захистом, EKF3 NOAID без GPS і вебконфігуратор, перевірений на реальному контролері.'},
+      en: {title:'Configurator A.T.L.A.S. — ArduPlane 4.7.2', description:'A.T.L.A.S. Release 1.0 builds for Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini; PIN-protected HEX downloads, EKF3 NOAID GPS-denied modes, and a browser configurator bench-tested with a real flight controller.'}
     },
     'configurator.html': {
       ru: {title:'A.T.L.A.S. — Конфигуратор полётного контроллера', description:'A.T.L.A.S. Release 1.0: веб-конфигуратор проверен на реальном полётном контроллере. USB/MAVLink, Quick Setup, параметры, калибровки, OSD и прошивка.'},

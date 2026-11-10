@@ -13,18 +13,19 @@ function checkPageTitle() {
   };
   const window = {addEventListener: (name, callback) => handlers.set(name, callback)};
   vm.runInNewContext(read('page-meta.js'), {
-    document, window, location: {pathname: '/a.t.l.a.s-site/'},
+    document, window, location: {pathname: '/a.t.l.a.s-site/index.html'},
     MutationObserver: class { observe() {} }
   });
-  assert.match(document.title, /& Configurator$/);
-  for (const [lang, event, suffix] of [
-    ['ru', 'atlas:languagechange', 'и конфигуратор'],
-    ['uk', 'atlas:languagechange', 'та конфігуратор'],
-    ['en', 'atlas:language', '& Configurator']
+  assert.match(document.title, /^Configurator A\.T\.L\.A\.S\./);
+  for (const [lang, event, prefix] of [
+    ['ru', 'atlas:languagechange', 'Конфигуратор A.T.L.A.S.'],
+    ['uk', 'atlas:languagechange', 'Конфігуратор A.T.L.A.S.'],
+    ['en', 'atlas:language', 'Configurator A.T.L.A.S.']
   ]) {
     document.documentElement.lang = lang;
     handlers.get(event)();
-    assert.ok(document.title.endsWith(suffix), document.title);
+    assert.ok(document.title.startsWith(prefix), document.title);
+    if (lang === 'ru') assert.ok(read('index.html').includes(`<title>${document.title}</title>`));
   }
 }
 
