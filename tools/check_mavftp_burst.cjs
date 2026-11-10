@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const ftp=require('../mavftp-param.js');
 const read=p=>fs.readFileSync(p,'utf8');
-const CHUNK=239;
+const CHUNK=110;
 function packedParams(count=180){
  const header=Buffer.alloc(6);header.writeUInt16LE(0x671c,0);header.writeUInt16LE(count,2);header.writeUInt16LE(count,4);
  const parts=[header];
