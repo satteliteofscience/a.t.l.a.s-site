@@ -22,6 +22,9 @@ Object.assign(words.en,{
 Object.assign(words.ru,{perfTime:'Время чтения',perfSpeed:'Скорость',perfBytes:'Передано',perfPauses:'Burst-паузы'});
 Object.assign(words.uk,{perfTime:'Час читання',perfSpeed:'Швидкість',perfBytes:'Передано',perfPauses:'Burst-паузи'});
 Object.assign(words.en,{perfTime:'Read duration',perfSpeed:'Throughput',perfBytes:'Transferred',perfPauses:'Burst pauses'});
+Object.assign(words.ru,{ftpBlockSize:'Размер MAVFTP-блока',ftpBlockStable:'110 байт · стабильный',ftpBlockTrial160:'160 байт · эксперимент',ftpBlockTrial220:'220 байт · эксперимент'});
+Object.assign(words.uk,{ftpBlockSize:'Розмір MAVFTP-блоку',ftpBlockStable:'110 байт · стабільний',ftpBlockTrial160:'160 байт · експеримент',ftpBlockTrial220:'220 байт · експеримент'});
+Object.assign(words.en,{ftpBlockSize:'MAVFTP block size',ftpBlockStable:'110 bytes · stable',ftpBlockTrial160:'160 bytes · experimental',ftpBlockTrial220:'220 bytes · experimental'});
 const categoryDefs=[['all','categoryAll'],['core','categoryCore'],['flight','categoryFlight'],['speed','categorySpeed'],['nav','categoryNav'],['takeoff','categoryTakeoff'],['sensors','categorySensors'],['servo','categoryServo'],['power','categoryPower'],['safety','categorySafety'],['comms','categoryComms'],['other','categoryOther']];
 // Categories reflect parameter names, not authoritative metadata; preserve full list and search.
 function parameterCategory(name){
@@ -147,10 +150,11 @@ function showParamPerf(x){
  $('paramPerfSpeed').textContent=(kilobytes/seconds).toFixed(1)+' KiB/s';
  $('paramPerfBytes').textContent=kilobytes.toFixed(1)+' KiB';
  $('paramPerfPauses').textContent=String(perf.pauses);
- $('paramPerfMode').textContent=perf.reader+' · WITHDEFAULTS='+perf.withDefaults+(perf.compactFallback?' · FALLBACK':'');
+ $('paramPerfMode').textContent=perf.reader+' · BLOCK='+perf.blockSize+' B'+(perf.sizeFallback?' (110 FALLBACK)':'')+' · WITHDEFAULTS='+perf.withDefaults+(perf.compactFallback?' · FORMAT FALLBACK':'');
 }
 function showProgress(){
  const x=state.paramTransfer,total=state.paramCount;
+ const blockSelect=$('paramFtpBlock');if(blockSelect)blockSelect.disabled=!!state.paramLoading;
  showParamPerf(x);
  const known=x&&Number.isInteger(total)?x.seen.size:state.params.size;
  const percent=total?Math.min(100,Math.round(100*known/total)):0;
@@ -495,13 +499,16 @@ function startLegacyParamStream(transfer){
 function startFastParamStream(transfer){
  if(!window.AtlasMavFtpParams||state.transport!=='bridge'||state.compid!==1)return false;
  transfer.phase='ftp';transfer.reader='MAVFTP BURST';transfer.bytes=0;showProgress();
+ const blockSize=Number($('paramFtpBlock')?.value)||110;
  const client=new window.AtlasMavFtpParams.Client({
   preferBurst:true,
+  readSize:blockSize,
   onStage:(stage,reason)=>{
    if(state.paramTransfer!==transfer||!state.paramLoading)return;
    transfer.ftpStage=stage;
    if(stage==='BURST-FAILED')transfer.ftpBurstError=reason||'unknown';
    if(stage==='COMPACT-FAILED')transfer.ftpCompactError=reason||'unknown';
+   if(stage==='SIZE-FAILED')transfer.ftpBlockError=reason||'unknown';
    showProgress();
   },
   send:packet=>transmit(110,M.ftpFrame(state.sysid,state.compid,packet)),
@@ -511,15 +518,15 @@ function startFastParamStream(transfer){
   }
  });
  state.ftpClient=client;
- toast('MAVFTP · OPEN @PARAM/param.pck · BurstReadFile · 110-byte blocks');
+ toast('MAVFTP · OPEN @PARAM/param.pck · BurstReadFile · '+blockSize+'-byte blocks'+(blockSize>110?' · experimental':' · stable'));
  void client.download().then(rows=>{
   if(state.ftpClient!==client||state.paramTransfer!==transfer||!state.paramLoading||!state.connected)return;
   // Commit only fully decoded/validated sets. No partial list is presented as complete.
   state.params=new Map(rows.map(row=>[row.name,{value:row.value,type:row.type,index:row.index}]));
   state.paramCount=rows.length;transfer.seen=new Set(rows.map(row=>row.index));transfer.reader=client.lastMethod||'MAVFTP';
-  transfer.perf={durationMs:client.lastDurationMs,bytes:client.lastBytes,pauses:client.pausedBursts,withDefaults:client.lastDefaults,reader:transfer.reader,compactFallback:!!client.lastCompactError};
+  transfer.perf={durationMs:client.lastDurationMs,bytes:client.lastBytes,pauses:client.pausedBursts,withDefaults:client.lastDefaults,reader:transfer.reader,compactFallback:!!client.lastCompactError,blockSize:client.lastReadSize,sizeFallback:!!client.lastSizeFallback};
   transfer.lastNew=Date.now();state.ftpClient=null;
-  toast('MAVFTP success · '+transfer.reader+' · '+rows.length+' params · '+(client.lastDurationMs/1000).toFixed(2)+' s · '+(client.lastBytes/1024).toFixed(1)+' KiB · defaults='+client.lastDefaults+' · burst pauses='+client.pausedBursts+(client.lastCompactError?' · compact fallback: '+client.lastCompactError:'')+(client.lastFallback?' · burst fallback: '+client.lastFallback:''));
+  toast('MAVFTP success · '+transfer.reader+' · '+rows.length+' params · '+(client.lastDurationMs/1000).toFixed(2)+' s · '+(client.lastBytes/1024).toFixed(1)+' KiB · defaults='+client.lastDefaults+' · burst pauses='+client.pausedBursts+' · block='+client.lastReadSize+' B'+(client.lastSizeFallback?' · size fallback: '+client.lastSizeFallback:'')+(client.lastCompactError?' · compact fallback: '+client.lastCompactError:'')+(client.lastFallback?' · burst fallback: '+client.lastFallback:''));
   finishParamTransfer(true);
  }).catch(error=>{
   if(state.ftpClient!==client||state.paramTransfer!==transfer||!state.paramLoading||!state.connected)return;
@@ -538,7 +545,7 @@ function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBu
  }
  state.ftpClient?.cancel();state.ftpClient=null;stopParamRepair();
  state.paramLoading=true;state.params.clear();state.paramCount=null;state.tableLimit=150;
- const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',reader:null,ftpStage:null,ftpError:null,ftpBurstError:null,ftpCompactError:null,perf:null,started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
+ const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',reader:null,ftpStage:null,ftpError:null,ftpBurstError:null,ftpCompactError:null,ftpBlockError:null,perf:null,started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
  state.paramTransfer=transfer;renderParams();renderBasic();showProgress();
  if(!startFastParamStream(transfer))startLegacyParamStream(transfer);
  return true;
