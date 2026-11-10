@@ -359,3 +359,14 @@
   .cc-release-item .cc-release-download{transition:none}
   .cc-release-item .cc-release-download:hover:not(:disabled){transform:none}
 }
+
+/* Lightweight MAVFTP transfer diagnostics; shown only after a fully checked read. */
+.cc-param-perf{border:1px solid #536440;background:linear-gradient(110deg,#202d19,#131d11);padding:12px 15px;margin:-5px 0 18px}
+.cc-param-perf[hidden]{display:none!important}
+.cc-param-perf-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;color:#dcca75;font:700 10px/1.5 'IBM Plex Mono',monospace;letter-spacing:.07em}
+.cc-param-perf-head span{color:#9fb87e;letter-spacing:0;overflow-wrap:anywhere}
+.cc-param-perf-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:10px 0 0}
+.cc-param-perf-grid>div{border-left:2px solid #7b8d50;padding-left:10px;min-width:0}
+.cc-param-perf-grid dt{font:600 10px/1.4 'IBM Plex Mono',monospace;color:#98a982}
+.cc-param-perf-grid dd{font:700 17px/1.35 'IBM Plex Mono',monospace;color:#eee0a4;margin:5px 0 0;overflow-wrap:anywhere}
+@media(max-width:580px){.cc-param-perf-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:15px}}
