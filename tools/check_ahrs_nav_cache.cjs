@@ -23,7 +23,8 @@ function p(...rows){return new Map(rows.map(([name,value])=>[name,{value,type:9,
  let state=core.indication({connected:true,live:true,params:selected,language:'ru'});
  assert.equal(state.label,'EKF3 · CFG');
  assert.equal(state.verified,false,'an AHRS parameter is not proof of active EKF3');
- assert.match(state.detail,/не подтверждён/);
+ assert.match(state.detail,/параметрах/,'configured AHRS status must identify source');
+ assert.doesNotMatch(state.detail,/не подтверждён/,'obsolete long warning removed');
  state=core.indication({connected:true,live:true,announced:'DCM',params:selected});
  assert.equal(state.label,'DCM');
  assert.equal(state.verified,true,'live AHRS: DCM active message overrides EKF3 selection');
