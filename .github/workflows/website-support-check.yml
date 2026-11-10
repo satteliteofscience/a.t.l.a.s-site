@@ -25,6 +25,7 @@ on:
       - 'tools/check_ahrs_nav_cache.cjs'
       - 'mavftp-param.js'
       - 'tools/check_mavftp_params.cjs'
+      - 'tools/check_mavftp_burst.cjs'
       - 'servo-config-core.js'
       - 'configurator.css'
       - 'tools/check_servo_config.cjs'
@@ -124,6 +125,8 @@ jobs:
         run: node tools/check_ahrs_nav_cache.cjs
       - name: Verify fast MAVFTP packed-parameter read and fallback
         run: node tools/check_mavftp_params.cjs
+      - name: Verify MAVFTP BurstReadFile streaming, packet loss repair and safe fallback
+        run: node tools/check_mavftp_burst.cjs
       - name: Verify release configurator imports, voltage calibration and local UDP bridge
         run: node tools/check_release_configurator.cjs
       - name: Verify Windows one-click TCP connector and secure handoff

@@ -62,14 +62,37 @@
   return out;
  }
  class Client{
-  constructor({send,onProgress,timeoutMs=1600,maxRetries=4,maxTimeMs=110000}){
+  constructor({send,onProgress,timeoutMs=1600,maxRetries=4,maxTimeMs=110000,preferBurst=false}){
    if(typeof send!=='function')throw Error('MAVFTP send callback required');
    this.send=send;this.onProgress=onProgress||(()=>{});this.timeoutMs=timeoutMs;
-   this.maxRetries=maxRetries;this.maxTimeMs=maxTimeMs;this.seq=1;this.waiting=null;this.closed=false;this.session=null;
+   this.maxRetries=maxRetries;this.maxTimeMs=maxTimeMs;this.seq=1;this.waiting=null;this.burst=null;this.closed=false;this.session=null;this.preferBurst=preferBurst;this.lastMethod=null;
   }
   handle(raw){
-   const result=response(raw),wait=this.waiting;
-   if(!result||!wait||this.closed||result.reqOpcode!==wait.opcode)return false;
+   const result=response(raw);
+   if(!result||this.closed)return false;
+   const burst=this.burst;
+   if(burst&&result.reqOpcode===15&&result.session===burst.session){
+    // Burst replies increment the FTP sequence, unlike one-shot ReadFile.
+    // Reject stale responses and replies outside the requested file range.
+    const delta=(result.seq-burst.seq+65536)%65536;
+    if(delta>4096||result.offset<burst.offset||result.offset>MAX_BYTES)return false;
+    if(result.opcode===129){
+     if(result.data[0]===6)burst.finish(null,result.offset);
+     else burst.finish(Error('MAVFTP burst NAK '+(result.data[0]??'?')));
+     return true;
+    }
+    if(result.opcode!==128||result.size<1)return false;
+    const previous=burst.frames.get(result.offset);
+    if(previous&&(previous.length!==result.size||previous.some((byte,i)=>byte!==result.data[i]))){
+     burst.finish(Error('Inconsistent MAVFTP burst block at '+result.offset));return true;
+    }
+    burst.frames.set(result.offset,result.data.slice());
+    if(result.burstComplete)burst.finish(null,null);
+    else burst.watchdog();
+    return true;
+   }
+   const wait=this.waiting;
+   if(!wait||result.reqOpcode!==wait.opcode)return false;
    if(wait.session!==null&&result.session!==wait.session)return false;
    if(result.opcode!==128&&result.opcode!==129)return false;
    if(wait.opcode===5&&result.offset!==wait.offset)return false;
@@ -101,30 +124,128 @@
   }
   cancel(){
    this.closed=true;
+   if(this.burst)this.burst.finish(Error('MAVFTP cancelled'));
    if(this.waiting){const w=this.waiting;this.waiting=null;clearTimeout(w.timer);w.reject(Error('MAVFTP cancelled'));}
+  }
+  async burstRead(session,offset){
+   if(this.closed)throw Error('MAVFTP cancelled');
+   if(this.waiting||this.burst)throw Error('Overlapping MAVFTP requests');
+   const seq=(this.seq++&65535);
+   return new Promise((resolve,reject)=>{
+    const burst={session,offset,seq,frames:new Map(),timer:null};
+    burst.finish=(error,eofOffset=null)=>{
+     if(this.burst!==burst)return;
+     clearTimeout(burst.timer);this.burst=null;
+     if(error)reject(error);
+     else resolve({frames:burst.frames,eofOffset,timedOut:false});
+    };
+    burst.watchdog=()=>{
+     clearTimeout(burst.timer);
+     burst.timer=setTimeout(()=>{
+      if(this.burst!==burst)return;
+      // A burst can stop early when output buffers fill. Keep the confirmed
+      // blocks and recover the next missing offset through ReadFile.
+      const frames=burst.frames;this.burst=null;
+      resolve({frames,eofOffset:null,timedOut:true});
+     },Math.max(1200,this.timeoutMs*2));
+    };
+    this.burst=burst;burst.watchdog();
+    Promise.resolve(this.send(packet(seq,15,session,offset,CHUNK))).catch(error=>burst.finish(error));
+   });
+  }
+  async readSequential(session,started){
+   const chunks=[];let offset=0;
+   for(;;){
+    if(this.closed)throw Error('MAVFTP cancelled');
+    if(Date.now()-started>this.maxTimeMs)throw Error('MAVFTP full read timeout');
+    if(offset>MAX_BYTES)throw Error('Oversized MAVFTP parameter file');
+    const reply=await this.request(5,{session,offset,size:CHUNK});
+    if(reply.opcode===129){
+     if(reply.data[0]!==6)throw Error('MAVFTP read failed (NAK '+reply.data[0]+')');
+     break;
+    }
+    if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP read block');
+    chunks.push(reply.data.slice());offset+=reply.size;this.onProgress(offset);
+   }
+   return Client.joinChunks(chunks,offset);
+  }
+  static joinChunks(chunks,total){
+   const bytes=new Uint8Array(total);let pos=0;
+   for(const chunk of chunks){bytes.set(chunk,pos);pos+=chunk.length;}
+   return bytes;
+  }
+  async readBurst(session,started){
+   const chunks=[],saved=new Map();let offset=0,eofOffset=null,retries=0;
+   // Only one outstanding operation. BurstReadFile is used for throughput,
+   // ReadFile fills gaps if a burst packet is lost or the server stalls.
+   while(true){
+    if(this.closed)throw Error('MAVFTP cancelled');
+    if(Date.now()-started>this.maxTimeMs)throw Error('MAVFTP full read timeout');
+    if(offset>=MAX_BYTES)throw Error('Oversized MAVFTP parameter file');
+    const before=offset;
+    const future=[...saved.keys()].some(k=>k>offset);
+    if(future||eofOffset!==null){
+     const reply=await this.request(5,{session,offset,size:CHUNK});
+     if(reply.opcode===129){
+      if(reply.data[0]!==6)throw Error('MAVFTP gap repair failed (NAK '+reply.data[0]+')');
+      eofOffset=offset;
+     }else{
+      if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP gap block');
+      saved.set(offset,reply.data.slice());
+     }
+    }else{
+     const batch=await this.burstRead(session,offset);
+     for(const [position,bytes] of batch.frames){
+      if(position<offset||position+bytes.length>MAX_BYTES)throw Error('Invalid MAVFTP burst offset');
+      const old=saved.get(position);
+      if(old&&(old.length!==bytes.length||old.some((b,i)=>b!==bytes[i])))throw Error('Conflicting MAVFTP burst data');
+      saved.set(position,bytes);
+     }
+     if(batch.eofOffset!==null){
+      if(eofOffset!==null&&eofOffset!==batch.eofOffset)throw Error('Conflicting MAVFTP EOF');
+      eofOffset=batch.eofOffset;
+     }
+     if(batch.timedOut&&!batch.frames.size)retries++;
+    }
+    while(saved.has(offset)){
+     const chunk=saved.get(offset);saved.delete(offset);
+     chunks.push(chunk);offset+=chunk.length;
+    }
+    if(offset!==before){retries=0;this.onProgress(offset);}
+    else if(++retries>=3)throw Error('MAVFTP burst stalled at '+offset);
+    if(eofOffset!==null){
+     if(offset>eofOffset)throw Error('MAVFTP data after EOF');
+     if(offset===eofOffset)return Client.joinChunks(chunks,offset);
+    }
+    // A lost packet can leave later blocks buffered. Repair the missing
+    // block in the next iteration rather than discarding downloaded bytes.
+   }
   }
   async download(){
    if(this.closed)throw Error('MAVFTP cancelled');
    let session=null;const started=Date.now();
    try{
-    const opened=await this.request(4,{data:enc.encode('@PARAM/param.pck?withdefaults=1'),size:enc.encode('@PARAM/param.pck?withdefaults=1').length});
+    const filename=enc.encode('@PARAM/param.pck?withdefaults=1');
+    const opened=await this.request(4,{data:filename,size:filename.length});
     if(opened.opcode!==128||opened.size<4)throw Error('MAVFTP parameter file unsupported (NAK '+(opened.data[0]??'?')+')');
     session=opened.session;this.session=session;
-    const chunks=[];let offset=0;
-    for(;;){
-     if(Date.now()-started>this.maxTimeMs)throw Error('MAVFTP full read timeout');
-     if(offset>MAX_BYTES)throw Error('Oversized MAVFTP parameter file');
-     const reply=await this.request(5,{session,offset,size:CHUNK});
-     if(reply.opcode===129){
-      if(reply.data[0]!==6)throw Error('MAVFTP read failed (NAK '+reply.data[0]+')');
-      break;
+    let bytes;
+    if(this.preferBurst){
+     try{
+      bytes=await this.readBurst(session,started);
+      this.lastMethod='MAVFTP BURST';
+     }catch(error){
+      if(this.closed)throw error;
+      // Some firmware/bridges reject bursts or throttle them too heavily.
+      // Retry with the known-good sequential read on the same file session.
+      this.onProgress(0);
+      bytes=await this.readSequential(session,started);
+      this.lastMethod='MAVFTP READ';
      }
-     if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP read block');
-     chunks.push(reply.data.slice());offset+=reply.size;this.onProgress(offset);
-     // EOF is determined by the server, never from its estimated OpenFileRO size.
+    }else{
+     bytes=await this.readSequential(session,started);
+     this.lastMethod='MAVFTP READ';
     }
-    const bytes=new Uint8Array(offset);let cursor=0;
-    for(const c of chunks){bytes.set(c,cursor);cursor+=c.length;}
     return decodePacked(bytes);
    }finally{
     if(session!==null&&!this.closed){
