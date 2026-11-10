@@ -100,15 +100,15 @@ async function testLargeBlockRead(blockSize){
   assert.equal(s.client.lastBytes,s.data.length);
  }finally{s.dispose();}
 }
-async function testLargeBlockRejectionFallback(){
- const s=makeServer({serverBlockSize:CHUNK,clientBlockSize:220,rejectExperimental:true});
+async function testLargeBlockRejectionFallback(blockSize=220){
+ const s=makeServer({serverBlockSize:CHUNK,clientBlockSize:blockSize,rejectExperimental:true});
  try{
   const rows=await s.client.download();
   assert.equal(rows.length,180,'all parameters must survive automatic block-size fallback');
   assert.equal(s.counters.open,2,'retry at 110 bytes requires its own fresh FTP file session');
-  assert.ok(s.counters.rejected>=1,'the simulated radio must actually reject the 220-byte burst');
+  assert.ok(s.counters.rejected>=1,'the simulated radio must actually reject the oversized trial burst');
   assert.equal(s.client.lastReadSize,110,'effective block size must indicate successful 110-byte recovery');
-  assert.equal(s.client.requestedReadSize,220);
+  assert.equal(s.client.requestedReadSize,blockSize);
   assert.equal(s.client.lastDefaults,0,'keep compact parameters across block-size fallback');
   assert.match(s.client.lastSizeFallback,/NAK/,'report failed larger-block attempt');
   assert.equal(s.client.lastCompactError,null,'not a compact-format failure');
@@ -267,7 +267,7 @@ async function testUnsupportedBurstFallback(){
  }finally{s.dispose();}
 }
 (async()=>{
- await testBurst();await testLargeBlockRead(160);await testLargeBlockRead(220);await testLargeBlockRejectionFallback();await testCompactUnavailableUsesStableFullFormat();await testControllerIgnoresCompactFormat();await testShortFinalBlockWithoutEofNak();await testSequentialShortFinalBlockWithoutEofNak();testPartialDecodeIsRejected();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
+ await testBurst();await testLargeBlockRead(160);await testLargeBlockRead(220);await testLargeBlockRead(239);await testLargeBlockRejectionFallback(220);await testLargeBlockRejectionFallback(239);await testCompactUnavailableUsesStableFullFormat();await testControllerIgnoresCompactFormat();await testShortFinalBlockWithoutEofNak();await testSequentialShortFinalBlockWithoutEofNak();testPartialDecodeIsRejected();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
  const ui=read('configurator.js'),tests=read('tools/check_ahrs_nav_cache.cjs');
  assert.ok(ui.includes('preferBurst:true'),'TCP should request burst client');
  assert.ok(ui.includes('readSize:blockSize'),'selected MAVFTP size must be passed to the real client');
@@ -276,6 +276,17 @@ async function testUnsupportedBurstFallback(){
  assert.match(html,/<option value="110"/,'the original 110-byte mode must remain the default');
  assert.match(html,/<option value="160"/,'160-byte experiment must be opt-in');
  assert.match(html,/<option value="220"/,'220-byte experiment must be opt-in');
+ assert.match(html,/<option value="239"/,'maximum 239-byte experiment must be opt-in');
+ assert.doesNotMatch(html,/<option value="(?:250|290)"/,'out-of-protocol read sizes must never be offered');
+ const maxBlock=reply(6,1,128,15,0,Buffer.alloc(239));
+ assert.equal(ftp.response(maxBlock).size,239,'239-byte MAVFTP data ACK must fit inside the 251-byte inner payload');
+ for(const invalid of [250,290,240]){
+  assert.throws(()=>new ftp.Client({send:async()=>{},readSize:invalid}),
+   /Unsupported MAVFTP read block size/,
+   'MAVFTP must reject an out-of-protocol '+invalid+'-byte option');
+ }
+ const maxClient=new ftp.Client({send:async()=>{},readSize:239});
+ assert.equal(maxClient.readSize,239,'239 bytes is the maximum legal MAVFTP data chunk');
  assert.ok(ui.includes('transfer.perf={durationMs:client.lastDurationMs'),'successful FTP reads should record measured performance');
  assert.ok(ui.includes('showParamPerf(x)'),'performance panel should update with actual transfer stats');
  const css=read('configurator.css');
