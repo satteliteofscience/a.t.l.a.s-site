@@ -101,10 +101,10 @@ async function testLargeBlockRead(blockSize){
  }finally{s.dispose();}
 }
 async function testLargeBlockRejectionFallback(blockSize=220){
- const s=makeServer({serverBlockSize:CHUNK,clientBlockSize:blockSize,rejectExperimental:true});
+ const s=makeServer({serverBlockSize:CHUNK,clientBlockSize:blockSize,count:1338,shortNames:true,rejectExperimental:true});
  try{
   const rows=await s.client.download();
-  assert.equal(rows.length,180,'all parameters must survive automatic block-size fallback');
+  assert.equal(rows.length,1338,'all parameters must survive automatic block-size fallback');
   assert.equal(s.counters.open,2,'retry at 110 bytes requires its own fresh FTP file session');
   assert.ok(s.counters.rejected>=1,'the simulated radio must actually reject the oversized trial burst');
   assert.equal(s.client.lastReadSize,110,'effective block size must indicate successful 110-byte recovery');
@@ -241,7 +241,7 @@ async function testDelayedReadReply(){
    timers.push(setTimeout(()=>client.handle(result),q.offset===0?2100:5));
   }
  };
- client=new ftp.Client({send,preferBurst:false,maxRetries:1,maxTimeMs:15000});
+ client=new ftp.Client({send,readSize:CHUNK,preferBurst:false,maxRetries:1,maxTimeMs:15000});
  try{
   assert.equal(client.timeoutMs,6000,'TCP default timeout should tolerate congested links');
   const rows=await client.download();
@@ -273,10 +273,14 @@ async function testUnsupportedBurstFallback(){
  assert.ok(ui.includes('readSize:blockSize'),'selected MAVFTP size must be passed to the real client');
  assert.ok(ui.includes('sizeFallback:!!client.lastSizeFallback'),'monitor must identify automatic 110-byte fallback');
  const html=read('configurator.html');
- assert.match(html,/<option value="110"/,'the original 110-byte mode must remain the default');
+ assert.match(html,/<option value="110"/,'the proven 110-byte mode must remain available for manual selection');
  assert.match(html,/<option value="160"/,'160-byte experiment must be opt-in');
  assert.match(html,/<option value="220"/,'220-byte experiment must be opt-in');
- assert.match(html,/<option value="239"/,'maximum 239-byte experiment must be opt-in');
+ assert.match(html,/<option value="239"[^>]* selected>/,'239-byte mode must be selected by default in the HTML');
+ assert.ok(ui.includes("const blockSize=Number($('paramFtpBlock')?.value)||239"),'dashboard auto-read and manual refresh must both use 239 when no size is selected');
+ assert.ok(ui.includes("$('paramFtpBlock').value='239'"),'initialization must override the browser restoring an old 110-byte default');
+ assert.ok(ui.includes('if(!startFastParamStream(transfer))startLegacyParamStream(transfer)'),'all parameter reads must use a shared FTP path');
+ assert.ok(ui.includes('sizeFallback:!!client.lastSizeFallback'),'the UI must report safe size fallback');
  assert.doesNotMatch(html,/<option value="(?:250|290)"/,'out-of-protocol read sizes must never be offered');
  const maxBlock=reply(6,1,128,15,0,Buffer.alloc(239));
  assert.equal(ftp.response(maxBlock).size,239,'239-byte MAVFTP data ACK must fit inside the 251-byte inner payload');
@@ -285,8 +289,11 @@ async function testUnsupportedBurstFallback(){
    /Unsupported MAVFTP read block size/,
    'MAVFTP must reject an out-of-protocol '+invalid+'-byte option');
  }
- const maxClient=new ftp.Client({send:async()=>{},readSize:239});
- assert.equal(maxClient.readSize,239,'239 bytes is the maximum legal MAVFTP data chunk');
+ const maxClient=new ftp.Client({send:async()=>{}});
+ assert.equal(maxClient.readSize,239,'default MAVFTP client read size must be 239 bytes');
+ assert.equal(maxClient.requestedReadSize,239,'diagnostics should expose the requested default size');
+ const stableClient=new ftp.Client({send:async()=>{},readSize:110});
+ assert.equal(stableClient.readSize,110,'110-byte backup must still be supported');
  assert.ok(ui.includes('transfer.perf={durationMs:client.lastDurationMs'),'successful FTP reads should record measured performance');
  assert.ok(ui.includes('showParamPerf(x)'),'performance panel should update with actual transfer stats');
  const css=read('configurator.css');

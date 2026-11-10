@@ -22,9 +22,9 @@ Object.assign(words.en,{
 Object.assign(words.ru,{perfTime:'Время чтения',perfSpeed:'Скорость',perfBytes:'Передано',perfPauses:'Burst-паузы'});
 Object.assign(words.uk,{perfTime:'Час читання',perfSpeed:'Швидкість',perfBytes:'Передано',perfPauses:'Burst-паузи'});
 Object.assign(words.en,{perfTime:'Read duration',perfSpeed:'Throughput',perfBytes:'Transferred',perfPauses:'Burst pauses'});
-Object.assign(words.ru,{ftpBlockSize:'Размер MAVFTP-блока',ftpBlockStable:'110 байт · стабильный',ftpBlockTrial160:'160 байт · эксперимент',ftpBlockTrial220:'220 байт · эксперимент',ftpBlockTrial239:'239 байт · максимум MAVFTP'});
-Object.assign(words.uk,{ftpBlockSize:'Розмір MAVFTP-блоку',ftpBlockStable:'110 байт · стабільний',ftpBlockTrial160:'160 байт · експеримент',ftpBlockTrial220:'220 байт · експеримент',ftpBlockTrial239:'239 байт · максимум MAVFTP'});
-Object.assign(words.en,{ftpBlockSize:'MAVFTP block size',ftpBlockStable:'110 bytes · stable',ftpBlockTrial160:'160 bytes · experimental',ftpBlockTrial220:'220 bytes · experimental',ftpBlockTrial239:'239 bytes · MAVFTP maximum'});
+Object.assign(words.ru,{ftpBlockSize:'Размер MAVFTP-блока',ftpBlockStable:'110 байт · резервный стабильный',ftpBlockTrial160:'160 байт · эксперимент',ftpBlockTrial220:'220 байт · эксперимент',ftpBlockTrial239:'239 байт · быстрый по умолчанию'});
+Object.assign(words.uk,{ftpBlockSize:'Розмір MAVFTP-блоку',ftpBlockStable:'110 байт · резервний стабільний',ftpBlockTrial160:'160 байт · експеримент',ftpBlockTrial220:'220 байт · експеримент',ftpBlockTrial239:'239 байт · швидкий за замовчуванням'});
+Object.assign(words.en,{ftpBlockSize:'MAVFTP block size',ftpBlockStable:'110 bytes · stable fallback',ftpBlockTrial160:'160 bytes · experimental',ftpBlockTrial220:'220 bytes · experimental',ftpBlockTrial239:'239 bytes · fast default'});
 const categoryDefs=[['all','categoryAll'],['core','categoryCore'],['flight','categoryFlight'],['speed','categorySpeed'],['nav','categoryNav'],['takeoff','categoryTakeoff'],['sensors','categorySensors'],['servo','categoryServo'],['power','categoryPower'],['safety','categorySafety'],['comms','categoryComms'],['other','categoryOther']];
 // Categories reflect parameter names, not authoritative metadata; preserve full list and search.
 function parameterCategory(name){
@@ -499,7 +499,7 @@ function startLegacyParamStream(transfer){
 function startFastParamStream(transfer){
  if(!window.AtlasMavFtpParams||state.transport!=='bridge'||state.compid!==1)return false;
  transfer.phase='ftp';transfer.reader='MAVFTP BURST';transfer.bytes=0;showProgress();
- const blockSize=Number($('paramFtpBlock')?.value)||110;
+ const blockSize=Number($('paramFtpBlock')?.value)||239;
  const client=new window.AtlasMavFtpParams.Client({
   preferBurst:true,
   readSize:blockSize,
@@ -868,7 +868,11 @@ function drawHorizon(ts){
  ctx.font='bold 12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.fillStyle='#e4d088';ctx.fillText('A.T.L.A.S. // ATTITUDE',midx,h-20);ctx.textAlign='left';ctx.fillStyle='#b9c495a6';ctx.textAlign='right';ctx.fillText(state.demo?'SYNTHETIC':heartbeatLive()?'MAVLINK':state.connected?'NO HEARTBEAT':'OFFLINE',w-15,26);
  if(ts-state.renderTimer>140){state.renderTimer=ts;updateTelemetryUI();}scheduleHorizon();
 }
-function wire(){document.querySelectorAll('[data-language]').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.language)));document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.tab)));
+function wire(){
+ // Apply the default for automatic dashboard/quick setup and manual reads.
+ // A new page visit must not silently restore the former 110-byte default.
+ $('paramFtpBlock').value='239';
+ document.querySelectorAll('[data-language]').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.language)));document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.tab)));
  // Explicitly close the live serial session BEFORE navigating home; pagehide alone
  // cannot guarantee that asynchronous port.close() completes before unloading.
  document.querySelectorAll('a[href="index.html"], a[href="faq.html"], a[href="changelog.html"]').forEach(a=>a.addEventListener('click',async ev=>{

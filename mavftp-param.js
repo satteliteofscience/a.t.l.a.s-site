@@ -65,7 +65,7 @@
   return out;
  }
  class Client{
-  constructor({send,onProgress,onStage,timeoutMs=6000,maxRetries=3,maxTimeMs=110000,preferBurst=false,burstIdleMs=900,readSize=CHUNK}){
+  constructor({send,onProgress,onStage,timeoutMs=6000,maxRetries=3,maxTimeMs=110000,preferBurst=false,burstIdleMs=900,readSize=MAX_PAYLOAD}){
    if(typeof send!=='function')throw Error('MAVFTP send callback required');
     if(![CHUNK,160,220,MAX_PAYLOAD].includes(readSize))throw Error('Unsupported MAVFTP read block size (maximum '+MAX_PAYLOAD+' bytes)');
    this.send=send;this.onProgress=onProgress||(()=>{});this.onStage=onStage||(()=>{});this.timeoutMs=timeoutMs;
