@@ -288,6 +288,9 @@
       if(this.closed)throw error;
       this.lastFallback=error.message;
       this.onStage('BURST-FAILED',error.message);
+      // An experimental read that fails must reopen at proven 110 B;
+      // do not spend time retrying this same block size sequentially.
+      if(this.readSize!==CHUNK)throw error;
       // Some firmware/bridges reject bursts or throttle them too heavily.
       // Retry with the known-good sequential read on the same file session.
       this.onProgress(0,'MAVFTP READ');
