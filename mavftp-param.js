@@ -113,11 +113,11 @@
    if(result.seq!==wait.seq && result.seq!==((wait.seq+1)&65535))return false;
    clearTimeout(wait.timer);this.waiting=null;wait.resolve(result);return true;
   }
-  async request(opcode,{session=0,offset=0,size=0,data=new Uint8Array(),ignoreReply=false}={}){
+  async request(opcode,{session=0,offset=0,size=0,data=new Uint8Array(),ignoreReply=false,retries=this.maxRetries}={}){
    if(this.closed)throw Error('MAVFTP cancelled');
    const seq=(this.seq++&65535),bytes=packet(seq,opcode,session,offset,size,data);
    if(ignoreReply){await this.send(bytes);return null;}
-   for(let attempt=0;attempt<=this.maxRetries;attempt++){
+   for(let attempt=0;attempt<=retries;attempt++){
     if(this.closed)throw Error('MAVFTP cancelled');
     const wait=new Promise((resolve,reject)=>{
      const holder={opcode,session:opcode===4?null:session,offset,seq,resolve,reject,timer:null};
@@ -130,7 +130,7 @@
      return await wait;
     }catch(error){
      if(this.waiting){clearTimeout(this.waiting.timer);this.waiting=null;}
-     if(attempt>=this.maxRetries)throw error;
+     if(attempt>=retries)throw error;
     }
    }
    throw Error('MAVFTP attempts exhausted');
@@ -199,19 +199,9 @@
     if(offset>=MAX_BYTES)throw Error('Oversized MAVFTP parameter file');
     const before=offset;
     const future=[...saved.keys()].some(k=>k>offset);
-    if(future||eofOffset!==null){
-     const reply=await this.request(5,{session,offset,size:CHUNK});
-     if(reply.opcode===129){
-      if(reply.data[0]!==6)throw Error('MAVFTP gap repair failed · offset='+offset+' · NAK '+reply.data[0]);
-      eofOffset=offset;
-     }else{
-      if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP gap block');
-      saved.set(offset,reply.data.slice());
-     }
-    }else{
-     const batch=await this.burstRead(session,offset);
+    const mergeBurst=batch=>{
      for(const [position,bytes] of batch.frames){
-      if(position<offset||position+bytes.length>MAX_BYTES)throw Error('Invalid MAVFTP burst offset');
+      if(position<offset||position+bytes.length>MAX_BYTES||bytes.length>CHUNK)throw Error('Invalid MAVFTP burst offset/size');
       const old=saved.get(position);
       if(old&&(old.length!==bytes.length||old.some((b,i)=>b!==bytes[i])))throw Error('Conflicting MAVFTP burst data');
       saved.set(position,bytes);
@@ -220,6 +210,28 @@
       if(eofOffset!==null&&eofOffset!==batch.eofOffset)throw Error('Conflicting MAVFTP EOF');
       eofOffset=batch.eofOffset;
      }
+    };
+    if(future||eofOffset!==null){
+     try{
+      // Recover an isolated missing block first, using the same 110-byte size.
+      const reply=await this.request(5,{session,offset,size:CHUNK,retries:1});
+      if(reply.opcode===129){
+       if(reply.data[0]!==6)throw Error('MAVFTP gap repair failed · offset='+offset+' · NAK '+reply.data[0]);
+       eofOffset=offset;
+      }else{
+       if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP gap block');
+       saved.set(offset,reply.data.slice());
+      }
+     }catch(error){
+      if(!String(error.message).includes('MAVFTP response timeout'))throw error;
+      // If the bridge fails to deliver a ReadFile answer, re-request just
+      // this missing offset via BurstReadFile instead of restarting all 16k.
+      this.onStage('GAP-BURST-RETRY','offset='+offset);
+      mergeBurst(await this.burstRead(session,offset));
+     }
+    }else{
+     const batch=await this.burstRead(session,offset);
+     mergeBurst(batch);
      if(batch.timedOut&&!batch.frames.size)retries++;
     }
     while(saved.has(offset)){
