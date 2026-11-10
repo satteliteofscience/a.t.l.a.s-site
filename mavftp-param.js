@@ -65,9 +65,12 @@
   return out;
  }
  class Client{
-  constructor({send,onProgress,onStage,timeoutMs=6000,maxRetries=3,maxTimeMs=110000,preferBurst=false}){
+  constructor({send,onProgress,onStage,timeoutMs=6000,maxRetries=3,maxTimeMs=110000,preferBurst=false,burstIdleMs=900}){
    if(typeof send!=='function')throw Error('MAVFTP send callback required');
    this.send=send;this.onProgress=onProgress||(()=>{});this.onStage=onStage||(()=>{});this.timeoutMs=timeoutMs;
+   // ArduPilot can silently stop a burst when link TX buffers fill.
+   // A short burst-idle detector must not use the long ReadFile reply timeout.
+   this.burstIdleMs=Math.max(20,Math.min(5000,burstIdleMs));this.pausedBursts=0;
    this.maxRetries=maxRetries;this.maxTimeMs=maxTimeMs;this.seq=1;this.waiting=null;this.burst=null;this.closed=false;this.session=null;this.preferBurst=preferBurst;this.lastMethod=null;this.lastFallback=null;this.responses=0;this.burstFrames=0;this.burstReceivedBytes=0;this.lastProgressAt=0;this.stage='idle';
   }
   handle(raw){
@@ -156,11 +159,13 @@
      clearTimeout(burst.timer);
      burst.timer=setTimeout(()=>{
       if(this.burst!==burst)return;
-      // A burst can stop early when output buffers fill. Keep the confirmed
-      // blocks and recover the next missing offset through ReadFile.
-      const frames=burst.frames;this.burst=null;
+      // ArduPilot can stop a burst without setting burst_complete when
+      // output buffers are full. Restart at the next contiguous offset
+      // after a short idle, rather than waiting 12s per partial burst.
+      const frames=burst.frames;this.burst=null;this.pausedBursts++;
+      if(frames.size)this.onStage('BURST-PAUSE',`offset=${offset} · frames=${frames.size} · pauses=${this.pausedBursts}`);
       resolve({frames,eofOffset:null,timedOut:true});
-     },Math.max(1200,this.timeoutMs*2));
+     },this.burstIdleMs);
     };
     this.burst=burst;burst.watchdog();
     Promise.resolve(this.send(packet(seq,15,session,offset,CHUNK))).catch(error=>burst.finish(error));
@@ -232,14 +237,14 @@
     }else{
      const batch=await this.burstRead(session,offset);
      mergeBurst(batch);
-     if(batch.timedOut&&!batch.frames.size)retries++;
+     if(batch.timedOut&&!batch.frames.size)this.onStage('BURST-IDLE','offset='+offset);
     }
     while(saved.has(offset)){
      const chunk=saved.get(offset);saved.delete(offset);
      chunks.push(chunk);offset+=chunk.length;
     }
     if(offset!==before){retries=0;this.onProgress(Math.max(offset,this.burstReceivedBytes),'MAVFTP BURST');}
-    else if(++retries>=3)throw Error('MAVFTP burst stalled at '+offset);
+    else if(++retries>=3)throw Error('MAVFTP burst stalled · offset='+offset+' · pauses='+this.pausedBursts);
     if(eofOffset!==null){
      if(offset>eofOffset)throw Error('MAVFTP data after EOF');
      if(offset===eofOffset)return Client.joinChunks(chunks,offset);
