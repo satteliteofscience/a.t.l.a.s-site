@@ -143,15 +143,15 @@ function showProgress(){
  $('paramCount').textContent=`${known} / ${total??'?'}`;
  const note=$('paramLoadNote');if(!note)return;$('refreshParamsBtn').textContent=x?.phase==='partial'?tr('resumeLoad'):tr('load');
  const status=x?.phase||'idle';
- if(status==='ftp'){const kb=((x.bytes||0)/1024).toFixed(1);note.textContent=`MAVFTP · ${kb} kB · @PARAM/param.pck`; $('paramProgressLabel').textContent=`MAVFTP · ${kb} kB`; $('paramCount').textContent='MAVFTP';return;}
+ if(status==='ftp'){const kb=((x.bytes||0)/1024).toFixed(1);note.textContent=`MAVFTP BURST · ${kb} kB · @PARAM/param.pck`; $('paramProgressLabel').textContent=`MAVFTP · ${kb} kB`; $('paramCount').textContent='MAVFTP';return;}
  note.classList.toggle('is-warning',status==='partial'||status==='noReply');
  if(!x){note.textContent=pl('idle');return;}
- if(status==='complete'){note.textContent=`✓ ${pl('done')} · ${known}/${total}`;return;}
+ if(status==='complete'){note.textContent=`✓ ${pl('done')} · ${known}/${total}${x.reader?' · '+x.reader:''}`;return;}
  if(status==='partial'){note.textContent=`⚠ ${pl('partial')} · ${known}/${total} · missing ${Math.max(0,total-known)}`;return;}
  if(status==='noReply'){note.textContent=`⚠ ${pl('noReply')}`;return;}
  if(status==='retry'){note.textContent=pl('retry');return;}
  if(total&&x.phase==='repair'){note.textContent=`${pl('repair')} · ${Math.max(0,total-known)} missing · ${x.requests} requests`;return;}
- note.textContent=total?`${pl('receiving')} · ${percent}%` : pl('waiting');
+ note.textContent=total?`${pl('receiving')} · ${percent}%${x.reader?' · '+x.reader:''}` : pl('waiting');
 }
 function stopParamRepair(){if(state.paramRepairTimer){clearInterval(state.paramRepairTimer);state.paramRepairTimer=null;}}
 function finishParamTransfer(complete){
@@ -204,7 +204,12 @@ function renderAhrsFilter(){
    announced:state.activeFilter,params:state.params,language:lang});
  const badge=$('ahrsFilterBadge'),detail=$('ahrsFilterDetail');
  if(badge){if(badge.textContent!==info.label)badge.textContent=info.label;if(badge.title!==info.detail)badge.title=info.detail;badge.dataset.verified=String(info.verified);}
- if(detail){if(detail.textContent!==info.detail)detail.textContent=info.detail;const title=info.label+' — '+info.detail;if(detail.title!==title)detail.title=title;}
+ if(detail){
+    // Compact visible status; full AHRS provenance remains in the tooltip.
+    const visible=info.label.endsWith(' · CFG')?info.label:info.verified?info.label:info.detail;
+    if(detail.textContent!==visible)detail.textContent=visible;
+    const title=info.label+' — '+info.detail;if(detail.title!==title)detail.title=title;
+  }
 }
 function updateTelemetryUI(){const t=state.demo||heartbeatLive()?state.telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};
  $('rollReadout').textContent=Number.isFinite(t.roll)?`${t.roll>=0?'+':''}${cleanNum(t.roll,1)}°`:'--.-°';
@@ -454,7 +459,7 @@ function startLegacyParamStream(transfer){
  if(!state.connected||state.paramTransfer!==transfer||!state.paramLoading)return;
  state.ftpClient=null;stopParamRepair();
  const time=Date.now();
- transfer.phase='receiving';transfer.seen.clear();transfer.attempts.clear();transfer.lastRequested.clear();
+ transfer.phase='receiving';transfer.reader='MAVLink PARAM_VALUE';transfer.seen.clear();transfer.attempts.clear();transfer.lastRequested.clear();
  transfer.started=time;transfer.lastNew=time;transfer.lastListRequest=time;transfer.listRetries=0;transfer.requests=0;transfer.repairBusy=false;
  state.params.clear();state.paramCount=null;state.paramRepairTimer=setInterval(recoverMissingParams,1400);
  showProgress();
@@ -465,8 +470,9 @@ function startLegacyParamStream(transfer){
 }
 function startFastParamStream(transfer){
  if(!window.AtlasMavFtpParams||state.transport!=='bridge'||state.compid!==1)return false;
- transfer.phase='ftp';transfer.bytes=0;showProgress();
+ transfer.phase='ftp';transfer.reader='MAVFTP BURST';transfer.bytes=0;showProgress();
  const client=new window.AtlasMavFtpParams.Client({
+  preferBurst:true,
   send:packet=>transmit(110,M.ftpFrame(state.sysid,state.compid,packet)),
   onProgress:bytes=>{
    if(state.paramTransfer!==transfer||!state.paramLoading)return;
@@ -478,7 +484,7 @@ function startFastParamStream(transfer){
   if(state.ftpClient!==client||state.paramTransfer!==transfer||!state.paramLoading||!state.connected)return;
   // Commit only fully decoded/validated sets. No partial list is presented as complete.
   state.params=new Map(rows.map(row=>[row.name,{value:row.value,type:row.type,index:row.index}]));
-  state.paramCount=rows.length;transfer.seen=new Set(rows.map(row=>row.index));
+  state.paramCount=rows.length;transfer.seen=new Set(rows.map(row=>row.index));transfer.reader=client.lastMethod||'MAVFTP';
   transfer.lastNew=Date.now();state.ftpClient=null;
   finishParamTransfer(true);
  }).catch(error=>{
@@ -497,20 +503,20 @@ function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBu
  }
  state.ftpClient?.cancel();state.ftpClient=null;stopParamRepair();
  state.paramLoading=true;state.params.clear();state.paramCount=null;state.tableLimit=150;
- const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
+ const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),phase:'receiving',reader:null,started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
  state.paramTransfer=transfer;renderParams();renderBasic();showProgress();
  if(!startFastParamStream(transfer))startLegacyParamStream(transfer);
  return true;
 }
 function canWrite(){return state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading&&!state.readTwoBusy;}
 window.AtlasCC = Object.freeze({
-  getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,lastVoltageTelemetry:state.lastVoltageTelemetry,transport:state.transport,compassStatus:state.compassStatus,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
+  getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,lastVoltageTelemetry:state.lastVoltageTelemetry,transport:state.transport,compassStatus:state.compassStatus,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramReader:state.paramTransfer?.reader||null,paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
   canWrite:()=>canWrite(),
   connectUsb:()=>connect(),
   connectBridge:()=>connectBridge(),
   selectBoard:(id)=>{if(window.AtlasDfuUi?.isBusy()||!['matek-h743-wing-v3','cube-orange-plus','uni-ic743-mini'].includes(id))return false;state.selectedBoard=id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:id}}));return true;},
   navigate:(tab)=>navigate(tab),
-  diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
+  diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,paramReader:state.paramTransfer?.reader||null,paramPhase:state.paramTransfer?.phase||'idle',positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
   canCalibrate:()=>state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait,
   rebootController:()=>{
     if(!state.connected||state.demo||state.sysid===null||state.armed!==false||Date.now()-state.lastHeartbeat>=4000||state.writeWait||state.servoConfigBusy||state.paramLoading||state.bulk?.running)throw Error('Reboot blocked: live USB, DISARMED and idle writes required');
