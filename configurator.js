@@ -494,7 +494,7 @@ function startFastParamStream(transfer){
   }
  });
  state.ftpClient=client;
- toast('MAVFTP · OPEN @PARAM/param.pck · BurstReadFile attempt');
+ toast('MAVFTP · OPEN @PARAM/param.pck · BurstReadFile · 110-byte blocks');
  void client.download().then(rows=>{
   if(state.ftpClient!==client||state.paramTransfer!==transfer||!state.paramLoading||!state.connected)return;
   // Commit only fully decoded/validated sets. No partial list is presented as complete.

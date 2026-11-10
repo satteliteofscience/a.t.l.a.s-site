@@ -44,7 +44,7 @@ function samplePacked(){
   onProgress:bytes=>assert.ok(bytes>0),
   send:async request=>{
    requests++;const req={seq:new DataView(request.buffer,request.byteOffset,request.byteLength).getUint16(0,true),opcode:request[3],size:request[4],offset:new DataView(request.buffer,request.byteOffset,request.byteLength).getUint32(8,true),data:request.subarray(12)};
-   assert.equal(req.opcode===5?req.size:0,req.opcode===5?239:0);
+   assert.equal(req.opcode===5?req.size:0,req.opcode===5?110:0);
    let response;
    if(req.opcode===4){
     assert.equal(Buffer.from(req.data).toString(),'@PARAM/param.pck?withdefaults=1');

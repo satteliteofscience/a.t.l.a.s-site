@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const ftp=require('../mavftp-param.js');
 const read=p=>fs.readFileSync(p,'utf8');
-const CHUNK=239;
+const CHUNK=110;
 function packedParams(count=180){
  const header=Buffer.alloc(6);header.writeUInt16LE(0x671c,0);header.writeUInt16LE(count,2);header.writeUInt16LE(count,4);
  const parts=[header];
@@ -26,7 +26,7 @@ function parseRequest(raw){
  const v=new DataView(raw.buffer,raw.byteOffset,raw.byteLength);
  return {seq:v.getUint16(0,true),session:raw[2],opcode:raw[3],size:raw[4],offset:v.getUint32(8,true),data:raw.slice(12)};
 }
-function makeServer({dropOnce=null,disableBurst=false}={}){
+function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false}={}){
  const data=packedParams();
  const counters={open:0,burst:0,read:0,missingRepaired:false},progress=[],stages=[];
  const delayed=[];
@@ -42,6 +42,7 @@ function makeServer({dropOnce=null,disableBurst=false}={}){
   }
   if(q.opcode===15){
    counters.burst++;assert.equal(q.size,CHUNK);
+   if(dropGapRead&&q.offset===dropOnce)counters.missingRepaired=true;
    if(disableBurst){schedule(reply(seq,1,129,15,q.offset,[7]));return;}
    if(q.offset>=data.length){schedule(reply(seq,1,129,15,q.offset,[6]));return;}
    let sent=0,replySeq=seq,p=q.offset;
@@ -57,7 +58,8 @@ function makeServer({dropOnce=null,disableBurst=false}={}){
    return;
   }
   if(q.opcode===5){
-   counters.read++;
+   counters.read++;assert.equal(q.size,CHUNK,'all reads on a packed parameter file must use the same 110-byte size');
+   if(dropGapRead&&q.offset===dropOnce)return; // emulate a station dropping isolated ReadFile replies
    if(q.offset===dropOnce)counters.missingRepaired=true;
    if(q.offset>=data.length)schedule(reply(seq,1,129,5,q.offset,[6]));
    else schedule(reply(seq,1,128,5,q.offset,data.subarray(q.offset,q.offset+CHUNK)));
@@ -92,6 +94,17 @@ async function testLostBurstBlock(){
   assert.equal(s.client.lastMethod,'MAVFTP BURST');
   assert.ok(s.counters.missingRepaired,'missing offset recovered with ReadFile');
   assert.equal(s.counters.read,1,'only the missing packet should be requested');
+ }finally{s.dispose();}
+}
+async function testLostGapReadRecovery(){
+ const s=makeServer({dropOnce:CHUNK,dropGapRead:true});
+ try{
+  const rows=await s.client.download();
+  assert.equal(rows.length,180,'burst re-request should recover all parameters');
+  assert.equal(s.client.lastMethod,'MAVFTP BURST','a lost isolated ReadFile should not force a whole-file restart');
+  assert.ok(s.counters.read>=2,'initial ReadFile attempts really timed out');
+  assert.ok(s.counters.missingRepaired,'resumed burst must request the missing offset');
+  assert.ok(s.stages.some(x=>x.stage==='GAP-BURST-RETRY'),'gap recovery must be observable in diagnostics');
  }finally{s.dispose();}
 }
 async function testDelayedReadReply(){
@@ -137,7 +150,7 @@ async function testUnsupportedBurstFallback(){
  }finally{s.dispose();}
 }
 (async()=>{
- await testBurst();await testLostBurstBlock();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
+ await testBurst();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
  const ui=read('configurator.js'),tests=read('tools/check_ahrs_nav_cache.cjs');
  assert.ok(ui.includes('preferBurst:true'),'TCP should request burst client');
  assert.ok(ui.includes("transfer.reader='MAVLink PARAM_VALUE'"),'fallback must identify real legacy mode');
