@@ -22,9 +22,9 @@ Object.assign(words.en,{
 Object.assign(words.ru,{perfTime:'Время чтения',perfSpeed:'Скорость',perfBytes:'Передано',perfPauses:'Burst-паузы'});
 Object.assign(words.uk,{perfTime:'Час читання',perfSpeed:'Швидкість',perfBytes:'Передано',perfPauses:'Burst-паузи'});
 Object.assign(words.en,{perfTime:'Read duration',perfSpeed:'Throughput',perfBytes:'Transferred',perfPauses:'Burst pauses'});
-Object.assign(words.ru,{ftpBlockSize:'Размер MAVFTP-блока',ftpBlockStable:'110 байт · стабильный',ftpBlockTrial160:'160 байт · эксперимент',ftpBlockTrial220:'220 байт · эксперимент'});
-Object.assign(words.uk,{ftpBlockSize:'Розмір MAVFTP-блоку',ftpBlockStable:'110 байт · стабільний',ftpBlockTrial160:'160 байт · експеримент',ftpBlockTrial220:'220 байт · експеримент'});
-Object.assign(words.en,{ftpBlockSize:'MAVFTP block size',ftpBlockStable:'110 bytes · stable',ftpBlockTrial160:'160 bytes · experimental',ftpBlockTrial220:'220 bytes · experimental'});
+Object.assign(words.ru,{ftpBlockSize:'Размер MAVFTP-блока',ftpBlockStable:'110 байт · стабильный',ftpBlockTrial160:'160 байт · эксперимент',ftpBlockTrial220:'220 байт · эксперимент',ftpBlockTrial239:'239 байт · максимум MAVFTP'});
+Object.assign(words.uk,{ftpBlockSize:'Розмір MAVFTP-блоку',ftpBlockStable:'110 байт · стабільний',ftpBlockTrial160:'160 байт · експеримент',ftpBlockTrial220:'220 байт · експеримент',ftpBlockTrial239:'239 байт · максимум MAVFTP'});
+Object.assign(words.en,{ftpBlockSize:'MAVFTP block size',ftpBlockStable:'110 bytes · stable',ftpBlockTrial160:'160 bytes · experimental',ftpBlockTrial220:'220 bytes · experimental',ftpBlockTrial239:'239 bytes · MAVFTP maximum'});
 const categoryDefs=[['all','categoryAll'],['core','categoryCore'],['flight','categoryFlight'],['speed','categorySpeed'],['nav','categoryNav'],['takeoff','categoryTakeoff'],['sensors','categorySensors'],['servo','categoryServo'],['power','categoryPower'],['safety','categorySafety'],['comms','categoryComms'],['other','categoryOther']];
 // Categories reflect parameter names, not authoritative metadata; preserve full list and search.
 function parameterCategory(name){
