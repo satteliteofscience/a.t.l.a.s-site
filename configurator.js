@@ -150,7 +150,7 @@ function showParamPerf(x){
  $('paramPerfSpeed').textContent=(kilobytes/seconds).toFixed(1)+' KiB/s';
  $('paramPerfBytes').textContent=kilobytes.toFixed(1)+' KiB';
  $('paramPerfPauses').textContent=String(perf.pauses);
- $('paramPerfMode').textContent=perf.reader+' · BLOCK='+perf.blockSize+' B'+(perf.sizeFallback?' (110 FALLBACK)':'')+' · WITHDEFAULTS='+perf.withDefaults+(perf.compactFallback?' · FORMAT FALLBACK':'');
+ $('paramPerfMode').textContent=perf.reader+' · BLOCK='+perf.blockSize+' B'+(perf.sizeFallback?' (110 FALLBACK)':'')+' · WITHDEFAULTS='+perf.withDefaults+(perf.compactFallback?' · FORMAT FALLBACK':'')+' · '+(perf.firstConnection?'FIRST':'REFRESH')+' · BG PARAM='+ (perf.concurrentParamValues||0);
  $('paramPerfMode').title='First connection: '+(perf.firstConnection?'yes':'no')+'; competing PARAM_VALUE packets: '+(perf.concurrentParamValues||0);
 }
 function showProgress(){
