@@ -94,6 +94,36 @@ async function testLostBurstBlock(){
   assert.equal(s.counters.read,1,'only the missing packet should be requested');
  }finally{s.dispose();}
 }
+async function testDelayedReadReply(){
+ const packed=packedParams(6);
+ const timers=[];
+ let client;
+ const send=async raw=>{
+  const q=parseRequest(raw),seq=(q.seq+1)&65535;
+  if(q.opcode===4){
+   const estimate=Buffer.alloc(4);estimate.writeUInt32LE(packed.length,0);
+   timers.push(setTimeout(()=>client.handle(reply(seq,1,128,4,0,estimate)),5));
+  }else if(q.opcode===5){
+   const result=q.offset>=packed.length
+    ?reply(seq,1,129,5,q.offset,[6])
+    :reply(seq,1,128,5,q.offset,packed.subarray(q.offset,q.offset+CHUNK));
+   // Simulate a busy ArduPilot bridge requiring more than the old 1.6s timeout.
+   timers.push(setTimeout(()=>client.handle(result),q.offset===0?2100:5));
+  }
+ };
+ client=new ftp.Client({send,preferBurst:false,maxRetries:1,maxTimeMs:15000});
+ try{
+  assert.equal(client.timeoutMs,6000,'TCP default timeout should tolerate congested links');
+  const rows=await client.download();
+  assert.equal(rows.length,6);
+  assert.equal(client.lastMethod,'MAVFTP READ');
+ }finally{timers.forEach(clearTimeout);}
+}
+async function testTimeoutDiagnostics(){
+ let client;
+ client=new ftp.Client({send:async()=>{},preferBurst:false,timeoutMs:30,maxRetries:0});
+ await assert.rejects(client.request(5,{session:4,offset:956,size:CHUNK}),/opcode=5 · offset=956 · session=4 · replies=0/);
+}
 async function testUnsupportedBurstFallback(){
  const s=makeServer({disableBurst:true});
  try{
@@ -107,7 +137,7 @@ async function testUnsupportedBurstFallback(){
  }finally{s.dispose();}
 }
 (async()=>{
- await testBurst();await testLostBurstBlock();await testUnsupportedBurstFallback();
+ await testBurst();await testLostBurstBlock();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
  const ui=read('configurator.js'),tests=read('tools/check_ahrs_nav_cache.cjs');
  assert.ok(ui.includes('preferBurst:true'),'TCP should request burst client');
  assert.ok(ui.includes("transfer.reader='MAVLink PARAM_VALUE'"),'fallback must identify real legacy mode');
