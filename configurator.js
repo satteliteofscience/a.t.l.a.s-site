@@ -151,7 +151,7 @@ function showProgress(){
   }
  note.classList.toggle('is-warning',status==='partial'||status==='noReply');
  if(!x){note.textContent=pl('idle');return;}
- if(status==='complete'){note.textContent=`✓ ${pl('done')} · ${known}/${total}${x.reader?' · '+x.reader:''}${x.ftpBurstError?' · Burst→READ: '+x.ftpBurstError:''}`;return;}
+ if(status==='complete'){note.textContent=`✓ ${pl('done')} · ${known}/${total}${x.reader?' · '+x.reader:''}${x.ftpError?' · MAVFTP failed ('+x.ftpError+')':x.ftpBurstError?' · Burst→READ ('+x.ftpBurstError+')':''}`;return;}
  if(status==='partial'){note.textContent=`⚠ ${pl('partial')} · ${known}/${total} · missing ${Math.max(0,total-known)}`;return;}
  if(status==='noReply'){note.textContent=`⚠ ${pl('noReply')}`;return;}
  if(status==='retry'){note.textContent=pl('retry');return;}
