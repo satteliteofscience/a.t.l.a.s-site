@@ -103,7 +103,12 @@
       this.lastProgressAt=now;this.onProgress(this.burstReceivedBytes,'MAVFTP BURST');
      }
     }
-    if(result.burstComplete)burst.finish(null,null);
+    // @PARAM/param.pck's OpenFileRO size is only an estimate (nparams*12).
+    // AP_Filesystem_Param returns a short ACK at the real end of the stream.
+    // Like Mission Planner, use it as authoritative EOF; an additional EOF
+    // NAK may never be forwarded through a telemetry bridge.
+    if(result.size<CHUNK)burst.finish(null,result.offset+result.size);
+    else if(result.burstComplete)burst.finish(null,null);
     else burst.watchdog();
     return true;
    }
@@ -186,6 +191,9 @@
     }
     if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP read block');
     chunks.push(reply.data.slice());offset+=reply.size;this.onProgress(offset,'MAVFTP READ');
+    // A short successful packed-file read is the last data block. The
+    // estimated size from OpenFileRO must not be treated as exact.
+    if(reply.size<CHUNK)break;
    }
    return Client.joinChunks(chunks,offset);
   }
@@ -227,6 +235,13 @@
       }else{
        if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP gap block');
        saved.set(offset,reply.data.slice());
+       // ReadFile gap repair can itself return the terminal short block.
+       // Record its true end rather than waiting for another EOF NAK.
+       if(reply.size<CHUNK){
+        const trueEnd=offset+reply.size;
+        if(eofOffset!==null&&eofOffset!==trueEnd)throw Error('Conflicting MAVFTP short-read EOF');
+        eofOffset=trueEnd;
+       }
       }
      }catch(error){
       if(!String(error.message).includes('MAVFTP response timeout'))throw error;

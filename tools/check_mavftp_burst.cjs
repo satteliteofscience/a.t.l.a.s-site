@@ -4,11 +4,11 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
 const ftp=require('../mavftp-param.js');
 const read=p=>fs.readFileSync(p,'utf8');
 const CHUNK=110;
-function packedParams(count=180){
+function packedParams(count=180,shortNames=false){
  const header=Buffer.alloc(6);header.writeUInt16LE(0x671c,0);header.writeUInt16LE(count,2);header.writeUInt16LE(count,4);
  const parts=[header];
  for(let i=0;i<count;i++){
-  const name=Buffer.from('PARAM_'+String(i).padStart(4,'0'),'ascii');
+  const name=Buffer.from(shortNames?'P'+String(i).padStart(4,'0'):'PARAM_'+String(i).padStart(4,'0'),'ascii');
   const entry=Buffer.alloc(2+name.length+4);
   entry[0]=4;entry[1]=(name.length-1)<<4;name.copy(entry,2);
   entry.writeFloatLE(i+0.5,2+name.length);parts.push(entry);
@@ -26,8 +26,8 @@ function parseRequest(raw){
  const v=new DataView(raw.buffer,raw.byteOffset,raw.byteLength);
  return {seq:v.getUint16(0,true),session:raw[2],opcode:raw[3],size:raw[4],offset:v.getUint32(8,true),data:raw.slice(12)};
 }
-function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBackpressure=false}={}){
- const data=packedParams();
+function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBackpressure=false,count=180,shortNames=false,omitEofNak=false}={}){
+ const data=packedParams(count,shortNames);
  const counters={open:0,burst:0,read:0,missingRepaired:false},progress=[],stages=[];
  const delayed=[];
  let client;
@@ -37,7 +37,9 @@ function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBa
   if(q.opcode===4){
    counters.open++;
    assert.equal(Buffer.from(q.data).toString(),'@PARAM/param.pck?withdefaults=1');
-   const estimate=Buffer.alloc(4);estimate.writeUInt32LE(data.length+222);
+   // The real ArduPilot virtual file returns a size ESTIMATE: param_count*12.
+   // For a short-name 1338-param file the true payload is smaller.
+   const estimate=Buffer.alloc(4);estimate.writeUInt32LE(count*12);
    schedule(reply(seq,1,128,4,0,estimate));return;
   }
   if(q.opcode===15){
@@ -54,14 +56,14 @@ function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBa
     if(!skip)schedule(reply(replySeq,1,128,15,p,bytes,isLast),sent*2);
     p+=bytes.length;replySeq++;sent++;
    }
-   if(p>=data.length&&!silentBackpressure)schedule(reply(replySeq,1,129,15,p,[6]),sent*2);
+   if(p>=data.length&&!silentBackpressure&&!omitEofNak)schedule(reply(replySeq,1,129,15,p,[6]),sent*2);
    return;
   }
   if(q.opcode===5){
    counters.read++;assert.equal(q.size,CHUNK,'all reads on a packed parameter file must use the same 110-byte size');
    if(dropGapRead&&q.offset===dropOnce)return; // emulate a station dropping isolated ReadFile replies
    if(q.offset===dropOnce)counters.missingRepaired=true;
-   if(q.offset>=data.length)schedule(reply(seq,1,129,5,q.offset,[6]));
+   if(q.offset>=data.length){if(!omitEofNak)schedule(reply(seq,1,129,5,q.offset,[6]));}
    else schedule(reply(seq,1,128,5,q.offset,data.subarray(q.offset,q.offset+CHUNK)));
    return;
   }
@@ -85,6 +87,37 @@ async function testBurst(){
   assert.ok(s.stages.some(x=>x.stage==='OPEN')&&s.stages.some(x=>x.stage==='BURST')&&s.stages.some(x=>x.stage==='DONE'),
    'OPEN, BURST and DONE stages must be observable');
  }finally{s.dispose();}
+}
+async function testShortFinalBlockWithoutEofNak(){
+ // Regression for the real FC: 1338 parameters -> advertised 16056 bytes,
+ // but the packed file can finish much earlier, e.g. at roughly 14.7kB.
+ // The ground-station bridge never delivers an explicit EOF NAK.
+ const s=makeServer({count:1338,shortNames:true,omitEofNak:true});
+ try{
+  assert.ok(s.data.length<1338*12,'virtual AP_Filesystem_Param size must be only an estimate');
+  assert.ok(s.data.length>14000&&s.data.length<16056);
+  assert.notEqual(s.data.length%CHUNK,0,'final success block must be short');
+  const rows=await s.client.download();
+  assert.equal(rows.length,1338);
+  assert.equal(rows[1337].value,1337.5);
+  assert.equal(s.client.lastMethod,'MAVFTP BURST');
+  assert.equal(s.counters.read,0,'no extra ReadFile at estimated size');
+ }finally{s.dispose();}
+}
+async function testSequentialShortFinalBlockWithoutEofNak(){
+ const s=makeServer({count:1338,shortNames:true,disableBurst:true,omitEofNak:true});
+ try{
+  const rows=await s.client.download();
+  assert.equal(rows.length,1338,'read fallback must stop on a short final ACK too');
+  assert.equal(s.client.lastMethod,'MAVFTP READ');
+  assert.equal(s.client.lastFallback?.includes('NAK'),true);
+ }finally{s.dispose();}
+}
+function testPartialDecodeIsRejected(){
+ const data=packedParams(1338,true);
+ assert.throws(()=>ftp.decodePacked(new Uint8Array(data.subarray(0,data.length-13))),
+  /Truncated|Invalid|Unexpected|Duplicate/,
+  'short-ACK EOF must not commit an incomplete parameter file');
 }
 async function testSilentBurstBackpressure(){
  // ArduPilot's GCS_FTP can stop pushing a burst without NAK, EOF, or
@@ -166,7 +199,7 @@ async function testUnsupportedBurstFallback(){
  }finally{s.dispose();}
 }
 (async()=>{
- await testBurst();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
+ await testBurst();await testShortFinalBlockWithoutEofNak();await testSequentialShortFinalBlockWithoutEofNak();testPartialDecodeIsRejected();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
  const ui=read('configurator.js'),tests=read('tools/check_ahrs_nav_cache.cjs');
  assert.ok(ui.includes('preferBurst:true'),'TCP should request burst client');
  assert.ok(ui.includes("transfer.reader='MAVLink PARAM_VALUE'"),'fallback must identify real legacy mode');
