@@ -16,6 +16,7 @@ on:
       - 'tools/mavlink-bridge.cjs'
       - 'tools/A.T.L.A.S.-TCP-Connector.cmd'
       - 'tools/check_one_click_tcp.cjs'
+      - 'tools/check_tcp_startup_contention.cjs'
       - 'MAVLINK-NETWORK-BRIDGE.md'
       - 'tools/check_release_configurator.cjs'
       - 'mavlink.js'
@@ -129,6 +130,8 @@ jobs:
         run: node tools/check_mavftp_burst.cjs
       - name: Verify release configurator imports, voltage calibration and local UDP bridge
         run: node tools/check_release_configurator.cjs
+      - name: Verify first TCP parameter read does not interfere with ground-station telemetry
+        run: node tools/check_tcp_startup_contention.cjs
       - name: Verify Windows one-click TCP connector and secure handoff
         run: node tools/check_one_click_tcp.cjs
       - name: Verify servo reverse persistence and serialized writes
