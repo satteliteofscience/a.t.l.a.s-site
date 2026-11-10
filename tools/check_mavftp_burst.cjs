@@ -26,8 +26,8 @@ function parseRequest(raw){
  const v=new DataView(raw.buffer,raw.byteOffset,raw.byteLength);
  return {seq:v.getUint16(0,true),session:raw[2],opcode:raw[3],size:raw[4],offset:v.getUint32(8,true),data:raw.slice(12)};
 }
-function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBackpressure=false,count=180,shortNames=false,omitEofNak=false,rejectCompact=false}={}){
- const data=packedParams(count,shortNames,rejectCompact);
+function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBackpressure=false,count=180,shortNames=false,omitEofNak=false,rejectCompact=false,badCompactMagic=false}={}){
+ const data=packedParams(count,shortNames,rejectCompact||badCompactMagic);
  const counters={open:0,burst:0,read:0,missingRepaired:false},progress=[],stages=[];
  const delayed=[];
  let client;
@@ -41,7 +41,7 @@ function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBa
    if(rejectCompact&&filename.endsWith('=0')){
     schedule(reply(seq,0,129,4,0,[7]));return;
    }
-   assert.equal(filename,'@PARAM/param.pck?withdefaults='+(rejectCompact?'1':'0'));
+   assert.equal(filename,'@PARAM/param.pck?withdefaults='+(rejectCompact||badCompactMagic&&counters.open>1?'1':'0'));
    // The real ArduPilot virtual file returns a size ESTIMATE: param_count*12.
    // For a short-name 1338-param file the true payload is smaller.
    const estimate=Buffer.alloc(4);estimate.writeUInt32LE(count*12);
@@ -105,6 +105,17 @@ async function testCompactUnavailableUsesStableFullFormat(){
   assert.equal(s.client.lastMethod,'MAVFTP BURST');
   assert.equal(s.counters.open,2,'compact attempt then known-good format');
   assert.ok(s.client.lastCompactError?.includes('unsupported'),'reason for compact fallback must be recorded');
+  assert.equal(s.client.lastBytes,s.data.length);
+ }finally{s.dispose();}
+}
+async function testControllerIgnoresCompactFormat(){
+ const s=makeServer({badCompactMagic:true});
+ try{
+  const rows=await s.client.download();
+  assert.equal(rows.length,180);
+  assert.equal(s.counters.open,2,'compact header mismatch should retry the original format');
+  assert.equal(s.client.lastDefaults,1,'only verified full-file format should be marked successful');
+  assert.ok(s.client.lastCompactError?.includes('not honored'),'compact-format mismatch must be diagnosed');
   assert.equal(s.client.lastBytes,s.data.length);
  }finally{s.dispose();}
 }
@@ -219,7 +230,7 @@ async function testUnsupportedBurstFallback(){
  }finally{s.dispose();}
 }
 (async()=>{
- await testBurst();await testCompactUnavailableUsesStableFullFormat();await testShortFinalBlockWithoutEofNak();await testSequentialShortFinalBlockWithoutEofNak();testPartialDecodeIsRejected();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
+ await testBurst();await testCompactUnavailableUsesStableFullFormat();await testControllerIgnoresCompactFormat();await testShortFinalBlockWithoutEofNak();await testSequentialShortFinalBlockWithoutEofNak();testPartialDecodeIsRejected();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
  const ui=read('configurator.js'),tests=read('tools/check_ahrs_nav_cache.cjs');
  assert.ok(ui.includes('preferBurst:true'),'TCP should request burst client');
  assert.ok(ui.includes('transfer.perf={durationMs:client.lastDurationMs'),'successful FTP reads should record measured performance');
