@@ -28,7 +28,7 @@ function parseRequest(raw){
 }
 function makeServer({dropOnce=null,disableBurst=false}={}){
  const data=packedParams();
- const counters={open:0,burst:0,read:0,missingRepaired:false};
+ const counters={open:0,burst:0,read:0,missingRepaired:false},progress=[],stages=[];
  const delayed=[];
  let client;
  function schedule(msg,ms=0){delayed.push(setTimeout(()=>client.handle(msg),ms));}
@@ -66,8 +66,8 @@ function makeServer({dropOnce=null,disableBurst=false}={}){
   if(q.opcode===1)return;
   throw Error('Unexpected MAVFTP operation '+q.opcode);
  };
- client=new ftp.Client({send,preferBurst:true,timeoutMs:500,maxRetries:1,maxTimeMs:15000});
- return {client,counters,data,dispose:()=>delayed.forEach(clearTimeout)};
+ client=new ftp.Client({send,preferBurst:true,timeoutMs:500,maxRetries:1,maxTimeMs:15000,onProgress:(bytes,method)=>progress.push({bytes,method}),onStage:(stage,reason)=>stages.push({stage,reason})});
+ return {client,counters,data,progress,stages,dispose:()=>delayed.forEach(clearTimeout)};
 }
 async function testBurst(){
  const s=makeServer();
@@ -78,6 +78,10 @@ async function testBurst(){
   assert.equal(s.client.lastMethod,'MAVFTP BURST');
   assert.ok(s.counters.burst>=2);
   assert.equal(s.counters.read,0,'healthy burst uses zero sequential per-block reads');
+  assert.ok(s.progress.some(x=>x.bytes>0&&x.method==='MAVFTP BURST'),
+   'progress must be reported as soon as burst packets arrive, before a whole file completes');
+  assert.ok(s.stages.some(x=>x.stage==='OPEN')&&s.stages.some(x=>x.stage==='BURST')&&s.stages.some(x=>x.stage==='DONE'),
+   'OPEN, BURST and DONE stages must be observable');
  }finally{s.dispose();}
 }
 async function testLostBurstBlock(){
@@ -98,6 +102,8 @@ async function testUnsupportedBurstFallback(){
   assert.equal(s.client.lastMethod,'MAVFTP READ');
   assert.equal(s.counters.burst,1);
   assert.ok(s.counters.read>4,'server without burst uses old reliable reads');
+  assert.ok(s.client.lastFallback?.includes('NAK'),'unsupported burst reason must remain available for diagnostics');
+  assert.ok(s.stages.some(x=>x.stage==='BURST-FAILED'),'Burst-to-Read fallback must produce a stage marker');
  }finally{s.dispose();}
 }
 (async()=>{
@@ -108,6 +114,11 @@ async function testUnsupportedBurstFallback(){
  assert.ok(ui.includes("transfer.reader=client.lastMethod"),'finished mode should show actual method');
  assert.ok(ui.includes("const visible=info.label.endsWith(' · CFG')"),'AHRS status row should be concise');
  assert.ok(ui.includes('const title=info.label+'),'full AHRS provenance should remain in tooltip');
+ assert.ok(ui.includes("const ftpActive=transfer?.phase==='ftp'"),'PARAM_VALUE messages must recognize the active FTP reader');
+ assert.ok(ui.includes('if(transfer&&state.paramLoading&&!ftpActive)'),'simultaneous legacy PARAM_VALUE must not steal MAVFTP progress');
+ assert.ok(ui.includes('transfer&&!ftpActive&&transfer.seen.size>=state.paramCount'),'competing PARAM_VALUE must not complete MAVFTP prematurely');
+ assert.ok(ui.includes("toast('MAVFTP failed"),'FTP errors must remain visible after legacy fallback');
+ assert.ok(ui.includes('paramFtpError:state.paramTransfer?.ftpError'),'diagnostic API must retain the FTP fallback reason');
  assert.ok(tests.includes('configured-only'),'existing AHRS verification tests must be preserved');
  console.log('PASS: MAVFTP burst, lost-packet recovery, unsupported burst fallback, mode diagnostics and concise AHRS status');
 })().catch(e=>{console.error(e.stack||e);process.exitCode=1;});
