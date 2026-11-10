@@ -70,6 +70,11 @@ const qs={
  resumeFrom:saved&&Number.isInteger(saved.step)?saved.step:0
 };
 function lang(){return window.AtlasLanguage?.()||'ru';}
+const incompleteWrite={
+ ru:'Дождись полной загрузки параметров контроллера.',
+ uk:'Дочекайся повного завантаження параметрів контролера.',
+ en:'Wait for a complete parameter download from the controller.'
+};
 function t(key){return (copy[lang()]||copy.ru)[key]||(copy.ru[key])||key;}
 function el(tag,cls,text){const x=document.createElement(tag);if(cls)x.className=cls;if(text!==undefined)x.textContent=text;return x;}
 function appendText(parent,tag,text,cls){const x=el(tag,cls,text);parent.append(x);return x;}
@@ -91,7 +96,8 @@ function complete(step,status='done'){qs.completed[step]=status;persist();render
 function invalidateFrom(step){
  for(let index=step;index<stepKeys.length;index++)delete qs.completed[index];
  if(step<=3){
-  qs.paramsApplied=false;qs.awaitingCalibration=null;
+  if(step<3)qs.paramsApplied=false;
+  qs.awaitingCalibration=null;
   qs.rebootBaseline=0;qs.rebootSawDisconnect=false;qs.rebootReady=false;qs.rebootUserConfirmed=false;
   qs.rebootReading=false;qs.escConfirmed=false;qs.compassAwaitingSave=false;qs.compassError='';
   qs.accelError='';qs.levelError='';qs.compassNeedReboot=false;qs.compassRebootVerified=false;qs.compassRebootManual=false;qs.compassReadBusy=false;qs.compassRebootMessage='';qs.compassOffline=false;qs.compassLastProgress=0;qs.compassLastUpdate=0;qs.compassManualAudio=false;qs.compassBatteryMode=false;qs.compassBefore=null;qs.finalPhase='idle';qs.finalToken++;if(qs.finalTimer)clearTimeout(qs.finalTimer);
@@ -112,6 +118,7 @@ function canNext(){
  if(qs.step===6&&!qs.paramsApplied)return true;
  if(qs.step===8&&qs.compassNeedReboot&&!qs.compassRebootVerified)return false;
  if(qs.step===10)return false;
+ if(qs.step===3&&!safeLink(state()))return false;
  if(qs.step===9){const status=window.AtlasTempCal?.report();if(!safeLink(state())||!state().paramComplete||status?.busy)return false;}
  return !!qs.completed[qs.step]&&!qs.applyBusy&&!qs.readBusy&&!window.AtlasDfuUi?.isBusy();
 }
@@ -242,10 +249,11 @@ function downloadBackup(){
  qs.backupDownloaded=true;qs.paramsMessage=t('backupDone');if(qs.paramsMode==='keep'&&qs.keepConfirmed&&paramReady(state()))qs.completed[3]='manual';persist();render();
 }
 async function waitForParams(timeout=180000){
+ const connection=state().connectionId;
  return new Promise(resolve=>{
   const started=Date.now(),timer=setInterval(()=>{
    const s=state();
-   if(!s.connected){clearInterval(timer);resolve({ok:false,reason:'disconnected',state:s});}
+   if(!s.connected||s.connectionId!==connection){clearInterval(timer);resolve({ok:false,reason:'disconnected',state:s});}
    else if(!s.paramLoading){
     clearInterval(timer);
     resolve({ok:paramReady(s)&&safeLink(s),complete:s.paramComplete===true,state:s,reason:s.paramPhase});
@@ -255,16 +263,22 @@ async function waitForParams(timeout=180000){
   },450);
  });
 }
-async function refreshProfile(preserveConfirmation=false){
+async function refreshProfile(){
  if(!qs.fileText||!paramReady(state()))return;
- const token=qs.fileToken,board=selectedBoard(),metadata=await getMetadata();
+ const token=qs.fileToken,board=selectedBoard(),connection=state().connectionId,metadata=await getMetadata();
  const live=state();
- if(token!==qs.fileToken||selectedBoard()!==board||!paramReady(live))return;
+ if(token!==qs.fileToken||selectedBoard()!==board||live.connectionId!==connection||!paramReady(live))return;
  qs.preview=core.parseParamText(qs.fileText,live.params,metadata,{boardLabel:boardLabel(board)});
  qs.previewBoard=board;
- if(!preserveConfirmation)qs.compatConfirmed=false;
+ qs.previewConnection=connection;
+ qs.compatConfirmed=false;
  qs.paramsMessage=qs.preview.valid?t('preview'):t('paramInvalid');
  render();
+}
+function refreshProfileAfterConnect(){
+ const live=state();
+ if(!qs.fileText||qs.applyBusy||qs.readBusy||!live.paramComplete||qs.previewConnection===live.connectionId)return;
+ void refreshProfile();
 }
 async function loadParams(){
  if(qs.readBusy||qs.applyBusy||!safeLink(state())){if(!qs.readBusy)setGlobal(t('readNoLink'),true);return;}
@@ -321,25 +335,25 @@ async function applyCustomParams(){
  if(!fresh.valid||JSON.stringify(fresh.changes)!==JSON.stringify(qs.preview.changes)){
   qs.preview=fresh;qs.compatConfirmed=false;qs.paramsMessage=t('retryAfterParam');render();return;
  }
- if(!qs.preview.changes.length){qs.paramsApplied=false;qs.paramsMessage=t('paramNoChanges');complete(3,'manual');return;}
+ if(!qs.preview.changes.length){qs.paramsMessage=t('paramNoChanges');complete(3,'manual');return;}
  if(!window.confirm(t('applyConfirm')+'\n\n'+qs.preview.changes.length+' '+t('changed')+' / '+qs.preview.skipped.length+' '+t('skipped')+'\n\n'+t('backupAuto')))return;
  // Capture the live values before any writes, including when the user did not manually click Backup.
  try{downloadBackup();}catch(error){setGlobal(t('backupError')+' '+error.message,true);return;}
  if(core.writeBlockers(state(),qs,api.canWrite()).length){setGlobal(t('writeBlocked'),true);return;}
- const expected=qs.preview.changes.slice(),board=s.selectedBoard;
- invalidateFrom(3);qs.applyBusy=true;qs.cancelApply=false;qs.applySkipped=[];qs.paramsMessage=t('applying');render();
+ const expected=qs.preview.changes.slice(),board=s.selectedBoard,connection=s.connectionId;
+ invalidateFrom(3);qs.paramsApplied=true;qs.applyBusy=true;qs.cancelApply=false;qs.applySkipped=[];qs.paramsMessage=t('applying');render();
  try{
   const updates=Object.fromEntries(expected);
   const result=await api.writeAdvancedParams(updates,p=>{qs.paramsMessage=t('applying')+' · '+p.done+'/'+p.total+' · '+(p.name||'');setGlobal(qs.paramsMessage);},()=>qs.cancelApply,{skipRejected:true});
   qs.applySkipped=result.skipped||[];
   if(!result.done)throw Error(t('applyPartial'));
-  qs.paramsApplied=true;
   let readback=null;
   for(let pass=1;pass<=2;pass++){
+   if(state().connectionId!==connection)throw Error(t('readNoLink'));
    qs.paramsMessage=t('readPass')+' '+pass+'/2';render();
    if(!api.requestParameters(true))throw Error(t('readPartial'));
    readback=await waitForParams();
-   if(!readback.ok)throw Error(t('readPartial'));
+   if(!readback.ok||!readback.complete)throw Error(t('readPartial'));
   }
   const live=readback.state.params,rejected=new Set(qs.applySkipped.map(item=>item.name));
   const mismatches=expected.filter(([name,value])=>{
@@ -361,10 +375,13 @@ async function applyCustomParams(){
    qs.paramsMessage=t('applyDone')+(qs.applySkipped.length?' · '+qs.applySkipped.length+' '+t('applySkipped'):'');
    complete(3,'done');
   }
- }catch(error){qs.paramsMessage=t('applyPartial')+' · '+error.message;setGlobal(qs.paramsMessage,true);}
- finally{qs.applyBusy=false;qs.cancelApply=false;render();}
+ }catch(error){
+  qs.compatConfirmed=false;
+  qs.paramsMessage=t('applyPartial')+' · '+error.message;
+  setGlobal(qs.paramsMessage,true);
+ }finally{qs.applyBusy=false;qs.cancelApply=false;refreshProfileAfterConnect();render();}
 }
-const writeReason=reason=>t('writeReason'+reason.charAt(0).toUpperCase()+reason.slice(1));
+const writeReason=reason=>reason==='incomplete'?(incompleteWrite[lang()]||incompleteWrite.ru):reason==='stalePreview'?t('retryAfterParam'):t('writeReason'+reason.charAt(0).toUpperCase()+reason.slice(1));
 function updateWriteGate(){
  const btn=$('qsApplyBtn'),note=$('qsWriteGate');if(!btn||!note||qs.step!==3)return;
  const blockers=core.writeBlockers(state(),qs,api.canWrite());
@@ -416,7 +433,7 @@ function renderParams(box){
    if(qs.applyBusy)button(applyRow,t('cancelApply'),()=>{qs.cancelApply=true;setGlobal(t('cancelled'));},'cc-button outline');
    box.append(applyRow);
    const note=appendText(box,'p','', 'qs-global-status');note.id='qsWriteGate';updateWriteGate();
-   if(qs.preview.valid&&qs.preview.changes.length===0&&qs.compatConfirmed&&ready&&!qs.completed[3])button(box,t('confirm'),()=>{qs.paramsMessage=t('paramNoChanges');complete(3,'manual');},'cc-button ghost');
+   if(qs.preview.valid&&qs.preview.changes.length===0&&qs.compatConfirmed&&s.paramComplete&&qs.previewConnection===s.connectionId&&safeLink(s)&&!qs.completed[3])button(box,t('confirm'),()=>{qs.paramsMessage=t('paramNoChanges');complete(3,'manual');},'cc-button ghost');
   }
  }
  if(!ready&&s.paramPhase==='partial')callout(box,t('readPartial'),'warning');
@@ -455,6 +472,7 @@ function startCalibration(kind,batteryMode=false){
 function renderAccel(box){
  addHeading(box,t('accelTitle'),t('accelBody'));
  const s=state();callout(box,api.canCalibrate()?t('disarmed'):t('accelNeedLink'),api.canCalibrate()?'success':'warning');
+ if(!s.connected)addUsbButton(box);
  if(qs.accelError)callout(box,qs.accelError,'danger');
  button(box,t('startAccel'),()=>startCalibration('six'),'cc-button primary').disabled=!api.canCalibrate()||qs.awaitingCalibration==='six';
  callout(box,t('calInline'));
@@ -465,6 +483,7 @@ function renderLevel(box){
  addHeading(box,t('levelTitle'),t('levelBody'));
  if(qs.levelError)callout(box,qs.levelError,'danger');
  callout(box,api.canCalibrate()?t('disarmed'):t('accelNeedLink'),api.canCalibrate()?'success':'warning');
+ if(!state().connected)addUsbButton(box);
  button(box,t('startLevel'),()=>startCalibration('level'),'cc-button primary').disabled=!api.canCalibrate()||qs.awaitingCalibration==='level';
  callout(box,t('calInline'));
  mountCalibrationWidget(box,accelWidget);
@@ -484,13 +503,13 @@ function renderReboot(box){
    api.requestParameters();
    if(!state().paramLoading){qs.rebootReading=false;setGlobal(t('readPartial'),true);render();return;}
    const result=await waitForParams();qs.rebootReading=false;
-   if(result.ok&&safeLink(result.state)){complete(6,'done');setGlobal(t('rebootDone'));}else setGlobal(t('readPartial'),true);
+   if(result.ok&&result.complete&&safeLink(result.state)){complete(6,'done');setGlobal(t('rebootDone'));}else{setGlobal(t('readPartial'),true);render();}
   },'cc-button primary').disabled=qs.rebootReading;
  }else appendText(box,'p',t('rebootStatus'),'qs-global-status');
 }
 function renderEsc(box){
  addHeading(box,t('escTitle'),t('escBody'));
- const s=state();if(!paramReady(s)){callout(box,t('readWaiting'),'warning');return;}
+ const s=state();if(!paramReady(s)){callout(box,t('readWaiting'),'warning');if(!s.connected)addUsbButton(box);return;}
  const profile=qs.paramsMode==='custom'&&qs.fileText&&qs.previewBoard===s.selectedBoard?qs.fileText:null;
  const result=core.classifyEscFromProfile(s.params,profile,s.selectedBoard);
  const channels=result.channels?.length?result.channels.join(', '):'—';
@@ -792,11 +811,25 @@ setInterval(()=>{
 },1000);
 window.addEventListener('atlas:tempcal',()=>{if(wizardActive&&qs.step===9)renderHeader();});
 window.addEventListener('atlas:language',()=>{if(wizardActive)render();else translateStatic();});
-window.addEventListener('atlas:navigate',event=>{wizardActive=event.detail?.tab==='quicksetup';if(wizardActive)render();else{restoreDfuPanel();restoreCalWidgets();}});
-window.addEventListener('atlas:state',()=>{if(wizardActive&&[1,2,3,6,8,9].includes(qs.step))render();});
+window.addEventListener('atlas:navigate',event=>{wizardActive=event.detail?.tab==='quicksetup';if(wizardActive){if(qs.step===3)refreshProfileAfterConnect();render();}else{restoreDfuPanel();restoreCalWidgets();}});
+window.addEventListener('atlas:state',()=>{
+ const live=state();
+ if(!live.connected){
+  qs.compatConfirmed=false;
+  if(qs.step===6&&qs.paramsApplied)qs.rebootSawDisconnect=true;
+  if(qs.step===8&&(qs.compassNeedReboot||qs.awaitingCalibration==='compass'))qs.compassSawDisconnect=true;
+  if(qs.step===10&&qs.finalPhase==='success'){
+   clearTimeout(qs.finalTimer);qs.finalTimer=null;
+   qs.finalPhase='failed';qs.finalMessage=t('finalError');
+   delete qs.completed[10];persist();
+  }
+ }
+ if(wizardActive&&qs.step>=2)render();
+});
 window.addEventListener('atlas:board',()=>{if(qs.firmwareBoard&&qs.firmwareBoard!==selectedBoard()){invalidateFrom(2);qs.fileToken++;qs.fileText=null;qs.preview=null;qs.firmwareSource=null;qs.firmwareBoard=null;}if(wizardActive)render();});
 window.addEventListener('atlas:parameters',()=>{
  if(!wizardActive||[4,5,8].includes(qs.step))return;
+ if(qs.step===3)refreshProfileAfterConnect();
  if(qs.step===9){
   // The INS editor observes atlas:parameters itself. Rebuilding its live form
   // for every PARAM_VALUE packet interrupts keyboard edits and allocates DOM.

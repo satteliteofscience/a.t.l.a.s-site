@@ -61,11 +61,13 @@
    if(!Number.isFinite(s.lastHeartbeat)||Math.abs(now-s.lastHeartbeat)>4000)out.push('heartbeat');
   }
   if(s?.paramLoading)out.push('loading');
+  else if(s?.connected&&s.paramComplete!==true)out.push('incomplete');
   if(!(s?.params instanceof Map)||s.params.size===0)out.push('empty');
   if(!qs.preview)out.push('file');
   else{
    if(!qs.preview.valid)out.push('invalid');
    if(qs.previewBoard!==s?.selectedBoard)out.push('board');
+   if(qs.previewConnection!==s?.connectionId)out.push('stalePreview');
    if(!Array.isArray(qs.preview.changes)||qs.preview.changes.length===0)out.push('unchanged');
   }
   if(!qs.compatConfirmed)out.push('compat');

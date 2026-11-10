@@ -35,7 +35,7 @@ const mkHeartbeat=(sysid,vehicleType=1,compid=1)=>{
  assert.match(cfg,/if\(state\.sysid!==null&&!heartbeatLive\(\)&&!state\.heartbeatStale\)/,'heartbeat loss must be detected only once per outage');
  assert.match(cfg,/else if\(recovered\)\{updateConnectionUI\(\);updateTelemetryUI\(\);/,'heartbeat recovery must restore UI status');
  assert.match(cfg,/WebSocket bridge handshake timed out \(12 s\)/,'network handshake must have a bounded timeout');
- assert.match(cfg,/if\(state\.connecting\)return;if\(state\.connected\)/,'USB and network connects must not overlap');
+ assert.match(cfg,/if\(state\.connecting\|\|closingConnection\)return;if\(state\.connected\)/,'USB must wait for another connect or teardown');
  assert.match(wizard,/let wizardActive=/,'Quick Setup should track whether its panel is visible');
  assert.match(wizard,/if\(!wizardActive\|\|\[4,5,8\]\.includes\(qs\.step\)\)return/,'inactive wizard must not rerender for streamed parameters');
  assert.match(wizard,/if\(qs\.step===9\)/,'INS temperature stage remains present');

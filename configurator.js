@@ -213,6 +213,7 @@ async function recoverMissingParams(){
   x.phase='repair';
   let sent=0,pending=0;
   for(let i=0;i<state.paramCount;i++){
+    if(state.paramTransfer!==x||!state.paramLoading)break;
     if(x.seen.has(i))continue;
     const tries=x.attempts.get(i)||0;
     if(tries>=5)continue;
@@ -274,13 +275,16 @@ async function cleanupForNavigation(){
 }
 
 let txGeneration=0;
-async function disconnect(){txGeneration++;state.bulkCancel=true;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.activeFilter=null;state.statusTextAssembler.reset();state.paramTransfer=null;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;const reader=state.reader;state.reader=null;
+let closingConnection=false;
+async function disconnect(){if(closingConnection)return;closingConnection=true;
+ txGeneration++;state.connected=false;state.bulkCancel=true;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.activeFilter=null;state.statusTextAssembler.reset();state.paramTransfer=null;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;const reader=state.reader;state.reader=null;
+ if(state.writeWait){const pending=state.writeWait;state.writeWait=null;clearTimeout(pending.timer);pending.reject(Error('Connection closed'));}
  try{if(reader)await reader.cancel();}catch{}
  try{if(reader)reader.releaseLock();}catch{}
  const port=state.port;state.port=null;try{if(port)await port.close();}catch(e){console.warn(e);}
  const socket=state.netSocket;state.netSocket=null;state.bridgeReady=false;state.transport=null;if(socket){try{socket.close();}catch{}}
  state.connected=false;state.sysid=null;state.compassStatus=null;state.lastVoltageTelemetry=0;state.lastHeartbeat=0;state.heartbeatStale=false;state.lastVfr=0;state.vfrFallbackSent=false;state.armed=null;state.mode=null;state.params.clear();state.paramCount=null;state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramLoading=false;
- if(state.writeWait){clearTimeout(state.writeWait.timer);state.writeWait.reject(Error('Connection closed'));state.writeWait=null;}
+ state.txPromise=Promise.resolve();closingConnection=false;
  updateConnectionUI();renderBasic();renderParams();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));toast('MAVLink disconnected');}
 async function transmit(messageId,payload){
  const generation=txGeneration;
@@ -381,7 +385,7 @@ function handleMessage(message){if(state.pageLeaving)return;const data=M.parseMe
 }
 let renderQueued=false;
 function scheduleParameterRerender(){if(renderQueued||state.pageLeaving)return;renderQueued=true;setTimeout(()=>{renderQueued=false;if(state.pageLeaving)return;if(state.selectedTab==='params')renderParams();if(state.selectedTab==='basic')renderBasic();showProgress();if(!document.hidden)window.dispatchEvent(new Event('atlas:parameters'));},state.paramLoading?1600:400);}
-async function connect(){if(state.connecting)return;if(state.connected){await disconnect();return;}
+async function connect(){if(state.connecting||closingConnection)return;if(state.connected){await disconnect();return;}
  if(state.demo)enterDemo();
  if(!window.isSecureContext||!('serial' in navigator)){toast(tr('nosupport'),true);alert(tr('nosupport'));return;}
  state.connecting=true;updateConnectionUI();
@@ -395,7 +399,26 @@ async function connect(){if(state.connecting)return;if(state.connected){await di
   state.streamTimer=setInterval(heartbeatTick,1000);
   transmit(0,M.heartbeat()).catch(()=>{});
   // Avoid blocking the UI by running the receive loop as an async task.
-  (async()=>{try{while(state.rxActive&&state.port){const reader=state.port.readable.getReader();state.reader=reader;try{while(state.rxActive){const {value,done}=await reader.read();if(done)break;if(value)parser.push(value);}}finally{reader.releaseLock();state.reader=null;}}}catch(err){if(state.rxActive)toast('USB RX: '+err.message,true);}finally{if(state.rxActive)disconnect().catch(console.error);}})();
+  const generation=txGeneration;
+  const active=()=>state.rxActive&&state.port===port&&txGeneration===generation;
+  void (async()=>{
+   try{
+    while(active()){
+     const readable=port.readable;
+     if(!readable)break;
+     const reader=readable.getReader();state.reader=reader;
+     try{
+      while(active()){
+       const {value,done}=await reader.read();
+       if(done||!active())break;
+       if(value)parser.push(value);
+      }
+     }finally{reader.releaseLock();if(state.reader===reader)state.reader=null;}
+     if(port.readable===readable)break;
+    }
+   }catch(err){if(active())toast('USB RX: '+err.message,true);}
+   finally{if(active())disconnect().catch(console.error);}
+  })();
  }catch(err){toast('USB: '+err.message,true);if(state.port)await disconnect();}
  finally{state.connecting=false;updateConnectionUI();}
 }
@@ -407,16 +430,17 @@ const readTwoLex={
 async function readParamsTwice(){
  if(state.readTwoBusy||!state.connected||state.sysid===null||state.bulk?.running||state.servoConfigBusy){toast((readTwoLex[lang]||readTwoLex.ru).busy,true);return;}
  const text=readTwoLex[lang]||readTwoLex.ru;
+ const generation=txGeneration;
  state.readTwoBusy=true;const button=$('twoPassParamsBtn');button.disabled=true;
  try{
   for(let pass=1;pass<=2;pass++){
-   if(!state.connected||state.sysid===null)throw Error(tr('needlink'));
+   if(!state.connected||state.sysid===null||txGeneration!==generation)throw Error(tr('needlink'));
    if(!state.paramLoading&&!startParamLoad(true))throw Error(text.busy);
    button.textContent=text.start+' '+pass+'/2';
    const started=Date.now();
-   while(state.connected&&state.paramLoading&&Date.now()-started<75000)await new Promise(resolve=>setTimeout(resolve,300));
+   while(state.connected&&txGeneration===generation&&state.paramLoading&&Date.now()-started<75000)await new Promise(resolve=>setTimeout(resolve,300));
+   if(!state.connected||txGeneration!==generation)throw Error(tr('needlink'));
    if(state.paramLoading)throw Error(text.incomplete+' · timeout');
-   if(!state.connected)throw Error(tr('needlink'));
   }
   toast(state.paramTransfer?.phase==='complete'?text.done:text.incomplete,state.paramTransfer?.phase!=='complete');
  }catch(e){toast(e.message,true);}
@@ -460,6 +484,7 @@ function syncNetworkDefaults(){
  $('networkPort').value=mode==='tcp-client'?'5760':'14550';
 }
 async function connectBridge(){
+ if(closingConnection)return;
  if(state.transport==='bridge'&&state.connected){await disconnect();updateNetworkLabels();return;}
  if(state.connecting)return;
  const mode=$('networkMode').value,host=$('networkHost').value.trim(),port=Number($('networkPort').value),token=$('networkToken').value.trim();
@@ -585,7 +610,7 @@ function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBu
 }
 function canWrite(){return state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading&&!state.readTwoBusy;}
 window.AtlasCC = Object.freeze({
-  getState:()=>({connected:state.connected,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,lastVoltageTelemetry:state.lastVoltageTelemetry,transport:state.transport,compassStatus:state.compassStatus,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramReader:state.paramTransfer?.reader||null,paramPerf:state.paramTransfer?.perf||null,paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
+  getState:()=>({connected:state.connected,connectionId:txGeneration,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,lastHeartbeat:state.lastHeartbeat,params:state.params,telemetry:state.telemetry,lastVoltageTelemetry:state.lastVoltageTelemetry,transport:state.transport,compassStatus:state.compassStatus,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramReader:state.paramTransfer?.reader||null,paramPerf:state.paramTransfer?.perf||null,paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
   canWrite:()=>canWrite(),
   connectUsb:()=>connect(),
   connectBridge:()=>connectBridge(),
@@ -618,11 +643,12 @@ window.AtlasCC = Object.freeze({
     if(!changes.length)return {done:0,total:0};
     const proposed=Object.fromEntries(['MIN','TRIM','MAX'].map(k=>[k,updates[k]??state.params.get(`SERVO${channel}_${k}`)?.value]));
     if(Object.values(proposed).every(Number.isFinite)&&!(proposed.MIN<=proposed.TRIM&&proposed.TRIM<=proposed.MAX))throw Error('MIN ≤ TRIM ≤ MAX required');
+    const generation=txGeneration;
     state.servoConfigBusy=true;
     let done=0;
     try{
       for(const change of changes){
-        if(!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>=4000)throw Error(`Stopped after ${done}/${changes.length}: USB/ARM state changed`);
+        if(txGeneration!==generation||!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>=4000)throw Error(`Stopped after ${done}/${changes.length}: USB/ARM state changed`);
         onProgress({done,total:changes.length,current:change.name});
         // PARAM_VALUE echoes the accepted value; do not report success until it arrives.
         await writeParameterWithAck(change.name,change.value,change.type);
@@ -648,11 +674,12 @@ window.AtlasCC = Object.freeze({
       else if(name.endsWith('_Y')&&!(value>=0&&value<=31))throw Error(`${name}: Y range 0..31`);
       if(p.value!==value)changes.push({name,value,type:p.type});
     }
+    const generation=txGeneration;
     state.servoConfigBusy=true;
     let done=0;
     try{
       for(const ch of changes){
-        if(!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>=4000)throw Error('Disconnected or ARM state changed');
+        if(txGeneration!==generation||!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>=4000)throw Error('Disconnected or ARM state changed');
         onProgress({done,total:changes.length,name:ch.name});
         await writeParameterWithAck(ch.name,ch.value,ch.type);
         done++;
@@ -684,15 +711,16 @@ window.AtlasCC = Object.freeze({
       if(Math.abs(p.value-value)>Math.max(1e-5,Math.abs(value)*2e-6))changes.push({name,value,type:p.type});
     }
     if(!changes.length)return {done:0,total:0};
+    const generation=txGeneration;
     state.servoConfigBusy=true;let done=0;const skipped=[];
     try{
       for(const c of changes){
         if(shouldCancel())throw Error('Cancelled after '+done+'/'+changes.length);
-        if(!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>4000)throw Error('Connection/ARM state changed');
+        if(txGeneration!==generation||!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>4000)throw Error('Connection/ARM state changed');
         onProgress({done,total:changes.length,name:c.name});
         try{await writeParameterWithAck(c.name,c.value,c.type);done++;}
         catch(e){
-          if(options.skipRejected===true&&state.connected&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!shouldCancel()){
+          if(options.skipRejected===true&&txGeneration===generation&&state.connected&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!shouldCancel()){
             skipped.push({name:c.name,reason:e.message});continue;
           }
           throw e;
@@ -808,9 +836,18 @@ function renderImportDiff(){const box=$('importDiff');if(!state.importedText){bo
 async function writeParameterWithAck(name,value,type){
  if(!state.connected||state.sysid===null||state.armed!==false||Date.now()-state.lastHeartbeat>=4000)throw Error('MAVLink link or DISARMED heartbeat missing');
  if(state.writeWait)throw Error('Other PARAM_SET in progress');
- const promise=new Promise((resolve,reject)=>{const timer=setTimeout(()=>{if(state.writeWait?.name===name){state.writeWait=null;reject(Error(tr('paramReq')));}},3500);state.writeWait={name,value,resolve,reject,timer};});
- try{await transmit(23,M.paramSet(state.sysid,state.compid,name,value,type));return await promise;}
- catch(e){if(state.writeWait?.name===name){clearTimeout(state.writeWait.timer);state.writeWait=null;}throw e;}
+ let pending;
+ const promise=new Promise((resolve,reject)=>{
+  const timer=setTimeout(()=>{if(state.writeWait===pending){state.writeWait=null;reject(Error(tr('paramReq')));}},3500);
+  pending={name,value,resolve,reject,timer};
+  state.writeWait=pending;
+ });
+ // A lost link must reject the operation even if the serial write is still pending.
+ try{
+  const [,valueRead]=await Promise.all([transmit(23,M.paramSet(state.sysid,state.compid,name,value,type)),promise]);
+  return valueRead;
+ }
+ catch(e){if(state.writeWait===pending){clearTimeout(pending.timer);state.writeWait=null;}throw e;}
 }
 async function writeImported(){
  if(!state.imported||!state.importReport||state.importReport.errors.length||!$('bulkConsent').checked||!canWrite()||state.paramLoading){toast(tr('batchNoLink'),true);renderImportDiff();return;}
@@ -915,6 +952,9 @@ function wire(){
    window.location.assign(href);
  }));
  $('networkMode').addEventListener('change',syncNetworkDefaults);$('networkConnectBtn').addEventListener('click',connectBridge);
+ navigator.serial?.addEventListener('disconnect',event=>{
+  if(state.port&&(event.target===state.port||event.port===state.port))void disconnect();
+ });
  $('connectBtn').addEventListener('click',connect);$('demoBtn').addEventListener('click',enterDemo);$('readBasicsBtn').addEventListener('click',()=>startParamLoad(false));$('refreshParamsBtn').addEventListener('click',()=>startParamLoad(true));$('twoPassParamsBtn').addEventListener('click',readParamsTwice);$('exportParamsBtn').addEventListener('click',exportParams);$('paramSearch').addEventListener('input',()=>{state.tableLimit=150;renderParams();});$('moreParamsBtn').addEventListener('click',()=>{state.tableLimit+=180;renderParams();});$('paramModifiedOnly').addEventListener('change',renderParams);$('paramNoDefaultOnly').addEventListener('change',renderParams);
  window.addEventListener('atlas:metadata',()=>{if(state.importedText)prepareImported();renderParams();renderImportDiff();});
  window.AtlasParamTree?.initialize({render:renderParams,langGetter:()=>lang});

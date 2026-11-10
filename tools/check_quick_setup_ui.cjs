@@ -7,7 +7,7 @@ const core=read('quick-setup-core.js'),wizard=read('quick-setup.js'),cal=read('c
 const vm=require('node:vm');
 assert.match(html,/data-tab="quicksetup"/,'Quick Setup navigation entry missing');
 assert.match(html,/data-panel="quicksetup"/,'Quick Setup panel missing');
-assert.match(html,/<script src="dfu-ui\.js" defer><\/script><script src="quick-setup-core\.js" defer><\/script><script src="tempcal-core\.js" defer><\/script><script src="tempcal-ui\.js" defer><\/script><script src="quick-setup\.js" defer>/,'Quick Setup must load after INS temperature calibration module and DFU');
+assert.match(html,/<script src="dfu-ui\.js" defer><\/script><script src="quick-setup-core\.js(?:\?[^"]+)?" defer><\/script><script src="tempcal-core\.js" defer><\/script><script src="tempcal-ui\.js" defer><\/script><script src="quick-setup\.js(?:\?[^"]+)?" defer>/,'Quick Setup must load after INS temperature calibration module and DFU');
 assert.match(cfg,/quicksetup/,'configurator navigation must allow Quick Setup');
 assert.match(cfg,/paramComplete:/,'controller API must expose complete parameter read state');
 assert.match(cfg,/writeAdvancedParams:async \(updates,onProgress=\(\)=>\{\},shouldCancel=\(\)=>false,options=\{\}\)/,'bulk parameter writer must support cancellation between acknowledged writes');
@@ -137,4 +137,19 @@ assert.match(wizard,/startCalibration\('compass',false\)/,'wizard must preserve 
 assert.match(wizard,/compassUsbPowerWarning/,'wizard must explain that software disconnect does not cut USB 5V');
 assert.match(wizard,/verifyCompassBatteryResult/,'quick setup must check post-reboot compass offsets');
 assert.match(wizard,/assessPostCompassCalibration\(qs\.compassBefore/,'post-reboot evidence should compare pre/post offsets, not claim MAG_CAL_REPORT success');
-console.log('PASS: Quick Setup navigation, API gates, DFU/calibration events, zero-trimmed VFR_HUD, battery compass and post-reboot evidence checks.');
+async function checkReadAcrossReconnect(){
+ const source=wizard.slice(wizard.indexOf('async function waitForParams('),wizard.indexOf('async function refreshProfile('));
+ let live={connected:true,connectionId:1,paramLoading:true},tick;
+ const context={state:()=>live,setInterval:callback=>{tick=callback;return 1;},clearInterval(){},paramReady:()=>true,safeLink:()=>true};
+ vm.runInNewContext(source,context);
+ const reading=context.waitForParams();
+ // The connection disappears and returns before the next polling interval.
+ live={connected:true,connectionId:2,paramLoading:false,paramComplete:true};
+ tick();
+ assert.equal((await reading).reason,'disconnected');
+ const fresh=context.waitForParams();tick();
+ assert.equal((await fresh).complete,true);
+}
+checkReadAcrossReconnect().then(()=>{
+ console.log('PASS: Quick Setup navigation, calibration and DFU events, and parameter read isolation across USB reconnects.');
+}).catch(error=>{console.error(error);process.exitCode=1;});

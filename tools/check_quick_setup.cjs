@@ -66,12 +66,14 @@ function escParams({mask=0,otype=0,channels=[3],can=false}={}){
  assert.equal(result.warnings.length,0);
 })();
 (function testQuickWriteButtonSafetyAndNoBackupPrecondition(){
- const now=Date.now(),s={connected:true,demo:false,armed:false,lastHeartbeat:now,paramLoading:false,params:params([['THR_MAX',100,6]]),selectedBoard:'matek-h743-wing-v3'};
+ const now=Date.now(),s={connected:true,demo:false,armed:false,lastHeartbeat:now,paramLoading:false,paramComplete:true,params:params([['THR_MAX',100,6]]),selectedBoard:'matek-h743-wing-v3'};
  const q={preview:{valid:true,changes:[['THR_MAX',95]]},previewBoard:s.selectedBoard,compatConfirmed:true,applyBusy:false,readBusy:false,backupDownloaded:false};
  assert.deepEqual(core.writeBlockers(s,q,true,now),[],'backup download must not silently block a safe write');
  assert.ok(core.writeBlockers({...s,armed:true},q,false,now).includes('disarmed'));
  assert.ok(core.writeBlockers({...s,lastHeartbeat:now-4500},q,false,now).includes('heartbeat'));
  assert.ok(core.writeBlockers({...s,paramLoading:true},q,false,now).includes('loading'));
+ assert.ok(core.writeBlockers({...s,paramComplete:false},q,true,now).includes('incomplete'));
+ assert.ok(core.writeBlockers({...s,connectionId:2},{...q,previewConnection:1},true,now).includes('stalePreview'));
  assert.ok(core.writeBlockers({...s,params:params([])},q,false,now).includes('empty'));
  assert.ok(core.writeBlockers(s,{...q,compatConfirmed:false},true,now).includes('compat'));
  assert.ok(core.writeBlockers(s,{...q,previewBoard:'cube-orange'},true,now).includes('board'));
