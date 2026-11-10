@@ -21,6 +21,39 @@ assert.match(receive,/if\(ftpActive&&state\.paramLoading\)transfer\.concurrentPa
  'count unsolicited legacy parameter stream during MAVFTP');
 assert.match(receive,/if\(!ftpActive\)scheduleParameterRerender\(\)/,
  'do not perform redundant table rerender for each unsolicited parameter during MAVFTP');
+
+async function checkLegacyParamStartup(transport){
+ const state={transport,connected:true,sysid:1,compid:1,params:new Map()};
+ const requests=[];
+ let now=10000;
+ const context={
+  state,Date:{now:()=>now},renderParams(){},renderBasic(){},showProgress(){},
+  toast(message,error){if(error)throw Error(message);},tr:key=>key,
+  setInterval:()=>1,clearInterval(){},
+  startFastParamStream(transfer){
+   if(transport!=='bridge')return false;
+   transfer.phase='ftp';
+   return true;
+  },
+  M:{paramList:()=>null,paramReadByIndex:(_sys,_comp,index)=>index},
+  async transmit(id,payload){requests.push([id,payload]);}
+ };
+ const source=extract('function stopParamRepair(){','function finishParamTransfer(')+
+  extract('async function recoverMissingParams(){','function renderAhrsFilter(')+
+  extract('function startLegacyParamStream(transfer){','function startFastParamStream(')+
+  extract('function startParamLoad(','function canWrite(');
+ vm.runInNewContext(source,context);
+ assert.equal(context.startParamLoad(),true);
+ if(transport==='bridge')context.startLegacyParamStream(state.paramTransfer);
+ assert.deepEqual(requests,[[21,null]],transport+' must request the legacy parameter list');
+ assert.equal(state.paramRepairTimer,1);
+ state.paramCount=3;
+ state.paramTransfer.seen.add(0).add(2);
+ now+=4000;
+ await context.recoverMissingParams();
+ await context.recoverMissingParams();
+ assert.deepEqual(requests,[[21,null],[20,1]],transport+' repairs the missing index without immediately repeating it');
+}
 const recoverySource=extract('async function requestBridgeMissingStreams(){','function handleMessage(');
 const sent=[],mockNow=Date.now(),state={
  transport:'bridge',connected:true,paramLoading:true,sysid:1,compid:1,
@@ -32,6 +65,8 @@ const ctx={
 };
 vm.runInNewContext(recoverySource+'\nthis.check=requestBridgeMissingStreams;',ctx);
 (async()=>{
+ await checkLegacyParamStartup('usb');
+ await checkLegacyParamStartup('bridge');
  await ctx.check();
  assert.equal(sent.length,0,'never negotiate streams while packed parameters are loading');
  state.paramLoading=false;

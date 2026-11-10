@@ -578,7 +578,7 @@ function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBu
  }
  state.ftpClient?.cancel();state.ftpClient=null;stopParamRepair();
  state.paramLoading=true;state.params.clear();state.paramCount=null;state.tableLimit=150;
- const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),firstConnection:state.paramTransfer===null,concurrentParamValues:0,phase:'receiving',reader:null,ftpStage:null,ftpError:null,ftpBurstError:null,ftpCompactError:null,ftpBlockError:null,perf:null,started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
+ const time=Date.now(),transfer={seen:new Set(),attempts:new Map(),lastRequested:new Map(),firstConnection:state.paramTransfer===null,concurrentParamValues:0,phase:'receiving',reader:null,ftpStage:null,ftpError:null,ftpBurstError:null,ftpCompactError:null,ftpBlockError:null,perf:null,started:time,lastNew:time,lastListRequest:time,listRetries:0,requests:0,repairBusy:false};
  state.paramTransfer=transfer;renderParams();renderBasic();showProgress();
  if(!startFastParamStream(transfer))startLegacyParamStream(transfer);
  return true;
