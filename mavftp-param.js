@@ -62,14 +62,15 @@
   return out;
  }
  class Client{
-  constructor({send,onProgress,timeoutMs=1600,maxRetries=4,maxTimeMs=110000,preferBurst=false}){
+  constructor({send,onProgress,onStage,timeoutMs=1600,maxRetries=4,maxTimeMs=110000,preferBurst=false}){
    if(typeof send!=='function')throw Error('MAVFTP send callback required');
-   this.send=send;this.onProgress=onProgress||(()=>{});this.timeoutMs=timeoutMs;
-   this.maxRetries=maxRetries;this.maxTimeMs=maxTimeMs;this.seq=1;this.waiting=null;this.burst=null;this.closed=false;this.session=null;this.preferBurst=preferBurst;this.lastMethod=null;
+   this.send=send;this.onProgress=onProgress||(()=>{});this.onStage=onStage||(()=>{});this.timeoutMs=timeoutMs;
+   this.maxRetries=maxRetries;this.maxTimeMs=maxTimeMs;this.seq=1;this.waiting=null;this.burst=null;this.closed=false;this.session=null;this.preferBurst=preferBurst;this.lastMethod=null;this.lastFallback=null;this.responses=0;this.burstFrames=0;this.burstReceivedBytes=0;this.lastProgressAt=0;this.stage='idle';
   }
   handle(raw){
    const result=response(raw);
    if(!result||this.closed)return false;
+   this.responses++;
    const burst=this.burst;
    if(burst&&result.reqOpcode===15&&result.session===burst.session){
     // Burst replies increment the FTP sequence, unlike one-shot ReadFile.
@@ -86,7 +87,16 @@
     if(previous&&(previous.length!==result.size||previous.some((byte,i)=>byte!==result.data[i]))){
      burst.finish(Error('Inconsistent MAVFTP burst block at '+result.offset));return true;
     }
-    burst.frames.set(result.offset,result.data.slice());
+    if(!previous){
+     this.burstFrames++;this.burstReceivedBytes+=result.size;
+     burst.frames.set(result.offset,result.data.slice());
+     // A real ArduPilot burst can contain the entire packed parameter file.
+     // Report received bytes while the stream is live, not only after EOF.
+     const now=Date.now();
+     if(now-this.lastProgressAt>=120||result.burstComplete){
+      this.lastProgressAt=now;this.onProgress(this.burstReceivedBytes,'MAVFTP BURST');
+     }
+    }
     if(result.burstComplete)burst.finish(null,null);
     else burst.watchdog();
     return true;
@@ -154,6 +164,7 @@
    });
   }
   async readSequential(session,started){
+   this.stage='read';this.onStage('READ');
    const chunks=[];let offset=0;
    for(;;){
     if(this.closed)throw Error('MAVFTP cancelled');
@@ -165,7 +176,7 @@
      break;
     }
     if(reply.size<1||reply.size>CHUNK)throw Error('Invalid MAVFTP read block');
-    chunks.push(reply.data.slice());offset+=reply.size;this.onProgress(offset);
+    chunks.push(reply.data.slice());offset+=reply.size;this.onProgress(offset,'MAVFTP READ');
    }
    return Client.joinChunks(chunks,offset);
   }
@@ -175,6 +186,7 @@
    return bytes;
   }
   async readBurst(session,started){
+   this.stage='burst';this.onStage('BURST');
    const chunks=[],saved=new Map();let offset=0,eofOffset=null,retries=0;
    // Only one outstanding operation. BurstReadFile is used for throughput,
    // ReadFile fills gaps if a burst packet is lost or the server stalls.
@@ -211,7 +223,7 @@
      const chunk=saved.get(offset);saved.delete(offset);
      chunks.push(chunk);offset+=chunk.length;
     }
-    if(offset!==before){retries=0;this.onProgress(offset);}
+    if(offset!==before){retries=0;this.onProgress(Math.max(offset,this.burstReceivedBytes),'MAVFTP BURST');}
     else if(++retries>=3)throw Error('MAVFTP burst stalled at '+offset);
     if(eofOffset!==null){
      if(offset>eofOffset)throw Error('MAVFTP data after EOF');
@@ -225,6 +237,7 @@
    if(this.closed)throw Error('MAVFTP cancelled');
    let session=null;const started=Date.now();
    try{
+    this.stage='open';this.onStage('OPEN');
     const filename=enc.encode('@PARAM/param.pck?withdefaults=1');
     const opened=await this.request(4,{data:filename,size:filename.length});
     if(opened.opcode!==128||opened.size<4)throw Error('MAVFTP parameter file unsupported (NAK '+(opened.data[0]??'?')+')');
@@ -236,6 +249,8 @@
       this.lastMethod='MAVFTP BURST';
      }catch(error){
       if(this.closed)throw error;
+      this.lastFallback=error.message;
+      this.onStage('BURST-FAILED',error.message);
       // Some firmware/bridges reject bursts or throttle them too heavily.
       // Retry with the known-good sequential read on the same file session.
       this.onProgress(0);
@@ -246,7 +261,10 @@
      bytes=await this.readSequential(session,started);
      this.lastMethod='MAVFTP READ';
     }
-    return decodePacked(bytes);
+    this.stage='decode';this.onStage('DECODE');
+    const rows=decodePacked(bytes);
+    this.stage='done';this.onStage('DONE');
+    return rows;
    }finally{
     if(session!==null&&!this.closed){
      try{await this.request(1,{session,ignoreReply:true});}catch{}
