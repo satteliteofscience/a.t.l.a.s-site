@@ -53,7 +53,7 @@ function samplePacked(){
    }else if(req.opcode===5){
     reads++;
     if(req.offset>=packed.length)response=rawHeader(req.seq,1,129,5,req.offset,Uint8Array.of(6));
-    else response=rawHeader(req.seq,1,128,5,req.offset,packed.subarray(req.offset,req.offset+239));
+    else response=rawHeader(req.seq,1,128,5,req.offset,packed.subarray(req.offset,req.offset+req.size));
    }else if(req.opcode===1){termination=true;return;}
    else throw Error('Unsupported FTP request '+req.opcode);
    setTimeout(()=>client.handle(response),1);
@@ -61,7 +61,7 @@ function samplePacked(){
  });
  const downloaded=await client.download();
  assert.equal(downloaded.length,items.length);
- assert.equal(reads,2,'must read through EOF NAK, not use the estimated OpenFileRO length');
+ assert.equal(reads,1,'short final ACK is the real end of the virtual file; estimated OpenFileRO size is not exact');
  assert.ok(termination);
  assert.equal(client.session,null);
  assert.deepEqual(items.map(x=>x.value),downloaded.map(x=>x.value));
