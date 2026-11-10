@@ -42,7 +42,7 @@ function samplePacked(withDefaults=true){
  assert.throws(()=>ftp.decodePacked(invalid),/header/);
  let client,requests=0,reads=0,termination=false;
  client=new ftp.Client({
-  timeoutMs:100,maxRetries:2,
+  readSize:110,timeoutMs:100,maxRetries:2,
   onProgress:bytes=>assert.ok(bytes>0),
   send:async request=>{
    requests++;const req={seq:new DataView(request.buffer,request.byteOffset,request.byteLength).getUint16(0,true),opcode:request[3],size:request[4],offset:new DataView(request.buffer,request.byteOffset,request.byteLength).getUint32(8,true),data:request.subarray(12)};
