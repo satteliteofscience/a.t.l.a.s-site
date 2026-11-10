@@ -26,9 +26,9 @@ function parseRequest(raw){
  const v=new DataView(raw.buffer,raw.byteOffset,raw.byteLength);
  return {seq:v.getUint16(0,true),session:raw[2],opcode:raw[3],size:raw[4],offset:v.getUint32(8,true),data:raw.slice(12)};
 }
-function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBackpressure=false,count=180,shortNames=false,omitEofNak=false,rejectCompact=false,badCompactMagic=false}={}){
+function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBackpressure=false,count=180,shortNames=false,omitEofNak=false,rejectCompact=false,badCompactMagic=false,serverBlockSize=CHUNK,clientBlockSize=serverBlockSize,rejectExperimental=false}={}){
  const data=packedParams(count,shortNames,rejectCompact||badCompactMagic);
- const counters={open:0,burst:0,read:0,missingRepaired:false},progress=[],stages=[];
+ const counters={open:0,burst:0,read:0,rejected:0,missingRepaired:false},progress=[],stages=[];
  const delayed=[];
  let client;
  function schedule(msg,ms=0){delayed.push(setTimeout(()=>client.handle(msg),ms));}
@@ -48,13 +48,17 @@ function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBa
    schedule(reply(seq,1,128,4,0,estimate));return;
   }
   if(q.opcode===15){
-   counters.burst++;assert.equal(q.size,CHUNK);
+   counters.burst++;
+   if(rejectExperimental&&q.size>CHUNK){
+    counters.rejected++;schedule(reply(seq,1,129,15,q.offset,[7]));return;
+   }
+   assert.equal(q.size,serverBlockSize,'burst size must remain consistent with active FTP session');
    if(dropGapRead&&q.offset===dropOnce)counters.missingRepaired=true;
    if(disableBurst){schedule(reply(seq,1,129,15,q.offset,[7]));return;}
    if(q.offset>=data.length){schedule(reply(seq,1,129,15,q.offset,[6]));return;}
    let sent=0,replySeq=seq,p=q.offset;
    while(p<data.length&&sent<(silentBackpressure?2:3)){
-    const bytes=data.subarray(p,p+CHUNK);
+    const bytes=data.subarray(p,p+serverBlockSize);
     const skip=dropOnce!==null&&p===dropOnce&&!counters.missingRepaired;
     // Even when a block is dropped, the server advances to the next offset.
     const isLast=sent===2&&p+bytes.length<data.length;
@@ -65,18 +69,51 @@ function makeServer({dropOnce=null,disableBurst=false,dropGapRead=false,silentBa
    return;
   }
   if(q.opcode===5){
-   counters.read++;assert.equal(q.size,CHUNK,'all reads on a packed parameter file must use the same 110-byte size');
+   counters.read++;
+   if(rejectExperimental&&q.size>CHUNK){
+    counters.rejected++;schedule(reply(seq,1,129,5,q.offset,[7]));return;
+   }
+   assert.equal(q.size,serverBlockSize,'all reads on a packed parameter file must use its opening block size');
    if(dropGapRead&&q.offset===dropOnce)return; // emulate a station dropping isolated ReadFile replies
    if(q.offset===dropOnce)counters.missingRepaired=true;
    if(q.offset>=data.length){if(!omitEofNak)schedule(reply(seq,1,129,5,q.offset,[6]));}
-   else schedule(reply(seq,1,128,5,q.offset,data.subarray(q.offset,q.offset+CHUNK)));
+   else schedule(reply(seq,1,128,5,q.offset,data.subarray(q.offset,q.offset+serverBlockSize)));
    return;
   }
   if(q.opcode===1)return;
   throw Error('Unexpected MAVFTP operation '+q.opcode);
  };
- client=new ftp.Client({send,preferBurst:true,timeoutMs:500,burstIdleMs:silentBackpressure?30:900,maxRetries:1,maxTimeMs:15000,onProgress:(bytes,method)=>progress.push({bytes,method}),onStage:(stage,reason)=>stages.push({stage,reason})});
+ client=new ftp.Client({send,preferBurst:true,readSize:clientBlockSize,timeoutMs:500,burstIdleMs:silentBackpressure?30:900,maxRetries:1,maxTimeMs:15000,onProgress:(bytes,method)=>progress.push({bytes,method}),onStage:(stage,reason)=>stages.push({stage,reason})});
  return {client,counters,data,progress,stages,dispose:()=>delayed.forEach(clearTimeout)};
+}
+async function testLargeBlockRead(blockSize){
+ const s=makeServer({count:1338,shortNames:true,serverBlockSize:blockSize});
+ try{
+  const rows=await s.client.download();
+  assert.equal(rows.length,1338,'larger block must return the complete packed parameter set');
+  assert.equal(rows[1337].value,1337.5);
+  assert.equal(s.client.lastReadSize,blockSize);
+  assert.equal(s.client.requestedReadSize,blockSize);
+  assert.equal(s.client.lastDefaults,0,'keep the compact no-defaults format');
+  assert.equal(s.client.lastSizeFallback,null,'healthy larger-block connection must not revert to 110');
+  assert.equal(s.counters.read,0,'healthy burst should not request individual gap blocks');
+  assert.equal(s.client.lastBytes,s.data.length);
+ }finally{s.dispose();}
+}
+async function testLargeBlockRejectionFallback(){
+ const s=makeServer({serverBlockSize:CHUNK,clientBlockSize:220,rejectExperimental:true});
+ try{
+  const rows=await s.client.download();
+  assert.equal(rows.length,180,'all parameters must survive automatic block-size fallback');
+  assert.equal(s.counters.open,2,'retry at 110 bytes requires its own fresh FTP file session');
+  assert.ok(s.counters.rejected>=1,'the simulated radio must actually reject the 220-byte burst');
+  assert.equal(s.client.lastReadSize,110,'effective block size must indicate successful 110-byte recovery');
+  assert.equal(s.client.requestedReadSize,220);
+  assert.equal(s.client.lastDefaults,0,'keep compact parameters across block-size fallback');
+  assert.match(s.client.lastSizeFallback,/NAK/,'report failed larger-block attempt');
+  assert.equal(s.client.lastCompactError,null,'not a compact-format failure');
+  assert.equal(s.client.lastBytes,s.data.length);
+ }finally{s.dispose();}
 }
 async function testBurst(){
  const s=makeServer();
@@ -230,12 +267,18 @@ async function testUnsupportedBurstFallback(){
  }finally{s.dispose();}
 }
 (async()=>{
- await testBurst();await testCompactUnavailableUsesStableFullFormat();await testControllerIgnoresCompactFormat();await testShortFinalBlockWithoutEofNak();await testSequentialShortFinalBlockWithoutEofNak();testPartialDecodeIsRejected();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
+ await testBurst();await testLargeBlockRead(160);await testLargeBlockRead(220);await testLargeBlockRejectionFallback();await testCompactUnavailableUsesStableFullFormat();await testControllerIgnoresCompactFormat();await testShortFinalBlockWithoutEofNak();await testSequentialShortFinalBlockWithoutEofNak();testPartialDecodeIsRejected();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
  const ui=read('configurator.js'),tests=read('tools/check_ahrs_nav_cache.cjs');
  assert.ok(ui.includes('preferBurst:true'),'TCP should request burst client');
+ assert.ok(ui.includes('readSize:blockSize'),'selected MAVFTP size must be passed to the real client');
+ assert.ok(ui.includes('sizeFallback:!!client.lastSizeFallback'),'monitor must identify automatic 110-byte fallback');
+ const html=read('configurator.html');
+ assert.match(html,/<option value="110"/,'the original 110-byte mode must remain the default');
+ assert.match(html,/<option value="160"/,'160-byte experiment must be opt-in');
+ assert.match(html,/<option value="220"/,'220-byte experiment must be opt-in');
  assert.ok(ui.includes('transfer.perf={durationMs:client.lastDurationMs'),'successful FTP reads should record measured performance');
  assert.ok(ui.includes('showParamPerf(x)'),'performance panel should update with actual transfer stats');
- const html=read('configurator.html'),css=read('configurator.css');
+ const css=read('configurator.css');
  for(const id of ['paramPerf','paramPerfTime','paramPerfSpeed','paramPerfBytes','paramPerfPauses','paramPerfMode'])
   assert.ok(html.includes('id="'+id+'"'),'missing visual performance metric '+id);
  assert.ok(css.includes('.cc-param-perf[hidden]'),'metrics must be invisible before a successful FTP read');
