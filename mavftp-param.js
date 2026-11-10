@@ -67,7 +67,7 @@
  class Client{
   constructor({send,onProgress,onStage,timeoutMs=6000,maxRetries=3,maxTimeMs=110000,preferBurst=false,burstIdleMs=900,readSize=CHUNK}){
    if(typeof send!=='function')throw Error('MAVFTP send callback required');
-    if(![CHUNK,160,220].includes(readSize))throw Error('Unsupported experimental MAVFTP read block size');
+    if(![CHUNK,160,220,MAX_PAYLOAD].includes(readSize))throw Error('Unsupported MAVFTP read block size (maximum '+MAX_PAYLOAD+' bytes)');
    this.send=send;this.onProgress=onProgress||(()=>{});this.onStage=onStage||(()=>{});this.timeoutMs=timeoutMs;
    // ArduPilot can silently stop a burst when link TX buffers fill.
    // A short burst-idle detector must not use the long ReadFile reply timeout.
