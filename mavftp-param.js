@@ -71,7 +71,7 @@
    // ArduPilot can silently stop a burst when link TX buffers fill.
    // A short burst-idle detector must not use the long ReadFile reply timeout.
    this.burstIdleMs=Math.max(20,Math.min(5000,burstIdleMs));this.pausedBursts=0;
-   this.maxRetries=maxRetries;this.maxTimeMs=maxTimeMs;this.seq=1;this.waiting=null;this.burst=null;this.closed=false;this.session=null;this.preferBurst=preferBurst;this.lastMethod=null;this.lastFallback=null;this.responses=0;this.burstFrames=0;this.burstReceivedBytes=0;this.lastProgressAt=0;this.stage='idle';
+   this.maxRetries=maxRetries;this.maxTimeMs=maxTimeMs;this.seq=1;this.waiting=null;this.burst=null;this.closed=false;this.session=null;this.preferBurst=preferBurst;this.lastMethod=null;this.lastFallback=null;this.responses=0;this.burstFrames=0;this.burstReceivedBytes=0;this.lastProgressAt=0;this.stage='idle';this.lastBytes=0;this.lastDefaults=null;this.lastCompactError=null;this.lastDurationMs=0;
   }
   handle(raw){
    const result=response(raw);
@@ -269,12 +269,12 @@
     // block in the next iteration rather than discarding downloaded bytes.
    }
   }
-  async download(){
+  async downloadFile(withDefaults){
    if(this.closed)throw Error('MAVFTP cancelled');
    let session=null;const started=Date.now();
    try{
-    this.stage='open';this.onStage('OPEN');
-    const filename=enc.encode('@PARAM/param.pck?withdefaults=1');
+    this.stage='open';this.onStage('OPEN','withdefaults='+withDefaults);
+    const filename=enc.encode('@PARAM/param.pck?withdefaults='+withDefaults);
     const opened=await this.request(4,{data:filename,size:filename.length});
     if(opened.opcode!==128||opened.size<4)throw Error('MAVFTP parameter file unsupported (NAK '+(opened.data[0]??'?')+')');
     session=opened.session;this.session=session;
@@ -298,14 +298,48 @@
      this.lastMethod='MAVFTP READ';
     }
     this.stage='decode';this.onStage('DECODE');
+    const magic=bytes[0]|(bytes[1]<<8);
+    if(withDefaults===0&&magic!==MAGIC_VALUES){
+     throw Error('Compact parameter format not honored (magic 0x'+magic.toString(16)+')');
+    }
     const rows=decodePacked(bytes);
-    this.stage='done';this.onStage('DONE');
+    this.lastBytes=bytes.byteLength;
+    this.lastDefaults=withDefaults;
+    this.stage='done';this.onStage('DONE','withdefaults='+withDefaults);
     return rows;
    }finally{
     if(session!==null&&!this.closed){
      try{await this.request(1,{session,ignoreReply:true});}catch{}
     }
     this.session=null;
+   }
+  }
+  async download(){
+   if(this.closed)throw Error('MAVFTP cancelled');
+   const started=Date.now();
+   this.lastBytes=0;this.lastDefaults=null;this.lastCompactError=null;this.lastDurationMs=0;
+   try{
+    let rows;
+    try{
+     // Request only parameter names, types and current values. The UI
+     // obtains displayed defaults from pdef metadata, not from this stream.
+     rows=await this.downloadFile(0);
+    }catch(error){
+     if(this.closed)throw error;
+     this.lastCompactError=error.message;
+     this.onStage('COMPACT-FAILED',error.message);
+     this.onProgress(0,'MAVFTP BURST');
+     // Fully close the first FTP session before reopening the original
+     // known-good format. Both attempts are checked before any UI commit.
+     this.lastMethod=null;this.lastFallback=null;
+     this.burstFrames=0;this.burstReceivedBytes=0;this.pausedBursts=0;
+     rows=await this.downloadFile(1);
+    }
+    this.lastDurationMs=Date.now()-started;
+    return rows;
+   }catch(error){
+    this.lastDurationMs=Date.now()-started;
+    throw error;
    }
   }
  }

@@ -161,6 +161,15 @@
         <div class="cc-section-title"><div><p class="cc-overline">03 / PARAMETER LIST</p><h1 id="parametersTitle" data-t="params">Список параметров</h1></div><div class="cc-section-actions"><button class="cc-button ghost" id="refreshParamsBtn" type="button" data-t="load">Загрузить параметры</button><button class="cc-button outline" id="twoPassParamsBtn" type="button">Прочитать параметры · 2 прохода</button><button class="cc-button ghost" id="exportParamsBtn" type="button" data-t="export">Экспорт .param</button></div></div>
         <div class="cc-param-tools"><div class="cc-input-search"><span>⌕</span><input id="paramSearch" type="search" data-ph="search" placeholder="Поиск по названию параметра..."></div><label for="importParamFile" class="cc-button outline"><span>↥</span><span data-t="import">Импорт .param</span></label><input id="importParamFile" type="file" accept=".param,.txt" hidden></div>
         <div class="cc-param-progress"><div class="cc-progress-track"><i id="paramProgressFill"></i></div><span id="paramProgressLabel">0 / ?</span></div><p id="paramLoadNote" class="cc-param-load-note" role="status" aria-live="polite">—</p>
+         <div id="paramPerf" class="cc-param-perf" role="group" aria-label="MAVFTP performance" hidden>
+          <div class="cc-param-perf-head"><strong>MAVFTP PERFORMANCE</strong><span id="paramPerfMode">—</span></div>
+          <dl class="cc-param-perf-grid">
+            <div><dt data-t="perfTime">Время чтения</dt><dd id="paramPerfTime">—</dd></div>
+            <div><dt data-t="perfSpeed">Скорость</dt><dd id="paramPerfSpeed">—</dd></div>
+            <div><dt data-t="perfBytes">Передано</dt><dd id="paramPerfBytes">—</dd></div>
+            <div><dt data-t="perfPauses">Burst-паузы</dt><dd id="paramPerfPauses">—</dd></div>
+          </dl>
+         </div>
         <div class="pt-controls"><button type="button" class="cc-button ghost pt-tree-toggle" id="paramTreeToggle">Группы параметров</button>
           <label><input type="checkbox" id="paramModifiedOnly"><span id="paramModifiedLabel">Изменённые</span></label>
           <label><input type="checkbox" id="paramNoDefaultOnly"><span id="paramNoDefaultLabel">Без default</span></label>
