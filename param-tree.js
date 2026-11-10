@@ -10,6 +10,7 @@ const dict={
  en:{all:'All parameters',tree:'Parameter tree',show:'Show tree',hide:'Hide tree',name:'Name',value:'Value',def:'Default',units:'Units',opts:'Options',desc:'Desc',fav:'Fav',meta:'Metadata',loadmeta:'Load pdef XML/JSON',online:'Fetch ArduPilot pdef',local:'Local descriptions',official:'ArduPlane metadata',missing:'No description',edited:'Modified',onlynod:'No default',nomatches:'No matches',group:'Group',noParams:'Load parameters from the controller first.',source:'Source',withdesc:'Description',noinfo:'—',metadataerror:'Metadata fetch blocked (possibly CORS). Download Plane apm.pdef.json and load it from a file.',count:'parameters'}
 };
 let meta=new Map(), metadataKind='loading', favorite=new Set(), expanded=new Set(['ACRO']), treeOpen=false, initCalled=false;
+let localMeta=new Map(), officialMeta=new Map();
 try{favorite=new Set(JSON.parse(localStorage.getItem('atlas-favorites')||'[]'));}catch{}
 function t(lang,k){return (dict[lang]||dict.ru)[k]||k;}
 function normalize(raw){const out=new Map();function add(name,value){if(!name||typeof value!=='object'||!value||Array.isArray(value))return;
@@ -24,7 +25,24 @@ function normalizeXML(source){const xml=new DOMParser().parseFromString(source,'
  const choices={};for(const v of p.querySelectorAll('values > value'))choices[v.getAttribute('code')]=v.textContent.trim();if(Object.keys(choices).length)data.Values=choices;
  out.set(name,data);
  }return out;}
-async function fetchBundled(){try{if(window.AtlasMetadataInline){meta=normalize(window.AtlasMetadataInline);metadataKind='local';window.dispatchEvent(new Event('atlas:metadata'));return;}const r=await fetch('data/param-metadata.json',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);meta=normalize(await r.json());metadataKind='local';}catch{metadataKind='none';}window.dispatchEvent(new Event('atlas:metadata'));}
+function refreshMetadata(){
+ meta=new Map([...localMeta,...officialMeta]);
+ metadataKind=officialMeta.size?'official':localMeta.size?'local':'none';
+ const status=$('paramMetadataStatus');
+ if(status)status.textContent='—';
+}
+async function fetchBundled(){
+ try{
+  if(window.AtlasMetadataInline)localMeta=normalize(window.AtlasMetadataInline);
+  else{
+   const response=await fetch('data/param-metadata.json');
+   if(!response.ok)throw Error('HTTP '+response.status);
+   localMeta=normalize(await response.json());
+  }
+ }catch{}
+ refreshMetadata();
+ window.dispatchEvent(new Event('atlas:metadata'));
+}
 function groupOf(key){const i=key.indexOf('_');return i>0?key.slice(0,i):'#';}
 function optionsText(m){let x=[];
  if(m.Values&&typeof m.Values==='object')x=Object.entries(m.Values).map(([n,s])=>n+':'+s);
@@ -34,15 +52,19 @@ function optionsText(m){let x=[];
 function flattenMeta(raw){if(typeof raw==='string'&&raw.trim().startsWith('<'))return normalizeXML(raw);return normalize(typeof raw==='string'?JSON.parse(raw):raw);}
 function initialize({render,langGetter}){if(initCalled)return;initCalled=true;
  const input=$('paramMetadataFile'),source=$('paramMetadataStatus');
- input?.addEventListener('change',async ev=>{const f=ev.target.files?.[0];if(!f)return;try{const parsed=flattenMeta(await f.text());if(!parsed.size)throw Error('Empty / unsupported pdef');meta=parsed;metadataKind='official';source.textContent=t(langGetter(),'official')+` · ${meta.size}`;render();}catch(e){source.textContent=e.message;}finally{input.value='';}});
- $('paramMetadataOnline')?.addEventListener('click',async()=>{source.textContent='Loading Plane pdef…';try{const resp=await fetch('https://autotest.ardupilot.org/Parameters/Plane/apm.pdef.json');if(!resp.ok)throw Error('HTTP '+resp.status);const parsed=normalize(await resp.json());if(!parsed.size)throw Error('pdef empty');meta=parsed;metadataKind='official';source.textContent=t(langGetter(),'official')+` · ${meta.size}`;render();}catch(e){source.textContent=t(langGetter(),'metadataerror')+' ('+e.message+')';}});
+ input?.addEventListener('change',async ev=>{const f=ev.target.files?.[0];if(!f)return;try{const parsed=flattenMeta(await f.text());if(!parsed.size)throw Error('Empty / unsupported pdef');officialMeta=parsed;refreshMetadata();render();}catch(e){source.textContent=e.message;}finally{input.value='';}});
+ $('paramMetadataOnline')?.addEventListener('click',async()=>{source.textContent='Loading Plane pdef…';try{const resp=await fetch('https://autotest.ardupilot.org/Parameters/Plane/apm.pdef.json');if(!resp.ok)throw Error('HTTP '+resp.status);const parsed=normalize(await resp.json());if(!parsed.size)throw Error('pdef empty');officialMeta=parsed;refreshMetadata();render();}catch(e){source.textContent=t(langGetter(),'metadataerror')+' ('+e.message+')';}});
  $('paramTreeToggle')?.addEventListener('click',()=>{treeOpen=!treeOpen;$('paramTreeLayout')?.classList.toggle('tree-open',treeOpen);$('paramTreeToggle').textContent=t(langGetter(),treeOpen?'hide':'show');});
  fetchBundled();}
 function render({state,lang,formatParam,canWrite,edit,onSelect,limit}){
  const root=$('paramTree'),tbody=$('paramsTable');if(!root||!tbody)return;
- const tr=key=>t(lang,key),query=$('paramSearch').value.trim().toUpperCase(),groupCounts=new Map();
+ const tr=key=>t(lang,key),query=$('paramSearch').value.trim().toUpperCase(),groups=new Map();
  const all=[...state.params.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
- for(const [key] of all){const g=groupOf(key);groupCounts.set(g,(groupCounts.get(g)||0)+1);}
+ for(const [name] of all){
+  const group=groupOf(name);
+  if(!groups.has(group))groups.set(group,[]);
+  groups.get(group).push(name);
+ }
  // Group categories are based on exact FC parameter prefixes, like Mission Planner.
  const selection=state.treeSelection||'ALL';const searched=all.filter(([name])=>{const md=meta.get(name)||{};return name.includes(query)||String(md.Description||'').toUpperCase().includes(query)||String(md.DisplayName||'').toUpperCase().includes(query);});
  const selected=searched.filter(([name,p])=>{
@@ -54,8 +76,8 @@ function render({state,lang,formatParam,canWrite,edit,onSelect,limit}){
   return true;
  });
  root.replaceChildren();const allButton=document.createElement('button');allButton.className='pt-group all'+(selection==='ALL'?' selected':'');allButton.textContent=`⌂ ${tr('all')} (${all.length})`;allButton.addEventListener('click',()=>select('ALL'));root.append(allButton);
- const sortedGroups=[...groupCounts.keys()].sort((a,b)=>a.localeCompare(b));
- for(const group of sortedGroups){const names=all.filter(([name])=>groupOf(name)===group).map(([name])=>name);const open=expanded.has(group);
+ const sortedGroups=[...groups.keys()].sort((a,b)=>a.localeCompare(b));
+ for(const group of sortedGroups){const names=groups.get(group);const open=expanded.has(group);
   const groupLine=document.createElement('div');groupLine.className='pt-group-row';
   const toggle=document.createElement('button');toggle.className='pt-expander';toggle.textContent=names.length>1?(open?'−':'+'):'·';toggle.setAttribute('aria-label',`${open?'Collapse':'Expand'} ${group}`);toggle.onclick=()=>{if(open)expanded.delete(group);else expanded.add(group);render({state,lang,formatParam,canWrite,edit,onSelect,limit});};
   const groupButton=document.createElement('button');groupButton.className='pt-group'+(selection==='G:'+group?' selected':'');groupButton.textContent=`${group==='\u0023'?'OTHER':group}  ${names.length>1?'('+names.length+')':''}`;groupButton.title=names.join(', ');groupButton.onclick=()=>{expanded.add(group);select('G:'+group);};groupLine.append(toggle,groupButton);root.append(groupLine);

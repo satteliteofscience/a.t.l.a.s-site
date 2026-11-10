@@ -25,7 +25,7 @@ assert.match(config,/lastVoltageTelemetry/,'battery calibration needs fresh SYS_
 assert.match(html,/id="batteryCalMeasured"/,'measured voltage input is missing');
 assert.match(html,/id="networkMode"/,'UDP/TCP configurator controls must exist');
 assert.match(config,/function connectBridge\(\)/,'MAVLink network transport should be supported');
-assert.match(config,/state\.netSocket\.send\(frame\)/,'bridge should send the same MAVLink frame as USB');
+assert.match(config,/socket\.send\(frame\)/,'bridge should send the same MAVLink frame as USB');
 assert.match(config,/function readParamsTwice\(/,'normal parameter editor needs two-pass read');
 assert.match(config,/if\(!state\.paramLoading&&!startParamLoad\(true\)\)/,'two-pass read must request a fresh second transfer');
 assert.match(config,/const report=window\.AtlasQuickSetupCore\?\.parseParamText\(name\+' '\+value/,'advanced parameter writes must validate type/range/read-only');

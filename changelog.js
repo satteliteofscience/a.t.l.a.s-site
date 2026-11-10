@@ -5,10 +5,72 @@ const changes=[{"ru":["EKF3 без спутниковой навигации","�
 const $=id=>document.getElementById(id);
 let lang='ru';try{const saved=localStorage.getItem('atlas-language');if(UI[saved])lang=saved;}catch{}
 function add(tag,className,text){const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;}
-// Each release retains its own changes; append a new object for version 1.01+.
-const releases=[{version:'1.0',channel:'RELEASE',changes}];
-function render(){const u=UI[lang];document.documentElement.lang=lang;document.title='A.T.L.A.S. — '+(lang==='ru'?'Список изменений':lang==='uk'?'Список змін':'Changelog');$('chHome').textContent=u.home;$('chConfigurator').textContent=u.config;$('chDownloads').textContent=u.builds;$('chTitle').textContent=u.title;$('chIntro').textContent=u.intro;$('chFooter').textContent=u.footer;
-for(const b of document.querySelectorAll('[data-language]')){const on=b.dataset.language===lang;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));}
-const groups=document.createDocumentFragment();for(const release of releases){const group=add('section','ch-release');group.setAttribute('aria-label',u.label+' '+release.version);const head=add('div','ch-release-head');const version=add('div','ch-release-id');version.append(add('span','',u.label+' '+release.version),add('b','',release.channel));head.append(version,add('p','ch-release-sub',u.versionHint));group.append(head);const list=add('ol','ch-comparisons');for(const item of release.changes){const entry=item[lang],li=add('li');li.append(add('h2','ch-compare-title',entry[0]));for(const [label,value,kind] of [[u.base,entry[1],'base'],[u.mod,entry[2],'atlas']]){const row=add('div','ch-comparison '+kind);row.append(add('div','ch-compare-label',label),add('p','',value));li.append(row);}list.append(li);}group.append(list);groups.append(group);}groups.append(add('p','ch-next-releases',u.releaseNote));$('chReleases').replaceChildren(groups);try{localStorage.setItem('atlas-language',lang);}catch{}}
+const releases=[window.AtlasRelease11,{version:'1.0',id:'release-1-0',channel:'RELEASE',changes}].filter(Boolean);
+const introductions={
+  ru:'Сравнение штатного ArduPlane 4.7.2 с опубликованным Release 1.0 и рабочими исходниками A.T.L.A.S. для 1.1.',
+  uk:'Порівняння штатного ArduPlane 4.7.2 з опублікованим Release 1.0 та робочим кодом A.T.L.A.S. для 1.1.',
+  en:'Compare stock ArduPlane 4.7.2 with the published Release 1.0 and the A.T.L.A.S. working source for 1.1.'
+};
+
+function renderRelease(release,u){
+  const group=add('section','ch-release');
+  group.id=release.id;
+  group.setAttribute('aria-label',u.label+' '+release.version);
+  const head=add('div','ch-release-head');
+  const version=add('div','ch-release-id');
+  version.append(add('span','',u.label+' '+release.version),add('b','',release.channel));
+  head.append(version,add('p','ch-release-sub',release.hint?.[lang] ?? u.versionHint));
+  group.append(head);
+
+  const list=add('ol','ch-comparisons');
+  for(const item of release.changes){
+    const entry=item[lang],li=add('li');
+    li.append(add('h2','ch-compare-title',entry[0]));
+    for(const [label,value,kind] of [[u.base,entry[1],'base'],[u.mod,entry[2],'atlas']]){
+      const row=add('div','ch-comparison '+kind);
+      row.append(add('div','ch-compare-label',label),add('p','',value));
+      li.append(row);
+    }
+    list.append(li);
+  }
+  group.append(list);
+  if(release.sources){
+    const details=add('details','ch-sources'),files=add('ul');
+    details.open=$('chReleases').querySelector('.ch-sources')?.open ?? false;
+    details.append(add('summary','',release.sourceLabel[lang]),files);
+    for(const path of release.sources){
+      const item=add('li');
+      item.append(add('code','',path));
+      files.append(item);
+    }
+    group.append(details);
+  }
+  return group;
+}
+
+function render(){
+  const u=UI[lang];
+  document.documentElement.lang=lang;
+  window.dispatchEvent(new CustomEvent('atlas:languagechange',{detail:{lang}}));
+  $('chHome').textContent=u.home;
+  $('chConfigurator').textContent=u.config;
+  $('chDownloads').textContent=u.builds;
+  $('chTitle').textContent=u.title;
+  $('chIntro').textContent=window.AtlasRelease11 ? introductions[lang] : u.intro;
+  $('chFooter').textContent=u.footer;
+  for(const button of document.querySelectorAll('[data-language]')){
+    const active=button.dataset.language===lang;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',String(active));
+  }
+  $('chVersions').replaceChildren(...releases.map(release=>{
+    const link=add('a','',u.label+' '+release.version);
+    link.href='#'+release.id;
+    return link;
+  }));
+  $('chReleases').replaceChildren(...releases.map(release=>renderRelease(release,u)));
+  try{localStorage.setItem('atlas-language',lang);}catch{}
+}
 for(const b of document.querySelectorAll('[data-language]'))b.addEventListener('click',()=>{lang=b.dataset.language;render();});render();
+if(/^#release-1-[01]$/.test(location.hash)) $(location.hash.slice(1))?.scrollIntoView();
 })();

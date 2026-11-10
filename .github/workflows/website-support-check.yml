@@ -8,7 +8,12 @@ on:
       - 'GITHUB-ABOUT.md'
       - 'README.md'
       - 'changelog.js'
+      - 'changelog.css'
+      - 'data/changelog/**'
+      - 'data/param-metadata.json'
       - 'faq.js'
+      - 'flight-demo.js'
+      - 'tools/check_site_11.cjs'
       - 'i18n.js'
       - 'calibration.js'
       - 'battery-cal-core.js'
@@ -116,6 +121,8 @@ jobs:
         run: node tools/check_support_contact.cjs
       - name: Check render performance and animation scheduling
         run: node tools/check_performance.cjs
+      - name: Check language switching, source comparison and queued MAVLink writes
+        run: node tools/check_site_11.cjs
       - name: Verify demo in-flight ARM status and live MAVLink safety isolation
         run: node tools/check_dashboard_demo_arm.cjs
       - name: Verify automatic parameter loading and Release 1.0 status

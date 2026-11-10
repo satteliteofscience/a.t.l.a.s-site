@@ -105,6 +105,7 @@ function navigate(tab){
  // Reopening Parameter List must show the cached data, not force another
  // expensive download over the radio. Explicit Refresh remains available.
  if(tab==='params'&&previous!=='params'){renderParams();showProgress();}
+ if(tab==='basic'&&previous!=='basic')renderBasic();
  if(state.params.size===0&&!state.paramTransfer&&
     (tab==='params'||['servos','osd','tuning','modes','radio','gimbal','parachute','temperature'].includes(tab))&&
     state.connected&&state.sysid!==null&&!state.paramLoading&&!state.bulk?.running&&!state.servoConfigBusy){
@@ -262,7 +263,7 @@ function enterDemo(){if(state.connected||state.connecting){toast(tr('needlink'),
  if(state.demo){const demo={'ROLL_LIMIT_DEG':45,'PITCH_MAX':2000,'PITCH_MIN':-1500,'AIRSPEED_MIN':16,'AIRSPEED_MAX':45,'TRIM_ARSPD_CM':2200,'THR_MIN':0,'THR_MAX':100,'STALL_PREVENTION':1,'FS_LONG_ACTN':0,'ARSPD_USE':1,'RUD_LIMIT_DEG':30,'EK3_PRIMARY':0,'EK3_IMU_MASK':3,'TECS_SPDWEIGHT':1,'TKOFF_ALT':150,'SERVO1_FUNCTION':4,'SERVO2_FUNCTION':19,'SERVO3_FUNCTION':70,'OSD_TYPE':1,'OSD_UNITS':0,'OSD1_ENABLE':1,'OSD1_ALTITUDE_EN':1,'OSD1_ALTITUDE_X':24,'OSD1_ALTITUDE_Y':2,'OSD1_ASPEED_EN':1,'OSD1_ASPEED_X':1,'OSD1_ASPEED_Y':3,'OSD1_BAT_VOLT_EN':1,'OSD1_BAT_VOLT_X':2,'OSD1_BAT_VOLT_Y':13,'OSD1_HORIZON_EN':1,'OSD1_HORIZON_X':15,'OSD1_HORIZON_Y':8,'OSD1_RSSI_EN':1,'OSD1_RSSI_X':2,'OSD1_RSSI_Y':1,'OSD1_MESSAGE_EN':0,'OSD1_MESSAGE_X':1,'OSD1_MESSAGE_Y':12};for(const [name,value]of Object.entries(demo))state.params.set(name,{value,type:Number.isInteger(value)?6:9,index:state.params.size});state.paramCount=state.params.size;toast('SIM DEMO · no USB hardware connected');}else toast('Demo exited');
  updateConnectionUI();renderParams();renderBasic();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));}
 async function cleanupForNavigation(){
- state.pageLeaving=true;state.hudLoopActive=false;if(state.hudRaf){cancelAnimationFrame(state.hudRaf);state.hudRaf=0;}
+ txGeneration++;state.pageLeaving=true;state.hudLoopActive=false;if(state.hudRaf){cancelAnimationFrame(state.hudRaf);state.hudRaf=0;}
  state.bulkCancel=true;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.activeFilter=null;state.statusTextAssembler.reset();state.paramTransfer=null;state.paramLoading=false;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;
  const reader=state.reader;state.reader=null;
  try{if(reader)await reader.cancel();}catch{}
@@ -272,7 +273,8 @@ async function cleanupForNavigation(){
  state.connected=false;state.connecting=false;state.demo=false;state.sysid=null;state.armed=null;
 }
 
-async function disconnect(){state.bulkCancel=true;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.activeFilter=null;state.statusTextAssembler.reset();state.paramTransfer=null;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;const reader=state.reader;state.reader=null;
+let txGeneration=0;
+async function disconnect(){txGeneration++;state.bulkCancel=true;stopParamRepair();state.ftpClient?.cancel();state.ftpClient=null;state.activeFilter=null;state.statusTextAssembler.reset();state.paramTransfer=null;if(state.streamTimer){clearInterval(state.streamTimer);state.streamTimer=null;}state.rxActive=false;const reader=state.reader;state.reader=null;
  try{if(reader)await reader.cancel();}catch{}
  try{if(reader)reader.releaseLock();}catch{}
  const port=state.port;state.port=null;try{if(port)await port.close();}catch(e){console.warn(e);}
@@ -281,15 +283,18 @@ async function disconnect(){state.bulkCancel=true;stopParamRepair();state.ftpCli
  if(state.writeWait){clearTimeout(state.writeWait.timer);state.writeWait.reject(Error('Connection closed'));state.writeWait=null;}
  updateConnectionUI();renderBasic();renderParams();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));toast('MAVLink disconnected');}
 async function transmit(messageId,payload){
- if(!state.connected||(!state.port&&!(state.netSocket&&state.bridgeReady)))throw Error(tr('needlink'));
+ const generation=txGeneration;
+ const socket=state.bridgeReady?state.netSocket:null,port=socket?null:state.port;
+ if(!state.connected||state.pageLeaving||(!socket&&(!port||!state.rxActive)))throw Error(tr('needlink'));
  const frame=M.createFrame(messageId,payload,state.seq++);
  const current=state.txPromise.then(async()=>{
-  if(state.netSocket&&state.bridgeReady){
-   if(state.netSocket.readyState!==WebSocket.OPEN)throw Error('WebSocket closed');
-   state.netSocket.send(frame);
+  if(!state.connected||state.pageLeaving||generation!==txGeneration)throw Error('Connection closed');
+  if(socket){
+   if(state.netSocket!==socket||!state.bridgeReady||socket.readyState!==WebSocket.OPEN)throw Error('WebSocket closed');
+   socket.send(frame);
   }else{
-   if(!state.port)throw Error('USB port closed');
-   const writer=state.port.writable.getWriter();try{await writer.write(frame);}finally{writer.releaseLock();}
+   if(state.port!==port)throw Error('USB port closed');
+   const writer=port.writable.getWriter();try{await writer.write(frame);}finally{writer.releaseLock();}
   }
  });
  state.txPromise=current.catch(()=>{});return current;

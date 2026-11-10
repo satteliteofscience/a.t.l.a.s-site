@@ -50,6 +50,8 @@
   }
   new MutationObserver(mutations=>{if(mutations.some(m=>m.attributeName==='lang')) update();})
     .observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+  window.addEventListener('atlas:languagechange',update);
+  window.addEventListener('atlas:language',update);
   // This also handles language set before scripts run and pages without a language selector.
   update();
   window.AtlasPageMeta={update};

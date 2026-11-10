@@ -1069,6 +1069,17 @@
    },
    "Increment": "0.5"
   },
+  "RUD_LIMIT_DEG": {
+   "DisplayName": "Experimental FBWA rudder bank allowance",
+   "Description": "Adds up to this many degrees to the FBWA bank demand when the aileron and rudder inputs agree. Requires measured airspeed and stall prevention. Zero disables the new path and leaves any separately configured RUD_RLL_ADD active.",
+   "Default": 0,
+   "Units": "deg",
+   "Range": {
+    "low": "0",
+    "high": "45"
+   },
+   "Increment": "1"
+  },
   "RUD_RLL_ADD": {
    "DisplayName": "FBWA manual rudder bank allowance",
    "Description": "FBWA manual rudder limiter. Zero disables it. Adds this many degrees to the current roll limit, capped at 85 degrees and by stall prevention. Progressively reduces manual rudder into the bank using roll angle and roll rate. Opposite rudder and automatic coordination are retained. Requires conventional rudder-to-roll response.",

@@ -30,7 +30,7 @@
     state.targetX = bound((ev.clientX - rect.left)/rect.width*2-1,-1,1);
     state.targetY = bound(1-(ev.clientY - rect.top)/rect.height*2,-1,1);
     state.aimRoll = state.targetX*70;
-    state.aimPitch = state.targetY*32;
+    state.aimPitch = -state.targetY*32;
     state.aimYaw = state.targetX*22;
   }
   function enter(ev){state.hovered=true; if (ev) targetFromPointer(ev);host.classList.add('is-hovered');}
@@ -65,8 +65,8 @@
     ev.preventDefault();state.hovered=true;state.keyboard=true;host.classList.add('is-hovered');
     if(ev.key==='ArrowLeft')state.aimRoll=bound(state.aimRoll-12,-70,70);
     if(ev.key==='ArrowRight')state.aimRoll=bound(state.aimRoll+12,-70,70);
-    if(ev.key==='ArrowUp')state.aimPitch=bound(state.aimPitch+7,-32,32);
-    if(ev.key==='ArrowDown')state.aimPitch=bound(state.aimPitch-7,-32,32);
+    if(ev.key==='ArrowUp')state.aimPitch=bound(state.aimPitch-7,-32,32);
+    if(ev.key==='ArrowDown')state.aimPitch=bound(state.aimPitch+7,-32,32);
     state.aimYaw=state.aimRoll*.35;
     if(ev.key===' '){state.boosted=true;host.classList.add('is-boosting');}
   });
@@ -86,16 +86,14 @@
     {name:'vtail-right',points:[[.075,.08,-1.46],[.78,.81,-1.85],[1.00,.95,-2.36],[.10,.12,-2.22]],fill:'rgba(240,203,99,.30)',line:'#f3d875',width:1.7},
     {name:'cockpit',points:[[0,.16,1.52],[.095,.20,1.10],[.15,.23,.22],[0,.29,-.22],[-.15,.23,.22],[-.095,.20,1.10]],fill:'rgba(254,241,169,.30)',line:'#f9eca8',width:1.2}
   ];
-  function rotate(p){
-    let [x,y,z]=p;
+  function planeRotation(){
     const r=state.roll*deg,pch=state.pitch*deg,yaw=state.yaw*deg;
-    let c=Math.cos(r),s=Math.sin(r);
-    [x,y]=[x*c-y*s,x*s+y*c];
-    c=Math.cos(pch);s=Math.sin(pch);
-    [y,z]=[y*c+z*s,-y*s+z*c];
-    c=Math.cos(yaw);s=Math.sin(yaw);
-    [x,z]=[x*c+z*s,-x*s+z*c];
-    return [x,y,z];
+    const cr=Math.cos(r),sr=Math.sin(r),cp=Math.cos(pch),sp=Math.sin(pch),cy=Math.cos(yaw),sy=Math.sin(yaw);
+    return ([x,y,z])=>{
+      [x,y]=[x*cr-y*sr,x*sr+y*cr];
+      [y,z]=[y*cp+z*sp,-y*sp+z*cp];
+      return [x*cy+z*sy,y,-x*sy+z*cy];
+    };
   }
   function project(p){
     const [x,y,z]=p;
@@ -132,6 +130,7 @@
     }
   }
   function drawPlane(){
+    const rotate=planeRotation();
     const projected=mesh.map(s=>{
       const verts=s.points.map(rotate);
       return {s,pts:verts.map(project),depth:verts.reduce((a,p)=>a+p[2],0)/verts.length};
