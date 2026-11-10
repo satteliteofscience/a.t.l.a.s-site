@@ -28,9 +28,9 @@
  function indication({connected=false,live=false,demo=false,announced=null,params=new Map(),language='ru'}={}){
   const lang=['ru','uk','en'].includes(language)?language:'ru';
   const t={
-   ru:{unknown:'Не определён',waiting:'Ожидание AHRS',demo:'Демо',active:'Подтверждён сообщением AHRS полётника',selected:'Выбран в параметрах; фактический фильтр ещё не подтверждён',noData:'Нет свежей связи с контроллером',noParam:'Параметры AHRS ещё не получены'},
-   uk:{unknown:'Невідомо',waiting:'Очікування AHRS',demo:'Демо',active:'Підтверджено повідомленням AHRS контролера',selected:'Обрано в параметрах; фактичний фільтр ще не підтверджено',noData:'Немає актуального з’єднання з контролером',noParam:'Параметри AHRS ще не отримано'},
-   en:{unknown:'Unknown',waiting:'Waiting for AHRS',demo:'Demo',active:'Confirmed by autopilot AHRS status message',selected:'Selected by parameters; actual active estimator not yet verified',noData:'No fresh flight controller connection',noParam:'AHRS parameters not yet available'}
+   ru:{unknown:'Не определён',waiting:'Ожидание AHRS',demo:'Демо',active:'Подтверждён сообщением AHRS полётника',selected:'Выбран в параметрах (CFG)',noData:'Нет свежей связи с контроллером',noParam:'Параметры AHRS ещё не получены'},
+   uk:{unknown:'Невідомо',waiting:'Очікування AHRS',demo:'Демо',active:'Підтверджено повідомленням AHRS контролера',selected:'Обрано в параметрах (CFG)',noData:'Немає актуального з’єднання з контролером',noParam:'Параметри AHRS ще не отримано'},
+   en:{unknown:'Unknown',waiting:'Waiting for AHRS',demo:'Demo',active:'Confirmed by autopilot AHRS status message',selected:'Selected in parameters (CFG)',noData:'No fresh flight controller connection',noParam:'AHRS parameters not yet available'}
   }[lang];
   if(demo)return {label:'SIM',detail:t.demo,verified:false};
   if(!connected||!live)return {label:'—',detail:t.noData,verified:false};
