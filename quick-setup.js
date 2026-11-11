@@ -804,7 +804,12 @@ setInterval(()=>{
   const progress=$('qsFinalProgress'),s=state();
   if(progress)progress.textContent=t('finalReadProgress')+' · '+String(s.params?.size??0)+' / '+String(s.paramCount??'?');
  }
- if(qs.step===8&&(!safeLink(state()))&&(qs.compassNeedReboot||qs.awaitingCalibration==='compass'))qs.compassSawDisconnect=true;
+ if(qs.step===8&&(!safeLink(state()))&&(qs.compassNeedReboot||qs.awaitingCalibration==='compass')){
+  qs.compassSawDisconnect=true;
+  // A TCP bridge can stay open while the autopilot reboots behind it. Its
+  // cached parameter list must not be treated as a fresh post-reboot read.
+  if(state().connected&&Date.now()-state().lastHeartbeat>=4000)qs.compassRefreshNeeded=true;
+ }
 },1000);
 window.addEventListener('atlas:tempcal',()=>{if(wizardActive&&qs.step===9)renderHeader();});
 window.addEventListener('atlas:language',()=>{if(wizardActive)render();else translateStatic();});
