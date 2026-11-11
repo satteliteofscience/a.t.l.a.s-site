@@ -44,7 +44,12 @@ function checkRelease() {
     }
   }
   const html = read('changelog.html');
-  assert.match(html, /src="data\/changelog\/1\.1\.js" defer><\/script>\s*<script src="changelog\.js"/);
+  const scripts = [...html.matchAll(/<script\s+src="([^"?]+)(?:\?[^\"]*)?"\s+defer><\/script>/g)].map(match => match[1]);
+  const previous = scripts.indexOf('data/changelog/1.1.js');
+  const current = scripts.indexOf('data/changelog/1.2.js');
+  const renderer = scripts.indexOf('changelog.js');
+  assert.ok(previous >= 0 && current > previous && renderer > current,
+    'Load both release datasets before the renderer, allowing cache-version queries');
   assert.match(read('changelog.js'), /version:'1\.0'/);
 }
 
