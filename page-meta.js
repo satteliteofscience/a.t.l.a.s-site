@@ -9,9 +9,9 @@
       en: {title:'Configurator A.T.L.A.S. — ArduPlane 4.7.2', description:'A.T.L.A.S. Release 1.0 builds for Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini; PIN-protected HEX downloads, EKF3 NOAID GPS-denied modes, and a browser configurator bench-tested with a real flight controller.'}
     },
     'configurator.html': {
-      ru: {title:'A.T.L.A.S. — Конфигуратор полётного контроллера', description:'A.T.L.A.S. Release 1.0: веб-конфигуратор проверен на реальном полётном контроллере. USB/MAVLink, Quick Setup, параметры, калибровки, OSD и прошивка.'},
-      uk: {title:'A.T.L.A.S. — Конфігуратор польотного контролера', description:'A.T.L.A.S. Release 1.0: вебконфігуратор перевірено на реальному польотному контролері. USB/MAVLink, Quick Setup, параметри, калібрування та OSD.'},
-      en: {title:'A.T.L.A.S. — Flight Controller Configurator', description:'A.T.L.A.S. Release 1.0: browser configurator bench-tested with a real flight controller. USB/MAVLink, Quick Setup, parameters, calibration and OSD.'}
+      ru: {title:'A.T.L.A.S. — Конфигуратор полётного контроллера', description:'A.T.L.A.S. — конфигуратор 1.2: USB/MAVLink, протокол П.Р.И.К.А.З, параметры, калибровки и OSD.'},
+      uk: {title:'A.T.L.A.S. — Конфігуратор польотного контролера', description:'A.T.L.A.S. — конфігуратор 1.2: USB/MAVLink, протокол Н.А.К.А.З, параметри, калібрування та OSD.'},
+      en: {title:'A.T.L.A.S. — Flight Controller Configurator', description:'A.T.L.A.S. Configurator 1.2: USB/MAVLink, O.R.D.E.R protocol, parameters, calibration and OSD.'}
     },
     'faq.html': {
       ru: {title:'A.T.L.A.S. — Вопросы и ответы', description:'Ответы на вопросы об EKF3 NOAID, необходимых датчиках и изменённых режимах полёта A.T.L.A.S.'},
