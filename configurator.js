@@ -59,12 +59,13 @@ const settingDefs=[
  {key:'STALL_PREVENTION',group:'safety',desc:['Защита от сваливания','Захист від звалювання','Stall prevention']},
  {key:'FS_LONG_ACTN',group:'safety',desc:['Действие длительного failsafe','Дія тривалого failsafe','Long failsafe action']},
  {key:'ARSPD_USE',group:'safety',desc:['Использование Пито','Використання трубки Піто','Use airspeed sensor']},
- {key:'CAPRI_MODE',group:'capri',desc:['Активация: 0 выключено, 1 тумблер RC (верх ВКЛ), 2 включено настройкой','Активація: 0 вимкнено, 1 перемикач RC (верх УВІМК), 2 увімкнено налаштуванням','Activation: 0 off, 1 RC switch (HIGH on), 2 enabled by configuration']},
- {key:'RUD_LIMIT_DEG',group:'capri',desc:['Добавочный крен от руля при активной C.A.P.R.I.; 0 отключает','Додатковий крен від керма при активній C.A.P.R.I.; 0 вимикає','Extra rudder bank while C.A.P.R.I. is active; 0 bypasses']},
- {key:'RUD_BRK_EN',group:'capri',desc:['Дополнительное торможение крена: 0 выключено, 1 включено','Додаткове гальмування крену: 0 вимкнено, 1 увімкнено','Additional bank braking: 0 off, 1 on']},
- {key:'CAPRI_PIT_MIN',group:'capri',desc:['Нижний предел команды тангажа, градусы; 0 отключает границу','Нижня межа команди тангажу, градуси; 0 вимикає межу','Minimum pitch demand in degrees; 0 bypasses this boundary']},
- {key:'CAPRI_PIT_MAX',group:'capri',desc:['Верхний предел команды тангажа, градусы; 0 отключает границу','Верхня межа команди тангажу, градуси; 0 вимикає межу','Maximum pitch demand in degrees; 0 bypasses this boundary']},
- {key:'CAPRI_RC_CH',group:'capri',desc:['Канал активации 1–16; 0 отключает RC-активацию','Канал активації 1–16; 0 вимикає RC-активацію','Activation channel 1–16; 0 disables RC activation']},
+ {key:'ORDER_MODE',group:'order',desc:['Активация: 0 выключено, 1 тумблер RC (верх ВКЛ), 2 включено настройкой','Активація: 0 вимкнено, 1 перемикач RC (верх УВІМК), 2 увімкнено налаштуванням','Activation: 0 off, 1 RC switch (HIGH on), 2 enabled by configuration']},
+ {key:'ORDER_RLL_LIM',group:'order',desc:['Базовый предел крена FBWA при активном O.R.D.E.R., 0–90°; 0 оставляет обычный ROLL_LIMIT_DEG. Добавка руля задаётся отдельно.','Базова межа крену FBWA при активному O.R.D.E.R., 0–90°; 0 залишає звичайний ROLL_LIMIT_DEG. Додаток керма задається окремо.','FBWA base bank limit while O.R.D.E.R. is active, 0–90°; 0 retains ROLL_LIMIT_DEG. Rudder allowance remains separate.']},
+ {key:'RUD_LIMIT_DEG',group:'order',desc:['Добавочный крен от руля при активной O.R.D.E.R.; 0 отключает','Додатковий крен від керма при активній O.R.D.E.R.; 0 вимикає','Extra rudder bank while O.R.D.E.R. is active; 0 bypasses']},
+ {key:'RUD_BRK_EN',group:'order',desc:['Дополнительное торможение крена: 0 выключено, 1 включено','Додаткове гальмування крену: 0 вимкнено, 1 увімкнено','Additional bank braking: 0 off, 1 on']},
+ {key:'ORDER_PIT_MIN',group:'order',desc:['Нижний предел команды тангажа, градусы; 0 отключает границу','Нижня межа команди тангажу, градуси; 0 вимикає межу','Minimum pitch demand in degrees; 0 bypasses this boundary']},
+ {key:'ORDER_PIT_MAX',group:'order',desc:['Верхний предел команды тангажа, градусы; 0 отключает границу','Верхня межа команди тангажу, градуси; 0 вимикає межу','Maximum pitch demand in degrees; 0 bypasses this boundary']},
+ {key:'ORDER_RC_CH',group:'order',desc:['Канал активации 1–16; 0 отключает RC-активацию','Канал активації 1–16; 0 вимикає RC-активацію','Activation channel 1–16; 0 disables RC activation']},
  {key:'EK3_PRIMARY',group:'atlas',desc:['Основное ядро EKF3','Основне ядро EKF3','Primary EKF3 core']},
  {key:'EK3_IMU_MASK',group:'atlas',desc:['Маска IMU для EKF3','Маска IMU для EKF3','EKF3 IMU mask']}
 ];
@@ -614,7 +615,7 @@ function startParamLoad(fresh=false){if(state.bulk?.running||state.servoConfigBu
  return true;
 }
 function canWrite(){return state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait&&!state.bulk?.running&&!state.servoConfigBusy&&!state.paramLoading&&!state.readTwoBusy;}
-let capriCommandPending=false;
+let orderCommandPending=false;
 window.AtlasCC = Object.freeze({
   getState:()=>({connected:state.connected,connectionId:txGeneration,demo:state.demo,sysid:state.sysid,compid:state.compid,armed:state.armed,mode:state.mode,lastHeartbeat:state.lastHeartbeat,lastAttitude:state.lastAttitude,params:state.params,telemetry:state.telemetry,lastVoltageTelemetry:state.lastVoltageTelemetry,transport:state.transport,compassStatus:state.compassStatus,selectedBoard:state.selectedBoard,paramLoading:state.paramLoading,paramCount:state.paramCount,paramPhase:state.paramTransfer?.phase||'idle',paramReader:state.paramTransfer?.reader||null,paramPerf:state.paramTransfer?.perf||null,paramComplete:!state.paramLoading&&state.paramTransfer?.phase==='complete'&&Number.isInteger(state.paramCount)&&state.params.size===state.paramCount}),
   canWrite:()=>canWrite(),
@@ -622,12 +623,12 @@ window.AtlasCC = Object.freeze({
   connectBridge:()=>connectBridge(),
   selectBoard:(id)=>{if(window.AtlasDfuUi?.isBusy()||!['matek-h743-wing-v3','cube-orange-plus','uni-ic743-mini'].includes(id))return false;state.selectedBoard=id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:id}}));return true;},
   navigate:(tab)=>navigate(tab),
-  navigateCapri:()=>{state.group='capri';document.querySelectorAll('[data-group]').forEach(b=>b.classList.toggle('active',b.dataset.group==='capri'));navigate('basic');renderBasic();},
-  capriCommand:async(enable)=>{
-    if(capriCommandPending||!window.AtlasCapriCore?.commandAllowed(window.AtlasCC.getState(),enable)||state.writeWait||state.servoConfigBusy||state.bulk?.running||state.readTwoBusy)throw Error('C.A.P.R.I.: fresh live link, interface revision 2 and idle parameter transfer required');
-    capriCommandPending=true;
-    try{const p=state.params.get('CAPRI_MODE');await writeParameterWithAck('CAPRI_MODE',enable?2:0,p.type,true);}
-    finally{capriCommandPending=false;}
+  navigateOrder:()=>{state.group='order';document.querySelectorAll('[data-group]').forEach(b=>b.classList.toggle('active',b.dataset.group==='order'));navigate('basic');renderBasic();},
+  orderCommand:async(enable)=>{
+    if(orderCommandPending||!window.AtlasOrderCore?.commandAllowed(window.AtlasCC.getState(),enable)||state.writeWait||state.servoConfigBusy||state.bulk?.running||state.readTwoBusy)throw Error('O.R.D.E.R.: fresh live link, interface revision 2 and idle parameter transfer required');
+    orderCommandPending=true;
+    try{const p=state.params.get('ORDER_MODE');await writeParameterWithAck('ORDER_MODE',enable?2:0,p.type,true);}
+    finally{orderCommandPending=false;}
   },
   diagnosticStats:()=>({valid:state.rxParser?.valid??0,invalid:state.rxParser?.invalid??0,connected:state.connected,sysid:state.sysid,compid:state.compid,lastHeartbeat:state.lastHeartbeat,paramReader:state.paramTransfer?.reader||null,paramPhase:state.paramTransfer?.phase||'idle',concurrentParamValues:state.paramTransfer?.concurrentParamValues||0,paramFtpStage:state.paramTransfer?.ftpStage||null,paramFtpError:state.paramTransfer?.ftpError||null,paramFtpBurstError:state.paramTransfer?.ftpBurstError||null,positionRequests:state.rxPositions||0,commands:state.rxCommands||0,acknowledgements:state.rxAcks||0,textMessages:state.rxTexts||0}),
   canCalibrate:()=>state.connected&&!state.demo&&state.sysid!==null&&state.armed===false&&Date.now()-state.lastHeartbeat<4000&&!state.writeWait,
@@ -846,8 +847,8 @@ function renderImportDiff(){const box=$('importDiff');if(!state.importedText){bo
  else if(b)$('bulkProgress').textContent=`${b.message} · ${tr('batchSaved')}: ${b.done}/${b.total} · ${tr('batchFailed')}: ${b.failed.length}`+(b.failed.length?` [${b.failed.slice(0,8).join(', ')}]`:'');
  else $('bulkProgress').textContent=`${writable.length} ${tr('parameterImportDiff')}; ${missing.length} ${tr('batchUnsupported')}`;
 }
-async function writeParameterWithAck(name,value,type,capriActivation=false){
- const activation=capriActivation===true&&name==='CAPRI_MODE'&&(value===0||value===2)&&window.AtlasCapriCore?.commandAllowed(window.AtlasCC.getState(),value===2);
+async function writeParameterWithAck(name,value,type,orderActivation=false){
+ const activation=orderActivation===true&&name==='ORDER_MODE'&&(value===0||value===2)&&window.AtlasOrderCore?.commandAllowed(window.AtlasCC.getState(),value===2);
  if(!state.connected||state.sysid===null||(!activation&&state.armed!==false)||Date.now()-state.lastHeartbeat>=4000)throw Error('MAVLink link or DISARMED heartbeat missing');
  if(state.writeWait)throw Error('Other PARAM_SET in progress');
  let pending;
