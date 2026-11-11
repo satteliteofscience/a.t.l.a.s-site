@@ -449,14 +449,14 @@ function mountCalibrationWidget(box,widget){
  if(!widget)return;
  const dock=el('div','qs-cal-dock');box.append(dock);dock.append(widget);
 }
-function startCalibration(kind,batteryMode=false){
+async function startCalibration(kind,batteryMode=false){
  if(!api.canCalibrate()){setGlobal(t('accelNeedLink'),true);return;}
  if(kind==='compass'&&!['enabled','unhealthy'].includes(core.detectCompass(state().params,state().compassStatus).kind)){setGlobal(t('compassNotConfirmed'),true);return;}
  const target={six:'accSixBtn',level:'accLevelBtn',compass:'compassStartBtn'}[kind];
  if(!target)return;
- const control=$(target);if(!control||control.disabled){setGlobal(t('accelNeedLink'),true);return;}
+ const control=$(target);if(kind!=='compass'&&(!control||control.disabled)){setGlobal(t('accelNeedLink'),true);return;}
  if(kind==='compass'){
-  if(!state().params.has('COMPASS_CAL_FIT')||!api.canWrite()){setGlobal(t('readWaiting'),true);return;}
+  const ready=window.AtlasCalibration?.compassReadiness();if(!ready?.ready){setGlobal(ready?.reason||t('readWaiting'),true);return;}
   if(batteryMode&&!window.confirm(t('compassBatteryConfirm')))return;
   qs.compassBefore=core.snapshotCompassOffsets(state().params);
   qs.compassBatteryMode=batteryMode;
@@ -464,9 +464,10 @@ function startCalibration(kind,batteryMode=false){
   qs.compassManualAudio=false;qs.compassError='';
  }
  qs.awaitingCalibration=kind;
- if(kind==='compass'&&batteryMode){
+ if(kind==='compass'){
   if(typeof window.AtlasCalibration?.startCompass!=='function'){qs.awaitingCalibration=null;setGlobal(t('accelNeedLink'),true);return;}
-  void window.AtlasCalibration.startCompass({autoReleaseAfterAck:true});
+  const result=await window.AtlasCalibration.startCompass({autoReleaseAfterAck:batteryMode});
+  if(!result?.started){qs.awaitingCalibration=null;qs.compassError=result?.reason||t('compassFail');setGlobal(qs.compassError,true);render();}
  }else control.click();
 }
 function renderAccel(box){
@@ -604,7 +605,9 @@ function renderCompass(box){
    box.append(panel);
   }
   if(!qs.compassNeedReboot){
-   const canStart=api.canCalibrate()&&['enabled','unhealthy'].includes(result.kind)&&!inSession;
+   const readiness=window.AtlasCalibration?.compassReadiness();
+   const canStart=!!readiness?.ready&&!inSession;
+   if(!canStart&&!inSession)callout(box,readiness?.reason||t('readWaiting'),'warning');
    button(box,t('compassBatteryStart'),()=>startCalibration('compass',true),'cc-button primary').disabled=!canStart;
    button(box,t('compassWiredStart'),()=>startCalibration('compass',false),'cc-button ghost').disabled=!canStart;
    mountCalibrationWidget(box,compassWidget);
@@ -791,7 +794,7 @@ window.addEventListener('atlas:calibration',event=>{
   qs.awaitingCalibration=null;
   if(d.kind==='six'){qs.accelError=t('accelFail');qs.completed[4]='failed';}
   else if(d.kind==='level'){qs.levelError=t('levelFail');qs.completed[5]='failed';}
-  else{qs.compassError=t('compassFail');qs.completed[8]='failed';qs.compassOffline=false;}
+  else{qs.compassError=d.reason||(d.status==='cancelled'?'':t('compassFail'));qs.completed[8]='failed';qs.compassOffline=false;qs.compassAwaitingSave=false;}
   render();
  }
 });
@@ -802,6 +805,7 @@ setInterval(()=>{
   if(qs.rebootUserConfirmed&&qs.rebootSawDisconnect&&s.connected&&s.lastHeartbeat>qs.rebootBaseline&&Date.now()-s.lastHeartbeat<4000&&!qs.rebootReady){qs.rebootReady=true;setGlobal(t('rebootDone'));render();}
  }
  if(wizardActive)renderHeader();
+ if(wizardActive&&qs.step===8){const key=JSON.stringify(window.AtlasCalibration?.compassReadiness());if(key!==qs.compassReadyKey){qs.compassReadyKey=key;render();}}
  if(wizardActive&&qs.step===3)updateWriteGate();
  if(qs.step===10&&qs.finalPhase==='reading'){
   const progress=$('qsFinalProgress'),s=state();

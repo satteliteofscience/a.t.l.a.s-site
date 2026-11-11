@@ -879,8 +879,8 @@
     "high": "127"
    },
    "Values": {
-    "-1": "Never reset",
-    "0": "Always reset"
+    "0": "Always reset",
+    "-1": "Never reset"
    }
   },
   "FLIGHT_OPTIONS": {
@@ -1092,7 +1092,7 @@
   },
   "CAPRI_MODE": {
    "DisplayName": "C.A.P.R.I. activation source",
-   "Description": "Master switch for both rudder and pitch limits, only in armed FBWA with valid RC. 0 bypasses C.A.P.R.I.; 1 uses raw RC PWM range; 2 accepts volatile configurator commands. Reboot/disarm/failsafe/leaving FBWA clears GCS activation.",
+   "Description": "0: off; 1: raw two-position RC HIGH on / LOW or centre off; 2: enabled by configuration, no extra command. Limits apply in armed FBWA with valid RC. Zero boundaries bypass their branches.",
    "Default": "0",
    "Range": {
     "low": "0",
@@ -1101,8 +1101,8 @@
    "Increment": "1",
    "Values": {
     "0": "Disabled",
-    "1": "RC PWM range",
-    "2": "Configurator command"
+    "1": "RC switch HIGH on",
+    "2": "Enabled by configuration"
    }
   },
   "RUD_BRK_EN": {
@@ -1143,7 +1143,7 @@
   },
   "CAPRI_RC_CH": {
    "DisplayName": "C.A.P.R.I. activation channel",
-   "Description": "Raw PWM receiver channel 1–16 for CAPRI_MODE=1. Zero disables RC activation. Primary flight-control channels are rejected. RC reversal is not applied; choose CAPRI_RC_MIN/MAX to match the switch position.",
+   "Description": "Two-position activation channel 1-16, excluding primary flight controls. HIGH on, LOW or centre off. 13-16 require actual receiver/MAVLink2 data. Ignored in CAPRI_MODE=2.",
    "Default": "0",
    "Range": {
     "low": "0",
@@ -1153,31 +1153,39 @@
   },
   "CAPRI_RC_MIN": {
    "DisplayName": "C.A.P.R.I. activation minimum PWM",
-   "Description": "Inclusive lower raw PWM boundary, smaller than CAPRI_RC_MAX. Activation requires 200 ms continuously in range. Exit uses 20 us hysteresis.",
+   "Description": "Inactive legacy storage slot. Since CAPRI_REV=2 use HIGH (>=1750 us) ON / LOW or centre OFF; no PWM range configuration.",
    "Default": "1800",
    "Range": {
     "low": "800",
     "high": "2200"
    },
    "Increment": "1",
-   "Units": "us"
+   "Units": "us",
+   "ReadOnly": "True"
   },
   "CAPRI_RC_MAX": {
    "DisplayName": "C.A.P.R.I. activation maximum PWM",
-   "Description": "Inclusive upper raw PWM boundary, greater than CAPRI_RC_MIN. Applies only in RC activation mode.",
+   "Description": "Inactive legacy storage slot. Since CAPRI_REV=2 use HIGH (>=1750 us) ON / LOW or centre OFF; no PWM range configuration.",
    "Default": "2200",
    "Range": {
     "low": "800",
     "high": "2200"
    },
    "Increment": "1",
-   "Units": "us"
+   "Units": "us",
+   "ReadOnly": "True"
   },
   "CAPRI_PIT_LIM": {
    "DisplayName": "Legacy symmetric C.A.P.R.I. limit (inactive)",
    "Description": "Inactive compatibility parameter. Use CAPRI_PIT_MIN / MAX and explicitly configure CAPRI_MODE.",
    "ReadOnly": true,
    "Default": "0"
+  },
+  "CAPRI_REV": {
+   "DisplayName": "C.A.P.R.I. activation interface revision",
+   "Description": "Read-only interface revision; 2 enables direct configuration activation and fixed two-position RC switching.",
+   "ReadOnly": "True",
+   "User": "Advanced"
   }
  }
 }

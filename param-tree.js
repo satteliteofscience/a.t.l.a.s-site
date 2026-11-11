@@ -35,7 +35,7 @@ async function fetchBundled(){
  try{
   if(window.AtlasMetadataInline)localMeta=normalize(window.AtlasMetadataInline);
   else{
-   const response=await fetch('data/param-metadata.json');
+   const response=await fetch('data/param-metadata.json?v=capri-3');
    if(!response.ok)throw Error('HTTP '+response.status);
    localMeta=normalize(await response.json());
   }
