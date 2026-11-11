@@ -91,6 +91,7 @@ function log(msg,warn=false,meta=null){
 }
 function toast(message,warning=false){log(message,warning);}
 function setLang(next){if(!words[next])return;lang=next;try{localStorage.setItem('atlas-language',lang);}catch{};document.documentElement.lang=next;
+ const orderTab=document.querySelector('[data-group="order"]');if(orderTab)orderTab.textContent=window.AtlasOrderCore.protocolName(lang);
  document.querySelectorAll('[data-t]').forEach(el=>{let k=el.dataset.t;if(words[lang][k])el.textContent=tr(k);});document.querySelectorAll('[data-ph]').forEach(el=>el.placeholder=tr(el.dataset.ph));
  document.querySelectorAll('[data-language]').forEach(el=>{el.classList.toggle('active',el.dataset.language===next);el.setAttribute('aria-pressed',String(el.dataset.language===next));});
  $('twoPassParamsBtn').textContent=(readTwoLex[next]||readTwoLex.ru).button;
@@ -773,8 +774,8 @@ async function saveEdit(ev){
 
 function renderBasic(){const grid=$('basicGrid');grid.replaceChildren();const filter=state.group;for(const s of settingDefs){if(filter!=='all'&&filter!==s.group)continue;
  const value=state.params.get(s.key);const card=document.createElement('article');card.className='cc-setting-card';
- const row=document.createElement('div');row.className='cc-setting-line';const code=document.createElement('code');code.textContent=s.key;const label=document.createElement('span');label.className='cc-setting-tag';label.textContent=s.group.toUpperCase();row.append(code,label);
- const desc=document.createElement('div');desc.className='cc-setting-label';desc.textContent=s.desc[lang==='uk'?1:lang==='en'?2:0];
+ const row=document.createElement('div');row.className='cc-setting-line';const code=document.createElement('code');code.textContent=s.key;const label=document.createElement('span');label.className='cc-setting-tag';label.textContent=s.group==='order'?window.AtlasOrderCore.protocolName(lang):s.group.toUpperCase();row.append(code,label);
+ const desc=document.createElement('div');desc.className='cc-setting-label';desc.textContent=s.desc[lang==='uk'?1:lang==='en'?2:0].replaceAll('O.R.D.E.R.',window.AtlasOrderCore.protocolName(lang));
  const bottom=document.createElement('div');bottom.className='cc-setting-bottom';const val=document.createElement('strong');val.textContent=value?formatParam(value.value):'—';const btn=document.createElement('button');btn.className='cc-button ghost';btn.textContent=tr('edit');btn.disabled=!value||!canWrite();btn.addEventListener('click',()=>openEdit(s.key));bottom.append(val,btn);card.append(row,desc,bottom);grid.append(card);
  }}
 function renderCategoryNav(){
