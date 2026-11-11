@@ -43,7 +43,7 @@ async function fetchBundled(){
  refreshMetadata();
  window.dispatchEvent(new Event('atlas:metadata'));
 }
-function groupOf(key){const i=key.indexOf('_');return i>0?key.slice(0,i):'#';}
+function groupOf(key){if(key.startsWith('CAPRI_')||key==='RUD_LIMIT_DEG'||key==='RUD_BRK_EN')return 'C.A.P.R.I.';const i=key.indexOf('_');return i>0?key.slice(0,i):'#';}
 function optionsText(m){let x=[];
  if(m.Values&&typeof m.Values==='object')x=Object.entries(m.Values).map(([n,s])=>n+':'+s);
  if(!x.length&&m.Bitmask)x=[String(m.Bitmask)];
@@ -76,7 +76,7 @@ function render({state,lang,formatParam,canWrite,edit,onSelect,limit}){
   return true;
  });
  root.replaceChildren();const allButton=document.createElement('button');allButton.className='pt-group all'+(selection==='ALL'?' selected':'');allButton.textContent=`⌂ ${tr('all')} (${all.length})`;allButton.addEventListener('click',()=>select('ALL'));root.append(allButton);
- const sortedGroups=[...groups.keys()].sort((a,b)=>a.localeCompare(b));
+ const sortedGroups=[...groups.keys()].sort((a,b)=>a==='C.A.P.R.I.'?1:b==='C.A.P.R.I.'?-1:a.localeCompare(b));
  for(const group of sortedGroups){const names=groups.get(group);const open=expanded.has(group);
   const groupLine=document.createElement('div');groupLine.className='pt-group-row';
   const toggle=document.createElement('button');toggle.className='pt-expander';toggle.textContent=names.length>1?(open?'−':'+'):'·';toggle.setAttribute('aria-label',`${open?'Collapse':'Expand'} ${group}`);toggle.onclick=()=>{if(open)expanded.delete(group);else expanded.add(group);render({state,lang,formatParam,canWrite,edit,onSelect,limit});};

@@ -3,7 +3,7 @@
    No auto-arming, motor output or firmware-writing commands are implemented. */
 (() => {
   'use strict';
-  const CRC_EXTRA = Object.freeze({0:50,1:124,20:214,21:159,22:220,23:168,30:39,66:148,74:20,76:152,77:143,36:222,65:118,110:84,147:154,191:92,192:36,253:83});
+  const CRC_EXTRA = Object.freeze({0:50,1:124,20:214,21:159,22:220,23:168,30:39,66:148,74:20,76:152,77:143,36:222,65:118,110:84,147:154,191:92,192:36,251:170,253:83});
   const enc = new TextEncoder();
   const decoder = new TextDecoder('ascii');
   function crcX25(data, extra) {
@@ -94,6 +94,7 @@
     // is only 30 bytes, not the nominal 33. The command and 7 params are complete at 30.
     if(id===76 && v.byteLength>=30) return {type:'command_long',command:v.getUint16(28,true),params:Array.from({length:7},(_,i)=>v.getFloat32(i*4,true)),targetSystem:v.byteLength>30?v.getUint8(30):0,targetComponent:v.byteLength>31?v.getUint8(31):0,confirmation:v.byteLength>32?v.getUint8(32):0};
     if(id===77 && v.byteLength>=3) return {type:'ack',command:v.getUint16(0,true),result:v.getUint8(2),progress:v.byteLength>=4?v.getUint8(3):null};
+    if(id===251 && v.byteLength>=9) return {type:'named_float',name:ascii16(frame.payload.slice(8,18)),value:v.getFloat32(4,true),timeBootMs:v.getUint32(0,true)};
     if(id===65 && v.byteLength>=4) return {type:'rc_channels',channels:Array.from({length:18},(_,i)=>(v.byteLength>=6+i*2?v.getUint16(4+i*2,true):0)),count:v.byteLength>=41?v.getUint8(40):0,rssi:v.byteLength>=42?v.getUint8(41):null};
     if(id===110 && v.byteLength>=15) return {type:'mavftp',data:frame.payload.slice(3)};
     if(id===36 && v.byteLength>=21) return {type:'servo_output',port:v.getUint8(20),pwm:Array.from({length:8},(_,i)=>v.getUint16(4+i*2,true)).concat(v.byteLength>=37?Array.from({length:8},(_,i)=>v.getUint16(21+i*2,true)):[])};

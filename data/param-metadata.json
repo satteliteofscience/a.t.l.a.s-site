@@ -1070,15 +1070,15 @@
    "Increment": "0.5"
   },
   "RUD_LIMIT_DEG": {
-   "DisplayName": "Experimental FBWA rudder bank allowance",
-   "Description": "Adds up to this many degrees to the FBWA bank demand when the aileron and rudder inputs agree. Requires measured airspeed and stall prevention. Zero disables the new path and leaves any separately configured RUD_RLL_ADD active.",
-   "Default": 0,
-   "Units": "deg",
+   "DisplayName": "C.A.P.R.I. extra rudder bank",
+   "Description": "Additional commanded FBWA bank while C.A.P.R.I. is active. Zero bypasses all experimental rudder/bank control. Does not guarantee a physical bank angle or prevent a stall.",
+   "Default": "0",
    "Range": {
     "low": "0",
     "high": "45"
    },
-   "Increment": "1"
+   "Increment": "1",
+   "Units": "deg"
   },
   "RUD_RLL_ADD": {
    "DisplayName": "FBWA manual rudder bank allowance",
@@ -1089,6 +1089,95 @@
     "high": "45"
    },
    "Increment": "1"
+  },
+  "CAPRI_MODE": {
+   "DisplayName": "C.A.P.R.I. activation source",
+   "Description": "Master switch for both rudder and pitch limits, only in armed FBWA with valid RC. 0 bypasses C.A.P.R.I.; 1 uses raw RC PWM range; 2 accepts volatile configurator commands. Reboot/disarm/failsafe/leaving FBWA clears GCS activation.",
+   "Default": "0",
+   "Range": {
+    "low": "0",
+    "high": "2"
+   },
+   "Increment": "1",
+   "Values": {
+    "0": "Disabled",
+    "1": "RC PWM range",
+    "2": "Configurator command"
+   }
+  },
+  "RUD_BRK_EN": {
+   "DisplayName": "C.A.P.R.I. optional bank brake",
+   "Description": "Additional bank tracking feedback. Requires active C.A.P.R.I. and RUD_LIMIT_DEG > 0. Zero bypasses this branch.",
+   "Default": "0",
+   "Range": {
+    "low": "0",
+    "high": "1"
+   },
+   "Increment": "1",
+   "Values": {
+    "0": "Disabled",
+    "1": "Enabled"
+   }
+  },
+  "CAPRI_PIT_MIN": {
+   "DisplayName": "C.A.P.R.I. minimum pitch demand",
+   "Description": "Lower final pitch-demand boundary in degrees, after trim and throttle additions. Zero bypasses this boundary. Only applies while C.A.P.R.I. is active.",
+   "Default": "0",
+   "Range": {
+    "low": "-45",
+    "high": "0"
+   },
+   "Increment": "0.5",
+   "Units": "deg"
+  },
+  "CAPRI_PIT_MAX": {
+   "DisplayName": "C.A.P.R.I. maximum pitch demand",
+   "Description": "Upper final pitch-demand boundary in degrees, after trim and throttle additions. Zero bypasses this boundary. Only applies while C.A.P.R.I. is active.",
+   "Default": "0",
+   "Range": {
+    "low": "0",
+    "high": "45"
+   },
+   "Increment": "0.5",
+   "Units": "deg"
+  },
+  "CAPRI_RC_CH": {
+   "DisplayName": "C.A.P.R.I. activation channel",
+   "Description": "Raw PWM receiver channel 1–16 for CAPRI_MODE=1. Zero disables RC activation. Primary flight-control channels are rejected. RC reversal is not applied; choose CAPRI_RC_MIN/MAX to match the switch position.",
+   "Default": "0",
+   "Range": {
+    "low": "0",
+    "high": "16"
+   },
+   "Increment": "1"
+  },
+  "CAPRI_RC_MIN": {
+   "DisplayName": "C.A.P.R.I. activation minimum PWM",
+   "Description": "Inclusive lower raw PWM boundary, smaller than CAPRI_RC_MAX. Activation requires 200 ms continuously in range. Exit uses 20 us hysteresis.",
+   "Default": "1800",
+   "Range": {
+    "low": "800",
+    "high": "2200"
+   },
+   "Increment": "1",
+   "Units": "us"
+  },
+  "CAPRI_RC_MAX": {
+   "DisplayName": "C.A.P.R.I. activation maximum PWM",
+   "Description": "Inclusive upper raw PWM boundary, greater than CAPRI_RC_MIN. Applies only in RC activation mode.",
+   "Default": "2200",
+   "Range": {
+    "low": "800",
+    "high": "2200"
+   },
+   "Increment": "1",
+   "Units": "us"
+  },
+  "CAPRI_PIT_LIM": {
+   "DisplayName": "Legacy symmetric C.A.P.R.I. limit (inactive)",
+   "Description": "Inactive compatibility parameter. Use CAPRI_PIT_MIN / MAX and explicitly configure CAPRI_MODE.",
+   "ReadOnly": true,
+   "Default": "0"
   }
  }
 }
