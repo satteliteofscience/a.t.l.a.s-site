@@ -5,35 +5,39 @@ const changes=[{"ru":["EKF3 без спутниковой навигации","�
 const $=id=>document.getElementById(id);
 let lang='ru';try{const saved=localStorage.getItem('atlas-language');if(UI[saved])lang=saved;}catch{}
 function add(tag,className,text){const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;}
-const releases=[window.AtlasRelease11,{version:'1.0',id:'release-1-0',channel:'RELEASE',changes}].filter(Boolean);
+const releases=[window.AtlasRelease12,window.AtlasRelease11,{version:'1.0',id:'release-1-0',channel:'RELEASE',changes}].filter(Boolean);
 const introductions={
   ru:'Сравнение штатного ArduPlane 4.7.2 с опубликованным Release 1.0 и рабочими исходниками A.T.L.A.S. для 1.1.',
   uk:'Порівняння штатного ArduPlane 4.7.2 з опублікованим Release 1.0 та робочим кодом A.T.L.A.S. для 1.1.',
   en:'Compare stock ArduPlane 4.7.2 with the published Release 1.0 and the A.T.L.A.S. working source for 1.1.'
 };
 
+const openReleases=new Map();
 function renderRelease(release,u){
-  const group=add('section','ch-release');
+  const group=add('details','ch-release');
   group.id=release.id;
   group.setAttribute('aria-label',u.label+' '+release.version);
-  const head=add('div','ch-release-head');
+  group.open=openReleases.get(release.id) ?? release===releases[0];
+  group.addEventListener('toggle',()=>openReleases.set(release.id,group.open));
+  const head=add('summary','ch-release-head');
   const version=add('div','ch-release-id');
   version.append(add('span','',u.label+' '+release.version),add('b','',release.channel));
   head.append(version,add('p','ch-release-sub',release.hint?.[lang] ?? u.versionHint));
   group.append(head);
+  const content=add('div','ch-release-content');group.append(content);
 
   const list=add('ol','ch-comparisons');
   for(const item of release.changes){
     const entry=item[lang],li=add('li');
     li.append(add('h2','ch-compare-title',entry[0]));
-    for(const [label,value,kind] of [[u.base,entry[1],'base'],[u.mod,entry[2],'atlas']]){
+    for(const [label,value,kind] of [[release.baseLabel?.[lang] ?? u.base,entry[1],'base'],[release.modLabel?.[lang] ?? u.mod,entry[2],'atlas']]){
       const row=add('div','ch-comparison '+kind);
       row.append(add('div','ch-compare-label',label),add('p','',value));
       li.append(row);
     }
     list.append(li);
   }
-  group.append(list);
+  content.append(list);
   if(release.sources){
     const details=add('details','ch-sources'),files=add('ul');
     details.open=$('chReleases').querySelector('.ch-sources')?.open ?? false;
@@ -43,7 +47,7 @@ function renderRelease(release,u){
       item.append(add('code','',path));
       files.append(item);
     }
-    group.append(details);
+    content.append(details);
   }
   return group;
 }
@@ -56,7 +60,9 @@ function render(){
   $('chConfigurator').textContent=u.config;
   $('chDownloads').textContent=u.builds;
   $('chTitle').textContent=u.title;
-  $('chIntro').textContent=window.AtlasRelease11 ? introductions[lang] : u.intro;
+  $('chIntro').textContent=({ru:'История A.T.L.A.S.: версия 1.2 относительно 1.1, предыдущие версии — отдельными разделами.',uk:'Історія A.T.L.A.S.: версія 1.2 відносно 1.1, попередні версії — окремими розділами.',en:'A.T.L.A.S. history: version 1.2 compared with 1.1; earlier versions have separate sections.'})[lang];
+  $('chProtocolTitle').textContent=({ru:'Протокол П.Р.И.К.А.З',uk:'Протокол Н.А.К.А.З',en:'O.R.D.E.R protocol'})[lang];
+  $('chProtocolInfo').textContent=({ru:'Управляемые ограничения FBWA · крен / руль / тангаж',uk:'Керовані обмеження FBWA · крен / кермо / тангаж',en:'Selectable FBWA limits · bank / rudder / pitch'})[lang];
   $('chFooter').textContent=u.footer;
   for(const button of document.querySelectorAll('[data-language]')){
     const active=button.dataset.language===lang;
@@ -65,12 +71,12 @@ function render(){
   }
   $('chVersions').replaceChildren(...releases.map(release=>{
     const link=add('a','',u.label+' '+release.version);
-    link.href='#'+release.id;
+    link.href='#'+release.id;link.addEventListener('click',()=>{const target=$(release.id);if(target)target.open=true;});
     return link;
   }));
   $('chReleases').replaceChildren(...releases.map(release=>renderRelease(release,u)));
   try{localStorage.setItem('atlas-language',lang);}catch{}
 }
 for(const b of document.querySelectorAll('[data-language]'))b.addEventListener('click',()=>{lang=b.dataset.language;render();});render();
-if(/^#release-1-[01]$/.test(location.hash)) $(location.hash.slice(1))?.scrollIntoView();
+if(/^#release-1-[012]$/.test(location.hash)) {const target=$(location.hash.slice(1));if(target){target.open=true;target.scrollIntoView();}}
 })();
