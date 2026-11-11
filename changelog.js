@@ -63,6 +63,7 @@ function render(){
   $('chIntro').textContent=({ru:'История A.T.L.A.S.: версия 1.2 относительно 1.1, предыдущие версии — отдельными разделами.',uk:'Історія A.T.L.A.S.: версія 1.2 відносно 1.1, попередні версії — окремими розділами.',en:'A.T.L.A.S. history: version 1.2 compared with 1.1; earlier versions have separate sections.'})[lang];
   $('chProtocolTitle').textContent=({ru:'Протокол П.Р.И.К.А.З',uk:'Протокол Н.А.К.А.З',en:'O.R.D.E.R protocol'})[lang];
   $('chProtocolInfo').textContent=({ru:'Управляемые ограничения FBWA · крен / руль / тангаж',uk:'Керовані обмеження FBWA · крен / кермо / тангаж',en:'Selectable FBWA limits · bank / rudder / pitch'})[lang];
+  $('chSitlDemo').textContent=({ru:'Демонстрация работы в SITL',uk:'Демонстрація роботи в SITL',en:'SITL demonstration'})[lang];
   $('chFooter').textContent=u.footer;
   for(const button of document.querySelectorAll('[data-language]')){
     const active=button.dataset.language===lang;
