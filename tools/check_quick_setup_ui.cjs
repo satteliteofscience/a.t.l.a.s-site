@@ -5,6 +5,16 @@ const read=p=>fs.readFileSync(p,'utf8');
 const html=read('configurator.html'),css=read('configurator.css'),cfg=read('configurator.js');
 const core=read('quick-setup-core.js'),wizard=read('quick-setup.js'),cal=read('calibration.js'),dfu=read('dfu-ui.js');
 const vm=require('node:vm');
+// A failed calibration is a status to display, never permission to advance.
+{
+ const source=wizard.slice(wizard.indexOf('function canNext(){'),wizard.indexOf('function setGlobal('));
+ const context={qs:{step:8,completed:{8:'failed'},compassNeedReboot:false},window:{},state:()=>({connected:true}),safeLink:()=>true};
+ vm.runInNewContext(source,context);
+ assert.equal(context.canNext(),false);
+ context.qs.completed[8]='done';assert.equal(context.canNext(),true);
+ context.qs.compassNeedReboot=true;assert.equal(context.canNext(),false);
+ context.qs.compassRebootVerified=true;assert.equal(context.canNext(),true);
+}
 assert.match(html,/data-tab="quicksetup"/,'Quick Setup navigation entry missing');
 assert.match(html,/data-panel="quicksetup"/,'Quick Setup panel missing');
 assert.match(html,/<script src="dfu-ui\.js" defer><\/script><script src="quick-setup-core\.js(?:\?[^"]+)?" defer><\/script><script src="tempcal-core\.js" defer><\/script><script src="tempcal-ui\.js" defer><\/script><script src="quick-setup\.js(?:\?[^"]+)?" defer>/,'Quick Setup must load after INS temperature calibration module and DFU');
@@ -22,7 +32,7 @@ assert.match(html,/id="compassFitness"/,'compass accuracy selection must be show
 assert.match(cfg,/rebootController:\(\)=>/,'controller API must offer DISARMED-only reboot');
 assert.match(cfg,/commandLong\(state\.sysid,state\.compid,246/,'autopilot reboot command must be 246');
 assert.match(wizard,/compassRestartControls\(box\)/,'compass stage must offer in-place reboot and USB reconnect');
-assert.match(wizard,/qs\.compassRebootManual\|\|!safeLink\(state\(\)\)/,'reread must require user reboot confirmation and a fresh DISARMED USB link');
+assert.match(wizard,/core\.assessCompassRecovery\(session,result\.state/,'completion requires fresh parameter and reboot assessment');
 assert.match(wizard,/if\(qs\.step===8&&qs\.compassNeedReboot&&!qs\.compassRebootVerified\)/,'compass post-reboot verification is required for both automatic and manual success');
 assert.match(wizard,/function verifyFinalSetup\(/,'final stage must initiate a fresh full parameter read');
 assert.doesNotMatch(wizard,/qs\.finalChecks\.every\(Boolean\)/,'legacy final checklist reference must not crash the final stage');
@@ -132,8 +142,8 @@ assert.match(cfg,/state\.lastVfr=Date\.now\(\)/,'speed display should only claim
 assert.match(cal,/void releaseCompassUsb\('MAV_CMD_DO_START_MAG_CAL ack '/,'automatic USB release must wait for successful calibration ACK');
 assert.match(cal,/d\.result===0\|\|d\.result===5/,'only an accepted or in-progress ACK may trigger automatic release');
 assert.match(cal,/api\.connectUsb\(\)/,'automatic release must use existing WebSerial disconnect');
-assert.match(wizard,/startCalibration\('compass',true\)/,'wizard must offer battery-powered auto-release calibration');
-assert.match(wizard,/startCalibration\('compass',false\)/,'wizard must preserve wired calibration');
+assert.match(wizard,/startCalibration\('compass'\)/,'wizard must offer a shared compass start');
+assert.doesNotMatch(wizard,/startCalibration\('compass',(?:true|false)\)/,'USB and TCP must use the same non-disconnecting start');
 assert.match(wizard,/compassUsbPowerWarning/,'wizard must explain that software disconnect does not cut USB 5V');
 assert.match(wizard,/verifyCompassBatteryResult/,'quick setup must check post-reboot compass offsets');
 assert.match(wizard,/assessPostCompassCalibration\(qs\.compassBefore/,'post-reboot evidence should compare pre/post offsets, not claim MAG_CAL_REPORT success');

@@ -1,4 +1,4 @@
-/* A.T.L.A.S. Quick Setup — guided workflow. All hardware actions require an explicit user click. */
+/* A.T.L.A.S. Quick Setup — guided workflow. Calibration, writes and reboot require an explicit user click; reconnect verification is read-only. */
 (() => {
 'use strict';
 const api=window.AtlasCC,core=window.AtlasQuickSetupCore,$=id=>document.getElementById(id);
@@ -60,13 +60,14 @@ en:{
  live:'LINK',disarmed:'DISARMED',connected:'Connected',disconnected:'Not connected',notComplete:'NOT COMPLETE',error:'Error',cancelled:'Stopped',manual:'Manual confirmation',skip:'Skip stage',confirm:'Confirm',open:'Open section',download:'Download',progress:'PROGRESS',unsupported:'Not supported automatically',verified:'VERIFIED',fullLink:'Open full configurator'
 }
 };
+for(const [language,values] of Object.entries({"ru":{"compassStart":"Калибровка компаса","compassBody":"Запусти калибровку и медленно вращай аппарат по трём осям. Прогресс приходит от контроллера по USB или TCP.","compassWireMode":"Можно оставить связь подключённой или отключить USB, сохранив питание от батареи. После возвращения связи мастер прочитает параметры и проверит сохранение и перезагрузку.","compassOfflineGuide":"При отключении связи новые проценты недоступны. Последнее значение сохраняется; отключение само по себе не означает завершение или ошибку.","compassRebootInfo":"Результат сохранён. Перезагрузи контроллер: после подключения мастер повторно проверит параметры, здоровье компаса и счётчик загрузок.","compassRebootSuccess":"Перезагрузка и состояние компаса подтверждены. Шаг завершён.","compassEvidenceOk":"Сохранённые коэффициенты изменились, компас исправен, перезагрузка подтверждена. Отчёт MAG_CAL_REPORT во время отключения связи не получен; результат подтверждён косвенно.","compassEvidenceMissing":"Новое сохранение пока не подтверждено. Если калибровка ещё выполняется, продолжай вращать аппарат; при ошибке повтори её. По одним неизменившимся параметрам успех определить нельзя.","compassEvidenceBusy":"Чтение параметров и проверка состояния компаса…","compassRebootRead":"Проверить состояние","compassRebootManual":"Счётчик загрузок недоступен. Я перезагрузил контроллер после калибровки и подключился заново.","compassRebootTitle":"Перезагрузка после калибровки","linkDisconnect":"Отключить связь","compassOfflineProgress":"Прогресс калибровки","compassReconnectHint":"После подключения дождись полного чтения параметров — проверка продолжится автоматически.","compassWrongDevice":"Подключён другой контроллер или изменился набор компасов. Повтори калибровку для этого устройства."},"uk":{"compassStart":"Калібрування компаса","compassBody":"Запусти калібрування й повільно обертай апарат навколо трьох осей. Прогрес надходить від контролера через USB або TCP.","compassWireMode":"Можна залишити зв’язок або від’єднати USB, зберігши живлення від батареї. Після повернення зв’язку майстер зчитає параметри й перевірить збереження та перезапуск.","compassOfflineGuide":"Без зв’язку нові відсотки недоступні. Останнє значення зберігається; від’єднання саме по собі не означає завершення чи помилку.","compassRebootInfo":"Результат збережено. Перезапусти контролер: після підключення майстер перевірить параметри, стан компаса та лічильник запусків.","compassRebootSuccess":"Перезапуск і стан компаса підтверджено. Етап завершено.","compassEvidenceOk":"Збережені коефіцієнти змінилися, компас справний, перезапуск підтверджено. Звіт MAG_CAL_REPORT під час від’єднання не отримано; результат підтверджено опосередковано.","compassEvidenceMissing":"Нове збереження ще не підтверджено. Якщо калібрування триває, продовжуй обертати апарат; при помилці повтори його. Незмінені параметри самі по собі не підтверджують успіх.","compassEvidenceBusy":"Зчитування параметрів і перевірка стану компаса…","compassRebootRead":"Перевірити стан","compassRebootManual":"Лічильник запусків недоступний. Я перезапустив контролер після калібрування та підключився знову.","compassRebootTitle":"Перезапуск після калібрування","linkDisconnect":"Від’єднати зв’язок","compassOfflineProgress":"Прогрес калібрування","compassReconnectHint":"Після підключення дочекайся повного зчитування параметрів — перевірка продовжиться автоматично.","compassWrongDevice":"Підключено інший контролер або змінився набір компасів. Повтори калібрування для цього пристрою."},"en":{"compassStart":"Compass calibration","compassBody":"Start calibration and slowly rotate the aircraft around all three axes. Live progress comes from the controller over USB or TCP.","compassWireMode":"Keep the link connected or unplug USB while maintaining battery power. On reconnection, the wizard reads parameters and checks saving and reboot status.","compassOfflineGuide":"New percentages are unavailable without a link. The last value is retained; disconnection alone does not mean success or failure.","compassRebootInfo":"The result was saved. Reboot the controller; after reconnecting, the wizard checks parameters, compass health and the boot counter.","compassRebootSuccess":"Controller reboot and compass state verified. Step completed.","compassEvidenceOk":"Saved coefficients changed, the compass is healthy and reboot is confirmed. MAG_CAL_REPORT was not received while disconnected; this is indirect evidence.","compassEvidenceMissing":"New saved calibration is not yet confirmed. Continue rotating if calibration is still running; retry if it failed. Unchanged parameters alone cannot confirm success.","compassEvidenceBusy":"Reading parameters and checking compass state…","compassRebootRead":"Check state","compassRebootManual":"Boot counter unavailable. I rebooted the controller after calibration and reconnected.","compassRebootTitle":"Reboot after calibration","linkDisconnect":"Disconnect link","compassOfflineProgress":"Calibration progress","compassReconnectHint":"After reconnecting, wait for the complete parameter read; verification resumes automatically.","compassWrongDevice":"A different controller is connected or the compass set changed. Repeat calibration for this device."}}))Object.assign(copy[language],values);
 const stepKeys=['stepIntro','stepSafety','stepFirmware','stepParams','stepAccel','stepLevel','stepReboot','stepEsc','stepCompass','stepTemp','stepFinal'];
 const stepNames=['intro','safety','firmware','params','accel','level','reboot','esc','compass','temp','final'];
 const saved=(()=>{try{return JSON.parse(localStorage.getItem('atlas.quicksetup.v1')||'null');}catch{return null;}})();
 const qs={
  step:0,completed:{},safety:[false,false,false,false,false,false],firmwareSource:null,firmwareError:'',
  paramsMode:'keep',fileName:'',fileText:null,preview:null,previewBoard:null,fileToken:0,awaitingCalibration:null,readBusy:false,readPass:0,applySkipped:[],metadata:{},metadataReady:false,backupDownloaded:false,compatConfirmed:false,keepConfirmed:false,applyBusy:false,cancelApply:false,paramsMessage:'',paramsApplied:false,
- accelError:'',levelError:'',rebootBaseline:0,rebootSawDisconnect:false,rebootReady:false,rebootReading:false,rebootUserConfirmed:false,firmwareBoard:null,escConfirmed:false,compassAwaitingSave:false,compassError:'',compassNeedReboot:false,compassRebootVerified:false,compassRebootManual:false,compassReadBusy:false,compassRebootBaseline:0,compassSawDisconnect:false,compassRebootMessage:'',compassOffline:false,compassLastProgress:0,compassLastUpdate:0,compassManualAudio:false,compassBatteryMode:false,compassBefore:null,finalPhase:'idle',finalMessage:'',finalToken:0,finalTimer:null,
+ accelError:'',levelError:'',rebootBaseline:0,rebootSawDisconnect:false,rebootReady:false,rebootReading:false,rebootUserConfirmed:false,firmwareBoard:null,escConfirmed:false,compassAwaitingSave:false,compassError:'',compassNeedReboot:false,compassRebootVerified:false,compassRebootManual:false,compassReadBusy:false,compassRebootBaseline:0,compassSawDisconnect:false,compassRebootMessage:'',compassOffline:false,compassLastProgress:0,compassLastUpdate:0,compassManualAudio:false,compassBatteryMode:false,compassBefore:null,compassSession:null,compassReportVerified:false,compassSaved:false,compassRefreshNeeded:false,compassCheckedConnection:null,compassNextCheckAt:0,compassTransport:'usb',finalPhase:'idle',finalMessage:'',finalToken:0,finalTimer:null,
  resumeFrom:saved&&Number.isInteger(saved.step)?saved.step:0
 };
 function lang(){return window.AtlasLanguage?.()||'ru';}
@@ -100,7 +101,7 @@ function invalidateFrom(step){
   qs.awaitingCalibration=null;
   qs.rebootBaseline=0;qs.rebootSawDisconnect=false;qs.rebootReady=false;qs.rebootUserConfirmed=false;
   qs.rebootReading=false;qs.escConfirmed=false;qs.compassAwaitingSave=false;qs.compassError='';
-  qs.accelError='';qs.levelError='';qs.compassNeedReboot=false;qs.compassRebootVerified=false;qs.compassRebootManual=false;qs.compassReadBusy=false;qs.compassRebootMessage='';qs.compassOffline=false;qs.compassLastProgress=0;qs.compassLastUpdate=0;qs.compassManualAudio=false;qs.compassBatteryMode=false;qs.compassBefore=null;qs.finalPhase='idle';qs.finalToken++;if(qs.finalTimer)clearTimeout(qs.finalTimer);
+  qs.accelError='';qs.levelError='';qs.compassNeedReboot=false;qs.compassRebootVerified=false;qs.compassRebootManual=false;qs.compassReadBusy=false;qs.compassRebootMessage='';qs.compassOffline=false;qs.compassLastProgress=0;qs.compassLastUpdate=0;qs.compassManualAudio=false;qs.compassBatteryMode=false;qs.compassBefore=null;qs.compassSession=null;qs.compassReportVerified=false;qs.compassSaved=false;qs.compassCheckedConnection=null;qs.compassNextCheckAt=0;qs.finalPhase='idle';qs.finalToken++;if(qs.finalTimer)clearTimeout(qs.finalTimer);
  }
  persist();
 }
@@ -120,7 +121,7 @@ function canNext(){
  if(qs.step===10)return false;
  if(qs.step===3&&!safeLink(state()))return false;
  if(qs.step===9){const status=window.AtlasTempCal?.report();if(!safeLink(state())||!state().paramComplete||status?.busy)return false;}
- return !!qs.completed[qs.step]&&!qs.applyBusy&&!qs.readBusy&&!window.AtlasDfuUi?.isBusy();
+ return ['done','manual','skipped'].includes(qs.completed[qs.step])&&!qs.applyBusy&&!qs.readBusy&&!window.AtlasDfuUi?.isBusy();
 }
 function setGlobal(message,bad=false){$('qsGlobalStatus').textContent=message||'—';$('qsGlobalStatus').style.color=bad?'#e9a17f':'#aeb88d';}
 function stepStatus(i){if(qs.completed[i]==='done')return t('statusDone');if(qs.completed[i]==='manual')return t('statusManual');if(qs.completed[i]==='skipped')return t('statusSkipped');if(qs.completed[i]==='failed')return t('statusFailed');return i===qs.step?t('statusCurrent'):t('statusPending');}
@@ -444,12 +445,12 @@ const widgetAnchors=new Map();
 for(const widget of [accelWidget,compassWidget]){
  if(widget?.parentNode){const anchor=document.createComment('Quick Setup calibration restore');widget.parentNode.insertBefore(anchor,widget);widgetAnchors.set(widget,anchor);}
 }
-function restoreCalWidgets(){for(const [widget,anchor] of widgetAnchors)if(anchor.parentNode)anchor.parentNode.insertBefore(widget,anchor.nextSibling);}
+function restoreCalWidgets(){for(const [widget,anchor] of widgetAnchors)if(anchor.parentNode)anchor.parentNode.insertBefore(widget,anchor.nextSibling);if($('compassStartBtn'))$('compassStartBtn').hidden=false;}
 function mountCalibrationWidget(box,widget){
  if(!widget)return;
- const dock=el('div','qs-cal-dock');box.append(dock);dock.append(widget);
+ const dock=el('div','qs-cal-dock');box.append(dock);dock.append(widget);if(widget===compassWidget)$('compassStartBtn').hidden=true;
 }
-async function startCalibration(kind,batteryMode=false){
+async function startCalibration(kind){
  if(!api.canCalibrate()){setGlobal(t('accelNeedLink'),true);return;}
  if(kind==='compass'&&!['enabled','unhealthy'].includes(core.detectCompass(state().params,state().compassStatus).kind)){setGlobal(t('compassNotConfirmed'),true);return;}
  const target={six:'accSixBtn',level:'accLevelBtn',compass:'compassStartBtn'}[kind];
@@ -457,17 +458,17 @@ async function startCalibration(kind,batteryMode=false){
  const control=$(target);if(kind!=='compass'&&(!control||control.disabled)){setGlobal(t('accelNeedLink'),true);return;}
  if(kind==='compass'){
   const ready=window.AtlasCalibration?.compassReadiness();if(!ready?.ready){setGlobal(ready?.reason||t('readWaiting'),true);return;}
-  if(batteryMode&&!window.confirm(t('compassBatteryConfirm')))return;
   qs.compassBefore=core.snapshotCompassOffsets(state().params);
-  qs.compassBatteryMode=batteryMode;
-  qs.compassRebootMessage=batteryMode?t('compassAutoReleasePending'):'';
+  qs.compassSession=core.snapshotCompassSession(state());qs.compassTransport=state().transport||'usb';
+  qs.compassReportVerified=false;qs.compassSaved=false;qs.compassRefreshNeeded=false;qs.compassCheckedConnection=null;qs.compassNextCheckAt=0;
+  qs.compassBatteryMode=false;qs.compassRebootMessage='';
   qs.compassManualAudio=false;qs.compassError='';
  }
  qs.awaitingCalibration=kind;
  if(kind==='compass'){
   if(typeof window.AtlasCalibration?.startCompass!=='function'){qs.awaitingCalibration=null;setGlobal(t('accelNeedLink'),true);return;}
-  const result=await window.AtlasCalibration.startCompass({autoReleaseAfterAck:batteryMode});
-  if(!result?.started){qs.awaitingCalibration=null;qs.compassError=result?.reason||t('compassFail');setGlobal(qs.compassError,true);render();}
+  const result=await window.AtlasCalibration.startCompass();
+  if(!result?.started){qs.awaitingCalibration=null;qs.compassSession=null;qs.compassError=result?.reason||t('compassFail');setGlobal(qs.compassError,true);render();}
  }else control.click();
 }
 function renderAccel(box){
@@ -529,55 +530,60 @@ function renderEsc(box){
  if(result.kind==='pwm')link(box,t('escDocs'),'https://ardupilot.org/plane/docs/common-esc-calibration.html');
  checkbox(box,t(confirmLabel),!!qs.escConfirmed,value=>{qs.escConfirmed=value;if(value)complete(7,status);else{delete qs.completed[7];render();}});
 }
-async function verifyCompassBatteryResult(){
- if(qs.step!==8||qs.awaitingCalibration!=='compass'||qs.compassReadBusy||!qs.compassSawDisconnect||!safeLink(state()))return;
- if(!window.confirm(t('compassBatteryConfirmReboot')))return;
- qs.compassReadBusy=true;qs.compassRebootMessage=t('compassEvidenceBusy');render();
+async function verifyCompassBatteryResult(refresh=true){
+ const s=state(),session=qs.compassSession;
+ if(qs.step!==8||!session||qs.compassReadBusy||!safeLink(s)||qs.compassRebootVerified)return;
+ qs.compassReadBusy=true;qs.compassCheckedConnection=s.connectionId;qs.compassRefreshNeeded=false;
+ qs.compassRebootMessage=t('compassEvidenceBusy');if(wizardActive)render();
  try{
-  if(!state().paramLoading&&!api.requestParameters(true))throw Error(t('readPartial'));
+  if(refresh&&!state().paramLoading&&!api.requestParameters(true))throw Error(t('readPartial'));
   const result=await waitForParams(55000);
+  if(qs.compassSession!==session||qs.step!==8)return;
   if(!result.ok||!result.complete||!safeLink(result.state))throw Error(t('readPartial'));
   const evidence=core.assessPostCompassCalibration(qs.compassBefore,result.state.params,result.state.compassStatus);
-  if(evidence.kind!=='evidence')throw Error(t('compassEvidenceMissing')+' ('+evidence.reason+')');
-  qs.compassNeedReboot=true;qs.compassRebootVerified=true;qs.compassRebootManual=true;
-  qs.compassOffline=false;qs.compassManualAudio=false;qs.awaitingCalibration=null;
-  qs.completed[8]='manual';persist();
-  qs.compassRebootMessage=t('compassEvidenceOk');qs.compassError='';
-  window.dispatchEvent(new Event('atlas:mag-manual-finish'));
- }catch(error){qs.compassRebootMessage=error.message||t('compassEvidenceMissing');}
- finally{qs.compassReadBusy=false;render();}
+  const recovery=core.assessCompassRecovery(session,result.state,{saved:qs.compassSaved,reportVerified:qs.compassReportVerified,manualReboot:qs.compassRebootManual,sawDisconnect:qs.compassSawDisconnect});
+  if(recovery.kind==='ready'||recovery.kind==='reboot-required'){
+   qs.compassSaved=true;qs.compassNeedReboot=true;qs.compassOffline=false;qs.compassManualAudio=false;qs.awaitingCalibration=null;
+   window.dispatchEvent(new Event('atlas:mag-manual-finish'));
+   qs.compassRebootVerified=recovery.kind==='ready';
+   if(qs.compassRebootVerified){qs.completed[8]=qs.compassReportVerified?'done':'manual';qs.compassLastProgress=100;persist();}
+   qs.compassRebootMessage=qs.compassRebootVerified?t(qs.compassReportVerified?'compassRebootSuccess':'compassEvidenceOk'):t('compassRebootInfo');
+   qs.compassError='';
+  }else{
+   // Offset changes are evidence of saving, not a substitute for a lost MAG_CAL_REPORT.
+   if(recovery.kind==='waiting')qs.compassCheckedConnection=null;
+   qs.compassRebootMessage=t(['different-controller','different-compass'].includes(recovery.reason)?'compassWrongDevice':evidence.kind==='evidence'?'compassNotConfirmed':'compassEvidenceMissing');
+  }
+ }catch(error){if(qs.compassSession===session)qs.compassRebootMessage=error.message||t('readPartial');}
+ finally{qs.compassReadBusy=false;if(wizardActive&&qs.step===8)render();}
+}
+function reconcileCompass(){
+ if(qs.step!==8||!qs.compassSession||qs.compassRebootVerified||qs.compassReadBusy||(!qs.compassNeedReboot&&!qs.compassSawDisconnect&&!qs.compassRefreshNeeded))return;
+ const s=state();if(!safeLink(s)||s.paramLoading||s.paramComplete!==true)return;
+ if(qs.compassNextCheckAt){if(Date.now()<qs.compassNextCheckAt)return;qs.compassNextCheckAt=0;qs.compassRefreshNeeded=true;}
+ if(qs.compassCheckedConnection===s.connectionId&&!qs.compassRefreshNeeded)return;
+ void verifyCompassBatteryResult(qs.compassRefreshNeeded);
+}
+function compassLinkButton(parent){
+ const s=state(),bridge=(s.connected?s.transport:qs.compassTransport)==='bridge';
+ button(parent,s.connected?t('linkDisconnect'):(bridge?'TCP / MAVLink':t('usbConnect')),()=>bridge?api.connectBridge():api.connectUsb(),'cc-button ghost').disabled=qs.compassReadBusy||!!window.AtlasDfuUi?.isBusy();
 }
 function compassRestartControls(box){
  if(!qs.compassNeedReboot)return;
- const panel=el('div','qs-reboot-card');
- addHeading(panel,t('compassRebootTitle'));
- callout(panel,qs.compassManualAudio?t('compassAudioCaution'):t('compassRebootInfo'),'warning');
- const actions=el('div','qs-inline-actions');
- const s=state();
- button(actions,s.connected?t('usbDisconnect'):t('usbConnect'),()=>api.connectUsb(),'cc-button ghost').disabled=qs.compassReadBusy||!!window.AtlasDfuUi?.isBusy();
- button(actions,t('compassRebootButton'),async()=>{
-  if(!window.confirm(t('compassRebootAsk')))return;
-  try{await api.rebootController();qs.compassRebootMessage=t('compassRebootSent');}
-  catch(error){qs.compassRebootMessage=error.message;}
-  render();
- },'cc-button outline').disabled=!safeLink(s)||qs.compassReadBusy;
+ const panel=el('div','qs-reboot-card');addHeading(panel,t('compassRebootTitle'));
+ if(!qs.compassRebootVerified)callout(panel,t('compassRebootInfo'),'warning');
+ const actions=el('div','qs-inline-actions');compassLinkButton(actions);
+ if(!qs.compassRebootVerified){
+  button(actions,t('compassRebootButton'),async()=>{
+   if(!window.confirm(t('compassRebootAsk')))return;
+   try{await api.rebootController();qs.compassNextCheckAt=Date.now()+6000;qs.compassRefreshNeeded=true;qs.compassRebootMessage=t('compassRebootSent');}
+   catch(error){qs.compassRebootMessage=error.message;}
+   render();
+  },'cc-button outline').disabled=!safeLink(state())||qs.compassReadBusy||state().paramLoading;
+  if(qs.compassSession?.boot===null)checkbox(panel,t('compassRebootManual'),qs.compassRebootManual,value=>{qs.compassRebootManual=value;qs.compassRefreshNeeded=true;reconcileCompass();render();});
+  button(actions,t('compassRebootRead'),()=>verifyCompassBatteryResult(),'cc-button primary').disabled=qs.compassReadBusy||!safeLink(state());
+ }
  panel.append(actions);
- checkbox(panel,t('compassRebootManual'),qs.compassRebootManual,value=>{
-  qs.compassRebootManual=value;qs.compassRebootVerified=false;qs.compassRebootMessage='';render();
- });
- const read=button(panel,t('compassRebootRead'),async()=>{
-  if(qs.compassReadBusy||!qs.compassRebootManual||!safeLink(state()))return;
-  qs.compassReadBusy=true;qs.compassRebootMessage=t('readWaiting');render();
-  try{
-   if(!state().paramLoading&&!api.requestParameters(true))throw Error(t('readPartial'));
-   const result=await waitForParams(55000);
-   if(!result.ok||!result.complete||!safeLink(result.state))throw Error(t('readPartial'));
-   qs.compassRebootVerified=true;qs.compassRebootMessage=t('compassRebootSuccess');
-   if(qs.compassManualAudio){qs.completed[8]='manual';persist();}
-  }catch(error){qs.compassRebootVerified=false;qs.compassRebootMessage=t('compassRebootFailure')+' '+error.message;}
-  finally{qs.compassReadBusy=false;render();}
- },'cc-button primary');
- read.disabled=qs.compassReadBusy||!qs.compassRebootManual||!safeLink(s);
  if(qs.compassRebootMessage)callout(panel,qs.compassRebootMessage,qs.compassRebootVerified?'success':'warning');
  box.append(panel);
 }
@@ -585,7 +591,6 @@ function renderCompass(box){
  addHeading(box,t('compassTitle'),t('compassBody'));
  callout(box,t('compassOfflineGuide'),'warning');
  callout(box,t('compassWireMode'));
- callout(box,t('compassUsbPowerWarning'),'warning');
  const s=state(),connected=safeLink(s),inSession=qs.awaitingCalibration==='compass';
  if(!paramReady(s)&&!qs.compassNeedReboot&&!inSession){callout(box,t('readWaiting'),'warning');addUsbButton(box);return;}
  const result=core.detectCompass(s.params,s.compassStatus);
@@ -599,7 +604,7 @@ function renderCompass(box){
   if(inSession||qs.compassOffline){
    const panel=el('div','qs-reboot-card');
    const pct=Math.round(qs.compassLastProgress);
-   appendText(panel,'p',t('compassOfflineProgress')+' · '+pct+'%','qs-global-status');
+   appendText(panel,'p',t('compassOfflineProgress')+' · '+pct+'%','qs-global-status').id='qsCompassProgress';
    if(!connected)callout(panel,t('compassOfflineState')+' '+t('compassReconnectHint'),'warning');
    else if(qs.compassOffline)callout(panel,t('compassReconnectHint'),'warning');
    box.append(panel);
@@ -608,36 +613,22 @@ function renderCompass(box){
    const readiness=window.AtlasCalibration?.compassReadiness();
    const canStart=!!readiness?.ready&&!inSession;
    if(!canStart&&!inSession)callout(box,readiness?.reason||t('readWaiting'),'warning');
-   button(box,t('compassBatteryStart'),()=>startCalibration('compass',true),'cc-button primary').disabled=!canStart;
-   button(box,t('compassWiredStart'),()=>startCalibration('compass',false),'cc-button ghost').disabled=!canStart;
+   button(box,t('compassStart'),()=>startCalibration('compass'),'cc-button primary').disabled=!canStart;
    mountCalibrationWidget(box,compassWidget);
    // USB can be disconnected while battery power maintains the onboard calibration.
    const actions=el('div','qs-inline-actions');
-   button(actions,connected?t('usbDisconnect'):t('usbConnect'),()=>api.connectUsb(),'cc-button ghost');
+   compassLinkButton(actions);
    box.append(actions);
    if(inSession||qs.compassOffline){
-    if(inSession&&qs.compassBatteryMode&&connected&&qs.compassSawDisconnect){
-     button(box,t('compassBatteryCheck'),()=>verifyCompassBatteryResult(),'cc-button primary').disabled=qs.compassReadBusy;
-    }
     callout(box,t('compassRetryHelp'),'warning');
+    if(connected&&qs.compassSawDisconnect)button(box,t('compassRebootRead'),()=>verifyCompassBatteryResult(),'cc-button outline').disabled=qs.compassReadBusy;
     if(inSession&&connected)button(box,t('compassStopRetry'),()=>{
      const cancel=$('compassCancelBtn');if(cancel&&!cancel.disabled)cancel.click();
     },'cc-button outline');
-    checkbox(box,t('compassAudioSuccess'),qs.compassManualAudio,value=>{qs.compassManualAudio=value;render();});
-    if(qs.compassManualAudio){
-     callout(box,t('compassAudioCaution'),'warning');
-     button(box,t('compassManualFinish'),()=>{
-      qs.awaitingCalibration=null;qs.compassOffline=false;qs.compassNeedReboot=true;qs.compassRebootVerified=false;
-      qs.compassRebootBaseline=qs.compassRebootBaseline||s.lastHeartbeat;qs.compassRebootManual=false;
-      qs.compassRebootMessage=t('compassAudioCaution');qs.compassError='';
-      window.dispatchEvent(new Event('atlas:mag-manual-finish'));
-      render();
-     },'cc-button primary');
-    }
     if(connected)appendText(box,'p',t('compassRetryNow')+' — '+t('compassReconnectHint'),'qs-global-status');
    }
   }
-  if(qs.completed[8])callout(box,t('compassDone'),'success');
+  if(qs.compassRebootVerified&&qs.completed[8])callout(box,t('compassDone'),'success');
   compassRestartControls(box);
  }else if(result.kind==='disabled'||result.kind==='absent'){
   callout(box,t(result.kind==='absent'?'compassAbsent':'compassDisabled'),'warning');
@@ -767,7 +758,7 @@ window.addEventListener('atlas:calibration',event=>{
   }
   if(d.status==='auto-disconnecting'){qs.compassRebootMessage=t('compassAutoReleasePending');setGlobal(qs.compassRebootMessage);return;}
   if(d.status==='progress'||d.status==='offline'||d.status==='reconnected'){
-   if(Number.isFinite(d.pct)){qs.compassLastProgress=d.pct;qs.compassLastUpdate=Date.now();}
+   if(Number.isFinite(d.pct)){qs.compassLastProgress=d.pct;qs.compassLastUpdate=Date.now();const progress=$('qsCompassProgress');if(progress)progress.textContent=t('compassOfflineProgress')+' · '+Math.round(d.pct)+'%';}
    qs.compassOffline=d.status==='offline'||!safeLink(state());
    if(d.status==='offline')qs.compassSawDisconnect=true;
    if(d.status==='reconnected')setGlobal(t('compassReconnectHint'));
@@ -786,7 +777,8 @@ window.addEventListener('atlas:calibration',event=>{
    qs.compassOffline=false;qs.compassLastProgress=100;qs.compassAwaitingSave=false;qs.compassError='';
    qs.compassNeedReboot=true;qs.compassManualAudio=false;qs.compassRebootVerified=false;qs.compassRebootManual=false;
    qs.compassRebootBaseline=state().lastHeartbeat;qs.compassRebootMessage='';
-   complete(8,'done');setGlobal(t('compassDone'));
+   qs.compassReportVerified=true;qs.compassSaved=true;qs.compassRefreshNeeded=true;qs.compassCheckedConnection=null;delete qs.completed[8];
+   setGlobal(t('compassRebootInfo'));render();reconcileCompass();
   }
  }else if(d.kind==='compass'&&d.status==='awaiting-save'){qs.compassAwaitingSave=true;render();}
  else if(d.kind==='compass'&&d.status==='retrying'){qs.compassError='';qs.compassAwaitingSave=false;qs.compassLastProgress=0;setGlobal(t('compassRetryHint'));}
@@ -794,7 +786,7 @@ window.addEventListener('atlas:calibration',event=>{
   qs.awaitingCalibration=null;
   if(d.kind==='six'){qs.accelError=t('accelFail');qs.completed[4]='failed';}
   else if(d.kind==='level'){qs.levelError=t('levelFail');qs.completed[5]='failed';}
-  else{qs.compassError=d.reason||(d.status==='cancelled'?'':t('compassFail'));qs.completed[8]='failed';qs.compassOffline=false;qs.compassAwaitingSave=false;}
+  else{qs.compassSession=null;qs.compassNeedReboot=false;qs.compassError=d.reason||(d.status==='cancelled'?'':t('compassFail'));qs.completed[8]='failed';qs.compassOffline=false;qs.compassAwaitingSave=false;}
   render();
  }
 });
@@ -804,6 +796,7 @@ setInterval(()=>{
   if(!s.connected||Date.now()-s.lastHeartbeat>6000)qs.rebootSawDisconnect=true;
   if(qs.rebootUserConfirmed&&qs.rebootSawDisconnect&&s.connected&&s.lastHeartbeat>qs.rebootBaseline&&Date.now()-s.lastHeartbeat<4000&&!qs.rebootReady){qs.rebootReady=true;setGlobal(t('rebootDone'));render();}
  }
+ reconcileCompass();
  if(wizardActive)renderHeader();
  if(wizardActive&&qs.step===8){const key=JSON.stringify(window.AtlasCalibration?.compassReadiness());if(key!==qs.compassReadyKey){qs.compassReadyKey=key;render();}}
  if(wizardActive&&qs.step===3)updateWriteGate();
@@ -832,7 +825,8 @@ window.addEventListener('atlas:state',()=>{
 });
 window.addEventListener('atlas:board',()=>{if(qs.firmwareBoard&&qs.firmwareBoard!==selectedBoard()){invalidateFrom(2);qs.fileToken++;qs.fileText=null;qs.preview=null;qs.firmwareSource=null;qs.firmwareBoard=null;}if(wizardActive)render();});
 window.addEventListener('atlas:parameters',()=>{
- if(!wizardActive||[4,5,8].includes(qs.step))return;
+ if(qs.step===8){reconcileCompass();return;}
+ if(!wizardActive||[4,5].includes(qs.step))return;
  if(qs.step===3)refreshProfileAfterConnect();
  if(qs.step===9){
   // The INS editor observes atlas:parameters itself. Rebuilding its live form

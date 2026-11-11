@@ -1,6 +1,28 @@
 'use strict';
 const assert=require('node:assert/strict');
 const core=require('../quick-setup-core.js');
+// Parameter recovery must distinguish saving, rebooting, and merely reconnecting.
+(function testCompassRecovery(){
+ const now=Date.now(),values={COMPASS_USE:1,COMPASS_DEV_ID:123,COMPASS_OFS_X:10,COMPASS_OFS_Y:20,COMPASS_OFS_Z:30,STAT_BOOTCNT:10};
+ const state=(change={})=>({connected:true,demo:false,armed:false,lastHeartbeat:now,paramComplete:true,paramLoading:false,sysid:1,compid:1,params:new Map(Object.entries({...values,...change}).map(([k,v])=>[k,{value:v}])),compassStatus:{present:true,healthy:true,lastSeen:now}});
+ const before=core.snapshotCompassSession(state()),assess=(s,opts={})=>core.assessCompassRecovery(before,s,opts,now);
+ assert.equal(assess(state()).kind,'unverified','unchanged offsets cannot replace a missing calibration report');
+ assert.equal(assess(state(),{saved:true}).kind,'reboot-required','successful calibration alone is not a reboot');
+ assert.equal(assess(state(),{saved:true,manualReboot:true,sawDisconnect:true}).kind,'reboot-required','manual checkbox must not override an unchanged known boot counter');
+ assert.equal(assess(state({COMPASS_OFS_X:15})).kind,'reboot-required','offline saving still requires reboot');
+ assert.equal(assess(state({COMPASS_OFS_X:15,STAT_BOOTCNT:11})).kind,'ready','saved coefficients and actual reboot can be recognized automatically');
+ assert.equal(assess(state({STAT_BOOTCNT:11}),{saved:true,reportVerified:true}).kind,'ready','a saved report allows unchanged coefficients');
+ assert.equal(assess({...state({STAT_BOOTCNT:11}),paramComplete:false},{saved:true}).kind,'waiting');
+ assert.equal(assess({...state({STAT_BOOTCNT:11}),armed:true},{saved:true}).kind,'waiting');
+ assert.equal(assess({...state({STAT_BOOTCNT:11}),connected:false},{saved:true}).kind,'waiting');
+ assert.equal(assess({...state({STAT_BOOTCNT:11}),lastHeartbeat:now-5000},{saved:true}).kind,'waiting');
+ assert.equal(assess({...state({STAT_BOOTCNT:11}),sysid:2},{saved:true}).reason,'different-controller');
+ assert.equal(assess(state({STAT_BOOTCNT:11,COMPASS_DEV_ID:456}),{saved:true}).reason,'different-compass');
+ assert.equal(assess({...state({STAT_BOOTCNT:11}),compassStatus:{present:true,healthy:false,lastSeen:now}},{saved:true}).kind,'waiting');
+ const unknown=state();unknown.params.delete('STAT_BOOTCNT');const baseline=core.snapshotCompassSession(unknown);
+ assert.equal(core.assessCompassRecovery(baseline,unknown,{saved:true,manualReboot:true},now).kind,'reboot-required');
+ assert.equal(core.assessCompassRecovery(baseline,unknown,{saved:true,manualReboot:true,sawDisconnect:true},now).kind,'ready');
+})();
 function params(entries){return new Map(entries.map(([name,value,type=9])=>[name,{value,type}]));}
 function escParams({mask=0,otype=0,channels=[3],can=false}={}){
  const out=[['SERVO_BLH_MASK',mask],['SERVO_BLH_OTYPE',otype]];

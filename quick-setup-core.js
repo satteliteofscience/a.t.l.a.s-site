@@ -148,6 +148,28 @@
   return {kind:'evidence',reason:'offsets-changed-and-healthy',changed};
  }
  function verifiedEvent(detail,kind){return !!detail&&detail.kind===kind&&detail.status==='done'&&detail.verified===true;}
+ // Keep the pre-calibration boot counter and sensor identity across a link loss.
+ // Reopening a serial port or TCP bridge is not proof of an autopilot reboot.
+ function snapshotCompassSession(state){
+  const params=mapOf(state?.params),boot=Number(params.get('STAT_BOOTCNT')?.value),devices={};
+  for(const name of ['COMPASS_DEV_ID','COMPASS_DEV_ID2','COMPASS_DEV_ID3']){
+   const value=Number(params.get(name)?.value);if(Number.isFinite(value)&&value>0)devices[name]=value;
+  }
+  return {sysid:state?.sysid,compid:state?.compid,boot:Number.isInteger(boot)&&boot>=0?boot:null,devices,offsets:snapshotCompassOffsets(params)};
+ }
+ function assessCompassRecovery(before,state,options={},now=Date.now()){
+  if(!before||!state?.connected||state.demo||state.armed!==false||!Number.isFinite(state.lastHeartbeat)||now-state.lastHeartbeat<0||now-state.lastHeartbeat>=4000||state.paramLoading||state.paramComplete!==true)return {kind:'waiting',reason:'fresh-complete-read-required'};
+  if(state.sysid!==before.sysid||state.compid!==before.compid)return {kind:'unverified',reason:'different-controller'};
+  const current=snapshotCompassSession(state);
+  if(Object.entries(before.devices).some(([name,id])=>current.devices[name]!==id))return {kind:'unverified',reason:'different-compass'};
+  const sensor=state.compassStatus;
+  if(detectCompass(state.params,sensor,now).kind!=='enabled')return {kind:'waiting',reason:'magnetometer-not-healthy'};
+  const evidence=assessPostCompassCalibration(before.offsets,state.params,sensor,now);
+  if(!options.saved&&evidence.kind!=='evidence')return {kind:'unverified',reason:evidence.reason};
+  const counterAvailable=Number.isInteger(before.boot)&&Number.isInteger(current.boot);
+  const rebooted=counterAvailable?current.boot>before.boot:options.manualReboot===true&&options.sawDisconnect===true;
+  return {kind:rebooted?'ready':'reboot-required',reason:counterAvailable?'boot-counter':'manual-reboot-required',saved:true,reportVerified:options.reportVerified===true,evidence:evidence.kind==='evidence'};
+ }
  function canMarkManualComplete(confirmed,required){return confirmed===true&&required===true;}
- return Object.freeze({THROTTLE_FUNCTIONS,DSHOT_TYPES,INTEGER_TYPES,parseParamText,writeBlockers,readEscProfile,classifyEscFromProfile,classifyEscProtocol,detectCompass,snapshotCompassOffsets,assessPostCompassCalibration,verifiedEvent,canMarkManualComplete});
+ return Object.freeze({THROTTLE_FUNCTIONS,DSHOT_TYPES,INTEGER_TYPES,parseParamText,writeBlockers,readEscProfile,classifyEscFromProfile,classifyEscProtocol,detectCompass,snapshotCompassOffsets,assessPostCompassCalibration,snapshotCompassSession,assessCompassRecovery,verifiedEvent,canMarkManualComplete});
 });

@@ -37,7 +37,9 @@ const mkHeartbeat=(sysid,vehicleType=1,compid=1)=>{
  assert.match(cfg,/WebSocket bridge handshake timed out \(12 s\)/,'network handshake must have a bounded timeout');
  assert.match(cfg,/if\(state\.connecting\|\|closingConnection\)return;if\(state\.connected\)/,'USB must wait for another connect or teardown');
  assert.match(wizard,/let wizardActive=/,'Quick Setup should track whether its panel is visible');
- assert.match(wizard,/if\(!wizardActive\|\|\[4,5,8\]\.includes\(qs\.step\)\)return/,'inactive wizard must not rerender for streamed parameters');
+ assert.match(wizard,/if\(!wizardActive\|\|\[4,5\]\.includes\(qs\.step\)\)return/,'inactive wizard must not rerender for streamed parameters');
+ assert.match(wizard,/if\(qs\.step===8\)\{reconcileCompass\(\);return;\}/,'compass packets use bounded recovery instead of rebuilding the form');
+ assert.match(wizard,/if\(wizardActive&&qs\.step===8\)render\(\)/,'background compass readback must not move the visible calibration widget');
  assert.match(wizard,/if\(qs\.step===9\)/,'INS temperature stage remains present');
  assert.match(wizard,/if\(\(ready&&!embedded\)\|\|\(!ready&&embedded\)\)render\(\)/,'INS form should not be rebuilt on every packet');
  assert.match(temp,/for\(const old of roots\)if\(!old\.isConnected\)roots\.delete\(old\)/,'detached INS editor instances must be discarded');
@@ -50,7 +52,7 @@ const mkHeartbeat=(sysid,vehicleType=1,compid=1)=>{
  assert.match(readme,/UDP\/TCP bridge.*analog multimeter.*INS temperature-learning/,'README must not claim unverified hardware features are fully proven');
  assert.match(about,/hardware-tested browser configurator/,'repository About suggestion must mention real-device testing');
  assert.match(home,/прошёл стендовую проверку на реальном полётном контроллере/,'landing page must mention hardware check');
- assert.match(config,/USB\/MAVLink и Quick Setup проверены на реальном полётном контроллере/,'social metadata should accurately describe tested features');
+ assert.match(config,/<meta name="description" content="A\.T\.L\.A\.S\. — конфигуратор \d+\.\d+: USB\/MAVLink/,'configurator metadata should identify the current version without claiming every new flow is hardware-tested');
  assert.match(meta,/browser configurator bench-tested with a real flight controller/,'English metadata should acknowledge hardware test');
 })();
 console.log('PASS: mixed-vehicle SYSID isolation, telemetry freshness and network timeout, hidden-wizard/INS optimization, honest real-hardware test scope');
