@@ -18,8 +18,8 @@ for(const name of ['Matek H743-WING V3','Cube Orange Plus','Uni-IC743 Mini']){
  assert.ok(og && og[1].includes(name),'social preview must name '+name);
 }
 assert.match(home,/прошёл стендовую проверку на реальном полётном контроллере/,'preserve real bench-tested wording');
-assert.ok(translations.includes('PIN-protected Release 1.0 builds are available for Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini'));
-assert.ok(translations.includes('Захищені збірки Release 1.0 доступні для Matek H743-WING V3, Cube Orange Plus та Uni-IC743 Mini'));
+assert.ok(translations.includes('PIN-protected builds for Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini are published in the catalog'));
+assert.ok(translations.includes('Захищені збірки для Matek H743-WING V3, Cube Orange Plus та Uni-IC743 Mini публікуються в каталозі'));
 assert.ok(app.includes('plannedChip.hidden=!hasPlanned'),'hide empty Planned filter only while no future builds exist');
 assert.ok(css.includes('.filter-chip[hidden]{display:none!important}'),'hidden filter must be invisible');
 assert.ok(gate.includes("method:'POST'")&&gate.includes("JSON.stringify({pin})"),'PIN authorization must be preserved');

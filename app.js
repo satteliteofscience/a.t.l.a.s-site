@@ -139,7 +139,7 @@
 
   function bindPublicCatalog(data) {
     const available = (data.boards || []).filter(b => b.status === 'available' && downloadItems(b).length > 0);
-    if (available.length > 0) el('releaseIndicator').textContent = 'RELEASES AVAILABLE';
+    el('releaseIndicator').textContent = 'RELEASE 1.2';
   }
 
   async function loadData() {
