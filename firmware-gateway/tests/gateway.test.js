@@ -56,3 +56,46 @@ test('rate limiter and browser origin validation',async()=>{
  assert.equal(options.status,204);
  assert.equal(options.headers.get('Access-Control-Allow-Origin'),ORIGIN);
 });
+
+test('public catalog only lists explicitly published, existing, correctly sized release objects',async()=>{
+ const env=await fakeEnv();
+ const catalog={
+  schema:1,builds:{
+   'matek-h743-v3-release-1-2':{
+    channel:'release',board_id:'matek-h743-wing-v3',version:'1.2',
+    object_key:'release/matek-h743-v3-release-1-2.hex',
+    filename:'ATLAS-Matek-H743-V3-release-1.2.hex',
+    sha256:'c'.repeat(64),bytes:11,timestamp:1794480000,published:true
+   },
+   'cube-orange-plus-release-1-2':{
+    channel:'release',board_id:'cube-orange-plus',version:'1.2',
+    object_key:'release/cube-orange-plus-release-1-2.hex',
+    filename:'ATLAS-Cube-Orange-Plus-release-1.2.hex',
+    sha256:'d'.repeat(64),bytes:20,published:true
+   },
+   'hidden-test-1':{
+    channel:'early',board_id:'matek-h743-wing-v3',version:'1.2',
+    object_key:'early/hidden-test-1.hex',filename:'hidden-test-1.hex',
+    sha256:'e'.repeat(64),bytes:11,published:true
+   }
+  }
+ };
+ env.FIRMWARE.get=async key=>key==='_internal/firmware-index.json'?
+  {text:async()=>JSON.stringify(catalog)}:null;
+ env.FIRMWARE.head=async key=>key==='release/matek-h743-v3-release-1-2.hex'?{size:11}:
+  key==='release/cube-orange-plus-release-1-2.hex'?{size:15}:null;
+ const request=new Request('https://gateway.example/api/catalog',{headers:{Origin:ORIGIN}});
+ const response=await gateway.fetch(request,env);
+ assert.equal(response.status,200);
+ assert.equal(response.headers.get('Access-Control-Allow-Origin'),ORIGIN);
+ const body=await response.json();
+ assert.equal(body.schema,1);
+ assert.equal(body.builds.length,1);
+ assert.equal(body.builds[0].version,'1.2');
+ assert.equal(body.builds[0].board_id,'matek-h743-wing-v3');
+ assert.equal(body.builds[0].secure_id,'matek-h743-v3-release-1-2');
+ assert.equal('object_key' in body.builds[0],false);
+ assert.equal((await gateway.fetch(new Request('https://gateway.example/api/catalog',{
+  headers:{Origin:'https://another.example'}
+ }),env)).status,403);
+});
