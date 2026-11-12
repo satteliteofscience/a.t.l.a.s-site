@@ -12,6 +12,7 @@ on:
       - 'css/sitl-demo.css'
       - 'sitl-demo.html'
       - 'sitl-demo-72.html'
+      - 'sitl-demo-stress.html'
       - 'data/sitl/**'
       - 'tools/check_sitl_demo.cjs'
       - 'css/changelog.css'

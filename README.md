@@ -79,7 +79,7 @@ The repository cover under `assets/github-social-preview.jpg` may be uploaded in
 - [Legacy mail service setup](docs/MAIL-SERVICE-SETUP.md) — optional self-hosted SMTP/SQLite alternative.
 - [Suggested commits](docs/GITHUB-COMMITS.md) — ready-to-use commit titles and short descriptions.
 - [History](docs/LEGACY-README.md) — archived development documentation.
-- SITL replays: [6.3 kg model](sitl-demo.html) and [7.2 kg model](sitl-demo-72.html) — recorded simulation data, not live telemetry.
+- SITL replays: [6.3 kg model](sitl-demo.html), [7.2 kg model](sitl-demo-72.html) and the [7.2 kg stress test, EKF3 and DCM](sitl-demo-stress.html) — recorded simulation data, not live telemetry.
 
 ## Repository layout
 
@@ -87,7 +87,7 @@ Public pages stay in the repository root so their URLs do not change; everything
 
 | Folder | Contents |
 |---|---|
-| `/` | `index.html`, `configurator.html`, `changelog.html`, `faq.html`, `privacy.html`, `sitl-demo.html`, `sitl-demo-72.html`, diagnostic pages |
+| `/` | `index.html`, `configurator.html`, `changelog.html`, `faq.html`, `privacy.html`, `sitl-demo.html`, `sitl-demo-72.html`, `sitl-demo-stress.html`, diagnostic pages |
 | `css/` | page stylesheets (`styles.css` is shared) |
 | `js/site/` | scripts of the public site: homepage, translations, changelog, FAQ, support, firmware access, SITL replay |
 | `js/configurator/` | web configurator: MAVLink, parameters, Quick Setup, calibration, DFU, OSD, O.R.D.E.R. |

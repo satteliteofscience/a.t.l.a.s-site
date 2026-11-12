@@ -66,6 +66,7 @@ function render(){
   $('chProtocolInfo').textContent=({ru:'Управляемые ограничения FBWA · крен / руль / тангаж',uk:'Керовані обмеження FBWA · крен / кермо / тангаж',en:'Selectable FBWA limits · bank / rudder / pitch'})[lang];
   $('chSitlDemo').textContent=({ru:'Демонстрация работы SITL на модели 6,3 кг',uk:'Демонстрація роботи SITL на моделі 6,3 кг',en:'SITL demonstration on the 6.3 kg model'})[lang];
   $('chSitlDemo72').textContent=({ru:'Демонстрация работы SITL на модели 7,2 кг',uk:'Демонстрація роботи SITL на моделі 7,2 кг',en:'SITL demonstration on the 7.2 kg model'})[lang];
+   $('chSitlDemoStress').textContent=({ru:'Стресс-тест SITL на модели 7,2 кг: EKF3 и DCM',uk:'Стрес-тест SITL на моделі 7,2 кг: EKF3 і DCM',en:'SITL stress test on the 7.2 kg model: EKF3 and DCM'})[lang];
   $('chFooter').textContent=u.footer;
   for(const button of document.querySelectorAll('[data-language]')){
     const active=button.dataset.language===lang;

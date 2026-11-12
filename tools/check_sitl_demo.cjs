@@ -1,11 +1,12 @@
-/* SITL replay pages (6.3 kg and 7.2 kg): wiring, recorded-data shape, three-language coverage and changelog buttons. */
+/* SITL replay pages (6.3 kg, 7.2 kg and the 7.2 kg stress test): wiring, recorded-data shape, three-language coverage and changelog buttons. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const read=p=>fs.readFileSync(p,'utf8');
 const pages={
  'sitl-demo.html':{variant:'63',src:'data/sitl/order-demo.json'},
- 'sitl-demo-72.html':{variant:'72',src:'data/sitl/atlas-72kg-showcase.json'}
+ 'sitl-demo-72.html':{variant:'72',src:'data/sitl/atlas-72kg-showcase.json'},
+ 'sitl-demo-stress.html':{variant:'stress',src:'data/sitl/atlas-72kg-stress.json'}
 };
 const js=read('js/site/sitl-demo.js');
 const ids=['title','scope','status','dataset','play','rate','phase','scrub','time','truth','ekf','dcm','truthValues','ekfValues','dcmValues','speeds','speedPlot','errorSource','errorPlot','sampling','metrics','metricsTitle','runLabel','limits','tiltHead'];
@@ -51,6 +52,25 @@ for(const r of a72.table){
 const phaseNames=new Set(a72.datasets.flatMap(d=>d.phases.map(p=>p.name)));
 const shared=js.slice(js.indexOf('const phases={'),js.indexOf("if(variant==='72'"));
 for(const name of phaseNames)assert.match(kinds+shared,new RegExp('\\b'+name+':\\[\'[^\']+\',\'[^\']+\',\'[^\']+\'\\]'),'phase needs ru, uk and en names: '+name);
+// the stress-test recording: same shape plus fault and wind lines; three-language labels for datasets, metric rows, fault kinds, phases and page texts
+const as=archives['sitl-demo-stress.html'];
+const extraS=js.slice(js.indexOf('const extraStress='),js.indexOf('const extra72='));
+const kindsS=js.slice(js.indexOf('const kindsStress='),js.indexOf('const kinds72='));
+const textsS=js.slice(js.indexOf('special.stress='),js.indexOf('const extraStress='));
+assert.ok(Array.isArray(as.table)&&as.table.length>=8,'stress metrics table missing');
+for(const key of ['title','scope','sampling','limits','metricsTitle','controls','background','faultsLabel','none','windLabel','ms'])assert.equal(count(textsS,new RegExp('\\b'+key+":'",'g')),3,'stress page text must exist in ru, uk and en: '+key);
+assert.match(read('sitl-demo-stress.html'),/id="ekfLabel"/);assert.match(read('sitl-demo-stress.html'),/id="faults"/);
+for(const d of as.datasets){
+ assert.equal(count(extraS,new RegExp('\\b'+d.id+":'",'g')),3,'stress dataset label must exist in ru, uk and en: '+d.id);
+ assert.ok(['ekf3','dcm'].includes(d.active),'stress dataset must say which estimator flew: '+d.id);
+ assert.ok(Array.isArray(d.faults)&&Array.isArray(d.wind)&&d.wind.length,'stress dataset needs fault and wind lines: '+d.id);
+ for(const f of d.faults){assert.ok(f.start<f.end&&[1,2,3].includes(f.sev),'bad fault window in '+d.id);assert.equal(count(extraS,new RegExp('\\bf_'+f.kind+":'",'g')),3,'fault kind label must exist in ru, uk and en: '+f.kind);}
+ for(const p of d.phases)assert.match(kindsS,new RegExp('\\b'+p.name+':\\[\'[^\']+\',\'[^\']+\',\'[^\']+\'\\]'),'stress phase needs ru, uk and en names: '+p.name);
+}
+for(const r of as.table){
+ assert.equal(count(extraS,new RegExp('\\bm_'+r.id+":'",'g')),3,'stress metric row label must exist in ru, uk and en: '+r.id);
+ assert.ok(r.ekf_rms.length===3&&r.dcm_rms.length===3&&Number.isFinite(r.ekf_tilt)&&Number.isFinite(r.dcm_tilt),'stress metric row incomplete: '+r.id);
+}
 // page title carries the protocol rename and the model in all three languages
 for(const [lang,protocol] of [['ru','с протоколом П.Р.И.К.А.З'],['uk','з протоколом Н.А.К.А.З'],['en','with the O.R.D.E.R protocol']]){
  const block=js.slice(js.indexOf(' '+lang+":{title:'A.T.L.A.S "));
@@ -58,10 +78,12 @@ for(const [lang,protocol] of [['ru','с протоколом П.Р.И.К.А.З']
 }
 assert.match(js,/6,3 кг/);assert.match(js,/7,2 кг/);assert.match(js,/6\.3 kg/);assert.match(js,/7\.2 kg/);
 for(const text of ['scope','limits'])assert.ok(count(js,new RegExp('\\b'+text+':\'','g'))>=6,'both models need '+text+' in three languages');
-// changelog: two buttons, one per model, with three-language captions
+// changelog: three buttons (6.3 kg, 7.2 kg, 7.2 kg stress test) with three-language captions
 const html=read('changelog.html'),log=read('js/site/changelog.js');
 assert.match(html,/id="chSitlDemo"[^>]*href="sitl-demo\.html"/,'6.3 kg button missing');
 assert.match(html,/id="chSitlDemo72"[^>]*href="sitl-demo-72\.html"/,'7.2 kg button missing');
+assert.match(html,/id="chSitlDemoStress"[^>]*href="sitl-demo-stress\.html"/,'stress test button missing');
+for(const text of ['Стресс-тест SITL на модели 7,2 кг: EKF3 и DCM','Стрес-тест SITL на моделі 7,2 кг: EKF3 і DCM','SITL stress test on the 7.2 kg model: EKF3 and DCM'])assert.ok(log.includes(text),'changelog caption missing: '+text);
 for(const text of ['SITL на модели 6,3 кг','SITL на моделі 6,3 кг','SITL demonstration on the 6.3 kg model','SITL на модели 7,2 кг','SITL на моделі 7,2 кг','SITL demonstration on the 7.2 kg model'])assert.ok(log.includes(text),'changelog caption missing: '+text);
 for(const text of ['A.T.L.A.S с протоколом П.Р.И.К.А.З','A.T.L.A.S з протоколом Н.А.К.А.З','A.T.L.A.S with the O.R.D.E.R protocol'])assert.ok(log.includes(text),'protocol heading missing: '+text);
-console.log('PASS: SITL replay pages for 6.3 kg and 7.2 kg, recorded data shape, three-language labels and changelog buttons.');
+console.log('PASS: SITL replay pages for 6.3 kg, 7.2 kg and the 7.2 kg stress test, recorded data shape, three-language labels and changelog buttons.');
