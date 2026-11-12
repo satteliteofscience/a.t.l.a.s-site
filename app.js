@@ -4,13 +4,13 @@
   const tr = (key) => window.AtlasI18n?.t(key) ?? key;
   function localText(key) {
     const data = {
-      ru: {history:'Архив и откат к предыдущим версиям',source:'Исходный код',choose:'Версия прошивки',pending:'Готовится · файлы ещё не опубликованы'},
-      uk: {history:'Архів і повернення до попередніх версій',source:'Вихідний код',choose:'Версія прошивки',pending:'Готується · файли ще не опубліковано'},
-      en: {history:'Release history and rollback',source:'Source code',choose:'Firmware version',pending:'Coming soon · files not published yet'}
+      ru: {history:'Архив и откат к предыдущим версиям',source:'Исходный код',choose:'ВЫБОР ВЕРСИИ',pending:'Сборка ещё не опубликована',current:'НОВАЯ',archive:'АРХИВ',soon:'СКОРО'},
+      uk: {history:'Архів і повернення до попередніх версій',source:'Вихідний код',choose:'ВИБІР ВЕРСІЇ',pending:'Збірку ще не опубліковано',current:'НОВА',archive:'АРХІВ',soon:'НЕЗАБАРОМ'},
+      en: {history:'Release history and rollback',source:'Source code',choose:'SELECT RELEASE',pending:'Build not published yet',current:'LATEST',archive:'ARCHIVE',soon:'SOON'}
     };
     return (data[window.AtlasI18n?.lang] || data.ru)[key];
   }
-  const state = { data: null, catalogSignature: '', query: '', filter: 'all', fetchFailed: false };
+  const state = { data: null, catalogSignature: '', query: '', filter: 'all', fetchFailed: false, selectedVersions: Object.create(null) };
   let catalogRequestActive = false;
   const icon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 1v3m6-3v3M9 20v3m6-3v3M1 9h3m-3 6h3m16-6h3m-3 6h3M9 9h6v6H9z"/></svg>';
   const $ = (tag, className, content) => {
@@ -43,9 +43,12 @@
     card.append(top);
     card.append($('div', 'family', board[`family_${window.AtlasI18n?.lang}`] || board.family || tr('Flight controller')));
     card.append($('h3', '', board[`name_${window.AtlasI18n?.lang}`] || board.name || tr('Неизвестная плата')));
-    card.append($('p', 'desc', board[`description_${window.AtlasI18n?.lang}`] || tr(board.description || 'Описание отсутствует.')));
+    const description=$('p', 'desc', board[`description_${window.AtlasI18n?.lang}`] || tr(board.description || 'Описание отсутствует.'));
+    card.append(description);
     const meta = $('div', 'board-meta');
-    const version = $('span'); version.append(tr('База '), $('b', '', board.version || '—'));
+    const version = $('span');
+    const versionValue=$('b', '', board.version || '—');
+    version.append(tr('База '), versionValue);
     const target = $('span'); target.append('Target: ', $('b', '', board[`target_${window.AtlasI18n?.lang}`] || tr(board.target || '—')));
     meta.append(version, target); card.append(meta);
     const actions = $('div', 'board-actions');
@@ -60,7 +63,8 @@
           finally{link.disabled=false;}
         });
         const name = $('span', '', item.label || item.version || item.filename);
-        const hint = $('small', '', historical ? 'PIN · '+tr('СКАЧАТЬ ↗') : `LATEST · PIN · ${tr('СКАЧАТЬ ↗')}`);
+        const isLatest = item.secure_id === downloadable[0]?.secure_id;
+        const hint = $('small', '', isLatest ? `LATEST · PIN · ${tr('СКАЧАТЬ ↗')}` : 'PIN · '+tr('СКАЧАТЬ ↗'));
         link.append(name, hint); wrap.append(link);
         const details = $('div', 'version-meta');
         if (item.timestamp) {
@@ -84,24 +88,55 @@
         wrap.append(details);
         return wrap;
       };
-      const chooser=$('label','board-version-label',localText('choose'));
-      const select=$('select','board-version-select');
+      const chooser=$('fieldset','board-version-control');
+      const legend=$('legend','board-version-legend',localText('choose'));
+      const group=$('div','board-version-segmented');
+      group.setAttribute('role','group');
+      group.setAttribute('aria-label',localText('choose')+' — '+(board.name||board.id));
+      const view=$('div','board-version-result');
       const names=[...new Set([...downloadable.map(item=>String(item.version||'')),'1.2','1.0'])].filter(Boolean)
         .sort((a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);return (y[0]-x[0])||(y[1]-x[1]);});
+      const buttons=new Map();
+      const releaseDescription=name=>{
+        const lang=window.AtlasI18n?.lang||'ru';
+        const versions=board.version_descriptions||{};
+        const texts=versions[name];
+        return texts?.[lang]||texts?.ru||board[`description_${lang}`]||tr(board.description||'Описание отсутствует.');
+      };
+      const renderSelection=name=>{
+        const item=downloadable.find(entry=>String(entry.version)===name);
+        const ready=!!item;
+        const published=ready&&board.status==='available';
+        state.selectedVersions[board.id]=name;
+        versionValue.textContent=name;
+        description.textContent=releaseDescription(name);
+        status.className='board-status '+(published?'available':'planned');
+        status.textContent=published?tr('● ОПУБЛИКОВАНО'):tr('◷ ПОДГОТОВКА');
+        card.classList.toggle('board-card-latest',published&&item.secure_id===downloadable[0]?.secure_id);
+        for(const [ver,button] of buttons){
+          const active=ver===name;
+          button.setAttribute('aria-pressed',String(active));
+          button.classList.toggle('is-selected',active);
+        }
+        view.replaceChildren(published?buildEntry(item):$('div','download-placeholder',localText('pending')));
+      };
       for(const name of names){
         const ready=downloadable.some(item=>String(item.version)===name);
-        const option=$('option','',name+(ready?'':' · '+localText('pending')));
-        option.value=name;select.append(option);
+        const button=$('button','board-version-option');
+        button.type='button';
+        button.dataset.version=name;
+        button.setAttribute('aria-pressed','false');
+        button.setAttribute('aria-label',localText('choose')+' '+name);
+        button.append($('span','board-version-number',name));
+        button.append($('small','board-version-kind',!ready?localText('soon'):name==='1.2'?localText('current'):localText('archive')));
+        button.addEventListener('click',()=>renderSelection(name));
+        buttons.set(name,button);
+        group.append(button);
       }
-      select.setAttribute('aria-label',localText('choose')+' — '+(board.name||board.id));
-      const view=$('div','board-version-result');
-      const update=()=>{
-        const item=downloadable.find(entry=>String(entry.version)===select.value);
-        view.replaceChildren(item?buildEntry(item):$('div','download-placeholder',localText('pending')));
-      };
-      select.value=String(downloadable[0].version||'1.0');
-      select.addEventListener('change',update);
-      chooser.append(select);actions.append(chooser,view);update();
+      chooser.append(legend,group);
+      actions.append(chooser,view);
+      const preferred=state.selectedVersions[board.id];
+      renderSelection(names.includes(preferred)?preferred:String(downloadable[0].version||'1.0'));
     } else {
       actions.append($('div', 'download-placeholder', board.status === 'unverified'
         ? tr('Нет подтверждённых сборок для этой платформы')

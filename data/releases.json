@@ -11,7 +11,7 @@
       "id": "cube-orange-plus",
       "name": "Cube Orange Plus",
       "family": "CubePilot / Cube Orange Plus",
-      "description": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Формат HEX и SHA-256 проверены. Запись через Web-DFU доступна в экспериментальном режиме после проверки платы и карты Flash, но на физическом Cube Orange Plus ещё не испытана. Сохрани параметры и загрузчик перед полной записью.",
+      "description": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Сборка для этой аппаратной платформы с проверенными данными HEX и SHA-256. Перед полной DFU-записью сохрани параметры и подготовь способ восстановления загрузчика.",
       "status": "available",
       "target": "CubeOrangePlus — STM32H757",
       "version": "1.0",
@@ -30,16 +30,28 @@
           "channel": "release"
         }
       ],
-      "description_uk": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Формат HEX і SHA-256 перевірено. Запис через Web-DFU доступний в експериментальному режимі після перевірки плати та карти Flash, але на фізичному Cube Orange Plus ще не випробуваний. Збережи параметри й завантажувач перед повним записом.",
-      "description_en": "A.T.L.A.S. Release 1.0 for Cube Orange Plus (STM32H757). HEX format and SHA-256 verified. Web-DFU flashing is experimental and gated on board and flash-map checks; not yet validated on a physical Cube Orange Plus. Back up parameters and preserve a recovery path before full erase.",
+      "description_uk": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Збірка для цієї апаратної платформи з перевіреними даними HEX і SHA-256. Перед повним DFU-записом збережи параметри та підготуй спосіб відновлення завантажувача.",
+      "description_en": "A.T.L.A.S. Release 1.0 for Cube Orange Plus (STM32H757). A target-specific build with verified HEX data and SHA-256. Before full DFU programming, back up parameters and prepare a bootloader recovery path.",
       "target_uk": "CubeOrangePlus — STM32H757",
-      "target_en": "CubeOrangePlus — STM32H757"
+      "target_en": "CubeOrangePlus — STM32H757",
+      "version_descriptions": {
+        "1.0": {
+          "ru": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Сборка для этой аппаратной платформы с проверенными данными HEX и SHA-256. Перед полной DFU-записью сохрани параметры и подготовь способ восстановления загрузчика.",
+          "uk": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Збірка для цієї апаратної платформи з перевіреними даними HEX і SHA-256. Перед повним DFU-записом збережи параметри та підготуй спосіб відновлення завантажувача.",
+          "en": "A.T.L.A.S. Release 1.0 for Cube Orange Plus (STM32H757). A target-specific build with verified HEX data and SHA-256. Before full DFU programming, back up parameters and prepare a bootloader recovery path."
+        },
+        "1.2": {
+          "ru": "A.T.L.A.S. Release 1.2 для Cube Orange Plus (STM32H757). Обновлённый EKF3 NOAID, режимы полёта без GPS и протокол П.Р.И.К.А.З. Предназначена именно для Cube Orange Plus. Перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S. Release 1.2 для Cube Orange Plus (STM32H757). Оновлений EKF3 NOAID, режими польоту без GPS і протокол O.R.D.E.R. Призначена саме для Cube Orange Plus. Перед записом збережи параметри.",
+          "en": "A.T.L.A.S. Release 1.2 for Cube Orange Plus (STM32H757). Updated EKF3 NOAID, GPS-denied flight modes, and the O.R.D.E.R. protocol. Built specifically for Cube Orange Plus. Back up parameters before flashing."
+        }
+      }
     },
     {
       "id": "uni-ic743-mini",
       "name": "Uni-IC743 Mini",
       "family": "Custom / Uni-IC743 Mini",
-      "description": "A.T.L.A.S. Release 1.0 для кастомного Uni-IC743 Mini (STM32H743). Проверены формат HEX, целевая плата Uni_IC743Mini и SHA-256. Полная Web-DFU запись экспериментальная, не проверена на физическом контроллере; сохрани параметры и предусмотрите восстановление загрузчика.",
+      "description": "A.T.L.A.S. Release 1.0 для Uni-IC743 Mini (STM32H743). Сборка для платы Uni_IC743Mini с проверенными данными HEX и SHA-256. Перед полной DFU-записью сохрани параметры и предусмотрите восстановление загрузчика.",
       "status": "available",
       "target": "Uni_IC743Mini — STM32H743",
       "version": "1.0",
@@ -58,16 +70,28 @@
           "channel": "release"
         }
       ],
-      "description_uk": "A.T.L.A.S. Release 1.0 для кастомного Uni-IC743 Mini (STM32H743). Перевірено формат HEX, ціль Uni_IC743Mini та SHA-256. Повне Web-DFU прошивання експериментальне та не перевірене на фізичному контролері; збережи параметри й підготуй відновлення завантажувача.",
-      "description_en": "A.T.L.A.S. Release 1.0 for custom Uni-IC743 Mini (STM32H743). HEX format, Uni_IC743Mini target and SHA-256 verified. Full Web-DFU programming is experimental and has not been validated on hardware; back up settings and prepare bootloader recovery.",
+      "description_uk": "A.T.L.A.S. Release 1.0 для Uni-IC743 Mini (STM32H743). Збірка для плати Uni_IC743Mini з перевіреними даними HEX і SHA-256. Перед повним DFU-записом збережи параметри та підготуй відновлення завантажувача.",
+      "description_en": "A.T.L.A.S. Release 1.0 for Uni-IC743 Mini (STM32H743). A build for the Uni_IC743Mini target with verified HEX data and SHA-256. Back up parameters and prepare a bootloader recovery path before full DFU flashing.",
       "target_uk": "Uni_IC743Mini — STM32H743",
-      "target_en": "Uni_IC743Mini — STM32H743"
+      "target_en": "Uni_IC743Mini — STM32H743",
+      "version_descriptions": {
+        "1.0": {
+          "ru": "A.T.L.A.S. Release 1.0 для Uni-IC743 Mini (STM32H743). Сборка для платы Uni_IC743Mini с проверенными данными HEX и SHA-256. Перед полной DFU-записью сохрани параметры и предусмотрите восстановление загрузчика.",
+          "uk": "A.T.L.A.S. Release 1.0 для Uni-IC743 Mini (STM32H743). Збірка для плати Uni_IC743Mini з перевіреними даними HEX і SHA-256. Перед повним DFU-записом збережи параметри та підготуй відновлення завантажувача.",
+          "en": "A.T.L.A.S. Release 1.0 for Uni-IC743 Mini (STM32H743). A build for the Uni_IC743Mini target with verified HEX data and SHA-256. Back up parameters and prepare a bootloader recovery path before full DFU flashing."
+        },
+        "1.2": {
+          "ru": "A.T.L.A.S. Release 1.2 для Uni-IC743 Mini (STM32H743). Обновлённый EKF3 NOAID, работа без GPS и протокол П.Р.И.К.А.З. Сборка предназначена исключительно для Uni_IC743Mini; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S. Release 1.2 для Uni-IC743 Mini (STM32H743). Оновлений EKF3 NOAID, робота без GPS і протокол O.R.D.E.R. Збірка призначена виключно для Uni_IC743Mini; перед записом збережи параметри.",
+          "en": "A.T.L.A.S. Release 1.2 for Uni-IC743 Mini (STM32H743). Updated EKF3 NOAID, GPS-denied operation, and O.R.D.E.R. Built exclusively for Uni_IC743Mini; back up parameters before flashing."
+        }
+      }
     },
     {
       "id": "matek-h743-wing-v3",
       "name": "Matek H743-WING V3",
       "family": "Matek Systems / H743",
-      "description": "A.T.L.A.S. Release 1.0: проверенная сборка HEX для Matek H743-WING V3. Прошивка готова к установке; перед записью проверь маркировку платы, ревизию и сохрани текущие параметры.",
+      "description": "A.T.L.A.S. Release 1.0 для Matek H743-WING V3. Проверенная сборка HEX на базе ArduPlane 4.7.2. Перед записью проверь ревизию платы и сохрани параметры.",
       "status": "available",
       "target": "Matek H743-WING V3 — STM32H743",
       "version": "1.0",
@@ -85,10 +109,22 @@
           "channel": "release"
         }
       ],
-      "description_uk": "A.T.L.A.S. Release 1.0: перевірена збірка HEX для Matek H743-WING V3. Прошивка готова до встановлення; перед записом перевір маркування й ревізію плати та збережи поточні параметри.",
-      "description_en": "A.T.L.A.S. Release 1.0: tested HEX build for Matek H743-WING V3, ready to install. Before flashing, verify the board marking and revision and back up the current parameters.",
+      "description_uk": "A.T.L.A.S. Release 1.0 для Matek H743-WING V3. Перевірена HEX-збірка на базі ArduPlane 4.7.2. Перед записом перевір ревізію плати та збережи параметри.",
+      "description_en": "A.T.L.A.S. Release 1.0 for Matek H743-WING V3. Verified HEX build based on ArduPlane 4.7.2. Check the board revision and back up parameters before flashing.",
       "target_uk": "Matek H743-WING V3 — STM32H743",
-      "target_en": "Matek H743-WING V3 — STM32H743"
+      "target_en": "Matek H743-WING V3 — STM32H743",
+      "version_descriptions": {
+        "1.0": {
+          "ru": "A.T.L.A.S. Release 1.0 для Matek H743-WING V3. Проверенная сборка HEX на базе ArduPlane 4.7.2. Перед записью проверь ревизию платы и сохрани параметры.",
+          "uk": "A.T.L.A.S. Release 1.0 для Matek H743-WING V3. Перевірена HEX-збірка на базі ArduPlane 4.7.2. Перед записом перевір ревізію плати та збережи параметри.",
+          "en": "A.T.L.A.S. Release 1.0 for Matek H743-WING V3. Verified HEX build based on ArduPlane 4.7.2. Check the board revision and back up parameters before flashing."
+        },
+        "1.2": {
+          "ru": "A.T.L.A.S. Release 1.2 для Matek H743-WING V3. Обновлённый EKF3 NOAID, режимы без GPS и протокол П.Р.И.К.А.З. Версия на базе ArduPlane 4.7.2, предназначенная для Matek H743-WING V3.",
+          "uk": "A.T.L.A.S. Release 1.2 для Matek H743-WING V3. Оновлений EKF3 NOAID, режими без GPS і протокол O.R.D.E.R. Версія на базі ArduPlane 4.7.2, призначена для Matek H743-WING V3.",
+          "en": "A.T.L.A.S. Release 1.2 for Matek H743-WING V3. Updated EKF3 NOAID, GPS-denied modes and the O.R.D.E.R. protocol. Based on ArduPlane 4.7.2 and built for Matek H743-WING V3."
+        }
+      }
     }
   ]
 }

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Russo+One&amp;display=swap">
-  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="configurator.css?v=compass-recovery-3"><link rel="stylesheet" href="capri.css?v=release-1-2-ekf"><link rel="stylesheet" href="firmware-access.css"><link rel="stylesheet" href="advanced.css"><link rel="stylesheet" href="osd-editor.css">
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="configurator.css?v=release-1.2-card-ui"><link rel="stylesheet" href="capri.css?v=release-1-2-ekf"><link rel="stylesheet" href="firmware-access.css"><link rel="stylesheet" href="advanced.css"><link rel="stylesheet" href="osd-editor.css">
   <title>A.T.L.A.S. — Конфигуратор полётного контроллера</title>
     <link rel="canonical" href="https://satteliteofscience.github.io/a.t.l.a.s-site/configurator.html">
   <meta property="og:type" content="website">
@@ -27,7 +27,7 @@
   <meta name="twitter:image" content="https://satteliteofscience.github.io/a.t.l.a.s-site/assets/github-social-preview.jpg">
   <meta name="twitter:image:alt" content="A.T.L.A.S. Control Center — ArduPlane EKF3 NOAID">
   <meta name="atlas-page" content="configurator.html">
-  <script src="page-meta.js?v=release-1.2-copy" defer></script>
+  <script src="page-meta.js?v=release-1.2-cards-2" defer></script>
 </head>
 <body class="console-body">
   <div class="cc-backdrop" aria-hidden="true"></div>
@@ -406,7 +406,7 @@
               <p class="dfu-postflash-note" data-dfu-t="postflash" role="note">После успешной записи дождись полной загрузки контроллера. Если COM-порт не появился, отключи и подключи USB ещё два раза. На Matek H743-WING V3 он может определиться только при третьем подключении.</p>
             </div>
             <div class="dfu-column dfu-check-column">
-              <div class="dfu-danger" data-dfu-t="warning">ВНИМАНИЕ: полный Mass Erase 2 MiB (до 0xFF), затем запись и побайтовая проверка. При обрыве питания понадобится восстановление через DFU/STM32CubeProgrammer. Проверено только на уровне кода, не на физической плате.</div>
+              <div class="dfu-danger" data-dfu-t="warning">ВНИМАНИЕ: полный Mass Erase 2 MiB (до 0xFF), затем запись и побайтовая проверка. При обрыве питания понадобится восстановление через DFU/STM32CubeProgrammer. Перед записью проверь тип платы, резервную копию параметров и доступность восстановления.</div>
               <label class="dfu-check"><input id="dfuConfirmBoard" type="checkbox"><span data-dfu-t="model">Я проверил маркировку платы: это Matek H743-WING V3 (STM32H743). USB DFU не подтверждает модель платы.</span></label>
               <label class="dfu-check"><input id="dfuConfirmBackup" type="checkbox"><span data-dfu-t="backup">Я сохранил параметры и знаю, что стирание удалит загрузчик и все данные Flash.</span></label>
               <label class="dfu-type-label" for="dfuConfirmText" data-dfu-t="confirm">Для подтверждения введи ERASE</label><input class="dfu-type" id="dfuConfirmText" type="text" autocomplete="off" spellcheck="false" placeholder="ERASE">
@@ -461,5 +461,5 @@
       <div class="cc-modal-actions"><button type="button" class="cc-button ghost" id="servoEditorCancel">Отмена</button><button class="cc-button primary" id="servoEditorSave" type="submit">Записать изменения</button></div>
     </form>
   </dialog>
-  <script src="mavlink.js?v=release-1-2-ekf" defer></script><script src="mavlink-status-core.js" defer></script><script src="mavftp-param.js" defer></script><script src="ahrs-filter-core.js" defer></script><script src="param-tree.js?v=release-1-2-ekf" defer></script><script src="firmware-access.js" defer></script><script src="firmware-catalog.js?v=release-1.2" defer></script><script src="capri-core.js?v=release-1-2-ekf" defer></script><script src="configurator.js?v=release-1-2-ekf" defer></script><script src="capri-ui.js?v=release-1-2-ekf" defer></script><script src="servo-config-core.js" defer></script><script src="battery-cal-core.js" defer></script><script src="calibration.js?v=compass-recovery-3" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js" defer></script><script src="quick-setup-core.js?v=compass-recovery-3" defer></script><script src="tempcal-core.js" defer></script><script src="tempcal-ui.js" defer></script><script src="quick-setup.js?v=compass-recovery-3" defer></script>
+  <script src="mavlink.js?v=release-1-2-ekf" defer></script><script src="mavlink-status-core.js" defer></script><script src="mavftp-param.js" defer></script><script src="ahrs-filter-core.js" defer></script><script src="param-tree.js?v=release-1-2-ekf" defer></script><script src="firmware-access.js" defer></script><script src="firmware-catalog.js?v=release-1.2" defer></script><script src="capri-core.js?v=release-1-2-ekf" defer></script><script src="configurator.js?v=release-1-2-ekf" defer></script><script src="capri-ui.js?v=release-1-2-ekf" defer></script><script src="servo-config-core.js" defer></script><script src="battery-cal-core.js" defer></script><script src="calibration.js?v=compass-recovery-3" defer></script><script src="advanced.js" defer></script><script src="config-ui-i18n.js" defer></script><script src="osd-editor.js" defer></script><script src="dfu-flasher.js" defer></script><script src="dfu-ui.js?v=release-1.2-card-ui" defer></script><script src="quick-setup-core.js?v=compass-recovery-3" defer></script><script src="tempcal-core.js" defer></script><script src="tempcal-ui.js" defer></script><script src="quick-setup.js?v=compass-recovery-3" defer></script>
 </body></html>
