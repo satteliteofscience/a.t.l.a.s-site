@@ -184,3 +184,9 @@ body{font-family:'IBM Plex Sans',Arial,sans-serif;font-size:16px;letter-spacing:
 
 /* The planned-release filter is hidden when all listed boards have published firmware. */
 .filter-chip[hidden]{display:none!important}
+
+/* A.T.L.A.S. 1.2/1.0 firmware version selection */
+.board-version-label{display:flex;flex-direction:column;gap:8px;font:700 11px 'IBM Plex Mono',monospace;color:#d7d2a0}
+.board-version-select{width:100%;min-height:42px;padding:9px 12px;background:#102332;border:1px solid #537263;border-radius:4px;color:#eef4db;font:600 12px 'IBM Plex Mono',monospace;cursor:pointer}
+.board-version-select:focus-visible{outline:2px solid #88ebd7;outline-offset:2px}
+.board-version-result .download-btn{width:100%}
