@@ -4,9 +4,9 @@
   const tr = (key) => window.AtlasI18n?.t(key) ?? key;
   function localText(key) {
     const data = {
-      ru: {history:'Архив и откат к предыдущим версиям',source:'Исходный код'},
-      uk: {history:'Архів і повернення до попередніх версій',source:'Вихідний код'},
-      en: {history:'Release history and rollback',source:'Source code'}
+      ru: {history:'Архив и откат к предыдущим версиям',source:'Исходный код',choose:'Версия прошивки',pending:'Готовится · файлы ещё не опубликованы'},
+      uk: {history:'Архів і повернення до попередніх версій',source:'Вихідний код',choose:'Версія прошивки',pending:'Готується · файли ще не опубліковано'},
+      en: {history:'Release history and rollback',source:'Source code',choose:'Firmware version',pending:'Coming soon · files not published yet'}
     };
     return (data[window.AtlasI18n?.lang] || data.ru)[key];
   }
@@ -84,14 +84,24 @@
         wrap.append(details);
         return wrap;
       };
-      actions.append(buildEntry(downloadable[0]));
-      if (downloadable.length > 1) {
-        const history = $('details', 'version-history');
-        const summary = $('summary', '', `${localText('history')} (${downloadable.length - 1})`);
-        history.append(summary);
-        downloadable.slice(1).forEach(item => history.append(buildEntry(item, true)));
-        actions.append(history);
+      const chooser=$('label','board-version-label',localText('choose'));
+      const select=$('select','board-version-select');
+      const names=[...new Set([...downloadable.map(item=>String(item.version||'')),'1.2','1.0'])].filter(Boolean)
+        .sort((a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);return (y[0]-x[0])||(y[1]-x[1]);});
+      for(const name of names){
+        const ready=downloadable.some(item=>String(item.version)===name);
+        const option=$('option','',name+(ready?'':' · '+localText('pending')));
+        option.value=name;select.append(option);
       }
+      select.setAttribute('aria-label',localText('choose')+' — '+(board.name||board.id));
+      const view=$('div','board-version-result');
+      const update=()=>{
+        const item=downloadable.find(entry=>String(entry.version)===select.value);
+        view.replaceChildren(item?buildEntry(item):$('div','download-placeholder',localText('pending')));
+      };
+      select.value=String(downloadable[0].version||'1.0');
+      select.addEventListener('change',update);
+      chooser.append(select);actions.append(chooser,view);update();
     } else {
       actions.append($('div', 'download-placeholder', board.status === 'unverified'
         ? tr('Нет подтверждённых сборок для этой платформы')
@@ -149,11 +159,13 @@
       const embedded = el('atlasEmbeddedData');
       if (embedded) {
         const data = JSON.parse(embedded.textContent);
-        state.data = data; bindPublicCatalog(data); renderBoards(); return;
+        state.data = window.AtlasFirmwareCatalog ? await window.AtlasFirmwareCatalog.mergeSiteCatalog(data) : data;
+        bindPublicCatalog(state.data); renderBoards(); return;
       }
       const response = await fetch('data/releases.json', { cache: 'no-store' });
       if (!response.ok) throw new Error('HTTP ' + response.status);
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = window.AtlasFirmwareCatalog ? await window.AtlasFirmwareCatalog.mergeSiteCatalog(rawData) : rawData;
       if (!data || !Array.isArray(data.boards)) throw new Error('Неверный формат JSON');
       const signature=JSON.stringify(data.boards);
       if(signature===state.catalogSignature){
