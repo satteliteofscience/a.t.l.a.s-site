@@ -50,7 +50,7 @@ export default {
   const url=new URL(request.url),origin=request.headers.get('Origin');
   const cors=origin===ORIGIN?{
    'Access-Control-Allow-Origin':ORIGIN,
-   'Access-Control-Allow-Methods':'POST, OPTIONS',
+   'Access-Control-Allow-Methods':'GET, POST, OPTIONS',
    'Access-Control-Allow-Headers':'Content-Type',
    'Access-Control-Expose-Headers':'X-ATLAS-SHA256, Content-Disposition',
    'Vary':'Origin'
@@ -59,6 +59,33 @@ export default {
   if(url.pathname==='/api/firmware'&&request.method==='OPTIONS'&&origin===ORIGIN)return respond(null,204,{...cors,'Access-Control-Max-Age':'600'});
   if(url.pathname.startsWith('/api/firmware/')&&request.method==='OPTIONS'&&origin===ORIGIN)return respond(null,204,{...cors,'Access-Control-Max-Age':'600'});
   if(origin!==ORIGIN)return json('Forbidden',403,cors);
+  if(url.pathname==='/api/catalog'&&request.method==='GET'){
+   if(!env.FIRMWARE)return json('Catalog not configured',503,cors);
+   const indexFile=await env.FIRMWARE.get(MANIFEST_KEY);
+   if(!indexFile)return json('Catalog unavailable',503,cors);
+   let index;
+   try{index=JSON.parse(await indexFile.text());}catch{return json('Invalid catalog',503,cors);}
+   const approved=new Set(['matek-h743-wing-v3','cube-orange-plus','uni-ic743-mini']);
+   const published=[];
+   for(const [id,entry] of Object.entries(index?.builds||{}).slice(0,100)){
+    if(entry?.published!==true||entry.channel!=='release'||!approved.has(entry.board_id)||
+       !/^[0-9]+[.][0-9]+$/.test(entry.version||'')||
+       !Number.isSafeInteger(entry.bytes)||entry.bytes<=0)continue;
+    const build=await lookupBuild(env,id);
+    if(!build)continue;
+    const head=await env.FIRMWARE.head(build.object_key);
+    if(!head||head.size!==entry.bytes)continue;
+    published.push({
+     board_id:entry.board_id,version:entry.version,secure_id:id,channel:'release',
+     filename:build.filename,sha256:build.sha256.toLowerCase(),bytes:entry.bytes,
+     timestamp:Number.isSafeInteger(entry.timestamp)?entry.timestamp:0,
+     label:typeof entry.label==='string'?entry.label.slice(0,160):'A.T.L.A.S. Release '+entry.version
+    });
+   }
+   return respond(JSON.stringify({schema:1,builds:published}),200,{
+    ...cors,'Content-Type':'application/json; charset=utf-8'
+   });
+  }
   if(request.method!=='POST'||!url.pathname.startsWith('/api/firmware/'))return json('Not found',404,cors);
   if(request.headers.get('Content-Type')?.split(';')[0]!=='application/json')return json('JSON required',415,cors);
   const id=url.pathname.slice('/api/firmware/'.length);

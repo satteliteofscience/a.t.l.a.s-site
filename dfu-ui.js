@@ -158,6 +158,8 @@
       throw Error(`HTTP ${response.status}: manifest.json`);
     const manifest=response.ok?await response.json():{board_id:board,files:[]};
     if(manifest.board_id!==board||board!==selectedBoard()||!Array.isArray(manifest.files))throw Error(tr('manifestEmpty'));
+    if(window.AtlasFirmwareCatalog)manifest.files=await window.AtlasFirmwareCatalog.boardFiles(board,manifest.files);
+    if(board!==selectedBoard())throw Error('Board selection changed while loading the firmware catalog.');
     const select=$('dfuReleaseSelect');
     select.replaceChildren();
     if(!manifest.files.length){select.disabled=true;$('dfuLoadReleaseBtn').disabled=true;refreshControls();return manifest;}
@@ -167,7 +169,13 @@
       option.textContent=`${index===0?'LATEST · ':''}${entry.label||entry.version||entry.filename} ${stamp}`;
       select.append(option);
     });
-    select.disabled=false;$('dfuLoadReleaseBtn').disabled=false;
+    if(!manifest.files.some(item=>String(item.version)==='1.2')){
+      const pending=document.createElement('option');pending.value='pending';pending.disabled=true;
+      const lang=window.AtlasLanguage?.()||'ru';
+      pending.textContent='1.2 · '+({ru:'готовится',uk:'готується',en:'coming soon'}[lang]||'coming soon');
+      select.prepend(pending);
+    }
+    select.value='0';select.disabled=false;$('dfuLoadReleaseBtn').disabled=false;
     return manifest;
   }
   async function latest(requestedIndex=null){
