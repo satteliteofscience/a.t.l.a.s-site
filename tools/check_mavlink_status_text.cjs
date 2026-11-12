@@ -1,9 +1,9 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const Status=require('../mavlink-status-core.js');
+const Status=require('../js/configurator/mavlink-status-core.js');
 const read=path=>fs.readFileSync(path,'utf8');
 const ctx={window:{},TextEncoder,TextDecoder,Uint8Array,DataView,console};
-vm.runInNewContext(read('mavlink.js'),ctx,{filename:'mavlink.js'});
+vm.runInNewContext(read('js/configurator/mavlink.js'),ctx,{filename:'js/configurator/mavlink.js'});
 const M=ctx.window.AtlasMAV;
 
 function statusFrame(severity,text,{sysid=42,compid=1,id=0,chunk=0,trim=true}={}){
@@ -99,8 +99,8 @@ function feed(assembler,severity,text,options){
  assert.equal(M.belongsToSelectedVehicle(received[0],msg,43),false,'other sysid cannot inject status text');
 })();
 (function sourceAndInterfaceRegression(){
- const js=read('configurator.js'),html=read('configurator.html'),css=read('configurator.css');
- assert.match(html,/src="mavlink-status-core\.js" defer/,'status assembler must load before configurator');
+ const js=read('js/configurator/configurator.js'),html=read('configurator.html'),css=read('css/configurator.css');
+ assert.match(html,/src="js\/configurator\/mavlink-status-core\.js" defer/,'status assembler must load before configurator');
  assert.match(js,/state\.statusTextAssembler=new window\.AtlasStatusTextCore\.Assembler\(\)/,
   'configure a single bounded fragment assembler per connection');
  assert.match(js,/const entry=state\.statusTextAssembler\.receive\(data,message\)/,
@@ -117,8 +117,8 @@ function feed(assembler,severity,text,options){
  assert.match(css,/\.cc-event-fc\[data-severity="7"\]/,'DEBUG styling required');
  assert.match(js,/if\(!data\|\|!M\.belongsToSelectedVehicle\(message,data,state\.sysid\)\)return/,
   'only selected vehicle telemetry can enter the event journal');
- const ahrs=read('ahrs-filter-core.js');
- assert.equal(require('../ahrs-filter-core.js').activeFromText('Filter: EKF3'),null,
+ const ahrs=read('js/configurator/ahrs-filter-core.js');
+ assert.equal(require('../js/configurator/ahrs-filter-core.js').activeFromText('Filter: EKF3'),null,
   'performance monitor Filter text is not by itself proof of the runtime EKF3 backend');
  assert.ok(ahrs);
 })();

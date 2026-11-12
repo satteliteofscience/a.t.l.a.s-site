@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const core=require('../capri-core.js');
+const core=require('../js/configurator/capri-core.js');
 for(const [name,[lo,hi,integer]]of Object.entries(core.specs)){
  assert(core.valid(name,lo));assert(core.valid(name,hi));assert(!core.valid(name,lo-1));assert(!core.valid(name,hi+1));assert(!core.valid(name,NaN));
  if(integer)assert(!core.valid(name,lo+.5));
@@ -19,7 +19,7 @@ assert.equal(core.observed(s,{value:1,connectionId:1,at:1000},3600),null);
 params.set('ORDER_MODE',{value:1});assert(core.commandAllowed(s,true,1001));
 params.delete('ORDER_REV');assert(!core.commandAllowed(s,true,1001));params.set('ORDER_REV',{value:2});
 params.set('RUD_LIMIT_DEG',{value:0});assert(!core.commandAllowed(s,true,1001));assert(core.commandAllowed(s,false,1001));
-const context={window:{},TextEncoder,TextDecoder,Uint8Array,DataView};vm.runInNewContext(fs.readFileSync(require.resolve('../mavlink.js'),'utf8'),context);
+const context={window:{},TextEncoder,TextDecoder,Uint8Array,DataView};vm.runInNewContext(fs.readFileSync(require.resolve('../js/configurator/mavlink.js'),'utf8'),context);
 const M=context.window.AtlasMAV;
 for(const value of [0,1]){
  const payload=new Uint8Array(16);new DataView(payload.buffer).setFloat32(4,value,true);payload.set(new TextEncoder().encode('ORDER_ON'),8);

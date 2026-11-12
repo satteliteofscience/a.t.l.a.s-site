@@ -2,8 +2,8 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const html=fs.readFileSync('index.html','utf8');
-const script=fs.readFileSync('support.js','utf8');
-const css=fs.readFileSync('support.css','utf8');
+const script=fs.readFileSync('js/site/support.js','utf8');
+const css=fs.readFileSync('css/support.css','utf8');
 const donor=JSON.parse(fs.readFileSync('data/support.json','utf8'));
 const tester=JSON.parse(fs.readFileSync('data/subscriptions.json','utf8'));
 const privacy=fs.readFileSync('privacy.html','utf8');

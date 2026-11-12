@@ -18,4 +18,4 @@
 
 ## Release 1.0 field-testing update — 2026-11-09
 
-The v0.4 statements above are historical. Since then, the maintainer reports successfully running the Control Center on a **real flight controller**, including the guided USB/MAVLink setup and compass calibration flow. Specific release features, especially complete INS temperature learning, all DFU erase/recovery cases, and analog battery voltage adjustment still require their own hardware checks. See [POST-HARDWARE-AUDIT-2026-11-09.md](POST-HARDWARE-AUDIT-2026-11-09.md).
+The v0.4 statements above are historical. Since then, the maintainer reports successfully running the Control Center on a **real flight controller**, including the guided USB/MAVLink setup and compass calibration flow. Specific release features, especially complete INS temperature learning, all DFU erase/recovery cases, and analog battery voltage adjustment still require their own hardware checks. See [docs/POST-HARDWARE-AUDIT-2026-11-09.md](POST-HARDWARE-AUDIT-2026-11-09.md).

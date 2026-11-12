@@ -1,7 +1,7 @@
 /* MAVFTP burst streaming, missing block recovery, fallback and AHRS status tests. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs');
-const ftp=require('../mavftp-param.js');
+const ftp=require('../js/configurator/mavftp-param.js');
 const read=p=>fs.readFileSync(p,'utf8');
 const CHUNK=110;
 function packedParams(count=180,shortNames=false,withDefaults=false){
@@ -268,7 +268,7 @@ async function testUnsupportedBurstFallback(){
 }
 (async()=>{
  await testBurst();await testLargeBlockRead(160);await testLargeBlockRead(220);await testLargeBlockRead(239);await testLargeBlockRejectionFallback(220);await testLargeBlockRejectionFallback(239);await testCompactUnavailableUsesStableFullFormat();await testControllerIgnoresCompactFormat();await testShortFinalBlockWithoutEofNak();await testSequentialShortFinalBlockWithoutEofNak();testPartialDecodeIsRejected();await testSilentBurstBackpressure();await testLostBurstBlock();await testLostGapReadRecovery();await testUnsupportedBurstFallback();await testDelayedReadReply();await testTimeoutDiagnostics();
- const ui=read('configurator.js'),tests=read('tools/check_ahrs_nav_cache.cjs');
+ const ui=read('js/configurator/configurator.js'),tests=read('tools/check_ahrs_nav_cache.cjs');
  assert.ok(ui.includes('preferBurst:true'),'TCP should request burst client');
  assert.ok(ui.includes('readSize:blockSize'),'selected MAVFTP size must be passed to the real client');
  assert.ok(ui.includes('sizeFallback:!!client.lastSizeFallback'),'monitor must identify automatic 110-byte fallback');
@@ -296,7 +296,7 @@ async function testUnsupportedBurstFallback(){
  assert.equal(stableClient.readSize,110,'110-byte backup must still be supported');
  assert.ok(ui.includes('transfer.perf={durationMs:client.lastDurationMs'),'successful FTP reads should record measured performance');
  assert.ok(ui.includes('showParamPerf(x)'),'performance panel should update with actual transfer stats');
- const css=read('configurator.css');
+ const css=read('css/configurator.css');
  for(const id of ['paramPerf','paramPerfTime','paramPerfSpeed','paramPerfBytes','paramPerfPauses','paramPerfMode'])
   assert.ok(html.includes('id="'+id+'"'),'missing visual performance metric '+id);
  assert.ok(css.includes('.cc-param-perf[hidden]'),'metrics must be invisible before a successful FTP read');

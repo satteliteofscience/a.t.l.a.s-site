@@ -5,7 +5,7 @@
 const fs=require('node:fs');
 const assert=require('node:assert/strict');
 const vm=require('node:vm');
-const src=fs.readFileSync('configurator.js','utf8');
+const src=fs.readFileSync('js/configurator/configurator.js','utf8');
 const first=src.indexOf('function updateTelemetryUI(){');
 const last=src.indexOf('function enterDemo(){',first);
 assert.ok(first>=0&&last>first,'telemetry dashboard function not found');

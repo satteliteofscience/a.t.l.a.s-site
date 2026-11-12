@@ -2,8 +2,8 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('configurator.html'),css=read('configurator.css'),cfg=read('configurator.js');
-const core=read('quick-setup-core.js'),wizard=read('quick-setup.js'),cal=read('calibration.js'),dfu=read('dfu-ui.js');
+const html=read('configurator.html'),css=read('css/configurator.css'),cfg=read('js/configurator/configurator.js');
+const core=read('js/configurator/quick-setup-core.js'),wizard=read('js/configurator/quick-setup.js'),cal=read('js/configurator/calibration.js'),dfu=read('js/configurator/dfu-ui.js');
 const vm=require('node:vm');
 // A failed calibration is a status to display, never permission to advance.
 {
@@ -17,7 +17,7 @@ const vm=require('node:vm');
 }
 assert.match(html,/data-tab="quicksetup"/,'Quick Setup navigation entry missing');
 assert.match(html,/data-panel="quicksetup"/,'Quick Setup panel missing');
-assert.match(html,/<script src="dfu-ui\.js" defer><\/script><script src="quick-setup-core\.js(?:\?[^"]+)?" defer><\/script><script src="tempcal-core\.js" defer><\/script><script src="tempcal-ui\.js" defer><\/script><script src="quick-setup\.js(?:\?[^"]+)?" defer>/,'Quick Setup must load after INS temperature calibration module and DFU');
+assert.match(html,/<script src="js\/configurator\/dfu-ui\.js(?:\?[^"]+)?" defer><\/script><script src="js\/configurator\/quick-setup-core\.js(?:\?[^"]+)?" defer><\/script><script src="js\/configurator\/tempcal-core\.js(?:\?[^"]+)?" defer><\/script><script src="js\/configurator\/tempcal-ui\.js(?:\?[^"]+)?" defer><\/script><script src="js\/configurator\/quick-setup\.js(?:\?[^"]+)?" defer>/,'Quick Setup must load after INS temperature calibration module and DFU');
 assert.match(cfg,/quicksetup/,'configurator navigation must allow Quick Setup');
 assert.match(cfg,/paramComplete:/,'controller API must expose complete parameter read state');
 assert.match(cfg,/writeAdvancedParams:async \(updates,onProgress=\(\)=>\{\},shouldCancel=\(\)=>false,options=\{\}\)/,'bulk parameter writer must support cancellation between acknowledged writes');
@@ -77,7 +77,7 @@ assert.match(cal,/detectedMagnetometer\(\)/,'native compass calibration must req
 assert.match(cfg,/compassStatus:state\.compassStatus/,'controller API must provide live magnetometer presence');
 assert.match(wizard,/safeLink\(result\.state\)/,'post-reboot readback requires a live DISARMED heartbeat');
 assert.match(core,/TYPE_RANGES/,'MAVLink integer type bounds must be enforced');
-const mav=read('mavlink.js');assert.match(mav,/sensorsPresent:v\.getUint32\(0,true\)/,'SYS_STATUS parser must provide present-sensors bitmask');
+const mav=read('js/configurator/mavlink.js');assert.match(mav,/sensorsPresent:v\.getUint32\(0,true\)/,'SYS_STATUS parser must provide present-sensors bitmask');
 assert.match(core,/metadataMissingCount/,'Missing metadata must not spam fatal import errors');
 assert.match(wizard,/core\.classifyEscFromProfile/,'ESC protocol must be identified using selected profile overrides and live parameters');
 assert.match(wizard,/escDshot/,'DShot no-calibration branch missing');
@@ -119,7 +119,7 @@ assert.match(css,/@media\(max-width:560px\)\{\.qs-step-list/,'mobile wizard layo
 // Decode real MAVLink2 frames with legal zero-truncated VFR_HUD payloads.
 (function testVfrHudZeroTruncationAndStreamFallback(){
  const context={window:{},TextEncoder,TextDecoder,Uint8Array,DataView,console};
- vm.runInNewContext(read('mavlink.js'),context,{filename:'mavlink.js'});
+ vm.runInNewContext(read('js/configurator/mavlink.js'),context,{filename:'js/configurator/mavlink.js'});
  const mav=context.window.AtlasMAV,packets=[],parser=new mav.Parser(frame=>packets.push(mav.parseMessage(frame)));
  const full=new Uint8Array(20),view=new DataView(full.buffer);
  view.setFloat32(0,12.5,true);view.setInt16(16,14,true); // throttle and trailing bytes are zero

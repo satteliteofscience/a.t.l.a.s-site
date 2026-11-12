@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict');
-const core=require('../quick-setup-core.js');
+const core=require('../js/configurator/quick-setup-core.js');
 // Parameter recovery must distinguish saving, rebooting, and merely reconnecting.
 (function testCompassRecovery(){
  const now=Date.now(),values={COMPASS_USE:1,COMPASS_DEV_ID:123,COMPASS_OFS_X:10,COMPASS_OFS_Y:20,COMPASS_OFS_Z:30,STAT_BOOTCNT:10};

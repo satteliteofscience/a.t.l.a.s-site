@@ -61,9 +61,11 @@ function render(){
   $('chDownloads').textContent=u.builds;
   $('chTitle').textContent=u.title;
   $('chIntro').textContent=({ru:'История A.T.L.A.S.: версия 1.2 относительно 1.1, предыдущие версии — отдельными разделами.',uk:'Історія A.T.L.A.S.: версія 1.2 відносно 1.1, попередні версії — окремими розділами.',en:'A.T.L.A.S. history: version 1.2 compared with 1.1; earlier versions have separate sections.'})[lang];
-  $('chProtocolTitle').textContent=({ru:'Протокол П.Р.И.К.А.З',uk:'Протокол Н.А.К.А.З',en:'O.R.D.E.R protocol'})[lang];
+  $('chProtocolKicker').textContent=({ru:'ПРОТОКОЛ УПРАВЛЕНИЯ',uk:'ПРОТОКОЛ КЕРУВАННЯ',en:'CONTROL PROTOCOL'})[lang];
+  $('chProtocolTitle').textContent=({ru:'A.T.L.A.S с протоколом П.Р.И.К.А.З',uk:'A.T.L.A.S з протоколом Н.А.К.А.З',en:'A.T.L.A.S with the O.R.D.E.R protocol'})[lang];
   $('chProtocolInfo').textContent=({ru:'Управляемые ограничения FBWA · крен / руль / тангаж',uk:'Керовані обмеження FBWA · крен / кермо / тангаж',en:'Selectable FBWA limits · bank / rudder / pitch'})[lang];
-  $('chSitlDemo').textContent=({ru:'Демонстрация работы в SITL',uk:'Демонстрація роботи в SITL',en:'SITL demonstration'})[lang];
+  $('chSitlDemo').textContent=({ru:'Демонстрация работы SITL на модели 6,3 кг',uk:'Демонстрація роботи SITL на моделі 6,3 кг',en:'SITL demonstration on the 6.3 kg model'})[lang];
+  $('chSitlDemo72').textContent=({ru:'Демонстрация работы SITL на модели 7,2 кг',uk:'Демонстрація роботи SITL на моделі 7,2 кг',en:'SITL demonstration on the 7.2 kg model'})[lang];
   $('chFooter').textContent=u.footer;
   for(const button of document.querySelectorAll('[data-language]')){
     const active=button.dataset.language===lang;

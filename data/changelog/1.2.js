@@ -226,17 +226,17 @@ window.AtlasRelease12 = {
     },
     {
       "ru": [
-        "Протокол П.Р.И.К.А.З",
+        "A.T.L.A.S с протоколом П.Р.И.К.А.З",
         "Отдельного общего переключателя ограничений не было.",
         "Добавлен O.R.D.E.R: единое разрешение ограничений крена, руля и тангажа в ARMED FBWA."
       ],
       "uk": [
-        "Протокол Н.А.К.А.З",
+        "A.T.L.A.S з протоколом Н.А.К.А.З",
         "Окремого спільного перемикача обмежень не було.",
         "Додано O.R.D.E.R: спільний дозвіл обмежень крену, керма та тангажу в ARMED FBWA."
       ],
       "en": [
-        "O.R.D.E.R protocol",
+        "A.T.L.A.S with the O.R.D.E.R protocol",
         "There was no shared activation switch for these limits.",
         "Adds a shared enable for bank, rudder and pitch limits in ARMED FBWA."
       ]

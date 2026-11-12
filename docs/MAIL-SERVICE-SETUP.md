@@ -1,6 +1,6 @@
 # Optional legacy self-hosted email service
 
-**For GitHub Pages + Brevo hosted forms, a server is NOT required.** Use [PROVIDER-SETUP.md](PROVIDER-SETUP.md) instead. Everything below describes the alternative private SMTP/SQLite implementation; do not deploy both providers for the same signup flow without a coordinated migration.
+**For GitHub Pages + Brevo hosted forms, a server is NOT required.** Use [docs/PROVIDER-SETUP.md](PROVIDER-SETUP.md) instead. Everything below describes the alternative private SMTP/SQLite implementation; do not deploy both providers for the same signup flow without a coordinated migration.
 
 # Private email service installation
 

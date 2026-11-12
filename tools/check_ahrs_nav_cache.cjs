@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs');
-const core=require('../ahrs-filter-core.js');
+const core=require('../js/configurator/ahrs-filter-core.js');
 const read=path=>fs.readFileSync(path,'utf8');
 function p(...rows){return new Map(rows.map(([name,value])=>[name,{value,type:9,index:0}]));}
 (function testAuthoritativeActiveFilter(){
@@ -40,7 +40,7 @@ function p(...rows){return new Map(rows.map(([name,value])=>[name,{value,type:9,
  assert.equal(state.label,'SIM');assert.equal(state.verified,false);
 })();
 (function integrationAndPerformance(){
- const js=read('configurator.js'),html=read('configurator.html'),css=read('configurator.css');
+ const js=read('js/configurator/configurator.js'),html=read('configurator.html'),css=read('css/configurator.css');
  const first=js.indexOf('function navigate(tab){'),last=js.indexOf('function heartbeatLive(',first);
  assert.ok(first>=0&&last>first);
  const nav=js.slice(first,last);
@@ -66,7 +66,7 @@ function p(...rows){return new Map(rows.map(([name,value])=>[name,{value,type:9,
  'the horizon must not paint decorative EKF3 text');
  assert.match(html,/id="ahrsFilterBadge"/,'horizon AHRS badge required');
  assert.match(html,/id="ahrsFilterDetail"/,'show the configured/verified status');
- assert.match(html,/src="ahrs-filter-core\.js" defer/,
+ assert.match(html,/src="js\/configurator\/ahrs-filter-core\.js" defer/,
  'AHRS parser module must be loaded before main code');
  assert.match(css,/\.cc-filter-indicator\[data-verified="true"\]/,
  'confirmed AHRS indication must differ visually from configured-only');

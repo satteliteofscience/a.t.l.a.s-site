@@ -5,52 +5,58 @@ on:
       - 'index.html'
       - 'tools/check_release_ready.cjs'
       - 'data/changelog.json'
-      - 'GITHUB-ABOUT.md'
+      - 'docs/GITHUB-ABOUT.md'
       - 'README.md'
-      - 'changelog.js'
-      - 'changelog.css'
+      - 'js/site/changelog.js'
+      - 'js/site/sitl-demo.js'
+      - 'css/sitl-demo.css'
+      - 'sitl-demo.html'
+      - 'sitl-demo-72.html'
+      - 'data/sitl/**'
+      - 'tools/check_sitl_demo.cjs'
+      - 'css/changelog.css'
       - 'data/changelog/**'
       - 'data/param-metadata.json'
-      - 'faq.js'
-      - 'flight-demo.js'
+      - 'js/site/faq.js'
+      - 'js/site/flight-demo.js'
       - 'tools/check_site_11.cjs'
-      - 'i18n.js'
-      - 'calibration.js'
-      - 'battery-cal-core.js'
-      - 'param-tree.js'
+      - 'js/site/i18n.js'
+      - 'js/configurator/calibration.js'
+      - 'js/configurator/battery-cal-core.js'
+      - 'js/configurator/param-tree.js'
       - 'tools/mavlink-bridge.cjs'
       - 'tools/A.T.L.A.S.-TCP-Connector.cmd'
       - 'tools/check_one_click_tcp.cjs'
       - 'tools/check_tcp_startup_contention.cjs'
-      - 'MAVLINK-NETWORK-BRIDGE.md'
+      - 'docs/MAVLINK-NETWORK-BRIDGE.md'
       - 'tools/check_release_configurator.cjs'
-      - 'mavlink.js'
-      - 'mavlink-status-core.js'
+      - 'js/configurator/mavlink.js'
+      - 'js/configurator/mavlink-status-core.js'
       - 'tools/check_mavlink_status_text.cjs'
-      - 'ahrs-filter-core.js'
+      - 'js/configurator/ahrs-filter-core.js'
       - 'tools/check_ahrs_nav_cache.cjs'
-      - 'mavftp-param.js'
+      - 'js/configurator/mavftp-param.js'
       - 'tools/check_mavftp_params.cjs'
       - 'tools/check_mavftp_burst.cjs'
-      - 'servo-config-core.js'
-      - 'configurator.css'
+      - 'js/configurator/servo-config-core.js'
+      - 'css/configurator.css'
       - 'tools/check_servo_config.cjs'
       - 'tools/check_configurator_ui.cjs'
       - 'tools/check_dashboard_demo_arm.cjs'
-      - 'tempcal-core.js'
-      - 'tempcal-ui.js'
+      - 'js/configurator/tempcal-core.js'
+      - 'js/configurator/tempcal-ui.js'
       - 'tools/check_tempcal.cjs'
       - 'tools/check_post_hardware_audit.cjs'
-      - 'quick-setup-core.js'
-      - 'quick-setup.js'
+      - 'js/configurator/quick-setup-core.js'
+      - 'js/configurator/quick-setup.js'
       - 'tools/check_quick_setup.cjs'
       - 'tools/check_quick_setup_ui.cjs'
-      - 'support.js'
-      - 'support.css'
-      - 'styles.css'
+      - 'js/site/support.js'
+      - 'css/support.css'
+      - 'css/styles.css'
       - 'tools/check_performance.cjs'
-      - 'contact-support.css'
-      - 'contact-support.js'
+      - 'css/contact-support.css'
+      - 'js/site/contact-support.js'
       - 'tools/check_support_contact.cjs'
       - 'data/support.json'
       - 'data/subscriptions.json'
@@ -58,19 +64,19 @@ on:
       - 'configurator.html'
       - 'faq.html'
       - 'changelog.html'
-      - 'page-meta.js'
-      - 'app.js'
-      - 'configurator.js'
-      - 'dfu-ui.js'
-      - 'dfu-flasher.js'
+      - 'js/site/page-meta.js'
+      - 'js/site/app.js'
+      - 'js/configurator/configurator.js'
+      - 'js/configurator/dfu-ui.js'
+      - 'js/configurator/dfu-flasher.js'
       - 'tools/check_cube_plus_local_dfu.cjs'
       - 'tools/check_cube_plus_dfu.cjs'
       - 'tools/check_uni_mini_and_transport.cjs'
       - 'tools/check_uni_release_metadata.cjs'
       - 'tools/check_catalog_resilience.cjs'
       - 'Firmware/Uni-IC743 Mini/manifest.json'
-      - 'firmware-access.js'
-      - 'firmware-access.css'
+      - 'js/site/firmware-access.js'
+      - 'css/firmware-access.css'
       - 'data/firmware-access.json'
       - 'data/releases.json'
       - 'data/firmware-history.json'
@@ -81,11 +87,11 @@ on:
       - 'tools/release_manager.py'
       - 'tools/update_firmware_manifest.py'
       - 'tools/publish_github_releases.py'
-      - 'RELEASE-DEPLOYMENT.md'
+      - 'docs/RELEASE-DEPLOYMENT.md'
       - 'firmware-gateway/**'
       - 'tools/check_firmware_access.cjs'
       - 'firmware-gateway-check.html'
-      - 'firmware-gateway-check.js'
+      - 'js/site/firmware-gateway-check.js'
       - 'tools/check_firmware_gateway_diagnostic.cjs'
       - 'assets/github-social-preview.jpg'
       - 'tools/check_social_preview.cjs'
@@ -100,7 +106,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check JavaScript syntax
-        run: node --check support.js && node --check page-meta.js && node --check app.js && node --check contact-support.js && node --check configurator.js && node --check tools/check_dashboard_demo_arm.cjs && node --check mavlink.js && node --check mavlink-status-core.js && node --check ahrs-filter-core.js && node --check mavftp-param.js && node --check battery-cal-core.js && node --check tempcal-core.js && node --check tempcal-ui.js && node --check tools/mavlink-bridge.cjs && node --check servo-config-core.js && node --check quick-setup-core.js && node --check quick-setup.js && node --check calibration.js && node --check i18n.js && node --check faq.js && node --check changelog.js && node --check dfu-ui.js && node --check dfu-flasher.js && node --check tools/check_cube_plus_local_dfu.cjs && node --check tools/check_cube_plus_dfu.cjs && node --check tools/check_uni_mini_and_transport.cjs && node --check tools/check_uni_release_metadata.cjs && node --check tools/check_catalog_resilience.cjs && node --check firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
+        run: node --check js/site/support.js && node --check js/site/page-meta.js && node --check js/site/app.js && node --check js/site/contact-support.js && node --check js/configurator/configurator.js && node --check tools/check_dashboard_demo_arm.cjs && node --check js/configurator/mavlink.js && node --check js/configurator/mavlink-status-core.js && node --check js/configurator/ahrs-filter-core.js && node --check js/configurator/mavftp-param.js && node --check js/configurator/battery-cal-core.js && node --check js/configurator/tempcal-core.js && node --check js/configurator/tempcal-ui.js && node --check tools/mavlink-bridge.cjs && node --check js/configurator/servo-config-core.js && node --check js/configurator/quick-setup-core.js && node --check js/configurator/quick-setup.js && node --check js/configurator/calibration.js && node --check js/site/i18n.js && node --check js/site/faq.js && node --check js/site/changelog.js && node --check js/site/sitl-demo.js && node --check tools/check_sitl_demo.cjs &&node --check js/configurator/dfu-ui.js && node --check js/configurator/dfu-flasher.js && node --check tools/check_cube_plus_local_dfu.cjs && node --check tools/check_cube_plus_dfu.cjs && node --check tools/check_uni_mini_and_transport.cjs && node --check tools/check_uni_release_metadata.cjs && node --check tools/check_catalog_resilience.cjs && node --check js/site/firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
       - name: Verify monobank/Tally URLs, labels, privacy, no legacy form
         run: node tools/check_monobank_support.cjs
       - name: Verify link preview Open Graph and Twitter metadata
@@ -123,6 +129,8 @@ jobs:
         run: node tools/check_performance.cjs
       - name: Check language switching, source comparison and queued MAVLink writes
         run: node tools/check_site_11.cjs
+      - name: Verify SITL replay pages for 6.3 kg and 7.2 kg models
+        run: node tools/check_sitl_demo.cjs
       - name: Verify demo in-flight ARM status and live MAVLink safety isolation
         run: node tools/check_dashboard_demo_arm.cjs
       - name: Verify automatic parameter loading and Release 1.0 status
@@ -160,7 +168,7 @@ jobs:
       - name: Unit-test server-side release PIN and per-tester keys
         run: node --test firmware-gateway/tests/*.test.js
       - name: Check temporary gateway diagnostics page
-        run: node --check firmware-gateway-check.js && node tools/check_firmware_gateway_diagnostic.cjs
+        run: node --check js/site/firmware-gateway-check.js && node tools/check_firmware_gateway_diagnostic.cjs
 
   windows-connector-syntax:
     runs-on: windows-latest

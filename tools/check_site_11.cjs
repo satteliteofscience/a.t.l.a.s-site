@@ -12,7 +12,7 @@ function checkPageTitle() {
     head: {querySelector: () => null, append() {}}, createElement: tag
   };
   const window = {addEventListener: (name, callback) => handlers.set(name, callback)};
-  vm.runInNewContext(read('page-meta.js'), {
+  vm.runInNewContext(read('js/site/page-meta.js'), {
     document, window, location: {pathname: '/a.t.l.a.s-site/index.html'},
     MutationObserver: class { observe() {} }
   });
@@ -47,10 +47,10 @@ function checkRelease() {
   const scripts = [...html.matchAll(/<script\s+src="([^"?]+)(?:\?[^\"]*)?"\s+defer><\/script>/g)].map(match => match[1]);
   const previous = scripts.indexOf('data/changelog/1.1.js');
   const current = scripts.indexOf('data/changelog/1.2.js');
-  const renderer = scripts.indexOf('changelog.js');
+  const renderer = scripts.indexOf('js/site/changelog.js');
   assert.ok(previous >= 0 && current > previous && renderer > current,
     'Load both release datasets before the renderer, allowing cache-version queries');
-  assert.match(read('changelog.js'), /version:'1\.0'/);
+  assert.match(read('js/site/changelog.js'), /version:'1\.0'/);
 }
 
 async function checkMetadataFallback() {
@@ -58,7 +58,7 @@ async function checkMetadataFallback() {
   const nodes = new Map(['paramMetadataFile', 'paramMetadataOnline', 'paramMetadataStatus'].map(id =>
     [id, {addEventListener: (event, callback) => handlers.set(id + ':' + event, callback)}]));
   const window = {AtlasMetadataInline: JSON.parse(read('data/param-metadata.json')), dispatchEvent() {}};
-  vm.runInNewContext(read('param-tree.js'), {
+  vm.runInNewContext(read('js/configurator/param-tree.js'), {
     window, document: {getElementById: id => nodes.get(id)}, Event: class {},
     fetch: async () => ({ok: true, json: async () => ({
       ArduPlane: {'ArduPlane:ROLL_LIMIT_DEG': {DisplayName: 'Official roll limit'}}
@@ -79,7 +79,7 @@ async function checkMetadataFallback() {
 }
 
 async function checkQueue() {
-  const configurator = read('configurator.js');
+  const configurator = read('js/configurator/configurator.js');
   assert.match(configurator, /tab==='basic'&&previous!=='basic'\)renderBasic\(\)/);
   const source = configurator.slice(configurator.indexOf('async function transmit('),
     configurator.indexOf('async function requestStreams('));

@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=path=>fs.readFileSync(path,'utf8');
 const ctx={window:{},TextEncoder,TextDecoder,Uint8Array,DataView,console};
-vm.runInNewContext(read('mavlink.js'),ctx,{filename:'mavlink.js'});
+vm.runInNewContext(read('js/configurator/mavlink.js'),ctx,{filename:'js/configurator/mavlink.js'});
 const M=ctx.window.AtlasMAV;
 const mkHeartbeat=(sysid,vehicleType=1,compid=1)=>{
  const payload=new Uint8Array(9);
@@ -28,7 +28,7 @@ const mkHeartbeat=(sysid,vehicleType=1,compid=1)=>{
  }
 })();
 (function handlerGuards(){
- const cfg=read('configurator.js'),wizard=read('quick-setup.js'),temp=read('tempcal-ui.js');
+ const cfg=read('js/configurator/configurator.js'),wizard=read('js/configurator/quick-setup.js'),temp=read('js/configurator/tempcal-ui.js');
  assert.match(cfg,/if\(!data\|\|!M\.belongsToSelectedVehicle\(message,data,state\.sysid\)\)return/,'FC identity must be enforced before processing any parsed message');
  assert.match(cfg,/function heartbeatLive\(now=Date\.now\(\)\)/,'fresh heartbeat gate must exist');
  assert.match(cfg,/const t=state\.demo\|\|heartbeatLive\(\)\?state\.telemetry/,'old dashboard telemetry must not be displayed as live');
@@ -46,13 +46,13 @@ const mkHeartbeat=(sysid,vehicleType=1,compid=1)=>{
  assert.match(temp,/if\(current\)\{/,'reuse an already-mounted INS editor');
 })();
 (function documentedHardwareScope(){
- const readme=read('README.md'),about=read('GITHUB-ABOUT.md');
- const home=read('index.html'),config=read('configurator.html'),meta=read('page-meta.js');
+ const readme=read('README.md'),about=read('docs/GITHUB-ABOUT.md');
+ const home=read('index.html'),config=read('configurator.html'),meta=read('js/site/page-meta.js');
  assert.match(readme,/bench-tested A\.T\.L\.A\.S\. Control Center on a real flight controller/,'README should document actual device validation');
  assert.match(readme,/UDP\/TCP bridge.*analog multimeter.*INS temperature-learning/,'README must not claim unverified hardware features are fully proven');
  assert.match(about,/hardware-tested browser configurator/,'repository About suggestion must mention real-device testing');
- assert.match(home,/прошёл стендовую проверку на реальном полётном контроллере/,'landing page must mention hardware check');
+ assert.match(home,/проверены по формату и контрольным суммам; это не заменяет испытаний на конкретном контроллере и самолёте/,'landing page must state that file checks do not replace hardware testing');
  assert.match(config,/<meta name="description" content="A\.T\.L\.A\.S\. — конфигуратор \d+\.\d+: USB\/MAVLink/,'configurator metadata should identify the current version without claiming every new flow is hardware-tested');
- assert.match(meta,/browser configurator bench-tested with a real flight controller/,'English metadata should acknowledge hardware test');
+ assert.match(meta,/A\.T\.L\.A\.S\. Configurator \d+\.\d+: USB\/MAVLink/,'English configurator metadata should identify the current version without claiming hardware testing of new flows');
 })();
 console.log('PASS: mixed-vehicle SYSID isolation, telemetry freshness and network timeout, hidden-wizard/INS optimization, honest real-hardware test scope');

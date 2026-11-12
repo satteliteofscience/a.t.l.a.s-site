@@ -10,7 +10,7 @@ assert.deepEqual(
   ['cube-orange-plus','matek-h743-wing-v3','uni-ic743-mini'],
   'all three protected releases must remain visible in the homepage catalog'
 );
-const home=fs.readFileSync('index.html','utf8'),app=fs.readFileSync('app.js','utf8');
+const home=fs.readFileSync('index.html','utf8'),app=fs.readFileSync('js/site/app.js','utf8');
 assert.match(home,/id="boardSearch"/,'search by controller must be preserved');
 assert.match(home,/id="boardGrid"/,'firmware catalog grid must remain mounted');
 assert.match(app,/function renderBoards\(\)/,'board rendering must remain operational');

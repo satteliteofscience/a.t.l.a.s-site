@@ -1,7 +1,7 @@
 /* First TCP connection must not compete with station-managed telemetry while MAVFTP runs. */
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const js=fs.readFileSync('configurator.js','utf8');
+const js=fs.readFileSync('js/configurator/configurator.js','utf8');
 function extract(start,end){
  const a=js.indexOf(start),b=js.indexOf(end,a+start.length);
  assert.ok(a>=0&&b>a,'expected source markers: '+start);

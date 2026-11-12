@@ -5,7 +5,7 @@ const read=path=>fs.readFileSync(path,'utf8');
 const cmd=read('tools/A.T.L.A.S.-TCP-Connector.cmd');
 // Compare the LF Git blob even when Windows autocrlf expands the checkout.
 const bridge=Buffer.from(read('tools/mavlink-bridge.cjs').replace(/\r\n/g,'\n'));
-const js=read('configurator.js'),html=read('configurator.html'),css=read('configurator.css');
+const js=read('js/configurator/configurator.js'),html=read('configurator.html'),css=read('css/configurator.css');
 const sourceHash=crypto.createHash('sha1')
  .update(Buffer.from('blob '+bridge.length+'\0','ascii')).update(bridge).digest('hex');
 const expected=cmd.match(/\$bridgeGitSha\s*=\s*'([a-f0-9]{40})'/);

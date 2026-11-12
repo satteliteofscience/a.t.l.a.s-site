@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const core=require('../servo-config-core.js');
+const core=require('../js/configurator/servo-config-core.js');
 
 function makeParams(reverse=0){
  return new Map([
@@ -110,7 +110,7 @@ function testDraftValidation(){
 }
 
 function testConfiguratorUsesOneQueue(){
- const source=fs.readFileSync('calibration.js','utf8');
+ const source=fs.readFileSync('js/configurator/calibration.js','utf8');
  assert.match(source,/const enqueueServoWrite=servoCore\.createSerialQueue\(\)/);
  assert.match(source,/enqueueServoWrite\(\(\)=>realtimeParamChange\(field\)\)/);
  assert.match(source,/servoCore\.selectLiveChanges\(validation,field\)/,'live writes must use the shared live-field selector');
@@ -127,10 +127,10 @@ function testConfiguratorUsesOneQueue(){
  assert.ok(saveStart>=0&&saveEnd>saveStart,'servo Apply handler must be present');
  assert.match(saveHandler,/if\(servoSavePending\|\|servoEditing===null\|\|benchActive\)return/);
  assert.doesNotMatch(saveHandler,/if\(servoIsSaving\|\|/,'Apply must not be discarded while an immediate reverse write is in flight');
- const writer=fs.readFileSync('configurator.js','utf8');
+ const writer=fs.readFileSync('js/configurator/configurator.js','utf8');
  assert.match(writer,/for\(const field of \['FUNCTION','MIN','TRIM','MAX','REVERSED'\]\)/,'servo parameters must use deterministic write order');
  const html=fs.readFileSync('configurator.html','utf8');
- assert.match(html,/<script src="servo-config-core\.js" defer><\/script><script src="battery-cal-core\.js" defer><\/script><script src="calibration\.js(?:\?v=[^"\s]+)?" defer>/);
+ assert.match(html,/<script src="js\/configurator\/servo-config-core\.js" defer><\/script><script src="js\/configurator\/battery-cal-core\.js" defer><\/script><script src="js\/configurator\/calibration\.js(?:\?v=[^"\s]+)?" defer>/);
  assert.match(html,/<details class="servo-bench-details">/);
 }
 

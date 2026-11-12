@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const h=fs.readFileSync('firmware-gateway-check.html','utf8');
-const j=fs.readFileSync('firmware-gateway-check.js','utf8');
+const j=fs.readFileSync('js/site/firmware-gateway-check.js','utf8');
 assert.ok(h.includes('id="pin"')&&h.includes('type="password"')&&h.includes('autocomplete="off"'));
 assert.ok(h.includes('name="robots" content="noindex,nofollow,noarchive"'));
 assert.ok(j.includes('method:\'POST\'')&&j.includes("credentials:'omit'"));

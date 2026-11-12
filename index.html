@@ -25,10 +25,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Russo+One&amp;display=swap">
-  <link rel="stylesheet" href="styles.css?v=release-1.2-cards-2"><link rel="stylesheet" href="support.css"><link rel="stylesheet" href="firmware-access.css"><link rel="stylesheet" href="contact-support.css">
+  <link rel="stylesheet" href="css/styles.css?v=release-1.2-cards-2"><link rel="stylesheet" href="css/support.css"><link rel="stylesheet" href="css/firmware-access.css"><link rel="stylesheet" href="css/contact-support.css">
   <title>Конфигуратор A.T.L.A.S. 1.2 — ArduPlane 4.7.2</title>
 <style>.nav-console-link{color:#dec96e!important}.nav-console-link:hover{color:#fff0a2!important}</style>  <meta name="atlas-page" content="index.html">
-  <script src="page-meta.js?v=release-1.2-cards-2" defer></script>
+  <script src="js/site/page-meta.js?v=release-1.2-cards-2" defer></script>
 </head>
 <body>
   <div class="page-noise" aria-hidden="true"></div>
@@ -114,7 +114,7 @@
         <div class="section-header"><div><p class="kicker">02 / FIRMWARE DISTRIBUTION</p><h2 class="block-blueprint-title"><img data-headline="downloads" src="assets/headline-downloads.png" alt="Выбери свою платформу." decoding="async" loading="lazy" fetchpriority="low"></h2></div><p class="section-intro">В каталоге опубликованы проверенные сборки для поддерживаемых плат. Для каждого файла указаны версия и SHA-256; скачивание защищено PIN, а целостность проверяется автоматически.</p></div>
         <div class="download-controls"><label class="search-field" for="boardSearch"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="boardSearch" type="search" placeholder="Найти полётный контроллер..." autocomplete="off"></label><div class="filter-chips" role="group" aria-label="Фильтр по статусу"><button type="button" class="filter-chip is-active" data-filter="all" aria-pressed="true">Все платы</button><button type="button" class="filter-chip" data-filter="available" aria-pressed="false">Есть сборка</button><button type="button" class="filter-chip" data-filter="planned" aria-pressed="false">В подготовке</button></div></div>
         <div class="download-status" id="downloadStatus" role="status" aria-live="polite">Загружаем список платформ…</div>
-        <p class="download-release-external"><a class="text-link" href="https://github.com/satteliteofscience/a.t.l.a.s-site/releases" target="_blank" rel="noopener noreferrer">GitHub Releases ↗</a> · <a class="text-link" href="https://github.com/satteliteofscience/a.t.l.a.s-site/blob/main/PROVIDER-SETUP.md" target="_blank" rel="noopener noreferrer">Deployment / Integrations</a></p>
+        <p class="download-release-external"><a class="text-link" href="https://github.com/satteliteofscience/a.t.l.a.s-site/releases" target="_blank" rel="noopener noreferrer">GitHub Releases ↗</a> · <a class="text-link" href="https://github.com/satteliteofscience/a.t.l.a.s-site/blob/main/docs/PROVIDER-SETUP.md" target="_blank" rel="noopener noreferrer">Deployment / Integrations</a></p>
         <div class="board-grid" id="boardGrid" aria-live="polite"></div>
         <div class="downloads-foot"><div class="foot-icon">i</div><p>Не видишь своей платы? Не прошивай сборку для другой аппаратной ревизии. Совместимость зависит от target/hwdef, загрузчика и распиновки.</p><button id="issuesLink" type="button" class="text-link support-contact-trigger" aria-haspopup="dialog" aria-controls="supportContactDialog">Как запросить поддержку <span aria-hidden="true">↗</span></button></div>
       </section>
@@ -194,12 +194,12 @@
     </dialog>
     <footer class="site-footer"><a class="footer-brand" href="#top"><img src="assets/mark.svg" alt="" width="32" height="32"><span>A.T.L.A.S.</span></a><p>A.T.L.A.S. ArduPlane 4.7.2 Release 1.2 by Oleksandr &amp; AI CODEX. Not an official ArduPilot release.</p><span>© <span id="copyrightYear"></span> A.T.L.A.S. / Oleksandr + AI CODEX</span></footer>
   </div>
-  <script src="i18n.js?v=release-1.2-cards-2" defer></script>
-  <script src="contact-support.js" defer></script>
-  <script src="firmware-access.js" defer></script>
-  <script src="firmware-catalog.js?v=release-1.2" defer></script>
-  <script src="app.js?v=release-1.2-cards-2" defer></script>
-  <script src="support.js" defer></script>
-  <script src="flight-demo.js" defer></script>
+  <script src="js/site/i18n.js?v=release-1.2-cards-2" defer></script>
+  <script src="js/site/contact-support.js" defer></script>
+  <script src="js/site/firmware-access.js" defer></script>
+  <script src="js/site/firmware-catalog.js?v=release-1.2" defer></script>
+  <script src="js/site/app.js?v=release-1.2-cards-2" defer></script>
+  <script src="js/site/support.js" defer></script>
+  <script src="js/site/flight-demo.js" defer></script>
 </body>
 </html>

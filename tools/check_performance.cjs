@@ -10,22 +10,22 @@ for(const page of pages){
  assert.ok(head.includes('<link rel="preconnect" href="https://fonts.googleapis.com">'),page+' needs font stylesheet preconnect');
  assert.ok(head.includes('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'),page+' needs font file preconnect');
  assert.equal(head.split('href="'+fonts+'"').length-1,1,page+' must load the same fonts only once');
- assert.ok(head.includes('href="styles.css"'),page+' original styles must remain');
+ assert.match(head,/href="css\/styles\.css(\?[^"]*)?"/,page+' original styles must remain');
 }
-assert.ok(!read('styles.css').includes('@import url('),'Do not block local stylesheet on remote font discovery');
+assert.ok(!read('css/styles.css').includes('@import url('),'Do not block local stylesheet on remote font discovery');
 const home=read('index.html');
 for(const name of ['features','downloads','guide']){
  assert.match(home,new RegExp('<img data-headline="'+name+'"[^>]+decoding="async" loading="lazy" fetchpriority="low">'),name+' should lazy load');
 }
 assert.match(home,/<img data-headline="hero"[^>]+decoding="async" loading="eager" fetchpriority="high">/,'hero stays high-priority');
 assert.match(home,/<h2 class="block-blueprint-title">Проверенная сборка\. Ответственная эксплуатация\.<\/h2>/,'release safety heading is rendered as live text');
-const config=read('configurator.js');
+const config=read('js/configurator/configurator.js');
 assert.ok(config.includes("function scheduleHorizon()"),'HUD visibility scheduler missing');
 assert.ok(config.includes("document.hidden||state.selectedTab!=='dashboard'||state.hudRaf"),'Do not schedule hidden/inactive HUD frames');
 assert.ok(config.includes("document.addEventListener('visibilitychange',scheduleHorizon)"),'Resume when tab visible');
 assert.ok(config.includes('function drawHorizon(ts)'), 'HUD rendering preserved');
 assert.ok(config.includes('ctx.clearRect(0,0,w,h)')&&config.includes('updateTelemetryUI()'), 'HUD functionality preserved');
-for(const js of ['app.js','support.js','contact-support.js','firmware-access.js','dfu-ui.js']){
+for(const js of ['js/site/app.js','js/site/support.js','js/site/contact-support.js','js/site/firmware-access.js','js/configurator/dfu-ui.js']){
  assert.ok(fs.existsSync(js),'Functional module missing: '+js);
 }
 console.log('PASS: earlier font discovery, critical/lazy image priority, tab-aware HUD animation and functional scripts retained.');

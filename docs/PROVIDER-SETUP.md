@@ -38,7 +38,7 @@ The old public IBAN was removed from the configuration, payment controls and vis
 The existing `.github/workflows/firmware-manifest.yml` publishes firmware index files from `Firmware/incoming/matek-h743-wing-v3/`. It also creates **GitHub Releases** only for manually verified **HEX + corresponding-source archive** pairs:
 
 - Put the complete matching source archive into `Firmware/Sources/atlas-vX.Y-source.zip`. Verify it really matches the binary and meets applicable GNU GPL Corresponding Source terms.
-- Put your build into `Firmware/incoming/matek-h743-wing-v3/`. Include `release.json` with `version`, `label`, `source_url` and `source_verified:true` as shown in [RELEASE-DEPLOYMENT.md](RELEASE-DEPLOYMENT.md).
+- Put your build into `Firmware/incoming/matek-h743-wing-v3/`. Include `release.json` with `version`, `label`, `source_url` and `source_verified:true` as shown in [docs/RELEASE-DEPLOYMENT.md](RELEASE-DEPLOYMENT.md).
 - Commit; GitHub Actions runs the HEX validator and immutable archiver, commits the catalog changes, then creates a pre-release GitHub tag **with the HEX and source archive**. The tag uses a SHA-256-derived identifier; it will not create duplicates.
 - Older builds missing corresponding source are **not** automatically promoted to GitHub Releases. The site catalog may still list them; before wider distribution, fix any remaining source-availability problem.
 

@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const read=p=>fs.readFileSync(p,'utf8');
-const configurator=read('configurator.js');
+const configurator=read('js/configurator/configurator.js');
 const heartbeatAt=configurator.indexOf('function handleMessage');
 assert.ok(heartbeatAt>=0,'MAVLink message handler missing');
 const heartbeatEnd=configurator.indexOf("}else if(data.type==='attitude')",heartbeatAt);
@@ -27,7 +27,7 @@ assert.ok(configurator.slice(connectAt,connectEnd).includes('state.paramLoading=
 const cleanupAt=configurator.indexOf('async function cleanupForNavigation()');
 const cleanupEnd=configurator.indexOf('async function disconnect()',cleanupAt);
 assert.ok(configurator.slice(cleanupAt,cleanupEnd).includes('state.paramLoading=false'),'page cleanup must clear stale loading state');
-const calibration=read('calibration.js');
+const calibration=read('js/configurator/calibration.js');
 assert.ok(calibration.includes('function renderServo()'),'servo output renderer missing');
 assert.ok(calibration.includes('SERVO${n}_FUNCTION'),'servo function parameters must render');
 assert.ok(calibration.includes('SERVO${n}_MIN')&&calibration.includes('SERVO${n}_TRIM')&&calibration.includes('SERVO${n}_MAX'),'servo limit parameters must render');
@@ -35,7 +35,8 @@ const releases=JSON.parse(read('data/releases.json'));
 assert.equal(releases.project.release_channel,'release','project channel must be release');
 const matek=releases.boards.find(b=>b.id==='matek-h743-wing-v3');
 assert.ok(matek&&matek.status==='available','Matek H743-WING V3 release must remain available');
-assert.match(matek.description,/проверенная сборка HEX.*готова к установке/i,'Matek catalog description must state Release 1.0 readiness');
+assert.match(matek.description,/ArduPlane 4\.7\.2/,'Matek catalog description must name the ArduPlane base version');
+assert.match(matek.description,/Matek H743-WING V3/,'Matek catalog description must name the target board');
 assert.match(matek.downloads[0].sha256,/^[a-f0-9]{64}$/i,'firmware SHA-256 must remain intact');
 assert.equal(matek.downloads[0].channel,'release','firmware download channel must remain release');
 assert.equal(matek.downloads[0].source_verified,false,'do not imply GPL corresponding source is already verified');
@@ -44,7 +45,7 @@ const history=JSON.parse(read('data/firmware-history.json'));
 assert.equal(history.releases[0].label,'A.T.L.A.S. Release 1.0 · ArduPlane 4.7.2');
 const changelog=JSON.parse(read('data/changelog.json'));
 assert.equal(changelog.channel,'Release 1.0');
-for(const file of ['index.html','configurator.html','faq.js','changelog.js','README.md','GITHUB-ABOUT.md']){
+for(const file of ['index.html','configurator.html','js/site/faq.js','js/site/changelog.js','README.md','docs/GITHUB-ABOUT.md']){
  const body=read(file);
  assert.ok(!/PRE-RELEASE|Pre-Release|экспериментальная прошивка|experimental ArduPlane firmware/i.test(body),file+' still shows an obsolete pre-release status');
 }

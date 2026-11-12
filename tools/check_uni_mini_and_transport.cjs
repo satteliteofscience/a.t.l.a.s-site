@@ -21,7 +21,7 @@ const miniManifest=JSON.parse(read('Firmware/Uni-IC743 Mini/manifest.json'));
 assert.equal(miniManifest.board_id,'uni-ic743-mini');
 if(uni.status==='planned')assert.equal(miniManifest.files.length,0,'placeholder manifest must not offer a broken URL');
 else assert.equal(miniManifest.files[0].secure_id,'uni-ic743-mini-release-1');
-const cfg=read('configurator.js'),quick=read('quick-setup.js'),dfu=read('dfu-ui.js'),flash=read('dfu-flasher.js');
+const cfg=read('js/configurator/configurator.js'),quick=read('js/configurator/quick-setup.js'),dfu=read('js/configurator/dfu-ui.js'),flash=read('js/configurator/dfu-flasher.js');
 assert.ok(cfg.includes("'uni-ic743-mini'"),'configurator needs a new controller');
 assert.ok(cfg.includes("HEX · LOCAL"),'local HEX must be clearly labelled');
 assert.ok(quick.includes("['uni-ic743-mini','Uni-IC743 Mini']"),'Quick Setup firmware stage must list custom target');
@@ -35,7 +35,7 @@ assert.ok(dfu.includes("selectedBoard()!==expectedBoard"),'abort if board change
 assert.ok(dfu.includes("dfuConfirmBoard")&&dfu.includes("dfuConfirmBackup")&&dfu.includes("dfuConfirmText"));
 assert.ok(dfu.includes("if(!readyToFlash())return;")||dfu.includes("!readyToFlash())return;"),'DFU erase must be guarded');
 const ctx={window:{},TextEncoder,TextDecoder,Uint8Array,DataView,console,setTimeout};
-vm.runInNewContext(flash,ctx,{filename:'dfu-flasher.js'});
+vm.runInNewContext(flash,ctx,{filename:'js/configurator/dfu-flasher.js'});
 const f=ctx.window.AtlasDFU;
 assert.equal(f.supportsH743FlashMap('@Internal Flash /0x08000000/08*128Kg,08*128Kg'),true);
 function record(type,address,data){
@@ -60,12 +60,12 @@ assert.equal(f.parseIntelHex(synthetic(['MatekH743'])).detectedTarget,'matek-h74
 assert.equal(f.parseIntelHex(synthetic([])).detectedTarget,null);
 assert.throws(()=>f.parseIntelHex(synthetic(['Uni_IC743Mini','CubeOrangePlus'])),/Conflicting board target markers/);
 assert.throws(()=>f.parseIntelHex(synthetic(['Uni_IC743Mini']).replace(/:[0-9A-F]{6}00/,'INVALID')),/Invalid HEX syntax/);
-const pin=read('firmware-access.js');
+const pin=read('js/site/firmware-access.js');
 assert.ok(pin.includes('signal:abortController.signal'),'PIN fetch must be cancellable');
 assert.ok(pin.includes('if(finished)return;'),'cancelled PIN request must not alter a new modal');
 assert.ok(pin.includes('blob.size!==entry.bytes'),'protected download size must match release metadata');
-const mavlink=read('mavlink.js');const mctx={window:{},TextEncoder,TextDecoder,Uint8Array,DataView,console};
-vm.runInNewContext(mavlink,mctx,{filename:'mavlink.js'});
+const mavlink=read('js/configurator/mavlink.js');const mctx={window:{},TextEncoder,TextDecoder,Uint8Array,DataView,console};
+vm.runInNewContext(mavlink,mctx,{filename:'js/configurator/mavlink.js'});
 const mav=mctx.window.AtlasMAV;
 const received=[],parser=new mav.Parser(frame=>received.push(frame));
 const good=mav.createFrame(0,mav.heartbeat(),0);

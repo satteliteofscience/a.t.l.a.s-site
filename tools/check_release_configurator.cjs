@@ -1,13 +1,13 @@
 'use strict';
 const assert=require('node:assert/strict'),crypto=require('node:crypto'),net=require('node:net'),dgram=require('node:dgram'),{spawn}=require('node:child_process');
-const core=require('../battery-cal-core.js');
+const core=require('../js/configurator/battery-cal-core.js');
 const fs=require('node:fs');
-const config=fs.readFileSync('configurator.js','utf8');
-const quick=fs.readFileSync('quick-setup-core.js','utf8');
-const tree=fs.readFileSync('param-tree.js','utf8');
+const config=fs.readFileSync('js/configurator/configurator.js','utf8');
+const quick=fs.readFileSync('js/configurator/quick-setup-core.js','utf8');
+const tree=fs.readFileSync('js/configurator/param-tree.js','utf8');
 const html=fs.readFileSync('configurator.html','utf8');
 const script=fs.readFileSync('tools/mavlink-bridge.cjs','utf8');
-const page=fs.readFileSync('app.js','utf8');
+const page=fs.readFileSync('js/site/app.js','utf8');
 (function testBatteryCalibration(){
  const value=core.compute({monitorType:4,multiplier:10,reportedVolts:24.5,measuredVolts:25.2});
  assert.equal(value.ok,true);assert.ok(Math.abs(value.newMultiplier-10.285714)<1e-5);
@@ -20,7 +20,7 @@ assert.match(config,/state\.importReport\.skipped/,'ordinary import must report 
 assert.match(config,/writeParameterWithAck\(name,value,p\.type\)/,'single edits must use central acknowledged PARAM_SET writer');
 assert.match(tree,/valueButton\.disabled=readOnly\|\|!canWrite\(\)/,'read-only table row must be locked');
 assert.match(quick,/String\(definition\.ReadOnly\)\.toLowerCase/,'pdef string ReadOnly fields must be respected');
-assert.match(fs.readFileSync('calibration.js','utf8'),/function renderBatteryCal\(/,'battery calibration preview must be rendered in normal monitor');
+assert.match(fs.readFileSync('js/configurator/calibration.js','utf8'),/function renderBatteryCal\(/,'battery calibration preview must be rendered in normal monitor');
 assert.match(config,/lastVoltageTelemetry/,'battery calibration needs fresh SYS_STATUS voltage timing');
 assert.match(html,/id="batteryCalMeasured"/,'measured voltage input is missing');
 assert.match(html,/id="networkMode"/,'UDP/TCP configurator controls must exist');

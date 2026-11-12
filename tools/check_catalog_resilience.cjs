@@ -4,9 +4,9 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const read=p=>fs.readFileSync(p,'utf8');
-const app=read('app.js'),gate=read('firmware-access.js');
-const home=read('index.html'),translations=read('i18n.js'),meta=read('page-meta.js');
-const css=read('styles.css');
+const app=read('js/site/app.js'),gate=read('js/site/firmware-access.js');
+const home=read('index.html'),translations=read('js/site/i18n.js'),meta=read('js/site/page-meta.js');
+const css=read('css/styles.css');
 const catalog=JSON.parse(read('data/releases.json'));
 const ids=['cube-orange-plus','matek-h743-wing-v3','uni-ic743-mini'];
 for(const id of ids)assert.ok(catalog.boards.some(b=>b.id===id && b.status==='available' && b.downloads.length),'Required protected board: '+id);
@@ -17,7 +17,7 @@ for(const name of ['Matek H743-WING V3','Cube Orange Plus','Uni-IC743 Mini']){
  const og=home.match(/<meta property="og:description" content="([^"]+)"/);
  assert.ok(og && og[1].includes(name),'social preview must name '+name);
 }
-assert.match(home,/прошёл стендовую проверку на реальном полётном контроллере/,'preserve real bench-tested wording');
+assert.match(home,/проверены по формату и контрольным суммам; это не заменяет испытаний на конкретном контроллере/,'homepage must not overstate verification: format/checksum checks do not replace hardware testing');
 assert.ok(translations.includes('PIN-protected builds for Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini are published in the catalog'));
 assert.ok(translations.includes('Захищені збірки для Matek H743-WING V3, Cube Orange Plus та Uni-IC743 Mini публікуються в каталозі'));
 assert.ok(app.includes('plannedChip.hidden=!hasPlanned'),'hide empty Planned filter only while no future builds exist');
@@ -34,7 +34,7 @@ async function checkCatalogRecovery(){
  const state={data:catalog,catalogSignature:JSON.stringify(catalog.boards),query:'',filter:'all',fetchFailed:false};
  const nodes={downloadStatus:{textContent:''}};
  const ctx={
-  state,console,
+  state,console,window:{},
   el:id=>id==='atlasEmbeddedData'?null:(nodes[id]||(nodes[id]={textContent:''})),
   tr:x=>x,
   renderBoards:()=>{renders++;nodes.downloadStatus.textContent='Recovered';},

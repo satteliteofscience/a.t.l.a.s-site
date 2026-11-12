@@ -37,12 +37,12 @@ function findPublicHex(dir){
  });
 }
 assert.deepEqual(findPublicHex('Firmware'),[],'Raw HEX must not remain in the public current branch');
-const app=read('app.js'),cc=read('configurator.js'),dfu=read('dfu-ui.js');
-const gate=read('firmware-access.js'),worker=read('firmware-gateway/src/index.js');
+const app=read('js/site/app.js'),cc=read('js/configurator/configurator.js'),dfu=read('js/configurator/dfu-ui.js');
+const gate=read('js/site/firmware-access.js'),worker=read('firmware-gateway/src/index.js');
 const ui1=read('index.html'),ui2=read('configurator.html');
 for(const html of [ui1,ui2]){
- assert.ok(html.includes('firmware-access.js'),'PIN dialog logic required');
- assert.ok(html.includes('firmware-access.css'),'PIN dialog style required');
+ assert.ok(html.includes('js/site/firmware-access.js'),'PIN dialog logic required');
+ assert.ok(html.includes('css/firmware-access.css'),'PIN dialog style required');
 }
 assert.ok(app.includes('AtlasFirmwareAccess.download(item)'));
 assert.ok(app.includes('AtlasFirmwareAccess?.isProtected(item)'));

@@ -2,7 +2,7 @@
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict'),vm=require('node:vm');
 const read=p=>fs.readFileSync(p,'utf8');
-const flasher=read('dfu-flasher.js'),ui=read('dfu-ui.js'),quick=read('quick-setup.js'),cfg=read('configurator.js');
+const flasher=read('js/configurator/dfu-flasher.js'),ui=read('js/configurator/dfu-ui.js'),quick=read('js/configurator/quick-setup.js'),cfg=read('js/configurator/configurator.js');
 assert.ok(cfg.includes("'cube-orange-plus'"));
 assert.ok(cfg.includes("'HEX · LOCAL'"),'Cube must show local HEX capability pending secure R2 publication');
 assert.ok(ui.includes("'cube-orange-plus':'Firmware/Cube Orange Plus/manifest.json'"));
@@ -15,7 +15,7 @@ assert.ok(quick.includes('if(matek||cube||uni)'),'Quick Setup must embed the sam
 assert.ok(quick.includes("d.board===selectedBoard()"),'Quick Setup must only accept a verified flash for selected board');
 assert.ok(flasher.includes("new TextEncoder().encode('CubeOrangePlus')"));
 const context={window:{},Uint8Array,DataView,TextEncoder,TextDecoder,console,setTimeout};
-vm.runInNewContext(flasher,context,{filename:'dfu-flasher.js'});
+vm.runInNewContext(flasher,context,{filename:'js/configurator/dfu-flasher.js'});
 const api=context.window.AtlasDFU;
 assert.equal(api.supportsH743FlashMap('@Internal Flash /0x08000000/08*128Kg,08*128Kg'),true);
 assert.equal(api.supportsH743FlashMap('@Internal Flash /0x08000000/04*128Kg'),false);

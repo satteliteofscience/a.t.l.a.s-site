@@ -51,7 +51,7 @@ The project maintainer has **bench-tested A.T.L.A.S. Control Center on a real fl
 1. Upload the **contents** of this repository to your public GitHub Pages repository.
 2. GitHub → **Settings → Pages → Deploy from a branch**, select `main`, `/(root)`.
 3. Open the HTTPS site and review its flight-control disclaimers and firmware links.
-4. For another build, upload the HEX privately to Cloudflare R2, update its private firmware index and the site's public *metadata-only* catalogs. See [RELEASE-DEPLOYMENT.md](RELEASE-DEPLOYMENT.md).
+4. For another build, upload the HEX privately to Cloudflare R2, update its private firmware index and the site's public *metadata-only* catalogs. See [docs/RELEASE-DEPLOYMENT.md](docs/RELEASE-DEPLOYMENT.md).
 
 The static GitHub Pages site prompts for a PIN, but **server-side Cloudflare Worker** verifies the code and streams the encrypted-at-rest private R2 object. Do not commit raw HEX files into this public repository. Legacy GitHub Actions public firmware publishing is disabled.
 
@@ -59,7 +59,7 @@ The static GitHub Pages site prompts for a PIN, but **server-side Cloudflare Wor
 
 Visitors can support A.T.L.A.S. using the public **[monobank Jar](https://send.monobank.ua/jar/7jkKfdWREX)** named `A.T.L.A.S. — Підтримка розробки`. The link is configured in `data/support.json`; the earlier IBAN is intentionally hidden. Donations are **voluntary**, independent from newsletter registration and do not buy early-test access. The website never handles card details or verifies transfer settlement: visitors choose the amount and supported methods directly on monobank.
 
-Early Tester applications now use the public [Tally form](https://tally.so/r/ArKQJl) linked from the Support section. Submissions are stored in the owner's **private Google Sheets**; the public site never stores email addresses or subscriber data. Applicants give explicit consent, and the maintainer manually reviews requests, verifies email and optionally checks donations before granting private test access. Donation is not a requirement and does not imply approval. This integration does **not** automatically send newsletters or verify email ownership. See [PROVIDER-SETUP.md](PROVIDER-SETUP.md) for operational steps; the legacy private SMTP backend is optional.
+Early Tester applications now use the public [Tally form](https://tally.so/r/ArKQJl) linked from the Support section. Submissions are stored in the owner's **private Google Sheets**; the public site never stores email addresses or subscriber data. Applicants give explicit consent, and the maintainer manually reviews requests, verifies email and optionally checks donations before granting private test access. Donation is not a requirement and does not imply approval. This integration does **not** automatically send newsletters or verify email ownership. See [docs/PROVIDER-SETUP.md](docs/PROVIDER-SETUP.md) for operational steps; the legacy private SMTP backend is optional.
 
 ## Firmware releases and source compliance
 
@@ -72,13 +72,31 @@ The repository cover under `assets/github-social-preview.jpg` may be uploaded in
 ## Repository resources
 
 - [FAQ](faq.html) — modified flight modes and minimum NOAID sensor requirements.
-- [Post-hardware configurator audit](POST-HARDWARE-AUDIT-2026-11-09.md) — actual real-FC checks, MAVLink hardening and software regression coverage.
+- [Post-hardware configurator audit](docs/POST-HARDWARE-AUDIT-2026-11-09.md) — actual real-FC checks, MAVLink hardening and software regression coverage.
 - [Changelog](changelog.html) — Release 1.0 and future updates.
-- [Release process](RELEASE-DEPLOYMENT.md) — private R2 uploads, version catalog, keys and matching GPL source.
-- [No-server provider setup](PROVIDER-SETUP.md) — Brevo hosted forms, LiqPay, release notifications and private early testing.
-- [Legacy mail service setup](MAIL-SERVICE-SETUP.md) — optional self-hosted SMTP/SQLite alternative.
-- [Suggested commits](GITHUB-COMMITS.md) — ready-to-use commit titles and short descriptions.
+- [Release process](docs/RELEASE-DEPLOYMENT.md) — private R2 uploads, version catalog, keys and matching GPL source.
+- [No-server provider setup](docs/PROVIDER-SETUP.md) — Brevo hosted forms, LiqPay, release notifications and private early testing.
+- [Legacy mail service setup](docs/MAIL-SERVICE-SETUP.md) — optional self-hosted SMTP/SQLite alternative.
+- [Suggested commits](docs/GITHUB-COMMITS.md) — ready-to-use commit titles and short descriptions.
 - [History](docs/LEGACY-README.md) — archived development documentation.
+- SITL replays: [6.3 kg model](sitl-demo.html) and [7.2 kg model](sitl-demo-72.html) — recorded simulation data, not live telemetry.
+
+## Repository layout
+
+Public pages stay in the repository root so their URLs do not change; everything else is grouped by purpose.
+
+| Folder | Contents |
+|---|---|
+| `/` | `index.html`, `configurator.html`, `changelog.html`, `faq.html`, `privacy.html`, `sitl-demo.html`, `sitl-demo-72.html`, diagnostic pages |
+| `css/` | page stylesheets (`styles.css` is shared) |
+| `js/site/` | scripts of the public site: homepage, translations, changelog, FAQ, support, firmware access, SITL replay |
+| `js/configurator/` | web configurator: MAVLink, parameters, Quick Setup, calibration, DFU, OSD, O.R.D.E.R. |
+| `data/` | release catalog, changelog, parameter metadata, recorded SITL data (`data/sitl/`) |
+| `assets/` | icons, social preview, headline images |
+| `docs/` | deployment, audit and status documents |
+| `tools/` | regression checks (`node tools/check_*.cjs`), release tooling and the local MAVLink bridge |
+| `firmware-gateway/` | Cloudflare Worker that serves private firmware |
+| `Firmware/`, `deploy/` | board manifests and server examples |
 
 ## Acknowledgements and licensing
 

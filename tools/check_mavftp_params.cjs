@@ -1,5 +1,5 @@
 'use strict';
-const assert=require('node:assert/strict'),fs=require('node:fs'),ftp=require('../mavftp-param.js');
+const assert=require('node:assert/strict'),fs=require('node:fs'),ftp=require('../js/configurator/mavftp-param.js');
 const read=path=>fs.readFileSync(path,'utf8');
 const rawHeader=(seq,session,opcode,reqOpcode,offset,data)=>{
  const b=new Uint8Array(12+data.length),v=new DataView(b.buffer);
@@ -79,8 +79,8 @@ function samplePacked(withDefaults=true){
  });
  await assert.rejects(failureClient.download(),/unsupported/);
  assert.equal(ftpAttempts,2,'unsupported FTP compact format should try the stable full format once, without a request storm');
- const full=read('configurator.js'),html=read('configurator.html'),mav=read('mavlink.js');
- assert.match(html,/<script src="mavftp-param.js" defer><\/script>/,'fast reader must be loaded before main configurator');
+ const full=read('js/configurator/configurator.js'),html=read('configurator.html'),mav=read('js/configurator/mavlink.js');
+ assert.match(html,/<script src="js\/configurator\/mavftp-param.js" defer><\/script>/,'fast reader must be loaded before main configurator');
  assert.match(full,/if\(!startFastParamStream\(transfer\)\)startLegacyParamStream\(transfer\)/,'unsupported mode must keep the legacy path');
  assert.match(full,/startLegacyParamStream\(transfer\);\s*\}\);/,'failed FTP must fall back automatically');
  assert.match(full,/state\.params=new Map\(rows\.map/,'parameter cache must be replaced only after a fully valid packed download');
