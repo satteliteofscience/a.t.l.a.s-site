@@ -159,17 +159,17 @@ window.AtlasRelease20 = {
     {
       "ru": [
         "Описание параметров",
-        "VTX_RC_CH, VTX_RC_SOUND и AUTOLAND_OPTIONS отсутствовали в сгенерированной документации параметров, а описание AUTOLAND_OPTIONS противоречило коду.",
+        "VTX_RC_CH, VTX_RC_SOUND и AUTOLAND_OPTIONS отсутствовали в документации параметров, а описание AUTOLAND_OPTIONS противоречило коду.",
         "Все три параметра теперь в документации (в конфигураторе и Mission Planner). AUTOLAND_OPTIONS: 0 это курс по компасу при ARM без GPS, бит 0 это курс по GPS после взлёта."
       ],
       "uk": [
         "Опис параметрів",
-        "VTX_RC_CH, VTX_RC_SOUND і AUTOLAND_OPTIONS були відсутні у згенерованій документації параметрів, а опис AUTOLAND_OPTIONS суперечив коду.",
+        "VTX_RC_CH, VTX_RC_SOUND і AUTOLAND_OPTIONS були відсутні в документації параметрів, а опис AUTOLAND_OPTIONS суперечив коду.",
         "Усі три параметри тепер у документації (у конфігураторі й Mission Planner). AUTOLAND_OPTIONS: 0 це курс за компасом при ARM без GPS, біт 0 це курс за GPS після зльоту."
       ],
       "en": [
         "Parameter documentation",
-        "VTX_RC_CH, VTX_RC_SOUND and AUTOLAND_OPTIONS were missing from the generated parameter documentation, and the AUTOLAND_OPTIONS text contradicted the code.",
+        "VTX_RC_CH, VTX_RC_SOUND and AUTOLAND_OPTIONS were missing from the parameter documentation, and the AUTOLAND_OPTIONS text contradicted the code.",
         "All three parameters are now documented (configurator and Mission Planner). AUTOLAND_OPTIONS: 0 is the compass heading captured at arming without GPS, bit 0 is the GPS ground course after takeoff."
       ]
     },

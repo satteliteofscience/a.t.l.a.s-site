@@ -1081,8 +1081,8 @@
    "Units": "deg"
   },
   "RUD_RLL_ADD": {
-   "DisplayName": "FBWA manual rudder bank allowance",
-   "Description": "FBWA manual rudder limiter. Zero disables it. Adds this many degrees to the current roll limit, capped at 85 degrees and by stall prevention. Progressively reduces manual rudder into the bank using roll angle and roll rate. Opposite rudder and automatic coordination are retained. Requires conventional rudder-to-roll response.",
+   "DisplayName": "Legacy rudder bank allowance (inactive)",
+   "Description": "Retained for stored-parameter compatibility. No longer enables experimental FBWA control. Use RUD_LIMIT_DEG to explicitly enable the rudder mixer and limiter; its zero value fully bypasses them.",
    "Units": "deg",
    "Range": {
     "low": "0",
