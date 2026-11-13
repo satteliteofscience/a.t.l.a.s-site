@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "note": "TEMPLATE ONLY. `node tools/r2_publish_release.cjs prepare --version 2.0 ...` writes the real file with measured SHA-256, bytes and timestamp. Merge it into the CURRENT private R2 _internal/firmware-index.json. Do not deploy with placeholders.",
+  "builds": {
+    "matek-h743-v3-release-2-0": {
+      "channel": "release",
+      "object_key": "release/matek-h743-v3-release-2-0.hex",
+      "filename": "ATLAS-Matek-H743-V3-release-2.0.hex",
+      "board_id": "matek-h743-wing-v3",
+      "version": "2.0",
+      "sha256": "REPLACE_WITH_REAL_SHA256",
+      "bytes": 0,
+      "image_bytes": 0,
+      "timestamp": 0,
+      "label": "A.T.L.A.S. Release 2.0 · A.T.L.A.S-G.L.O.B.A.L · ArduPlane 4.7.2 · Matek H743-WING V3",
+      "published": false
+    },
+    "cube-orange-plus-release-2-0": {
+      "channel": "release",
+      "object_key": "release/cube-orange-plus-release-2-0.hex",
+      "filename": "ATLAS-Cube-Orange-Plus-release-2.0.hex",
+      "board_id": "cube-orange-plus",
+      "version": "2.0",
+      "sha256": "REPLACE_WITH_REAL_SHA256",
+      "bytes": 0,
+      "image_bytes": 0,
+      "timestamp": 0,
+      "label": "A.T.L.A.S. Release 2.0 · A.T.L.A.S-G.L.O.B.A.L · ArduPlane 4.7.2 · Cube Orange Plus",
+      "published": false
+    },
+    "uni-ic743-mini-release-2-0": {
+      "channel": "release",
+      "object_key": "release/uni-ic743-mini-release-2-0.hex",
+      "filename": "ATLAS-Uni-IC743-Mini-release-2.0.hex",
+      "board_id": "uni-ic743-mini",
+      "version": "2.0",
+      "sha256": "REPLACE_WITH_REAL_SHA256",
+      "bytes": 0,
+      "image_bytes": 0,
+      "timestamp": 0,
+      "label": "A.T.L.A.S. Release 2.0 · A.T.L.A.S-G.L.O.B.A.L · ArduPlane 4.7.2 · Uni-IC743 Mini",
+      "published": false
+    }
+  }
+}

@@ -25,6 +25,12 @@
   };
   // Fail closed: no public direct download fallback for release archives.
   // Local-file flashing remains a separate user-supplied operation.
+  // "2.0" > "1.2" > "1.0"; any number of dot-separated parts.
+  const compareVersions = (a, b) => {
+    const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
+    for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (y[i] || 0) - (x[i] || 0); if (d) return d; }
+    return 0;
+  };
   const downloadItems = (board) => Array.isArray(board.downloads)
     ? board.downloads.filter(item => window.AtlasFirmwareAccess?.isProtected(item)
       && typeof item.filename === 'string' && item.filename.trim()
@@ -80,22 +86,26 @@
           });
           details.append(short, copy);
         }
-        if (item.source_url && safeUrl(item.source_url)) {
+        const sourceUrl = item.source_url || state.data?.project?.sources?.[item.version];
+        if (sourceUrl && safeUrl(sourceUrl)) {
           const source = $('a', 'version-source-link', localText('source'));
-          source.href = safeUrl(item.source_url); source.rel = 'noopener noreferrer'; source.target = '_blank';
+          source.href = safeUrl(sourceUrl); source.rel = 'noopener noreferrer'; source.target = '_blank';
           details.append(source);
         }
         wrap.append(details);
         return wrap;
       };
       const chooser=$('fieldset','board-version-control');
-      const legend=$('legend','board-version-legend',localText('choose'));
-      const group=$('div','board-version-segmented');
+      // Versions come from the catalogue: every published build plus the announced latest release (shown as "soon" until it is published).
+      const announced=String(state.data?.project?.latest_release||'');
+      const names=[...new Set([...downloadable.map(item=>String(item.version||'')),announced])].filter(Boolean).sort(compareVersions);
+      const latestReady=names.find(name=>downloadable.some(item=>String(item.version)===name));
+      const legend=$('legend','board-version-legend',`${localText('choose')} · ${names.length}`);
+      const group=$('div','board-version-segmented board-version-list');
       group.setAttribute('role','group');
       group.setAttribute('aria-label',localText('choose')+' — '+(board.name||board.id));
+      if(names.length>4)group.dataset.scroll='true';
       const view=$('div','board-version-result');
-      const names=[...new Set([...downloadable.map(item=>String(item.version||'')),'1.2','1.0'])].filter(Boolean)
-        .sort((a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);return (y[0]-x[0])||(y[1]-x[1]);});
       const buttons=new Map();
       const releaseDescription=name=>{
         const lang=window.AtlasI18n?.lang||'ru';
@@ -117,26 +127,45 @@
           const active=ver===name;
           button.setAttribute('aria-pressed',String(active));
           button.classList.toggle('is-selected',active);
+          // Keep the chosen row inside the scrollable list without scrolling the page.
+          if(active&&group.scrollHeight>group.clientHeight){
+            if(button.offsetTop<group.scrollTop)group.scrollTop=button.offsetTop-6;
+            else if(button.offsetTop+button.offsetHeight>group.scrollTop+group.clientHeight)group.scrollTop=button.offsetTop+button.offsetHeight-group.clientHeight+6;
+          }
         }
         view.replaceChildren(published?buildEntry(item):$('div','download-placeholder',localText('pending')));
       };
       for(const name of names){
-        const ready=downloadable.some(item=>String(item.version)===name);
-        const button=$('button','board-version-option');
+        const entry=downloadable.find(item=>String(item.version)===name);
+        const ready=!!entry;
+        const button=$('button','board-version-option'+(ready?'':' is-pending'));
         button.type='button';
         button.dataset.version=name;
         button.setAttribute('aria-pressed','false');
         button.setAttribute('aria-label',localText('choose')+' '+name);
         button.append($('span','board-version-number',name));
-        button.append($('small','board-version-kind',!ready?localText('soon'):name==='1.2'?localText('current'):localText('archive')));
+        const info=$('span','board-version-info');
+        const releaseName=state.data?.project?.release_names?.[name];
+        if(releaseName)info.append($('b','board-version-name',releaseName));
+        info.append($('small','board-version-kind',!ready?localText('soon'):name===latestReady?localText('current'):localText('archive')));
+        button.append(info);
+        const stamp=Number(entry?.timestamp);
+        const when=stamp>0?new Date(stamp*1000):null;
+        button.append($('span','board-version-date',when&&Number.isFinite(when.getTime())?when.toLocaleDateString(window.AtlasI18n?.lang||'ru'):''));
         button.addEventListener('click',()=>renderSelection(name));
+        button.addEventListener('keydown',event=>{
+          if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;
+          const order=names,at=order.indexOf(name),next=order[at+(event.key==='ArrowDown'?1:-1)];
+          if(!next)return;
+          event.preventDefault();renderSelection(next);buttons.get(next).focus({preventScroll:true});
+        });
         buttons.set(name,button);
         group.append(button);
       }
       chooser.append(legend,group);
       actions.append(chooser,view);
       const preferred=state.selectedVersions[board.id];
-      renderSelection(names.includes(preferred)?preferred:String(downloadable[0].version||'1.0'));
+      renderSelection(names.includes(preferred)?preferred:String(latestReady||downloadable[0].version||''));
     } else {
       actions.append($('div', 'download-placeholder', board.status === 'unverified'
         ? tr('Нет подтверждённых сборок для этой платформы')
@@ -183,8 +212,9 @@
   }
 
   function bindPublicCatalog(data) {
-    const available = (data.boards || []).filter(b => b.status === 'available' && downloadItems(b).length > 0);
-    el('releaseIndicator').textContent = 'RELEASE 1.2';
+    const latest = String(data.project?.latest_release || '2.0');
+    const name = data.project?.release_names?.[latest];
+    el('releaseIndicator').textContent = `RELEASE ${latest}` + (name ? ` · ${name}` : '');
   }
 
   async function loadData() {

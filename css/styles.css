@@ -201,3 +201,16 @@ body{font-family:'IBM Plex Sans',Arial,sans-serif;font-size:16px;letter-spacing:
 .board-version-result .download-placeholder{min-height:45px;display:grid;place-items:center}
 .board-card-latest{border-color:#5f7650}
 @media(max-width:560px){.board-version-segmented{gap:5px;padding:5px}.board-version-option{min-height:58px;padding:9px 7px}.board-version-legend{font-size:10px}}
+
+/* Firmware version picker for any number of releases: a scrollable list, newest first (replaces the two-column segmented grid). */
+.board-version-segmented.board-version-list{display:flex;flex-direction:column;grid-template-columns:none;gap:5px;padding:6px;max-height:238px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#7d9a6b #10201f;scroll-behavior:smooth}
+.board-version-list[data-scroll="true"]{box-shadow:inset 0 2px 9px #0006,inset 0 -16px 14px -14px #000a,0 5px 17px #0002}
+.board-version-list::-webkit-scrollbar{width:9px}.board-version-list::-webkit-scrollbar-track{background:#10201f;border-radius:6px}.board-version-list::-webkit-scrollbar-thumb{background:#6f8d62;border-radius:6px;border:2px solid #10201f}
+.board-version-list .board-version-option{flex:0 0 auto;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;justify-items:start;gap:11px;min-height:54px;padding:9px 13px;text-align:left}
+.board-version-list .board-version-number{font:800 20px/1 'IBM Plex Mono',monospace;min-width:2.6ch}
+.board-version-info{display:flex;flex-direction:column;gap:4px;min-width:0}
+.board-version-name{font:700 11px/1.25 'IBM Plex Mono',monospace;letter-spacing:.04em;overflow-wrap:anywhere}
+.board-version-date{font:500 10px/1.2 'IBM Plex Mono',monospace;letter-spacing:.04em;opacity:.8;white-space:nowrap}
+.board-version-option.is-pending{border-style:dashed;border-color:#5b6f52}
+.board-version-option.is-pending:not(.is-selected){color:#97ab94}
+@media(max-width:560px){.board-version-list .board-version-option{min-height:50px;padding:8px 10px;gap:8px}.board-version-list .board-version-number{font-size:18px}.board-version-date{display:none}}

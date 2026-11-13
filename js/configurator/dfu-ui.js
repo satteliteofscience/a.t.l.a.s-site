@@ -8,6 +8,7 @@
     'cube-orange-plus':'Firmware/Cube Orange Plus/manifest.json',
     'uni-ic743-mini':'Firmware/Uni-IC743 Mini/manifest.json'
   });
+  const ANNOUNCED_RELEASE='2.0'; // newest announced release; listed as "coming soon" until a build for the selected board is published
   const supportedBoard=id=>Object.prototype.hasOwnProperty.call(MANIFESTS,id);
   const T={
     ru:{title:'STM32 DFU · ПОЛНАЯ ЗАПИСЬ HEX',mode:'DFU-подключение (не MAVLink)',howdfu:'Удерживай BOOT на USB-переходнике Matek и подключи USB к ПК. Затем нажми «Подключить DFU». Закрой Mission Planner и другие программы, занявшие USB.',detect:'Подключить DFU',disconnect:'Отключить DFU',getLatest:'Загрузить последний .hex',chooseLocal:'Выбрать локальный .hex',notloaded:'Файл не загружен',waiting:'DFU не подключён',ready:'Устройство DFU обнаружено',unsupported:'WebUSB недоступен. Требуется Chrome / Edge, HTTPS или localhost.',manifestEmpty:'В каталоге нет опубликованного HEX. Выбери локальный файл или добавь его в приватную папку Firmware.',unsafeBoard:'Выбери Matek H743-WING V3 в карточках выше.',flash:'СТЕРЕТЬ И ЗАПИСАТЬ HEX',erasing:'Выполняется...',backup:'Я сохранил параметры и знаю, что стирание удалит загрузчик и все данные Flash.',model:'Я проверил маркировку платы: это Matek H743-WING V3 (STM32H743). USB DFU не подтверждает модель платы.',confirm:'Для подтверждения введи ERASE',warning:'ВНИМАНИЕ: полный Mass Erase 2 MiB (до 0xFF), затем запись и побайтовая проверка. При обрыве питания понадобится восстановление через DFU/STM32CubeProgrammer. Перед началом проверь резервную копию параметров и способ восстановления загрузчика.',nohardware:'Никаких операций ERASE/WRITE без нажатия кнопки не выполняется.',meta:'Источник · SHA-256 · диапазон памяти',complete:'Готово: запись проверена побайтово. Выйди из DFU вручную и проверь работу платы.',postflash:'После успешной записи дождись полной загрузки контроллера. Если COM-порт не появился, отключи и подключи USB ещё два раза. По наблюдениям на Matek H743-WING V3 порт может определиться только при третьем подключении.',chipUnknown:'Режим DFU найден, но карту 2 MiB / 16×128 KiB или wTransferSize определить не удалось. Прошивка заблокирована.',progress:'ПРОГРЕСС',stError:'ОШИБКА',fileIssue:'Ошибка HEX',private:'Удалённая прошивка загружается из приватного R2 после проверки PIN.',slow:'Запись может занять некоторое время. Не отключай USB и питание.'},
@@ -169,10 +170,11 @@
       option.textContent=`${index===0?'LATEST · ':''}${entry.label||entry.version||entry.filename} ${stamp}`;
       select.append(option);
     });
-    if(!manifest.files.some(item=>String(item.version)==='1.2')){
+    // The announced release (2.0 · A.T.L.A.S-G.L.O.B.A.L) is listed as "coming soon" until its build is published for this board.
+    if(!manifest.files.some(item=>String(item.version)===ANNOUNCED_RELEASE)){
       const pending=document.createElement('option');pending.value='pending';pending.disabled=true;
       const lang=window.AtlasLanguage?.()||'ru';
-      pending.textContent='1.2 · '+({ru:'готовится',uk:'готується',en:'coming soon'}[lang]||'coming soon');
+      pending.textContent=ANNOUNCED_RELEASE+' · A.T.L.A.S-G.L.O.B.A.L · '+({ru:'готовится',uk:'готується',en:'coming soon'}[lang]||'coming soon');
       select.prepend(pending);
     }
     select.value='0';select.disabled=false;$('dfuLoadReleaseBtn').disabled=false;

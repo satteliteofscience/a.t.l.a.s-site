@@ -4,7 +4,14 @@
     "version": "4.7.2",
     "repository_url": "https://github.com/satteliteofscience/a.t.l.a.s-site",
     "issues_url": "https://github.com/satteliteofscience/a.t.l.a.s-site/issues",
-    "release_channel": "release"
+    "release_channel": "release",
+    "latest_release": "2.0",
+    "release_names": {
+      "2.0": "A.T.L.A.S-G.L.O.B.A.L"
+    },
+    "sources": {
+      "2.0": "Firmware/Sources/ATLAS-source-v2.0.tar.gz"
+    }
   },
   "boards": [
     {
@@ -44,6 +51,11 @@
           "ru": "A.T.L.A.S. Release 1.2 для Cube Orange Plus (STM32H757). Обновлённый EKF3 NOAID, режимы полёта без GPS и протокол П.Р.И.К.А.З. Предназначена именно для Cube Orange Plus. Перед записью сохрани параметры.",
           "uk": "A.T.L.A.S. Release 1.2 для Cube Orange Plus (STM32H757). Оновлений EKF3 NOAID, режими польоту без GPS і протокол O.R.D.E.R. Призначена саме для Cube Orange Plus. Перед записом збережи параметри.",
           "en": "A.T.L.A.S. Release 1.2 for Cube Orange Plus (STM32H757). Updated EKF3 NOAID, GPS-denied flight modes, and the O.R.D.E.R. protocol. Built specifically for Cube Orange Plus. Back up parameters before flashing."
+        },
+        "2.0": {
+          "ru": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). EKF3 NoAID G.L.O.B.A.L.: позиция по счислению, автоматический переход на GPS и обратно, метка GPS на карте без влияния на навигацию. Профиль активации есть в конфигураторе. Сборка только для Cube Orange Plus; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). EKF3 NoAID G.L.O.B.A.L.: позиція за лічбою, автоматичний перехід на GPS і назад, мітка GPS на мапі без впливу на навігацію. Профіль активації є в конфігураторі. Збірка лише для Cube Orange Plus; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L for Cube Orange Plus (STM32H757). EKF3 NoAID G.L.O.B.A.L.: dead-reckoned position, automatic switch to the GPS and back, a GPS marker on the map that does not affect navigation. The activation profile is in the configurator. Built only for Cube Orange Plus; back up parameters before flashing."
         }
       }
     },
@@ -84,6 +96,11 @@
           "ru": "A.T.L.A.S. Release 1.2 для Uni-IC743 Mini (STM32H743). Обновлённый EKF3 NOAID, работа без GPS и протокол П.Р.И.К.А.З. Сборка предназначена исключительно для Uni_IC743Mini; перед записью сохрани параметры.",
           "uk": "A.T.L.A.S. Release 1.2 для Uni-IC743 Mini (STM32H743). Оновлений EKF3 NOAID, робота без GPS і протокол O.R.D.E.R. Збірка призначена виключно для Uni_IC743Mini; перед записом збережи параметри.",
           "en": "A.T.L.A.S. Release 1.2 for Uni-IC743 Mini (STM32H743). Updated EKF3 NOAID, GPS-denied operation, and O.R.D.E.R. Built exclusively for Uni_IC743Mini; back up parameters before flashing."
+        },
+        "2.0": {
+          "ru": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). EKF3 NoAID G.L.O.B.A.L.: позиция по счислению, автоматический переход на GPS и обратно, метка GPS на карте без влияния на навигацию. Профиль активации есть в конфигураторе. Сборка только для Uni-IC743 Mini; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). EKF3 NoAID G.L.O.B.A.L.: позиція за лічбою, автоматичний перехід на GPS і назад, мітка GPS на мапі без впливу на навігацію. Профіль активації є в конфігураторі. Збірка лише для Uni-IC743 Mini; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L for Uni-IC743 Mini (STM32H743). EKF3 NoAID G.L.O.B.A.L.: dead-reckoned position, automatic switch to the GPS and back, a GPS marker on the map that does not affect navigation. The activation profile is in the configurator. Built only for Uni-IC743 Mini; back up parameters before flashing."
         }
       }
     },
@@ -123,6 +140,11 @@
           "ru": "A.T.L.A.S. Release 1.2 для Matek H743-WING V3. Обновлённый EKF3 NOAID, режимы без GPS и протокол П.Р.И.К.А.З. Версия на базе ArduPlane 4.7.2, предназначенная для Matek H743-WING V3.",
           "uk": "A.T.L.A.S. Release 1.2 для Matek H743-WING V3. Оновлений EKF3 NOAID, режими без GPS і протокол O.R.D.E.R. Версія на базі ArduPlane 4.7.2, призначена для Matek H743-WING V3.",
           "en": "A.T.L.A.S. Release 1.2 for Matek H743-WING V3. Updated EKF3 NOAID, GPS-denied modes and the O.R.D.E.R. protocol. Based on ArduPlane 4.7.2 and built for Matek H743-WING V3."
+        },
+        "2.0": {
+          "ru": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). EKF3 NoAID G.L.O.B.A.L.: позиция по счислению, автоматический переход на GPS и обратно, метка GPS на карте без влияния на навигацию. Профиль активации есть в конфигураторе. Сборка только для Matek H743-WING V3; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). EKF3 NoAID G.L.O.B.A.L.: позиція за лічбою, автоматичний перехід на GPS і назад, мітка GPS на мапі без впливу на навігацію. Профіль активації є в конфігураторі. Збірка лише для Matek H743-WING V3; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L for Matek H743-WING V3 (STM32H743). EKF3 NoAID G.L.O.B.A.L.: dead-reckoned position, automatic switch to the GPS and back, a GPS marker on the map that does not affect navigation. The activation profile is in the configurator. Built only for Matek H743-WING V3; back up parameters before flashing."
         }
       }
     }

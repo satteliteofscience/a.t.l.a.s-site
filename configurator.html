@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1209">
-  <meta name="description" content="A.T.L.A.S. — конфигуратор 1.2: USB/MAVLink, П.Р.И.К.А.З, параметры, калибровки и OSD.">
+  <meta name="description" content="A.T.L.A.S. — конфигуратор 2.0: USB/MAVLink, П.Р.И.К.А.З, профиль EKF3 G.L.O.B.A.L., параметры, калибровки и OSD.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Russo+One&amp;display=swap">
-  <link rel="stylesheet" href="css/styles.css"><link rel="stylesheet" href="css/configurator.css?v=release-1.2-dfu-contrast"><link rel="stylesheet" href="css/capri.css?v=release-1-2-ekf"><link rel="stylesheet" href="css/firmware-access.css"><link rel="stylesheet" href="css/advanced.css"><link rel="stylesheet" href="css/osd-editor.css">
+  <link rel="stylesheet" href="css/styles.css"><link rel="stylesheet" href="css/configurator.css?v=release-2.0-global"><link rel="stylesheet" href="css/capri.css?v=release-2-0-global"><link rel="stylesheet" href="css/firmware-access.css"><link rel="stylesheet" href="css/advanced.css"><link rel="stylesheet" href="css/osd-editor.css">
   <title>A.T.L.A.S. — Конфигуратор полётного контроллера</title>
     <link rel="canonical" href="https://satteliteofscience.github.io/a.t.l.a.s-site/configurator.html">
   <meta property="og:type" content="website">
@@ -16,23 +16,23 @@
   <meta property="og:locale" content="ru_RU">
   <meta property="og:url" content="https://satteliteofscience.github.io/a.t.l.a.s-site/configurator.html">
   <meta property="og:title" content="A.T.L.A.S. — Конфигуратор полётных контроллеров">
-  <meta property="og:description" content="A.T.L.A.S. — конфигуратор 1.2: USB/MAVLink, П.Р.И.К.А.З, параметры, калибровки и OSD.">
+  <meta property="og:description" content="A.T.L.A.S. — конфигуратор 2.0: USB/MAVLink, П.Р.И.К.А.З, профиль EKF3 G.L.O.B.A.L., параметры, калибровки и OSD.">
   <meta property="og:image" content="https://satteliteofscience.github.io/a.t.l.a.s-site/assets/github-social-preview.jpg">
   <meta property="og:image:secure_url" content="https://satteliteofscience.github.io/a.t.l.a.s-site/assets/github-social-preview.jpg">
   <meta property="og:image:type" content="image/jpeg">
-  <meta property="og:image:alt" content="A.T.L.A.S. Control Center — ArduPlane 4.7.2 — Configurator 1.2">
+  <meta property="og:image:alt" content="A.T.L.A.S. Control Center — ArduPlane 4.7.2 — Configurator 2.0">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="A.T.L.A.S. — Конфигуратор полётных контроллеров">
-  <meta name="twitter:description" content="A.T.L.A.S. — конфигуратор 1.2: USB/MAVLink, П.Р.И.К.А.З, параметры, калибровки и OSD.">
+  <meta name="twitter:description" content="A.T.L.A.S. — конфигуратор 2.0: USB/MAVLink, П.Р.И.К.А.З, профиль EKF3 G.L.O.B.A.L., параметры, калибровки и OSD.">
   <meta name="twitter:image" content="https://satteliteofscience.github.io/a.t.l.a.s-site/assets/github-social-preview.jpg">
   <meta name="twitter:image:alt" content="A.T.L.A.S. Control Center — ArduPlane EKF3 NOAID">
   <meta name="atlas-page" content="configurator.html">
-  <script src="js/site/page-meta.js?v=release-1.2-cards-2" defer></script>
+  <script src="js/site/page-meta.js?v=release-2.0" defer></script>
 </head>
 <body class="console-body">
   <div class="cc-backdrop" aria-hidden="true"></div>
   <header class="cc-topbar">
-    <a class="cc-brand" href="index.html" title="A.T.L.A.S. Home"><img src="assets/mark.svg" alt=""><span><strong>A.T.L.A.S.</strong><small>CONTROL CENTER <b>RELEASE 1.2</b></small></span></a>
+    <a class="cc-brand" href="index.html" title="A.T.L.A.S. Home"><img src="assets/mark.svg" alt=""><span><strong>A.T.L.A.S.</strong><small>CONTROL CENTER <b>RELEASE 2.0</b></small></span></a>
     <nav class="cc-toplinks" aria-label="Навигация"><a href="index.html" data-t="home">← На сайт</a><span class="cc-top-divider">/</span><span data-t="workspace">Конфигуратор</span></nav>
     <div class="cc-righthead"><span class="cc-connection-pill" id="connectionPill"><i></i><span id="connectionLabel" data-t="offline">НЕ ПОДКЛЮЧЕН</span></span>
       <div class="cc-language" aria-label="Language"><button data-language="uk">UA</button><button data-language="en">ENG</button><button data-language="ru">RU</button></div>
@@ -69,7 +69,7 @@
         <a class="cc-nav cc-link-nav" href="changelog.html"><span class="cc-icon">≋</span><span data-t="changelog">Список изменений</span><i>↗</i></a>
         <a class="cc-nav cc-link-nav" href="./index.html#support" aria-label="Поддержать проект — перейти к разделу поддержки"><span class="cc-icon">♡</span><span data-t="atlasSupport">Поддержать проект</span><i>↗</i></a>
       </div>
-      <div class="cc-sidebar-foot"><div class="cc-led"></div><span data-t="experimental">CONFIGURATOR 1.2</span><small>Oleksandr × AI CODEX</small></div>
+      <div class="cc-sidebar-foot"><div class="cc-led"></div><span data-t="experimental">CONFIGURATOR 2.0</span><small>Oleksandr × AI CODEX</small></div>
     </aside>
 
     <div class="cc-main">
@@ -421,7 +421,7 @@
         <div class="cc-release-section"><div class="cc-card-title"><span>▤</span><strong data-t="releases">Сборки A.T.L.A.S.</strong><small>data/releases.json</small></div><div id="releaseList" class="cc-release-list"></div></div>
       </section>
 
-      <footer class="cc-footer"><span>A.T.L.A.S. RELEASE 1.2 · DEVELOPED BY OLEKSANDR & AI CODEX</span><span data-t="footer">НЕ ОФИЦИАЛЬНЫЙ ПРОДУКТ ARDUPILOT</span></footer>
+      <footer class="cc-footer"><span>A.T.L.A.S. RELEASE 2.0 · A.T.L.A.S-G.L.O.B.A.L · DEVELOPED BY OLEKSANDR & AI CODEX</span><span data-t="footer">НЕ ОФИЦИАЛЬНЫЙ ПРОДУКТ ARDUPILOT</span></footer>
     </div>
   </main>
   <dialog id="editDialog" class="cc-modal"><form method="dialog" id="editForm"><div class="cc-modal-head"><span>PARAMETER EDITOR</span><button type="button" id="closeEdit" aria-label="Close">✕</button></div><h2 id="editName">PARAM</h2><p id="editOriginal">—</p><label for="editValue" data-t="newvalue">Новое значение</label><input id="editValue" type="number" step="any" required><p id="editWarning" class="cc-edit-warning" data-t="editwarning">Изменение конфигурации влияет на поведение автопилота. Перед записью снимите пропеллер и проверьте значение.</p><div class="cc-modal-actions"><button type="button" class="cc-button ghost" id="cancelEdit" data-t="cancel">Отмена</button><button class="cc-button primary" type="submit" data-t="save">Подтвердить запись</button></div></form></dialog>
@@ -461,5 +461,6 @@
       <div class="cc-modal-actions"><button type="button" class="cc-button ghost" id="servoEditorCancel">Отмена</button><button class="cc-button primary" id="servoEditorSave" type="submit">Записать изменения</button></div>
     </form>
   </dialog>
-  <script src="js/configurator/mavlink.js?v=release-1-2-ekf" defer></script><script src="js/configurator/mavlink-status-core.js" defer></script><script src="js/configurator/mavftp-param.js" defer></script><script src="js/configurator/ahrs-filter-core.js" defer></script><script src="js/configurator/param-tree.js?v=release-1-2-ekf" defer></script><script src="js/site/firmware-access.js" defer></script><script src="js/site/firmware-catalog.js?v=release-1.2" defer></script><script src="js/configurator/capri-core.js?v=release-1-2-ekf" defer></script><script src="js/configurator/configurator.js?v=release-1-2-ekf" defer></script><script src="js/configurator/capri-ui.js?v=release-1-2-ekf" defer></script><script src="js/configurator/servo-config-core.js" defer></script><script src="js/configurator/battery-cal-core.js" defer></script><script src="js/configurator/calibration.js?v=compass-recovery-3" defer></script><script src="js/configurator/advanced.js" defer></script><script src="js/configurator/config-ui-i18n.js" defer></script><script src="js/configurator/osd-editor.js" defer></script><script src="js/configurator/dfu-flasher.js" defer></script><script src="js/configurator/dfu-ui.js?v=release-1.2-card-ui" defer></script><script src="js/configurator/quick-setup-core.js?v=compass-recovery-3" defer></script><script src="js/configurator/tempcal-core.js" defer></script><script src="js/configurator/tempcal-ui.js" defer></script><script src="js/configurator/quick-setup.js?v=compass-recovery-3" defer></script>
+  <script src="js/configurator/mavlink.js?v=release-2-0-global" defer></script><script src="js/configurator/mavlink-status-core.js" defer></script><script src="js/configurator/mavftp-param.js" defer></script><script src="js/configurator/ahrs-filter-core.js" defer></script><script src="js/configurator/param-tree.js?v=release-2-0-global" defer></script><script src="js/site/firmware-access.js" defer></script><script src="js/site/firmware-catalog.js?v=release-2.0" defer></script><script src="js/configurator/global-profile-core.js?v=release-2-0-global" defer></script>
+<script src="js/configurator/capri-core.js?v=release-2-0-global" defer></script><script src="js/configurator/configurator.js?v=release-2-0-global" defer></script><script src="js/configurator/capri-ui.js?v=release-2-0-global" defer></script><script src="js/configurator/global-profile-ui.js?v=release-2-0-global" defer></script><script src="js/configurator/servo-config-core.js" defer></script><script src="js/configurator/battery-cal-core.js" defer></script><script src="js/configurator/calibration.js?v=compass-recovery-3" defer></script><script src="js/configurator/advanced.js" defer></script><script src="js/configurator/config-ui-i18n.js" defer></script><script src="js/configurator/osd-editor.js" defer></script><script src="js/configurator/dfu-flasher.js" defer></script><script src="js/configurator/dfu-ui.js?v=release-2.0-card-ui" defer></script><script src="js/configurator/quick-setup-core.js?v=compass-recovery-3" defer></script><script src="js/configurator/tempcal-core.js" defer></script><script src="js/configurator/tempcal-ui.js" defer></script><script src="js/configurator/quick-setup.js?v=compass-recovery-3" defer></script>
 </body></html>

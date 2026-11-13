@@ -43,7 +43,7 @@ const pm=(...pairs)=>new Map(pairs.map(([name,value])=>[name,{value,type:9}]));
 })();
 (function uiWiring(){
  const html=read('configurator.html'),cfg=read('js/configurator/configurator.js'),ui=read('js/configurator/tempcal-ui.js'),wizard=read('js/configurator/quick-setup.js'),workflow=read('.github/workflows/website-support-check.yml');
- assert.match(html,/CONTROL CENTER <b>RELEASE 1\.2<\/b>/,'configurator header must display the current Release 1.2');
+ assert.match(html,/CONTROL CENTER <b>RELEASE 2\.0<\/b>/,'configurator header must display the current Release 2.0');
  assert.doesNotMatch(html,/<b>0\.7\.1/,'deprecated version not allowed');
  assert.match(html,/data-tab="temperature"/,'dedicated temperature tab missing from sidebar');
  assert.match(html,/data-panel="temperature"/,'temperature workspace panel missing');

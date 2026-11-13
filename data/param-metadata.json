@@ -1198,6 +1198,47 @@
    "Increment": "1",
    "User": "Advanced",
    "Default": "0"
+  },
+  "EK3_NOAID_POS": {
+   "DisplayName": "Navigation position from EKF3 dead reckoning",
+   "Description": "When 1, AHRS_GPS_USE is not 0, EKF3 is the active AHRS and runs without position aiding (NOAID), the horizontal position of the AHRS (used by L1 navigation, the mission, loiter, distance to home, MAVLink GLOBAL_POSITION_INT and the POS log message) is the EKF3 dead-reckoning position, never a GPS or DCM position. While the DCM is the active AHRS (fallback, or AHRS_EKF_TYPE=0) the DCM position is used. Altitude is not changed. When 0 the behaviour is unchanged.",
+   "Values": {
+    "0": "Disabled",
+    "1": "EKF3 dead reckoning"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "EK3_NOAID_GPS": {
+   "DisplayName": "Show GPS position without using it",
+   "Description": "When 1 and AHRS_GPS_USE is not 0, the secondary position (MAVLink AHRS2, the pill on the map) shows the position of GPS1, or of the primary GPS when GPS1 has no 3D fix. It is for display only and never used for navigation. It is shown with EKF3 and with the DCM as the active AHRS, also when no secondary AHRS exists (AHRS_EKF_TYPE=0). AHRS_GPS_USE keeps working for the DCM. When 0 the behaviour is unchanged.",
+   "Values": {
+    "0": "Disabled",
+    "1": "Show GPS position"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "EK3_NOAID_AUTO": {
+   "DisplayName": "Automatic NoAID to GPS transition",
+   "Description": "When 1, AHRS_GPS_USE is not 0 and the vehicle is armed, EKF3 switches by itself from the NoAID source set (EK3_SRC1_*) to the GPS source set (EK3_SRC2_*, which must use GPS for the horizontal position and the same yaw source as EK3_SRC1_*) when the primary GPS has had a good 3D fix for 5 seconds and the NoAID launch has been confirmed (or the vehicle has been flying for 5 seconds without it), so that the position follows the satellites. When the GPS is lost for 3 seconds, or EKF3 stops using it, it switches back to EK3_SRC1_* and EKF3 returns to the NoAID branch. The AHRS stays on EKF3 during the switch. When 0 the behaviour is unchanged.",
+   "Values": {
+    "0": "Disabled",
+    "1": "Enabled"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "EK3_NOAID_M_NSE": {
+   "DisplayName": "Non-GPS operation position uncertainty (m)",
+   "Description": "This sets the amount of position variation that the EKF allows for when operating without external measurements (eg GPS or optical flow). Increasing this parameter makes the EKF attitude estimate less sensitive to vehicle manoeuvres but more sensitive to IMU errors.",
+   "Range": {
+    "low": "0.5",
+    "high": "50.0"
+   },
+   "User": "Advanced",
+   "Units": "m",
+   "Default": "10.0"
   }
  }
 }

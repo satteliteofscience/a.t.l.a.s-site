@@ -31,3 +31,6 @@
 
 .ch-sitl-demos{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}.ch-sitl-demos .ch-sitl-demo{margin-top:0}
 .ch-sitl-demo{display:inline-flex;align-items:center;min-height:44px;max-width:100%;box-sizing:border-box;margin-top:20px;padding:12px 18px;border:1px solid #83eac3;color:#a1f2cf;background:#12271f;text-decoration:none;font:600 14px "IBM Plex Mono",monospace;transition:background .15s}.ch-sitl-demo:hover{background:#224636}.ch-sitl-demo:focus-visible{outline:2px solid #e3ce70;outline-offset:4px}
+
+/* Update 2.0 banner: same shape as the O.R.D.E.R. banner, blue accent. */
+.ch-global-banner{border-left-color:#78b3eb;background:repeating-linear-gradient(0deg,transparent,transparent 4px,#ffffff03 5px),linear-gradient(110deg,#0f2233,#142a2a 60%,#2c2f1a)}.ch-global-banner .ch-order-code{color:#9cc8f0}.ch-global-banner h2{color:#e6efb4;text-shadow:2px 2px #365a78}
