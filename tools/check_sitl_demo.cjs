@@ -59,6 +59,7 @@ const kindsS=js.slice(js.indexOf('const kindsStress='),js.indexOf('const kinds72
 const textsS=js.slice(js.indexOf('special.stress='),js.indexOf('const extraStress='));
 assert.ok(Array.isArray(as.table)&&as.table.length>=8,'stress metrics table missing');
 for(const key of ['title','scope','sampling','limits','metricsTitle','controls','background','faultsLabel','none','windLabel','ms'])assert.equal(count(textsS,new RegExp('\\b'+key+":'",'g')),3,'stress page text must exist in ru, uk and en: '+key);
+assert.equal(count(textsS,/\breport:\[/g),3,'stress page extended report must exist in ru, uk and en');assert.match(read('sitl-demo-stress.html'),/id="report"/);
 assert.match(read('sitl-demo-stress.html'),/id="ekfLabel"/);assert.match(read('sitl-demo-stress.html'),/id="faults"/);
 for(const d of as.datasets){
  assert.equal(count(extraS,new RegExp('\\b'+d.id+":'",'g')),3,'stress dataset label must exist in ru, uk and en: '+d.id);
