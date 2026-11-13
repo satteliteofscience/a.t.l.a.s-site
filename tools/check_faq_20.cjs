@@ -50,6 +50,19 @@ assert.ok(sitl.includes(f1(m.ekf3.tilt_rms)+'° RMS')&&sitl.includes(f1(m.ekf3.t
 assert.ok(sitl.includes(f0(m.ekf3.pos_med_nogps)+' м')&&sitl.includes(f0(m.dcm.pos_med_nogps))&&sitl.includes(f1(m.ekf3.pos_max_nogps/1000)+' км')&&sitl.includes(f1(m.dcm.pos_max_nogps/1000)+' км'),'position numbers of the SITL answer');
 assert.ok(drift.includes(f0(m.ekf3.pos_med_nogps)+' м')&&drift.includes(f1(m.ekf3.pos_max_nogps/1000)+' км')&&drift.includes(f0(m.dcm.pos_med_nogps)+' м'));
 assert.ok(auto.includes(f1(med(d.snap.ekf3))+' с'),'the switch-over time');
+// the "DCM wins right after a GPS loss" answer quotes the recording honestly: both GPS losses, same formula as the page
+const row=(F,t)=>F.rows[Math.min(F.rows.length-1,Math.round(t*d.hz))];
+const growth=(F,a,b)=>{const p=row(F,a),q=row(F,b);return Math.hypot((q[10]-q[1])-(p[10]-p[1]),(q[11]-q[2])-(p[11]-p[2]));};
+const losses=d.gps_on.map(x=>x[1]).filter(t=>t<d.end-160);
+assert.ok(losses.length>=2,'two GPS losses are needed for the wind answer');
+const wind=items.find(i=>i.id==='global-wind').ru[1],first=losses[0],last=losses.at(-1);
+for(const [t,label] of [[first,'first'],[last,'second']])for(const [F,who] of [[d.flights.ekf3,'EKF3'],[d.flights.dcm,'DCM']])assert.ok(wind.includes(f0(growth(F,t,t+150))+' м'),`wind answer: ${who} growth after the ${label} GPS loss`);
+const tiltRms=F=>{let s=0,n=0;for(let t=1500;t<1651;t+=0.5){const v=row(F,t)[18];s+=v*v;n++;}return Math.sqrt(s/n);};
+assert.ok(wind.includes(f1(tiltRms(d.flights.ekf3))+'° против '+f1(tiltRms(d.flights.dcm))+'°'),'storm horizon numbers of the wind answer');
+// the SITL page says that the two estimators treat the wind differently and quotes the same losses
+const demo=read('js/site/global-demo.js');
+for(const needle of ['исходит из нулевого ветра','переносит последнюю оценку ветра','assumes zero wind','carries over the last wind estimate','виходить із нульового вітру','переносить останню оцінку вітру'])assert.ok(demo.includes(needle),'SITL page wording: '+needle);
+assert.ok(!demo.includes('обе оценки считают позицию по счислению и уходят на величину ветра'),'the old claim that both estimators drift by the wind is gone');
 const home=read('index.html');
 assert.ok(home.includes(`${f1(m.ekf3.tilt_rms)}° RMS`)&&home.includes(`${f1(m.ekf3.tilt_rms_aero)}°`)&&home.includes(`${f1(m.dcm.tilt_rms)}°`)&&home.includes(`${f1(m.dcm.tilt_rms_aero)}°`)&&home.includes(`${f1(med(d.snap.ekf3))} с`),'the home-page card must quote the recording');
 
