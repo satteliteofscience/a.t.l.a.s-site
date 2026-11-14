@@ -56,7 +56,7 @@ assert.ok(dfu.includes("dfuConfirmText")&&dfu.includes('readyToFlash'),'Destruct
 assert.ok(gate.includes("method:'POST'")&&gate.includes("JSON.stringify({pin})"));
 assert.ok(gate.includes("crypto.subtle.digest('SHA-256'"),'Client integrity check required');
 assert.ok(worker.includes('env.ACCESS_CODES_JSON')&&worker.includes('env.FIRMWARE.get(build.object_key)')&&worker.includes('env.ACCESS_LIMITER.limit'));
-assert.ok(!gate.includes('ATL-USSM-HCSD-KUXJ-YFB7'),'Never embed real PIN');
+assert.ok(!/ATL-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/.test(gate),'Never embed a real PIN');
 const oldFlow=read('.github/workflows/firmware-manifest.yml');
 assert.ok(oldFlow.includes('workflow_dispatch'));
 assert.ok(!oldFlow.includes('  push:'),'Old public pipeline must not auto-publish');
