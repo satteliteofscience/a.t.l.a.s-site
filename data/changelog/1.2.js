@@ -23,204 +23,204 @@ window.AtlasRelease12 = {
     {
       "ru": [
         "EKF3: подтверждение настоящего разгона",
-        "При сильном продольном ускорении сохранялось ограничение горизонтального инерциального приращения до 5 м/с², которое могло задерживать рост оценки скорости.",
-        "Ослабление ограничения теперь зависит от согласованного роста TAS и ускорения IMU. Цель — уменьшить отставание GSPD при реальном разгоне, сохранив ограничение при неподтверждённом импульсе. Это не прямое присваивание скорости из Пито."
+        "При сильном продольном ускорении сохранялось ограничение горизонтального инерциального приращения, которое могло задерживать рост оценки скорости.",
+        "Ограничение ослабляется, когда реальный разгон подтверждают воздушная скорость и инерциальные датчики. Так оценка скорости меньше отстаёт при взлёте и разгоне, а неподтверждённый импульс по-прежнему ограничивается. Это не прямое присваивание скорости из Пито."
       ],
       "uk": [
         "EKF3: підтвердження справжнього розгону",
-        "При сильному поздовжньому прискоренні зберігалося обмеження горизонтального інерційного приросту до 5 м/с², що могло затримувати оцінку швидкості.",
-        "Послаблення обмеження тепер залежить від узгодженого зростання TAS та прискорення IMU. Мета — зменшити відставання GSPD при реальному розгоні й зберегти обмеження для непідтвердженого імпульсу. Це не пряме присвоєння швидкості з Піто."
+        "При сильному поздовжньому прискоренні зберігалося обмеження горизонтального інерційного приросту, що могло затримувати оцінку швидкості.",
+        "Обмеження послаблюється, коли справжній розгін підтверджують повітряна швидкість та інерційні датчики. Так оцінка швидкості менше відстає при зльоті й розгоні, а непідтверджений імпульс і далі обмежується. Це не пряме присвоєння швидкості з Піто."
       ],
       "en": [
         "EKF3: corroborating real acceleration",
-        "Strong forward acceleration could retain the 5 m/s² horizontal inertial-increment limit and delay estimated speed growth.",
-        "Relaxation now depends on consistent TAS growth and IMU acceleration. The aim is less GSPD lag during real acceleration while retaining the limit for an uncorroborated impulse. This does not directly assign Pitot speed to the velocity state."
+        "Strong forward acceleration could retain the horizontal inertial-increment limit and delay estimated speed growth.",
+        "The limit is relaxed when airspeed and the inertial sensors both confirm a real acceleration. Estimated speed lags less during takeoff and acceleration, while an uncorroborated impulse is still limited. This does not directly assign Pitot speed to the velocity state."
       ]
     },
     {
       "ru": [
         "EKF3: сравнение на одном временном окне",
         "У IMU и Пито разные частоты, задержки и интервалы измерения; один мгновенный отсчёт не описывает весь разгон.",
-        "Добавлена история из 64 инерциальных отсчётов. Продольный импульс после компенсации гравитации интегрируется по перекрытию с физическим интервалом роста TAS. Требуется покрытие не менее 95% окна: сравниваются соответствующие интервалы, а не случайно соседние отсчёты."
+        "Подтверждение разгона сравнивает данные IMU и Пито за один и тот же интервал времени, а не случайно соседние отсчёты."
       ],
       "uk": [
         "EKF3: порівняння в одному часовому вікні",
         "IMU та Піто мають різні частоти, затримки й інтервали; один миттєвий відлік не описує весь розгін.",
-        "Додано історію з 64 інерційних відліків. Поздовжній імпульс після компенсації гравітації інтегрується за перекриттям із фізичним інтервалом зростання TAS. Потрібне покриття щонайменше 95% вікна."
+        "Підтвердження розгону порівнює дані IMU та Піто за той самий інтервал часу, а не випадково сусідні відліки."
       ],
       "en": [
         "EKF3: matching measurement windows",
         "IMU and Pitot samples have different rates, delays and integration periods; a single instant does not describe the acceleration interval.",
-        "A 64-sample inertial history integrates gravity-corrected forward impulse over the actual TAS-growth interval. At least 95% window coverage is required, so matching intervals are compared rather than adjacent timestamps."
+        "Acceleration confirmation compares IMU and Pitot data over the same time interval rather than adjacent timestamps."
       ]
     },
     {
       "ru": [
         "EKF3: устойчивое подтверждение вместо одного пика",
         "Короткий всплеск ускорения и длительный разгон могли требовать различной реакции.",
-        "Для оконного подтверждения нужны минимум два разных измерения TAS и согласованность во времени. Вес этой ветви плавно нарастает после 80 мс и достигает полного значения за следующие 40 мс; при нарушении условий подтверждение сбрасывается."
+        "Подтверждение требует согласованных измерений за короткое время и включается плавно. При нарушении условий оно сбрасывается."
       ],
       "uk": [
         "EKF3: стале підтвердження замість одного піка",
         "Короткий сплеск прискорення та тривалий розгін потребують різної реакції.",
-        "Для віконного підтвердження потрібні щонайменше два різні вимірювання TAS та узгодженість у часі. Вага цієї гілки плавно зростає після 80 мс до повної за наступні 40 мс; при порушенні умов підтвердження скидається."
+        "Підтвердження потребує узгоджених вимірювань за короткий час і вмикається плавно. За порушення умов воно скидається."
       ],
       "en": [
         "EKF3: sustained confirmation instead of one spike",
         "A brief acceleration spike and sustained acceleration require different responses.",
-        "Window-based confirmation requires at least two distinct TAS samples and temporal consistency. This branch ramps its weight after 80 ms to full weight over another 40 ms; inconsistent conditions reset confirmation."
+        "Confirmation requires consistent measurements over a short time and is introduced smoothly. It resets when the conditions stop holding."
       ]
     },
     {
       "ru": [
         "EKF3: согласованность нескольких акселерометров",
-        "В инерциальном отсчёте не сохранялся отдельный признак разногласия продольного ускорения для этой проверки TAS.",
-        "В NOAID после запуска сравниваются продольные ускорения активного и пригодных соседних датчиков. Расхождение свыше 3 м/с² или отсутствие пригодного сравнения блокирует подтверждение быстрого разгона этой ветвью. Общую одинаковую ошибку всех IMU такая проверка не обнаруживает."
+        "Подтверждение разгона не проверяло, согласуются ли между собой несколько акселерометров.",
+        "После запуска в NOAID продольное ускорение активного датчика сверяется с пригодными соседними. При расхождении или отсутствии пригодного датчика для сравнения быстрое подтверждение разгона блокируется. Общую одинаковую ошибку всех IMU такая проверка не обнаруживает."
       ],
       "uk": [
         "EKF3: узгодженість акселерометрів",
-        "Інерційний відлік не зберігав окремої ознаки розбіжності поздовжнього прискорення для цієї перевірки TAS.",
-        "У NOAID після запуску порівнюються активний і придатні сусідні датчики. Розбіжність понад 3 м/с² або відсутність придатного порівняння блокує підтвердження швидкого розгону цією гілкою. Спільну однакову помилку всіх IMU це не виявляє."
+        "Підтвердження розгону не перевіряло, чи узгоджуються між собою кілька акселерометрів.",
+        "Після запуску в NOAID поздовжнє прискорення активного датчика звіряється з придатними сусідніми. За розбіжності або відсутності придатного датчика для порівняння швидке підтвердження розгону блокується. Спільну однакову помилку всіх IMU ця перевірка не виявляє."
       ],
       "en": [
         "EKF3: accelerometer agreement",
-        "The inertial sample did not carry a separate forward-acceleration disagreement flag for this TAS check.",
-        "After launch in NOAID, the active accelerometer is compared with suitable peers. More than 3 m/s² disagreement or no suitable reference blocks this fast-acceleration corroboration path. A shared error across all IMUs remains undetectable by this check."
+        "Acceleration confirmation did not check whether several accelerometers agree.",
+        "After launch in NOAID, the forward acceleration of the active accelerometer is compared with suitable peers. If they disagree or no suitable reference exists, fast acceleration confirmation is blocked. A shared error across all IMUs remains undetectable by this check."
       ]
     },
     {
       "ru": [
         "EKF3: скорость изменения воздушной скорости",
-        "В буфере TAS не было отдельных сырой и фильтрованной оценок роста для подтверждения разгона.",
-        "Производная рассчитывается из разности EAS того же датчика с последующим масштабированием EAS2TAS. Так скачок оценки плотности не выдаётся за ускорение. Используются интервалы 10–250 мс, проверка правдоподобия до 35 м/с² и фильтр с постоянной 0,22 с."
+        "Для подтверждения разгона не оценивалась скорость нарастания воздушной скорости.",
+        "Скорость нарастания воздушной скорости оценивается по измерениям одного датчика с учётом плотности воздуха, чтобы скачок оценки плотности не принимался за ускорение. Неправдоподобные значения отбрасываются, остальные сглаживаются."
       ],
       "uk": [
         "EKF3: темп зміни повітряної швидкості",
-        "Буфер TAS не мав окремих сирої та фільтрованої оцінок зростання для підтвердження розгону.",
-        "Похідна обчислюється з різниці EAS того самого датчика й масштабується EAS2TAS, щоб стрибок густини не трактувався як прискорення. Інтервали — 10–250 мс, перевірка правдоподібності — до 35 м/с², стала фільтра — 0,22 с."
+        "Для підтвердження розгону не оцінювався темп зростання повітряної швидкості.",
+        "Темп зростання повітряної швидкості оцінюється за вимірюваннями одного датчика з урахуванням густини повітря, щоб стрибок оцінки густини не сприймався як прискорення. Неправдоподібні значення відкидаються, решта згладжується."
       ],
       "en": [
         "EKF3: airspeed growth rate",
-        "The TAS buffer had no separate raw and filtered growth estimates for acceleration corroboration.",
-        "Rate is derived from EAS differences from the same sensor and then scaled by EAS2TAS, avoiding a density-estimate step being interpreted as acceleration. Uses 10–250 ms intervals, a 35 m/s² plausibility bound and a 0.22 s filter time constant."
+        "The growth rate of airspeed was not estimated for acceleration confirmation.",
+        "The growth rate of airspeed is estimated from one sensor with air-density scaling, so a step in the density estimate is not taken for acceleration. Implausible values are rejected and the rest is smoothed."
       ]
     },
     {
       "ru": [
         "EKF3: условия применения быстрого подтверждения",
         "Одного высокого показания Пито недостаточно, чтобы доверять сильному инерциальному ускорению.",
-        "Оконная ветвь требует свежих TAS и IMU, согласованных положительных ускорений более 3 м/с², достаточного покрытия окна и небольшой угловой скорости. При резком вращении, разногласии IMU, обвале давления или прерывании TAS она не подтверждает разгон."
+        "Быстрое подтверждение разгона работает только при свежих данных Пито и IMU, согласованном ускорении и небольшой угловой скорости. При резком вращении, разногласии IMU, обвале давления или прерывании TAS оно не подтверждает разгон."
       ],
       "uk": [
         "EKF3: умови швидкого підтвердження",
         "Одного високого показання Піто недостатньо для довіри до сильного інерційного прискорення.",
-        "Віконна гілка потребує свіжих TAS та IMU, узгоджених додатних прискорень понад 3 м/с², покриття вікна й невеликої кутової швидкості. При різкому обертанні, розбіжності IMU, провалі тиску чи перериванні TAS вона не підтверджує розгін."
+        "Швидке підтвердження розгону працює лише за свіжих даних Піто й IMU, узгодженого прискорення та невеликої кутової швидкості. За різкого обертання, розбіжності IMU, провалу тиску чи переривання TAS воно не підтверджує розгін."
       ],
       "en": [
         "EKF3: fast-confirmation gates",
         "A high Pitot reading alone cannot corroborate strong inertial acceleration.",
-        "The window path requires fresh TAS/IMU, consistent positive acceleration above 3 m/s², sufficient coverage and low angular rate. Rotation, IMU disagreement, pressure collapse or interrupted TAS prevent this path from confirming acceleration."
+        "Fast acceleration confirmation works only with fresh Pitot and IMU data, consistent acceleration and a low angular rate. Rotation, IMU disagreement, pressure collapse or interrupted TAS prevent it from confirming acceleration."
       ]
     },
     {
       "ru": [
         "EKF3: плавная высокоскоростная обработка TAS",
         "Направленная модель TAS уже существовала, но не имела этой дополнительной высокоскоростной обработки остатка.",
-        "В диапазоне TAS 300–320 км/ч плавно вводится дополнительная дисперсия вдоль направления движения при большом продольном остатке. Цель — смягчить влияние ошибочного давления, сохранив боковую составляющую наблюдения. Это не жёсткий потолок скорости и не отключение всего TAS-слияния."
+        "На высокой скорости ошибочное давление Пито влияет на оценку слабее: вдоль направления движения наблюдение плавно ослабляется, боковая составляющая сохраняется. Это не жёсткий потолок скорости и не отключение всего TAS-слияния."
       ],
       "uk": [
         "EKF3: плавна обробка TAS на великій швидкості",
         "Напрямлена модель TAS уже існувала, але не мала цієї додаткової високошвидкісної обробки залишку.",
-        "При TAS 300–320 км/год плавно вводиться додаткова дисперсія вздовж руху при великому поздовжньому залишку. Мета — пом’якшити вплив помилкового тиску зі збереженням бокової складової. Це не жорстка межа швидкості й не вимкнення всього TAS-злиття."
+        "На великій швидкості помилковий тиск Піто впливає на оцінку слабше: вздовж руху спостереження плавно послаблюється, бокова складова зберігається. Це не жорстка межа швидкості й не вимкнення всього TAS-злиття."
       ],
       "en": [
         "EKF3: smooth high-speed TAS treatment",
         "The directional TAS model existed, without this additional high-speed residual treatment.",
-        "Between 300 and 320 km/h TAS, extra along-track variance is introduced smoothly for large forward residuals under the branch conditions. It aims to soften bad-pressure influence while retaining the lateral observation. It is neither a hard speed ceiling nor a complete TAS-fusion shutdown."
+        "At high speed, bad Pitot pressure affects the estimate less: the observation along the direction of travel is softened smoothly while the lateral part is kept. It is neither a hard speed ceiling nor a complete TAS-fusion shutdown."
       ]
     },
     {
       "ru": [
         "EKF3: кратковременный обвал давления Пито",
         "Резкий спад давления мог попасть в NOAID-наблюдение скорости как физическое замедление.",
-        "После высокого EAS свыше 65 м/с неправдоподобный быстрый спад отмечается отдельно. До 1,8 с исключается наблюдение, остающееся более чем на 8 м/с ниже предшествующего уровня. Это ограниченное окно проверки, а не постоянное игнорирование снижения скорости."
+        "После высокой скорости неправдоподобно быстрый спад давления отмечается отдельно и на короткое время не попадает в оценку как замедление. Это ограниченная проверка, а не постоянное игнорирование снижения скорости."
       ],
       "uk": [
         "EKF3: короткий провал тиску Піто",
         "Різкий спад тиску міг потрапити до NOAID-спостереження як фізичне гальмування.",
-        "Після EAS понад 65 м/с неправдоподібний швидкий спад позначається окремо. До 1,8 с виключається спостереження більш ніж на 8 м/с нижче попереднього рівня. Це обмежене вікно перевірки, а не постійне ігнорування сповільнення."
+        "Після великої швидкості неправдоподібно швидкий спад тиску позначається окремо й на короткий час не потрапляє в оцінку як гальмування. Це обмежена перевірка, а не постійне ігнорування сповільнення."
       ],
       "en": [
         "EKF3: brief Pitot-pressure collapse",
         "An abrupt pressure drop could enter the NOAID velocity observation as real deceleration.",
-        "Following EAS above 65 m/s, an implausibly fast drop is flagged separately. For up to 1.8 s, observations more than 8 m/s below the prior level are excluded. This is a bounded recheck window, not permanent rejection of deceleration."
+        "After high speed, an implausibly fast pressure drop is flagged separately and briefly kept out of the estimate as deceleration. This is a bounded check, not permanent rejection of deceleration."
       ]
     },
     {
       "ru": [
         "EKF3: возврат Пито после короткого разрыва",
         "Для пропуска измерений не было этой отдельной проверки правдоподобного возврата.",
-        "Разрывы 250–2500 мс после высокого EAS проверяются относительно последнего уровня до пропуска. Возврат внутри физически ограниченного коридора проходит ускоренный переход весов; произвольный скачок использует обычную более долгую повторную проверку."
+        "После короткого пропадания данных Пито правдоподобный возврат значения принимается быстрее, чем произвольный скачок, который проходит обычную более долгую проверку."
       ],
       "uk": [
         "EKF3: повернення Піто після короткого розриву",
         "Для пропуску вимірювань не було цієї окремої перевірки правдоподібного повернення.",
-        "Розриви 250–2500 мс після високого EAS перевіряються відносно останнього рівня. Повернення в обмеженому коридорі проходить швидший перехід ваг; довільний стрибок — звичайну довшу повторну перевірку."
+        "Після короткого зникнення даних Піто правдоподібне повернення значення приймається швидше, ніж довільний стрибок, який проходить звичайну довшу перевірку."
       ],
       "en": [
         "EKF3: Pitot return after a short gap",
         "Measurement gaps lacked this dedicated plausible-return check.",
-        "Gaps of 250–2500 ms after high EAS are checked against the last pre-gap reading. Returns within a bounded corridor use a faster weighting transition; arbitrary steps use the normal longer recheck."
+        "After a short gap in Pitot data, a plausible return of the value is accepted faster than an arbitrary step, which uses the normal longer recheck."
       ]
     },
     {
       "ru": [
         "EKF3: свежесть TAS на высокой скорости",
-        "Общее окно пригодности TAS составляло до одной секунды.",
-        "Для наблюдения скорости при TAS от 75 м/с дополнительно требуется поступление измерений не старше 350 мс. Для оконного подтверждения разгона используются ещё более строгие 250 мс: устаревшее высокое значение не должно подтверждать новый импульс."
+        "К свежести измерений TAS предъявлялись общие требования.",
+        "На высокой скорости к свежести измерений TAS предъявляются более строгие требования, а для подтверждения разгона ещё строже: устаревшее высокое значение не должно подтверждать новый импульс."
       ],
       "uk": [
         "EKF3: свіжість TAS на великій швидкості",
-        "Загальне вікно придатності TAS становило до секунди.",
-        "Для спостереження швидкості при TAS від 75 м/с додатково потрібні вимірювання не старші 350 мс. Для віконного підтвердження розгону — суворіші 250 мс, щоб застаріле високе значення не підтверджувало новий імпульс."
+        "До свіжості вимірювань TAS ставилися загальні вимоги.",
+        "На великій швидкості до свіжості вимірювань TAS ставляться суворіші вимоги, а для підтвердження розгону ще суворіші: застаріле високе значення не повинно підтверджувати новий імпульс."
       ],
       "en": [
         "EKF3: high-speed TAS freshness",
-        "General TAS eligibility allowed an age of up to one second.",
-        "At TAS of at least 75 m/s, the velocity observation additionally requires a sensor update within 350 ms. Window acceleration confirmation uses stricter 250 ms freshness so an old high reading cannot confirm a new impulse."
+        "General freshness requirements applied to TAS measurements.",
+        "At high speed the freshness requirements for TAS measurements are stricter, and stricter still for acceleration confirmation, so an old high reading cannot confirm a new impulse."
       ]
     },
     {
       "ru": [
         "EKF3: сброс истории при смене условий",
         "Новые истории темпа TAS и подтверждения ещё отсутствовали.",
-        "При смене датчика, неподходящем интервале или отказе пригодности темп роста обнуляется. При выходе из нужного NOAID-контекста сбрасываются переходные состояния; инициализация явно очищает историю и счётчики, чтобы не перенести старое подтверждение на другой поток данных."
+        "При смене датчика, неподходящих интервалах или потере пригодности накопленная история сбрасывается, чтобы не переносить старое подтверждение на другой поток данных."
       ],
       "uk": [
         "EKF3: скидання історії при зміні умов",
         "Нових історій темпу TAS та підтвердження ще не було.",
-        "При зміні датчика, непридатному інтервалі чи відмові придатності темп зростання обнуляється. Поза потрібним NOAID-контекстом скидаються перехідні стани; ініціалізація очищає історію та лічильники, щоб не перенести старе підтвердження на інший потік."
+        "За зміни датчика, непридатних інтервалів чи втрати придатності накопичена історія скидається, щоб не переносити старе підтвердження на інший потік даних."
       ],
       "en": [
         "EKF3: resetting stale history",
         "The new TAS-rate and corroboration histories did not exist.",
-        "Sensor changes, invalid timing or eligibility loss reset growth rate. Leaving the intended NOAID context resets transition state; initialization explicitly clears history and counters to avoid carrying old corroboration into a different stream."
+        "Sensor changes, invalid timing or loss of eligibility reset the accumulated history, so old confirmation is not carried into a different data stream."
       ]
     },
     {
       "ru": [
         "Границы этих изменений EKF3",
-        "Якобиан направленного TAS-наблюдения, изменения ковариации и работа с bias уже описаны в 1.1.",
+        "Направленная модель TAS, изменения устойчивости фильтра и работа со смещениями уже описаны в 1.1.",
         "В 1.2 они не заявляются заново как новые исправления. Новая дельта относится к разгону, времени измерений и высокоскоростному Пито. Без внешней скорости остаются неопределённость ветра и ошибки GSPD; новые проверки не делают её независимым измерением относительно земли."
       ],
       "uk": [
         "Межі цих змін EKF3",
-        "Якобіан напрямленого TAS, зміни коваріації та робота з bias вже описані у 1.1.",
+        "Напрямлена модель TAS, зміни стійкості фільтра та робота зі зміщеннями вже описані у 1.1.",
         "У 1.2 вони не заявляються повторно як нові виправлення. Нова дельта стосується розгону, часу вимірювань і високошвидкісного Піто. Без зовнішньої швидкості залишаються невизначеність вітру та помилки GSPD; перевірки не роблять її незалежним наземним вимірюванням."
       ],
       "en": [
         "Scope of the EKF3 delta",
-        "Directional TAS Jacobians, covariance changes and bias handling were already documented in 1.1.",
+        "The directional TAS model, filter stability changes and bias handling were already documented in 1.1.",
         "They are not reintroduced as new 1.2 fixes. The new delta concerns acceleration, measurement timing and high-speed Pitot handling. Without external velocity, wind ambiguity and GSPD errors remain; the checks do not provide an independent ground-velocity measurement."
       ]
     },

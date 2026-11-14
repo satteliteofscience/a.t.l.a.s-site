@@ -44,9 +44,9 @@
         "en": "EKF3 numerical stability"
       },
       "description": {
-        "ru": "Обсуждались обновление ковариации в форме Джозефа, корректировка шума наблюдений в манёврах и особенности замораживания акселерометрического смещения при NOAID. Точные флаги и параметры требуют сверки с релизной сборкой.",
-        "uk": "Обговорювалися форма Джозефа для оновлення коваріації, адаптація шуму спостережень у маневрах та обмеження зміщення акселерометра в NOAID. Потрібна звірка з кодом релізу.",
-        "en": "Work included a Joseph-form covariance update, maneuver-dependent observation noise and NOAID accelerometer-bias handling. Exact build behavior requires final source comparison."
+        "ru": "Обсуждались доработки устойчивости фильтра EKF3 в NOAID, в том числе в манёврах. Подробности требуют сверки с релизной сборкой.",
+        "uk": "Обговорювалися доопрацювання стійкості фільтра EKF3 у NOAID, зокрема в маневрах. Подробиці потребують звірки з релізною збіркою.",
+        "en": "Work covered the numerical stability of the EKF3 filter in NOAID, including maneuvers. Details require release-build verification."
       }
     },
     {
@@ -74,9 +74,9 @@
         "en": "Throttle suppression re-entry handling"
       },
       "description": {
-        "ru": "В сохранённом servos.cpp движение может подтверждаться EAS от Пито (порог 5 м/с) вместе с признаками полёта, высоты и тангажа. Это не отключает защиту газа безусловно.",
-        "uk": "У збереженому servos.cpp рух може підтверджуватися EAS від Піто (поріг 5 м/с) разом з ознаками польоту, висоти й тангажу. Захист газу залишається умовним.",
-        "en": "The retained servos.cpp uses pitot EAS (5 m/s in the excerpt) along with flight, altitude and pitch checks to release throttle suppression after re-entering TAKEOFF. This is not unconditional throttle enabling."
+        "ru": "В сохранённом servos.cpp движение может подтверждаться воздушной скоростью по Пито (EAS) вместе с признаками полёта, высоты и тангажа. Это не отключает защиту газа безусловно.",
+        "uk": "У збереженому servos.cpp рух може підтверджуватися повітряною швидкістю за Піто (EAS) разом з ознаками польоту, висоти й тангажу. Захист газу залишається умовним.",
+        "en": "The retained servos.cpp uses Pitot airspeed (EAS) along with flight, altitude and pitch checks to release throttle suppression after re-entering TAKEOFF. This is not unconditional throttle enabling."
       }
     },
     {
@@ -134,9 +134,9 @@
         "en": "FBWA rudder-bank blending — RUD_LIMIT_DEG"
       },
       "description": {
-        "ru": "В сохранённом mode_fbwa.cpp рудер по направлению крена может добавлять команду крена через RUD_LIMIT_DEG с ограничением запаса до 85°. Старая настройка RUD_RLL_ADD в актуальной логике не используется.",
-        "uk": "У збереженому mode_fbwa.cpp кермо напрямку, подане в бік крену, може додавати команду крену через RUD_LIMIT_DEG із запасом до 85°. Попередній RUD_RLL_ADD не використовується.",
-        "en": "The retained mode_fbwa.cpp adds a bounded commanded-bank contribution from same-direction rudder input through RUD_LIMIT_DEG, with headroom capped at 85°. Earlier RUD_RLL_ADD is no longer the current setting."
+        "ru": "В сохранённом mode_fbwa.cpp рудер по направлению крена может добавлять ограниченную команду крена через RUD_LIMIT_DEG. Старая настройка RUD_RLL_ADD в актуальной логике не используется.",
+        "uk": "У збереженому mode_fbwa.cpp кермо напрямку, подане в бік крену, може додавати обмежену команду крену через RUD_LIMIT_DEG. Попередній RUD_RLL_ADD не використовується.",
+        "en": "The retained mode_fbwa.cpp adds a bounded commanded-bank contribution from same-direction rudder input through RUD_LIMIT_DEG. Earlier RUD_RLL_ADD is no longer the current setting."
       }
     },
     {
@@ -149,9 +149,9 @@
         "en": "FBWA aerodynamic rudder limiting"
       },
       "description": {
-        "ru": "Согласно обсуждавшейся реализации limit_manual_rudder, влияние ручного руля направления смягчается вблизи допустимого крена с учётом крена, скорости вращения и воздушной скорости. Текущие коэффициенты требуют дифф-сверки.",
-        "uk": "Згідно з описаною реалізацією limit_manual_rudder, ручне кермо напрямку обмежується поблизу допустимого крену з урахуванням кутової швидкості та повітряної швидкості. Поточні коефіцієнти треба звірити.",
-        "en": "The discussed limit_manual_rudder implementation fades manual rudder near the permitted bank envelope using roll, roll rate and airspeed. Current coefficients require release-source verification."
+        "ru": "Влияние ручного руля направления смягчается вблизи допустимого крена. Текущие настройки требуют сверки с релизной сборкой.",
+        "uk": "Ручне кермо напрямку обмежується поблизу допустимого крену. Поточні налаштування треба звірити з релізною збіркою.",
+        "en": "Manual rudder is faded near the permitted bank envelope. Current settings require release-build verification."
       }
     },
     {

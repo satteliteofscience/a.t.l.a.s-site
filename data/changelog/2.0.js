@@ -1,5 +1,5 @@
 'use strict';
-// AI-assisted; the 2.0 delta is the EKF3 / AHRS work on top of 1.2 (options EK3_NOAID_POS, EK3_NOAID_GPS, EK3_NOAID_AUTO, gyro gate, DCM-fallback debounce).
+// AI-assisted; the 2.0 delta is the EKF3 / AHRS work on top of 1.2 (options EK3_NOAID_POS, EK3_NOAID_GPS, EK3_NOAID_AUTO).
 window.AtlasRelease20 = {
   "version": "2.0",
   "id": "release-2-0",
@@ -58,51 +58,51 @@ window.AtlasRelease20 = {
       "ru": [
         "Автоматическое следование за GPS",
         "Переход из NoAID на спутники требовал ручного переключения набора источников (MAV_CMD_SET_EKF_SOURCE_SET или RCx_OPTION 90), а обратно в ветку NoAID фильтр не возвращался: он оставался в обычном режиме с замороженной оценкой ветра.",
-        "EK3_NOAID_AUTO=1 при AHRS_GPS_USE не 0 и взведённом самолёте: когда у основного GPS 3D fix, достаточно спутников и признак качества EKF3 держится 5 с, автомат выбирает набор EK3_SRC2_* (позиция и скорость GPS, высота по барометру, курс по компасу: 3, 1, 3, 3, 1). Позиция сразу совпадает со спутниками. Если GPS потерян на 3 с или EKF3 перестал его использовать, возвращается EK3_SRC1_*. AHRS остаётся на EKF3, на DCM не уходит."
+        "EK3_NOAID_AUTO=1 при AHRS_GPS_USE не 0 и взведённом самолёте: когда у основного GPS устойчивое хорошее решение, автомат выбирает набор EK3_SRC2_* (позиция и скорость GPS, высота по барометру, курс по компасу). Позиция сразу совпадает со спутниками. Если GPS пропадает или EKF3 перестаёт его использовать, возвращается EK3_SRC1_*. AHRS остаётся на EKF3, на DCM не уходит."
       ],
       "uk": [
         "Автоматичне слідування за GPS",
         "Перехід із NoAID на супутники потребував ручного перемикання набору джерел (MAV_CMD_SET_EKF_SOURCE_SET або RCx_OPTION 90), а назад у гілку NoAID фільтр не повертався: він лишався у звичайному режимі із замороженою оцінкою вітру.",
-        "EK3_NOAID_AUTO=1 за AHRS_GPS_USE не 0 і взведеного літака: коли в основного GPS 3D fix, достатньо супутників і ознака якості EKF3 тримається 5 с, автомат обирає набір EK3_SRC2_* (позиція й швидкість GPS, висота за барометром, курс за компасом: 3, 1, 3, 3, 1). Позиція одразу збігається із супутниками. Якщо GPS втрачено на 3 с або EKF3 перестав його використовувати, повертається EK3_SRC1_*. AHRS лишається на EKF3, на DCM не переходить."
+        "EK3_NOAID_AUTO=1 за AHRS_GPS_USE не 0 і взведеного літака: коли в основного GPS стійке хороше рішення, автомат обирає набір EK3_SRC2_* (позиція й швидкість GPS, висота за барометром, курс за компасом). Позиція одразу збігається із супутниками. Якщо GPS зникає або EKF3 перестає його використовувати, повертається EK3_SRC1_*. AHRS лишається на EKF3, на DCM не переходить."
       ],
       "en": [
         "Automatic satellite following",
         "Moving from NoAID to the satellites needed a manual source-set switch (MAV_CMD_SET_EKF_SOURCE_SET or RCx_OPTION 90), and the filter never returned to the NoAID branch: it stayed in the normal mode with a frozen wind estimate.",
-        "EK3_NOAID_AUTO=1 with AHRS_GPS_USE not 0 and the aircraft armed: when the primary GPS has a 3D fix, enough satellites and the EKF3 quality flag for 5 s, the source set EK3_SRC2_* is selected (GPS position and velocity, barometer height, compass yaw: 3, 1, 3, 3, 1). The position matches the satellites at once. If the GPS is lost for 3 s or EKF3 stops using it, EK3_SRC1_* returns. The AHRS stays on EKF3 and does not fall back to DCM."
+        "EK3_NOAID_AUTO=1 with AHRS_GPS_USE not 0 and the aircraft armed: when the primary GPS has a steady good solution, the source set EK3_SRC2_* is selected (GPS position and velocity, barometer height, compass yaw). The position matches the satellites at once. If the GPS is lost or EKF3 stops using it, EK3_SRC1_* returns. The AHRS stays on EKF3 and does not fall back to DCM."
       ]
     },
     {
       "ru": [
         "Возврат в NoAID без потери скорости",
         "Возврат на набор NoAID не восстанавливал NoAID-модель скорости по Пито.",
-        "При выбранном наборе NoAID и неиспользуемом GPS ядро EKF3 возвращается в ветку без внешней коррекции, сохраняет скорость решения с GPS вместо обнуления и расслабляет её дисперсию, чтобы NoAID-модель по TAS приняла управление без скачка."
+        "При возврате на набор NoAID модель NoAID по воздушной скорости принимает управление без скачка скорости."
       ],
       "uk": [
         "Повернення в NoAID без втрати швидкості",
         "Повернення на набір NoAID не відновлювало NoAID-модель швидкості за Піто.",
-        "За обраного набору NoAID та невикористовуваного GPS ядро EKF3 повертається в гілку без зовнішньої корекції, зберігає швидкість рішення з GPS замість обнулення й послаблює її дисперсію, щоб NoAID-модель за TAS прийняла керування без стрибка."
+        "За повернення на набір NoAID модель NoAID за повітряною швидкістю перебирає керування без стрибка швидкості."
       ],
       "en": [
         "Return to NoAID without losing the velocity",
         "Selecting the NoAID set again did not restore the NoAID Pitot velocity model.",
-        "With the NoAID set selected and no GPS in use, the EKF3 core returns to the unaided branch, keeps the velocity of the GPS solution instead of zeroing it and relaxes its variance, so the TAS-based NoAID model takes over without a step."
+        "When the NoAID set is selected again, the TAS-based NoAID model takes over without a velocity step."
       ]
     },
     {
       "ru": [
         "Условия включения: старт, посадка, disarm",
         "Автоматики выбора источников не было.",
-        "GPS не захватывается, пока NoAID-старт не подтверждён (или самолёт не летит 5 с): так NoAID-логика запуска и возврат в NoAID после потери GPS остаются корректными. Disarm на земле возвращает NoAID сразу, следующий старт снова NoAID-старт. Disarm в полёте оставляет набор GPS, потому что NoAID считает disarmed самолёт стоящим на земле."
+        "GPS не подключается, пока не подтверждён NoAID-старт (или самолёт уже в полёте). Disarm на земле сразу возвращает NoAID, следующий старт снова NoAID-старт. Disarm в полёте оставляет набор GPS."
       ],
       "uk": [
         "Умови вмикання: старт, посадка, disarm",
         "Автоматики вибору джерел не було.",
-        "GPS не захоплюється, поки NoAID-старт не підтверджено (або літак не летить 5 с): так NoAID-логіка запуску й повернення в NoAID після втрати GPS лишаються коректними. Disarm на землі одразу повертає NoAID, наступний старт знову NoAID-старт. Disarm у польоті лишає набір GPS, бо NoAID вважає disarmed літак таким, що стоїть на землі."
+        "GPS не підключається, поки не підтверджено NoAID-старт (або літак уже в польоті). Disarm на землі одразу повертає NoAID, наступний старт знову NoAID-старт. Disarm у польоті лишає набір GPS."
       ],
       "en": [
         "Engagement rules: launch, landing, disarm",
         "There was no automatic source selection.",
-        "The GPS is not engaged until the NoAID launch is confirmed (or the aircraft has been flying for 5 s), so the NoAID launch logic and the return to NoAID after a GPS loss stay valid. A disarm on the ground returns to NoAID at once and the next launch is a NoAID launch. A disarm in flight keeps the GPS source set, because NoAID treats a disarmed aircraft as standing on the ground."
+        "The GPS is not engaged until the NoAID launch is confirmed (or the aircraft is already flying). A disarm on the ground returns to NoAID at once and the next launch is a NoAID launch. A disarm in flight keeps the GPS source set."
       ]
     },
     {
@@ -125,35 +125,35 @@ window.AtlasRelease20 = {
     {
       "ru": [
         "EKF3: бочки и вращения без ложных срабатываний",
-        "В бочках и вращениях сила лифта даёт продольную составляющую больше 1,1 g, и исключение ограничителя ускорения для разгона срабатывало ложно, портя оценку скорости и наклона.",
-        "Исключение для сильного продольного ускорения действует, только пока угловая скорость меньше 0,8 рад/с (около 46°/с). Разгон и катапульта не затронуты. Ошибка наклона EKF3 в бочках, вращениях и выходе из них в SITL снизилась с 10–11° до менее 2°."
+        "В бочках и вращениях исключение ограничителя ускорения, предназначенное для настоящего разгона, срабатывало ложно и портило оценку скорости и наклона.",
+        "Исключение теперь действует только при небольшой угловой скорости. Разгон и катапульта не затронуты. Ошибка наклона EKF3 в бочках, вращениях и выходе из них в SITL снизилась с 10–11° до менее 2°."
       ],
       "uk": [
         "EKF3: бочки й обертання без хибних спрацювань",
-        "У бочках і обертаннях сила підйому дає поздовжню складову понад 1,1 g, і виняток обмежувача прискорення для розгону спрацьовував хибно, псуючи оцінку швидкості й нахилу.",
-        "Виняток для сильного поздовжнього прискорення діє, лише поки кутова швидкість менша за 0,8 рад/с (близько 46°/с). Розгін і катапульта не зачеплені. Похибка нахилу EKF3 у бочках, обертаннях і виході з них у SITL знизилась з 10–11° до менш ніж 2°."
+        "У бочках і обертаннях виняток обмежувача прискорення, призначений для справжнього розгону, спрацьовував хибно й псував оцінку швидкості та нахилу.",
+        "Виняток тепер діє лише за невеликої кутової швидкості. Розгін і катапульта не зачеплені. Похибка нахилу EKF3 у бочках, обертаннях і виході з них у SITL знизилась з 10–11° до менш ніж 2°."
       ],
       "en": [
         "EKF3: rolls and rotations without false triggers",
-        "In rolls and rotations lift gives a forward component above 1.1 g, and the exception of the acceleration limiter meant for a real launch fired falsely, spoiling the velocity and tilt estimates.",
-        "The strong-forward-acceleration exception applies only while the angular rate is below 0.8 rad/s (about 46 deg/s). Launches and boosts are unaffected. The EKF3 tilt error in rolls, rotations and recoveries dropped in SITL from 10 to 11 degrees to below 2 degrees."
+        "In rolls and rotations the exception of the acceleration limiter meant for a real launch fired falsely, spoiling the velocity and tilt estimates.",
+        "The exception now applies only at a low angular rate. Launches and boosts are unaffected. The EKF3 tilt error in rolls, rotations and recoveries dropped in SITL from 10 to 11 degrees to below 2 degrees."
       ]
     },
     {
       "ru": [
         "AHRS: меньше ложных переходов на DCM",
-        "Короткая потеря вертикальных флагов EKF3 без GPS (выброс барометра, сброс высоты, около 0,1 с) при верной ориентации уводила самолёт на DCM.",
-        "EKF3 остаётся основным AHRS до 1 с, пока потеряны только вертикальные флаги, а ориентация верна. Более долгая потеря уводит на DCM, как раньше. В SITL на шести стресс-полётах ложных переходов 61, стало 0, выбросы 45–80° исчезли. Правило действует и в режиме следования за GPS."
+        "Короткая потеря вертикальных флагов EKF3 без GPS (выброс барометра, сброс высоты) при верной ориентации уводила самолёт на DCM.",
+        "EKF3 остаётся основным AHRS, пока коротко потеряны только вертикальные флаги, а ориентация верна. Более долгая потеря уводит на DCM, как раньше. В SITL на шести стресс-полётах ложных переходов было 61, стало 0, выбросы 45–80° исчезли. Правило действует и в режиме следования за GPS."
       ],
       "uk": [
         "AHRS: менше хибних переходів на DCM",
-        "Коротка втрата вертикальних прапорців EKF3 без GPS (викид барометра, скидання висоти, близько 0,1 с) за вірної орієнтації переводила літак на DCM.",
-        "EKF3 лишається основним AHRS до 1 с, поки втрачено лише вертикальні прапорці, а орієнтація вірна. Довша втрата переводить на DCM, як раніше. У SITL на шести стрес-польотах хибних переходів було 61, стало 0, викиди 45–80° зникли. Правило діє й у режимі слідування за GPS."
+        "Коротка втрата вертикальних прапорців EKF3 без GPS (викид барометра, скидання висоти) за вірної орієнтації переводила літак на DCM.",
+        "EKF3 лишається основним AHRS, поки коротко втрачено лише вертикальні прапорці, а орієнтація вірна. Довша втрата переводить на DCM, як раніше. У SITL на шести стрес-польотах хибних переходів було 61, стало 0, викиди 45–80° зникли. Правило діє й у режимі слідування за GPS."
       ],
       "en": [
         "AHRS: fewer false fallbacks to DCM",
-        "A brief loss of the EKF3 vertical flags without GPS (barometer glitch, height reset, about 0.1 s) with a valid attitude sent the aircraft to DCM.",
-        "EKF3 stays the active AHRS for up to 1 s while only the vertical flags are missing and the attitude is valid. A longer loss falls back to DCM as before. In SITL over six stress flights false fallbacks went from 61 to 0 and the 45 to 80 degree spikes disappeared. The rule also holds in the satellite-following mode."
+        "A brief loss of the EKF3 vertical flags without GPS (barometer glitch, height reset) with a valid attitude sent the aircraft to DCM.",
+        "EKF3 stays the active AHRS while only the vertical flags are briefly missing and the attitude is valid. A longer loss falls back to DCM as before. In SITL over six stress flights false fallbacks went from 61 to 0 and the 45 to 80 degree spikes disappeared. The rule also holds in the satellite-following mode."
       ]
     },
     {
