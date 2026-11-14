@@ -103,6 +103,8 @@ function navigate(tab){
  const previous=state.selectedTab;
  state.selectedTab=tab;
  document.body.classList.toggle('cc-quick-setup',tab==='quicksetup');
+ // the firmware cards follow the published catalogue: refresh it when the tab is opened after a minute
+ if(tab==='firmware'&&Date.now()-(state.catalogAt||0)>60000)loadCatalog();
  window.dispatchEvent(new CustomEvent('atlas:navigate',{detail:{tab}}));
  document.querySelectorAll('.cc-tab').forEach(el=>el.classList.toggle('active',el.dataset.panel===tab));
  // A tab opened while the page is scrolled down starts where its title is visible: the sticky top bar covers the first pixels, so the panel is aligned just below it.
@@ -956,40 +958,17 @@ async function writeImported(){
 }
 function renderBoards(){const grid=$('firmwareBoards');grid.replaceChildren();const boards=state.boards.length?state.boards.filter(b=>b.id!=='other-boards'):[{id:'cube-orange-plus',name:'Cube Orange Plus',status:'planned'},{id:'matek-h743-wing-v3',name:'Matek H743-WING V3',status:'planned'},{id:'uni-ic743-mini',name:'Uni-IC743 Mini',status:'planned'}];for(const b of boards){const btn=document.createElement('button');btn.className='cc-board-choice'+(state.selectedBoard===b.id?' selected':'');btn.type='button';const mark=document.createElement('span');mark.textContent=state.selectedBoard===b.id?'✓':'';const name=document.createElement('strong');name.textContent=b.name;const small=document.createElement('small');small.textContent=b.status==='available'?'HEX':['cube-orange-plus','uni-ic743-mini'].includes(b.id)?'HEX · LOCAL':tr('pending').toUpperCase();btn.append(mark,name,small);btn.addEventListener('click',()=>{if(window.AtlasDfuUi?.isBusy())return;state.selectedBoard=b.id;renderBoards();window.dispatchEvent(new CustomEvent('atlas:board',{detail:{board:b.id}}));});grid.append(btn);}const selected=boards.find(b=>b.id===state.selectedBoard);$('boardSelection').textContent=tr('boardWaiting')+(selected?.name||'—')+' / '+tr('compat');}
 function renderReleases(){
- const container=$('releaseList');container.replaceChildren();
+ // Same cards as the firmware section of the main page: a version picker per board (see release-picker.js). The catalogue is data/releases.json merged with the published builds.
  const boards=state.boards.filter(b=>b.id!=='other-boards');
  if(!boards.length)boards.push({name:'Cube Orange Plus',downloads:[]},{name:'Matek H743-WING V3',downloads:[]},{name:'Uni-IC743 Mini',downloads:[]});
- for(const board of boards){
-  const box=document.createElement('div');box.className='cc-release-item';
-  const title=document.createElement('strong');title.textContent=board.name;
-  const info=document.createElement('small');
-  const downloads=(board.downloads||[]).filter(d=>
-   window.AtlasFirmwareAccess?.isProtected(d) && d.channel==='release' &&
-   /^[a-f0-9]{64}$/i.test(d.sha256||''));
-  info.textContent=downloads.length?`${downloads.length} ${tr('releases')}`:tr('notavailable');box.append(title,info);
-  for(const d of downloads){
-   const btn=document.createElement('button');
-   btn.className='cc-release-download';btn.type='button';
-   const releaseName=document.createElement('span');
-   releaseName.className='cc-release-download-title';
-   releaseName.textContent=d.label||d.filename||'Firmware';
-   const actionLabel=document.createElement('span');
-   actionLabel.className='cc-release-download-action';
-   const actionText={ru:'СКАЧАТЬ',uk:'ЗАВАНТАЖИТИ',en:'DOWNLOAD'};
-   actionLabel.textContent='PIN · '+(actionText[lang]||actionText.ru)+' ↗';
-   btn.append(releaseName,actionLabel);
-   btn.addEventListener('click',async()=>{
-    btn.disabled=true;
-    try{await window.AtlasFirmwareAccess.download(d);}
-    catch(err){if(err.message!=='Access cancelled')toast(err.message||'Firmware access failed',true);}
-    finally{btn.disabled=false;}
-   });
-   box.append(btn);
-  }
-  container.append(box);
- }
+ state.releaseSelected=state.releaseSelected||Object.create(null);
+ window.AtlasReleasePicker.render({document,container:$('releaseList'),boards,project:state.project,language:lang,access:window.AtlasFirmwareAccess,selected:state.releaseSelected,toast,baseURI:document.baseURI,noBuilds:tr('notavailable')});
+ const latest=String(state.project?.latest_release||''),name=state.project?.release_names?.[latest],note=$('releaseCatalogLatest');
+ if(note)note.textContent=latest?`RELEASE ${latest}`+(name?` · ${name}`:''):'';
 }
-async function loadCatalog(){let info=null;try{const embedded=$('atlasEmbeddedData');if(embedded)info=JSON.parse(embedded.textContent);else{const response=await fetch('data/releases.json',{cache:'no-store'});if(response.ok)info=await response.json();}}catch(e){console.warn(e);}state.boards=info?.boards||[];renderBoards();renderReleases();}
+async function loadCatalog(){let info=null;try{const embedded=$('atlasEmbeddedData');if(embedded)info=JSON.parse(embedded.textContent);else{const response=await fetch('data/releases.json',{cache:'no-store'});if(response.ok)info=await response.json();}}catch(e){console.warn(e);}
+ try{if(info&&window.AtlasFirmwareCatalog)info=await window.AtlasFirmwareCatalog.mergeSiteCatalog(info);}catch(e){console.warn(e);}   // the published builds of the gateway, like on the main page
+ state.project=info?.project||null;state.catalogAt=Date.now();state.boards=info?.boards||[];renderBoards();renderReleases();}
 async function parseApj(file){if(!file)return;state.apj=null;state.apjFilename=file.name;try{if(file.size>32*1024*1024)throw Error('File too large');const obj=JSON.parse(await file.text());if(!Number.isSafeInteger(obj.board_id)||typeof obj.image!=='string'||!obj.image.length)throw Error(tr('metaBad'));state.apj=obj;
  const node=$('apjMetadata');node.replaceChildren();const pair=(k,v)=>{const dl=document.createElement('dl'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=k;dd.textContent=String(v);dl.append(dt,dd);node.append(dl);};pair(tr('filename'),file.name);pair(tr('boardid'),obj.board_id);pair(tr('size'),(obj.image_size===undefined?'?':`${(obj.image_size/1024).toFixed(1)} KiB`));pair(tr('format'),'ArduPilot APJ / JSON');pair('STATUS',tr('metaFound'));toast(`APJ board_id=${obj.board_id} · ${file.name}`);
  }catch(err){$('apjMetadata').textContent=tr('metaBad');toast(`${tr('error')}: ${err.message}`,true);}}

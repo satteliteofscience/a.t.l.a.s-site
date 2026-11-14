@@ -47,7 +47,7 @@ for(const html of [ui1,ui2]){
 assert.ok(app.includes('AtlasFirmwareAccess.download(item)'));
 assert.ok(app.includes('AtlasFirmwareAccess?.isProtected(item)'));
 assert.ok(!app.includes('link.href = safeUrl(item.url)'),'Public site downloads forbidden');
-assert.ok(cc.includes('AtlasFirmwareAccess.download(d)'));
+assert.ok(read('js/configurator/release-picker.js').includes('access.download(item)')&&cc.includes('access:window.AtlasFirmwareAccess'),'configurator downloads go through the PIN gateway (cards in release-picker.js)');
 assert.ok(!cc.includes('new URL(d.url,location.href)'),'Public Configurator downloads forbidden');
 assert.ok(dfu.includes('AtlasFirmwareAccess.requestBlob(info)'),'DFU site-load must use server-checked PIN');
 assert.ok(!dfu.includes('releaseURL(') && !dfu.includes('fetch(fileURL'),'No DFU direct URL fallback');

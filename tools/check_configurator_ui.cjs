@@ -32,12 +32,13 @@ for(const language of [
  'After a successful flash, wait for the flight controller to finish booting'
 ])assert.ok(dfu.includes(language),'missing localized post-flash guidance: '+language);
 assert.match(dfu,/Matek H743-WING V3[^']*third connection/,'English note must qualify the behavior as board-specific');
-const firmwareUi=read('js/configurator/configurator.js');
+const firmwareUi=read('js/configurator/configurator.js')+read('js/configurator/release-picker.js');   // the cards live in release-picker.js (tools/check_release_picker.cjs)
 const firmwareCss=read('css/configurator.css');
-assert.match(firmwareUi,/className='cc-release-download-title'/,'firmware download must have a readable release title');
-assert.match(firmwareUi,/className='cc-release-download-action'/,'firmware download must display a separate PIN action');
-assert.match(firmwareUi,/actionText=\{ru:'СКАЧАТЬ',uk:'ЗАВАНТАЖИТИ',en:'DOWNLOAD'\}/,'PIN action must be translated into RU, UA and EN');
-assert.match(firmwareUi,/AtlasFirmwareAccess\.download\(d\)/,'protected firmware download must still use the PIN gateway');
+assert.match(firmwareUi,/'cc-release-download-title'/,'firmware download must have a readable release title');
+assert.match(firmwareUi,/'cc-release-download-action'/,'firmware download must display a separate PIN action');
+assert.match(firmwareUi,/ACTION=\{ru:'СКАЧАТЬ',uk:'ЗАВАНТАЖИТИ',en:'DOWNLOAD'\}/,'PIN action must be translated into RU, UA and EN');
+assert.match(firmwareUi,/access\.download\(item\)/,'protected firmware download must still use the PIN gateway');
+assert.match(firmwareUi,/access:window\.AtlasFirmwareAccess/,'the configurator hands the PIN gateway to the cards');
 for(const selector of [
  '.cc-release-item .cc-release-download{',
  '.cc-release-item .cc-release-download:hover:not(:disabled){',

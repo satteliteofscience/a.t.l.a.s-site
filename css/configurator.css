@@ -473,3 +473,6 @@
 .esc-num input:disabled,.esc-rev input:disabled{opacity:.5}
 .qs-esc-manual{margin-top:14px;padding-top:12px;border-top:1px solid #3d4f2d}
 @media (max-width:980px){.esc-row{grid-template-columns:34px 1fr 1fr;grid-auto-flow:row}.esc-pos{grid-column:1/-1}}
+.cc-release-item .board-version-control{margin:12px 0 8px}
+.cc-release-item .cc-release-desc{margin:10px 0 8px;font-size:12px;line-height:1.55;color:#b4bd95}
+.cc-release-item .board-version-result .version-current{margin-top:6px}
