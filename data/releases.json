@@ -8,9 +8,6 @@
     "latest_release": "2.0",
     "release_names": {
       "2.0": "A.T.L.A.S-G.L.O.B.A.L"
-    },
-    "sources": {
-      "2.0": "Firmware/Sources/ATLAS-source-v2.0.tar.gz"
     }
   },
   "boards": [
