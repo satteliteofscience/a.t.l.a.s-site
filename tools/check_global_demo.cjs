@@ -28,11 +28,14 @@ const idsUsed=[...new Set([...js.matchAll(/\$\('([A-Za-z]+)'\)/g)].map(m=>m[1]))
 for(const id of idsUsed)assert.ok(page.includes(`id="${id}"`),'sitl-demo-global.html lacks #'+id);
 for(const lang of ['ru','uk','en'])assert.ok(page.includes(`data-language="${lang}"`));
 const count=(text,re)=>(text.match(re)||[]).length;
-for(const key of ['title','loading','failed','play','pause','legend','posTitle','tiltTitle','metricsTitle','eventsTitle','reportTitle','limits','scope','report','mapEkf','mapDcm','m_tilt','m_snap','m_lev_n','m_lev_t','m_lev_err','m_lev_est','e_gps_on','e_lvl','paramsTitle','params','viewLabel','viewAll','viewFollow','truthPos','ahrsPos','homeName','s_aero','s_landing'])assert.equal(count(js,new RegExp('[ ,{]'+key+':','g')),3,'text must exist in ru, uk and en: '+key);
+for(const key of ['title','loading','failed','play','pause','legend','posTitle','tiltTitle','metricsTitle','eventsTitle','reportTitle','limits','scope','report','mapEkf','mapDcm','m_tilt','m_snap','m_lev_n','m_lev_t','m_lev_err','m_lev_est','e_gps_on','e_lvl','paramsTitle','params','fullTitle','fullLegend','fullInfo','viewLabel','viewAll','viewFollow','truthPos','ahrsPos','homeName','s_aero','s_landing'])assert.equal(count(js,new RegExp('[ ,{]'+key+':','g')),3,'text must exist in ru, uk and en: '+key);
 for(const text of ['EKF3 NoAID G.L.O.B.A.L.'])assert.ok(js.includes(text));
 // the position map is a satellite photo of the Dnipro airport area (Esri World Imagery) with a grid fallback; the pilot's levelling is not called ACRO on the page
 assert.ok(js.includes('World_Imagery/MapServer/tile/')&&js.includes('Esri, Maxar, Earthstar Geographics'),'satellite map layer and its credit missing');
 assert.ok(!/ACRO/.test(js),'the page must say levelling, not ACRO');
+// the full flight track (truth, AHRS, GPS-off stretches, error at every GPS return) is drawn for both flights on the shared map base
+assert.ok(js.includes('function drawFull(')&&js.includes('function baseMap(')&&/drawFull\('fullEkf','ekf3'\)/.test(js)&&/drawFull\('fullDcm','dcm'\)/.test(js),'full-track maps missing');
+for(const id of ['fullEkf','fullDcm','fullEkfInfo','fullDcmInfo','fullLegend','fullTitle'])assert.ok(page.includes(`id="${id}"`),'#'+id);
 assert.ok(page.includes('id="mapView"')&&page.includes('id="mapEkfCoords"')&&page.includes('id="mapDcmCoords"'));
 // recorded data
 const d=JSON.parse(read('data/sitl/atlas-global-hour.json'));
