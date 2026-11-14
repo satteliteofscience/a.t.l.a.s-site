@@ -71,7 +71,7 @@ const qs={
  resumeFrom:saved&&Number.isInteger(saved.step)?saved.step:0
 };
 // ESC calibration session (step 8): the throttle outputs are taken over only between "Start calibration" and "Write range and finish" / "Cancel".
-qs.esc={phase:'idle',outputs:[],range:{min:1000,max:2000},reversed:0,percent:0,ack1:false,ack2:false,fullAck:false,writing:false,error:'',message:'',node:null,ui:null,lang:null,result:null,pending:[],pwm:null,servo:[],servoAt:0,timer:null,applied:null};
+qs.esc={phase:'idle',outputs:[],zeroSide:null,ack1:false,ack2:false,fullAck:false,writing:false,fieldBusy:0,error:'',message:'',node:null,ui:null,lang:null,result:null,pending:[],pwm:null,servo:[],servoAt:0,timer:null};
 function lang(){return window.AtlasLanguage?.()||'ru';}
 const incompleteWrite={
  ru:'Дождись полной загрузки параметров контроллера.',
@@ -519,37 +519,48 @@ function renderReboot(box){
   },'cc-button primary').disabled=qs.rebootReading;
  }else appendText(box,'p',t('rebootStatus'),'qs-global-status');
 }
-// ---- ESC calibration of a normal PWM regulator (step 8). The controller refuses a direct PWM on a throttle output, so after an explicit, confirmed click the
-// throttle outputs are switched to Disabled, driven with the PWM the controller will use for 0 % and 100 % throttle, and restored at the end. The wizard
-// remembers the original functions in localStorage, so an interrupted calibration can always be undone from this step.
+// ---- ESC calibration (step 8 and the sidebar tab "ESC calibration"). One row per throttle output, laid out like a servo-output table:
+// POSITION (the real signal on the output, draggable in manual mode) | REVERSE | FUNCTION | MIN | TRIM | MAX. MIN / TRIM / MAX / REVERSE are written live while
+// DISARMED, every write acknowledged by the controller. Manual mode: the firmware refuses DO_SET_SERVO on a throttle output, so after an explicit, confirmed click the
+// throttle outputs are switched to Disabled, driven from the bar and restored at the end; the original functions are kept in localStorage so an interrupted
+// session can always be undone from this step.
 for(const [language,values] of Object.entries({
- ru:{escCalTitle:'Калибровка ESC по PWM',escCalNav:'Калибровка ESC',escCalTabTitle:'Калибровка ESC',escCalTabIntro:'Отдельная калибровка обычного PWM-регулятора: диапазон сигнала 1000–2200 µs, реверс и газ управляются отсюда. Нужны связь по USB и состояние DISARMED. Для DShot и CAN калибровка не нужна.',escCalIntro:'Обычный PWM-регулятор нужно научить сигналам нуля и полного газа. Контроллер не принимает прямой PWM на выходе газа, поэтому на время калибровки функция этого выхода временно отключается (SERVOx_FUNCTION = 0), а в конце возвращается. Пока идёт калибровка, самолёт без газа.',
-  escCalSteps:['Сними пропеллер. Аккумулятор ESC отключён: контроллер питается только от USB.','Нажми «Начать калибровку». Выход газа получает минимальный сигнал (0 %).','Задай диапазон и реверс (они применяются сразу), нажми «Полный газ» и подключи аккумулятор: ESC издаст сигналы входа в калибровку.','Нажми «Ноль»: ESC подтвердит новый диапазон сигналами.','Нажми «Записать диапазон и завершить»: SERVOx_MIN, MAX и REVERSED сохранятся, функция газа вернётся. Отключи аккумулятор.'],
-  escCalAck1:'Пропеллер снят.',escCalAck2:'Аккумулятор ESC отключён, контроллер питается только от USB.',escCalStart:'Начать калибровку',escCalConfirm:'Выход газа ({channels}) будет временно переключён в SERVOx_FUNCTION = 0 и возвращён в конце калибровки. Начать?',
-  escCalActive:'Калибровка идёт: газом управляет эта страница. Не закрывай страницу и не отсоединяй USB.',escCalRange:'Диапазон сигнала, µs',escCalMin:'Мин · ноль газа',escCalMax:'Макс · полный газ',escCalRangeHint:'От {min} до {max} µs, между значениями не меньше 100 µs. Изменения действуют сразу.',
-  escCalReverse:'Реверс сигнала',escCalReverseHint:'Меняет концы диапазона местами: ноль газа становится верхним значением, полный газ нижним. Применяется сразу и сохранится как SERVOx_REVERSED.',
-  escCalThrottle:'Газ',escCalZero:'Ноль',escCalFull:'Полный газ',escCalFullAck:'Аккумулятор ESC отключён, сейчас подам сигнал полного газа.',escCalSignal:'Сигнал на выходе: {pwm} µs · газ {percent} %',escCalObserved:'Контроллер выдаёт: {pwm} µs',escCalObservedNone:'Контроллер выдаёт: нет данных',
-  escCalApply:'Записать диапазон и завершить',escCalCancel:'Отменить и вернуть газ',escCalApplied:'Записано: диапазон {min}–{max} µs, реверс {rev}. Функция газа возвращена. Отключи аккумулятор и проверь, что двигатель отвечает на газ (без пропеллера).',escCalCancelled:'Калибровка отменена, функция газа возвращена. Диапазон и реверс не менялись.',
-  escCalPending:'Выход газа ({channels}) остался отключённым после калибровки (SERVOx_FUNCTION = 0). Верни функцию, иначе самолёт будет без газа.',escCalRestore:'Вернуть функцию газа',escCalRestored:'Функция газа возвращена.',escCalNoLink:'Нужны связь по USB, DISARMED и полностью прочитанные параметры.',escCalLeave:'Калибровка ESC идёт. Заверши или отмени её, прежде чем покинуть шаг.',
-  escCalRangeBad:'Недопустимый диапазон: {min}–{max} µs. Нужно от 1000 до 2200 µs и не меньше 100 µs между значениями.',escCalOn:'вкл',escCalOff:'выкл',escCalWriting:'Запись…',escCalFail:'Не удалось: {error}'},
- uk:{escCalTitle:'Калібрування ESC за PWM',escCalNav:'Калібрування ESC',escCalTabTitle:'Калібрування ESC',escCalTabIntro:'Окреме калібрування звичайного PWM-регулятора: діапазон сигналу 1000–2200 µs, реверс і газ керуються звідси. Потрібні зв’язок по USB і стан DISARMED. Для DShot і CAN калібрування не потрібне.',escCalIntro:'Звичайний PWM-регулятор потрібно навчити сигналам нуля й повного газу. Контролер не приймає прямий PWM на виході газу, тому на час калібрування функція цього виходу тимчасово вимикається (SERVOx_FUNCTION = 0), а наприкінці повертається. Поки триває калібрування, літак без газу.',
-  escCalSteps:['Зніми пропелер. Акумулятор ESC відключено: контролер живиться лише від USB.','Натисни «Почати калібрування». Вихід газу отримує мінімальний сигнал (0 %).','Задай діапазон і реверс (вони застосовуються відразу), натисни «Повний газ» і підключи акумулятор: ESC подасть сигнали входу в калібрування.','Натисни «Нуль»: ESC підтвердить новий діапазон сигналами.','Натисни «Записати діапазон і завершити»: SERVOx_MIN, MAX і REVERSED збережуться, функція газу повернеться. Відключи акумулятор.'],
-  escCalAck1:'Пропелер знято.',escCalAck2:'Акумулятор ESC відключено, контролер живиться лише від USB.',escCalStart:'Почати калібрування',escCalConfirm:'Вихід газу ({channels}) буде тимчасово переведено в SERVOx_FUNCTION = 0 і повернуто наприкінці калібрування. Почати?',
-  escCalActive:'Калібрування триває: газом керує ця сторінка. Не закривай сторінку й не від’єднуй USB.',escCalRange:'Діапазон сигналу, µs',escCalMin:'Мін · нуль газу',escCalMax:'Макс · повний газ',escCalRangeHint:'Від {min} до {max} µs, між значеннями не менше 100 µs. Зміни діють відразу.',
-  escCalReverse:'Реверс сигналу',escCalReverseHint:'Міняє кінці діапазону місцями: нуль газу стає верхнім значенням, повний газ нижнім. Застосовується відразу і збережеться як SERVOx_REVERSED.',
-  escCalThrottle:'Газ',escCalZero:'Нуль',escCalFull:'Повний газ',escCalFullAck:'Акумулятор ESC відключено, зараз подам сигнал повного газу.',escCalSignal:'Сигнал на виході: {pwm} µs · газ {percent} %',escCalObserved:'Контролер видає: {pwm} µs',escCalObservedNone:'Контролер видає: немає даних',
-  escCalApply:'Записати діапазон і завершити',escCalCancel:'Скасувати й повернути газ',escCalApplied:'Записано: діапазон {min}–{max} µs, реверс {rev}. Функцію газу повернуто. Відключи акумулятор і перевір, що двигун відповідає на газ (без пропелера).',escCalCancelled:'Калібрування скасовано, функцію газу повернуто. Діапазон і реверс не змінювались.',
-  escCalPending:'Вихід газу ({channels}) залишився вимкненим після калібрування (SERVOx_FUNCTION = 0). Поверни функцію, інакше літак буде без газу.',escCalRestore:'Повернути функцію газу',escCalRestored:'Функцію газу повернуто.',escCalNoLink:'Потрібні зв’язок по USB, DISARMED і повністю прочитані параметри.',escCalLeave:'Калібрування ESC триває. Заверши або скасуй його, перш ніж залишити крок.',
-  escCalRangeBad:'Недопустимий діапазон: {min}–{max} µs. Потрібно від 1000 до 2200 µs і не менше 100 µs між значеннями.',escCalOn:'увімк',escCalOff:'вимк',escCalWriting:'Запис…',escCalFail:'Не вдалося: {error}'},
- en:{escCalTitle:'ESC calibration by PWM',escCalNav:'ESC calibration',escCalTabTitle:'ESC calibration',escCalTabIntro:'Standalone calibration of a plain PWM ESC: the signal range 1000–2200 µs, the reverse and the throttle are controlled from here. A USB link and DISARMED are required. DShot and CAN ESCs need no calibration.',escCalIntro:'A plain PWM ESC has to learn the zero and full-throttle signals. The controller does not accept a direct PWM on a throttle output, so for the calibration the function of that output is switched off temporarily (SERVOx_FUNCTION = 0) and restored at the end. While it runs, the aircraft has no throttle.',
-  escCalSteps:['Remove the propeller. The ESC battery is disconnected: the controller is powered from USB only.','Press “Start calibration”. The throttle output gets the minimum signal (0 %).','Set the range and the reverse (they apply at once), press “Full throttle” and connect the battery: the ESC beeps to enter calibration.','Press “Zero”: the ESC confirms the new range with beeps.','Press “Write range and finish”: SERVOx_MIN, MAX and REVERSED are saved and the throttle function returns. Disconnect the battery.'],
-  escCalAck1:'The propeller is removed.',escCalAck2:'The ESC battery is disconnected, the controller is powered from USB only.',escCalStart:'Start calibration',escCalConfirm:'The throttle output ({channels}) will be switched to SERVOx_FUNCTION = 0 temporarily and restored at the end of the calibration. Start?',
-  escCalActive:'Calibration is running: this page controls the throttle. Do not close the page or unplug USB.',escCalRange:'Signal range, µs',escCalMin:'Min · zero throttle',escCalMax:'Max · full throttle',escCalRangeHint:'{min} to {max} µs, at least 100 µs between the values. Changes apply at once.',
-  escCalReverse:'Reverse the signal',escCalReverseHint:'Swaps the ends of the range: zero throttle becomes the upper value and full throttle the lower one. Applies at once and is saved as SERVOx_REVERSED.',
-  escCalThrottle:'Throttle',escCalZero:'Zero',escCalFull:'Full throttle',escCalFullAck:'The ESC battery is disconnected; I am about to send the full-throttle signal.',escCalSignal:'Output signal: {pwm} µs · throttle {percent} %',escCalObserved:'The controller outputs: {pwm} µs',escCalObservedNone:'The controller outputs: no data',
-  escCalApply:'Write range and finish',escCalCancel:'Cancel and restore throttle',escCalApplied:'Written: range {min}–{max} µs, reverse {rev}. The throttle function is restored. Disconnect the battery and check that the motor responds to throttle (propeller off).',escCalCancelled:'Calibration cancelled and the throttle function restored. Range and reverse were not changed.',
-  escCalPending:'The throttle output ({channels}) stayed disabled after a calibration (SERVOx_FUNCTION = 0). Restore the function, otherwise the aircraft has no throttle.',escCalRestore:'Restore throttle function',escCalRestored:'The throttle function is restored.',escCalNoLink:'A USB link, DISARMED and a completely read parameter list are required.',escCalLeave:'ESC calibration is running. Finish or cancel it before leaving this step.',
-  escCalRangeBad:'Invalid range: {min}–{max} µs. It must be 1000 to 2200 µs with at least 100 µs between the values.',escCalOn:'on',escCalOff:'off',escCalWriting:'Writing…',escCalFail:'Failed: {error}'}
+ ru:{escCalTitle:'Калибровка ESC по PWM',escCalNav:'Калибровка ESC',escCalTabTitle:'Калибровка ESC',escCalTabIntro:'Калибровка PWM-регулятора по таблице выходов: Position показывает реальный сигнал на выходе газа, а Reverse, Min, Trim и Max записываются в контроллер сразу при изменении. Диапазон сигнала 1000–2200 µs. Нужны связь по USB и состояние DISARMED. Для DShot и CAN калибровка не нужна.',
+  escCalIntro:'Задай диапазон сигнала, а потом подай регулятору полный газ и ноль, чтобы он их запомнил.',
+  escCalSteps:['Сними пропеллер. Аккумулятор ESC отключён: контроллер питается только от USB.','Задай Min, Max и Reverse в таблице. Они записываются в контроллер сразу.','Включи ручной режим, нажми «Полный газ» и подключи аккумулятор: ESC издаст сигналы входа в калибровку.','Нажми «Ноль газа»: ESC подтвердит диапазон сигналами. Заверши ручной режим и отключи аккумулятор.'],
+  escCalColPos:'Позиция',escCalColRev:'Реверс',escCalColFn:'Функция',escCalColMin:'Мин',escCalColTrim:'Трим',escCalColMax:'Макс',
+  escCalRowHint:'Значения от 1000 до 2200 µs, между Min и Max не меньше 100 µs. Trim подтягивается сам, если выходит за Min или Max. Каждое изменение подтверждается контроллером.',escCalSaved:'Записано и подтверждено контроллером: {name}',escCalNoOutputs:'Не найден выход газа (SERVOx_FUNCTION 70, 73 или 74).',
+  escCalProtocolUnknown:'Не удалось определить, обычный ли это PWM (нет параметров SERVO_BLH_*). Если твой ESC работает по PWM, калибровку можно продолжать.',escCalProtocolDigital:'Выход газа работает по цифровому протоколу или не по обычному PWM: калибровка диапазона не нужна, ручной сигнал отключён.',
+  escCalManualTitle:'Ручной сигнал на ESC',escCalManualIntro:'Контроллер не принимает прямой PWM на выходе газа, поэтому на время ручного режима функция выхода временно отключается (SERVOx_FUNCTION = 0), а в конце возвращается. Пока режим включён, самолёт без газа. «Ноль газа» — уровень, который контроллер подавал на выход до включения ручного режима, «Полный газ» — противоположный край диапазона.',
+  escCalAck1:'Пропеллер снят.',escCalAck2:'Аккумулятор ESC отключён, контроллер питается только от USB.',escCalAckNeeded:'Чтобы начать, отметь, что пропеллер снят и аккумулятор отключён.',escCalStart:'Включить ручной режим',escCalConfirm:'Выход газа ({channels}) будет временно переключён в SERVOx_FUNCTION = 0 и возвращён в конце. Включить ручной режим?',
+  escCalActive:'Ручной режим: газом управляет эта страница. Не закрывай страницу и не отсоединяй USB.',escCalZero:'Ноль газа · {pwm} µs',escCalFull:'Полный газ · {pwm} µs',escCalFullAck:'Аккумулятор ESC отключён, сейчас подам сигнал полного газа.',escCalSignal:'Сигнал на выходе: {pwm} µs',escCalNoData:'нет данных',
+  escCalFinish:'Завершить и вернуть газ',escCalFinished:'Ручной режим выключен, функция газа возвращена. Min, Trim, Max и Reverse записаны. Отключи аккумулятор и проверь, что двигатель отвечает на газ (без пропеллера).',escCalMixed:'У выходов газа разные Min / Max / Reverse: ручной режим доступен, когда они совпадут.',
+  escCalPending:'Выход газа ({channels}) остался отключённым после ручного режима (SERVOx_FUNCTION = 0). Верни функцию, иначе самолёт будет без газа.',escCalRestore:'Вернуть функцию газа',escCalRestored:'Функция газа возвращена.',escCalNoLink:'Нужны связь по USB, DISARMED и полностью прочитанные параметры.',escCalLeave:'Ручной режим ESC включён. Заверши его, прежде чем покинуть шаг.',
+  escCalRangeBad:'Недопустимое значение: нужно целое от 1000 до 2200 µs, Min ≤ Trim ≤ Max и не меньше 100 µs между Min и Max.',escCalWriting:'Запись…',escCalFail:'Не удалось: {error}'},
+ uk:{escCalTitle:'Калібрування ESC за PWM',escCalNav:'Калібрування ESC',escCalTabTitle:'Калібрування ESC',escCalTabIntro:'Калібрування PWM-регулятора за таблицею виходів: Position показує реальний сигнал на виході газу, а Reverse, Min, Trim і Max записуються в контролер відразу при зміні. Діапазон сигналу 1000–2200 µs. Потрібні зв’язок по USB і стан DISARMED. Для DShot і CAN калібрування не потрібне.',
+  escCalIntro:'Задай діапазон сигналу, а потім подай регулятору повний газ і нуль, щоб він їх запам’ятав.',
+  escCalSteps:['Зніми пропелер. Акумулятор ESC відключено: контролер живиться лише від USB.','Задай Min, Max і Reverse в таблиці. Вони записуються в контролер відразу.','Увімкни ручний режим, натисни «Повний газ» і підключи акумулятор: ESC подасть сигнали входу в калібрування.','Натисни «Нуль газу»: ESC підтвердить діапазон сигналами. Заверши ручний режим і відключи акумулятор.'],
+  escCalColPos:'Позиція',escCalColRev:'Реверс',escCalColFn:'Функція',escCalColMin:'Мін',escCalColTrim:'Трім',escCalColMax:'Макс',
+  escCalRowHint:'Значення від 1000 до 2200 µs, між Min і Max не менше 100 µs. Trim підтягується сам, якщо виходить за Min або Max. Кожну зміну підтверджує контролер.',escCalSaved:'Записано й підтверджено контролером: {name}',escCalNoOutputs:'Не знайдено виходу газу (SERVOx_FUNCTION 70, 73 або 74).',
+  escCalProtocolUnknown:'Не вдалося визначити, чи це звичайний PWM (немає параметрів SERVO_BLH_*). Якщо твій ESC працює за PWM, калібрування можна продовжувати.',escCalProtocolDigital:'Вихід газу працює за цифровим протоколом або не за звичайним PWM: калібрування діапазону не потрібне, ручний сигнал вимкнено.',
+  escCalManualTitle:'Ручний сигнал на ESC',escCalManualIntro:'Контролер не приймає прямий PWM на виході газу, тому на час ручного режиму функція виходу тимчасово вимикається (SERVOx_FUNCTION = 0), а наприкінці повертається. Поки режим увімкнено, літак без газу. «Нуль газу» — рівень, який контролер подавав на вихід до ввімкнення ручного режиму, «Повний газ» — протилежний край діапазону.',
+  escCalAck1:'Пропелер знято.',escCalAck2:'Акумулятор ESC відключено, контролер живиться лише від USB.',escCalAckNeeded:'Щоб почати, познач, що пропелер знято й акумулятор відключено.',escCalStart:'Увімкнути ручний режим',escCalConfirm:'Вихід газу ({channels}) буде тимчасово переведено в SERVOx_FUNCTION = 0 і повернуто наприкінці. Увімкнути ручний режим?',
+  escCalActive:'Ручний режим: газом керує ця сторінка. Не закривай сторінку й не від’єднуй USB.',escCalZero:'Нуль газу · {pwm} µs',escCalFull:'Повний газ · {pwm} µs',escCalFullAck:'Акумулятор ESC відключено, зараз подам сигнал повного газу.',escCalSignal:'Сигнал на виході: {pwm} µs',escCalNoData:'немає даних',
+  escCalFinish:'Завершити й повернути газ',escCalFinished:'Ручний режим вимкнено, функцію газу повернуто. Min, Trim, Max і Reverse записано. Відключи акумулятор і перевір, що двигун відповідає на газ (без пропелера).',escCalMixed:'У виходів газу різні Min / Max / Reverse: ручний режим доступний, коли вони збігатимуться.',
+  escCalPending:'Вихід газу ({channels}) залишився вимкненим після ручного режиму (SERVOx_FUNCTION = 0). Поверни функцію, інакше літак буде без газу.',escCalRestore:'Повернути функцію газу',escCalRestored:'Функцію газу повернуто.',escCalNoLink:'Потрібні зв’язок по USB, DISARMED і повністю прочитані параметри.',escCalLeave:'Ручний режим ESC увімкнено. Заверши його, перш ніж залишити крок.',
+  escCalRangeBad:'Недопустиме значення: потрібне ціле від 1000 до 2200 µs, Min ≤ Trim ≤ Max і не менше 100 µs між Min і Max.',escCalWriting:'Запис…',escCalFail:'Не вдалося: {error}'},
+ en:{escCalTitle:'ESC calibration by PWM',escCalNav:'ESC calibration',escCalTabTitle:'ESC calibration',escCalTabIntro:'Calibration of a PWM ESC from the output table: Position shows the real signal on the throttle output, and Reverse, Min, Trim and Max are written to the controller as you change them. Signal range 1000–2200 µs. A USB link and DISARMED are required. DShot and CAN ESCs need no calibration.',
+  escCalIntro:'Set the signal range, then give the ESC full throttle and zero so it can remember them.',
+  escCalSteps:['Remove the propeller. The ESC battery is disconnected: the controller is powered from USB only.','Set Min, Max and Reverse in the table. They are written to the controller at once.','Turn manual mode on, press “Full throttle” and connect the battery: the ESC beeps to enter calibration.','Press “Zero throttle”: the ESC confirms the range with beeps. Finish manual mode and disconnect the battery.'],
+  escCalColPos:'Position',escCalColRev:'Reverse',escCalColFn:'Function',escCalColMin:'Min',escCalColTrim:'Trim',escCalColMax:'Max',
+  escCalRowHint:'Values from 1000 to 2200 µs, at least 100 µs between Min and Max. Trim follows by itself when it would fall outside Min or Max. The controller acknowledges every change.',escCalSaved:'Written and acknowledged by the controller: {name}',escCalNoOutputs:'No throttle output found (SERVOx_FUNCTION 70, 73 or 74).',
+  escCalProtocolUnknown:'It could not be determined whether this is plain PWM (no SERVO_BLH_* parameters). If your ESC runs on PWM you can continue with the calibration.',escCalProtocolDigital:'The throttle output runs a digital protocol or is not plain PWM: no range calibration is needed, the manual signal is off.',
+  escCalManualTitle:'Manual signal to the ESC',escCalManualIntro:'The controller does not accept a direct PWM on a throttle output, so during manual mode the function of the output is switched off temporarily (SERVOx_FUNCTION = 0) and restored at the end. While it is on, the aircraft has no throttle. “Zero throttle” is the level the controller was outputting before manual mode, “Full throttle” the opposite end of the range.',
+  escCalAck1:'The propeller is removed.',escCalAck2:'The ESC battery is disconnected, the controller is powered from USB only.',escCalAckNeeded:'To start, tick that the propeller is removed and the battery is disconnected.',escCalStart:'Turn manual mode on',escCalConfirm:'The throttle output ({channels}) will be switched to SERVOx_FUNCTION = 0 temporarily and restored at the end. Turn manual mode on?',
+  escCalActive:'Manual mode: this page controls the throttle. Do not close the page or unplug USB.',escCalZero:'Zero throttle · {pwm} µs',escCalFull:'Full throttle · {pwm} µs',escCalFullAck:'The ESC battery is disconnected; I am about to send the full-throttle signal.',escCalSignal:'Output signal: {pwm} µs',escCalNoData:'no data',
+  escCalFinish:'Finish and restore throttle',escCalFinished:'Manual mode is off and the throttle function is restored. Min, Trim, Max and Reverse are written. Disconnect the battery and check that the motor responds to throttle (propeller off).',escCalMixed:'The throttle outputs have different Min / Max / Reverse: manual mode is available when they match.',
+  escCalPending:'The throttle output ({channels}) stayed disabled after manual mode (SERVOx_FUNCTION = 0). Restore the function, otherwise the aircraft has no throttle.',escCalRestore:'Restore throttle function',escCalRestored:'The throttle function is restored.',escCalNoLink:'A USB link, DISARMED and a completely read parameter list are required.',escCalLeave:'ESC manual mode is on. Finish it before leaving this step.',
+  escCalRangeBad:'Invalid value: an integer from 1000 to 2200 µs, Min ≤ Trim ≤ Max and at least 100 µs between Min and Max.',escCalWriting:'Writing…',escCalFail:'Failed: {error}'}
 }))Object.assign(copy[language],values);
 const ESC_PENDING_KEY='atlas.esccal.pending.v1';
 const fillText=(text,values)=>String(text).replace(/\{(\w+)\}/g,(match,key)=>values&&values[key]!==undefined?values[key]:match);
@@ -558,19 +569,26 @@ function escSavePending(record){try{localStorage.setItem(ESC_PENDING_KEY,JSON.st
 function escClearPending(){try{localStorage.removeItem(ESC_PENDING_KEY);}catch{}}
 const escChannelsText=outputs=>outputs.map(o=>'SERVO'+o.channel).join(', ');
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-let escSending=false,escAgain=false;
-// Send the current throttle position as PWM to every throttle output. Calls made during a send are merged into one follow-up send (a slider produces many).
+let escSending=false,escAgain=false,escQueue=Promise.resolve();
+/** The throttle outputs with their live values; during manual mode (function 0) the outputs the wizard took over. */
+function escOutputs(){
+ const e=qs.esc,s=state(),read=(channel,field)=>{const p=s.params.get(`SERVO${channel}_${field}`);return p&&Number.isFinite(p.value)?p.value:null;};
+ const list=e.phase==='active'?e.outputs.map(o=>({channel:o.channel,func:o.func})):core.escThrottleChannels(s.params).map(channel=>({channel,func:read(channel,'FUNCTION')}));
+ return list.map(o=>({...o,min:read(o.channel,'MIN'),trim:read(o.channel,'TRIM'),max:read(o.channel,'MAX'),reversed:read(o.channel,'REVERSED')===1?1:0})).filter(o=>[o.min,o.trim,o.max].every(v=>v!==null));
+}
+const escMeasured=channel=>{const raw=qs.esc.servo[channel-1];return Date.now()-qs.esc.servoAt<3000&&Number.isFinite(raw)&&raw>0?raw:null;};
+/** The two ends of the signal for an output: zero throttle is the level the controller output before the take-over, full throttle the other end. */
+const escEndsFor=o=>core.escEnds(o,qs.esc.zeroSide||core.escZeroSide(o,escMeasured(o.channel)));
+// Send the current signal to every throttle output. Calls made during a send or a parameter write are merged into one follow-up send (a slider produces many).
 async function escSend(){
  const e=qs.esc;if(e.phase!=='active'||e.writing)return;
- if(escSending){escAgain=true;return;}
+ if(escSending||e.fieldBusy>0){escAgain=true;return;}
  escSending=true;
  try{
   do{
-   escAgain=false;
-   const pwm=core.escPwm(e.percent,e.range.min,e.range.max,e.reversed);if(pwm===null)break;
-   e.pwm=pwm;
-   try{await api.sendEscCalibrationPwm(e.outputs.map(o=>o.channel),pwm);e.error='';}catch(error){e.error=error.message;break;}
-  }while(escAgain&&qs.esc.phase==='active'&&!qs.esc.writing);
+   escAgain=false;if(!Number.isInteger(e.pwm))break;
+   try{await api.sendEscCalibrationPwm(e.outputs.map(o=>o.channel),e.pwm);e.error='';}catch(error){e.error=error.message;break;}
+  }while(escAgain&&qs.esc.phase==='active'&&!qs.esc.writing&&qs.esc.fieldBusy===0);
  }finally{escSending=false;}
  updateEscPanel();
 }
@@ -580,19 +598,55 @@ async function escRestore(outputs){
  for(const o of outputs)await api.writeServoConfig(o.channel,{FUNCTION:o.func});
  escClearPending();
 }
-async function escStart(result){
+// One edited cell of the table: validated, then written (TRIM follows MIN / MAX when they would cross it) and acknowledged by the controller, one write at a time.
+function escSetField(channel,field,raw){
+ const e=qs.esc,output=escOutputs().find(o=>o.channel===channel);if(!output)return;
+ const value=field==='REVERSED'?(raw?1:0):Number(raw),result=core.escFieldWrites(field,value,output);
+ if(result.error){e.error=t('escCalRangeBad');updateEscPanel(true);return;}
+ if(!Object.keys(result.updates).length){updateEscPanel(true);return;}
+ if(!safeLink(state())||!api.canWrite()){e.error=t('escCalNoLink');updateEscPanel(true);return;}
+ e.fieldBusy++;e.error='';
+ escQueue=escQueue.catch(()=>{}).then(async()=>{
+  if(!safeLink(state()))throw Error(t('escCalNoLink'));
+  await api.writeServoConfig(channel,result.updates);
+  e.message=fillText(t('escCalSaved'),{name:Object.entries(result.updates).map(([k,v])=>`SERVO${channel}_${k} = ${v}`).join(', ')});
+ }).catch(error=>{e.error=fillText(t('escCalFail'),{error:error.message});e.message='';})
+  .finally(()=>{e.fieldBusy--;updateEscPanel(true);if(e.phase==='active')escSend();});
+ updateEscPanel();
+}
+const escTimers=new Map();
+// The spinner arrows of a number field fire one change per click: collect them for 400 ms so a burst becomes one write.
+function escSetFieldSoon(channel,field,raw){
+ const key=channel+field;clearTimeout(escTimers.get(key));
+ escTimers.set(key,setTimeout(()=>{escTimers.delete(key);escSetField(channel,field,raw);},400));
+}
+// Manual mode needs outputs that can share one signal.
+const escSameSettings=outputs=>outputs.every(o=>o.min===outputs[0].min&&o.max===outputs[0].max&&o.reversed===outputs[0].reversed);
+function escManualReasons(){
+ const e=qs.esc,s=state(),reasons=[],outputs=escOutputs();
+ if(!outputs.length)reasons.push(t('escCalNoOutputs'));
+ else if(!core.escManualAllowed(e.result?.kind))reasons.push(t('escCalProtocolDigital'));
+ else if(!escSameSettings(outputs))reasons.push(t('escCalMixed'));
+ if(!(safeLink(s)&&paramReady(s)&&api.canWrite()))reasons.push(t('escCalNoLink'));
+ if(!(e.ack1&&e.ack2))reasons.push(t('escCalAckNeeded'));
+ return reasons;
+}
+async function escStart(){
  const e=qs.esc,s=state();
  if(e.writing||e.phase==='active')return;
- if(!safeLink(s)||!paramReady(s)||!api.canWrite()){e.error=t('escCalNoLink');updateEscPanel();return;}
- const plan=core.escCalibrationPlan(s.params,core.classifyEscProtocol(s.params,s.selectedBoard).channels);
+ const reasons=escManualReasons();
+ if(reasons.length){e.error=reasons[0];updateEscPanel();return;}
+ const plan=core.escCalibrationPlan(s.params,core.escThrottleChannels(s.params));
  if(plan.error){e.error=fillText(t('escCalFail'),{error:plan.error+(plan.channel?' SERVO'+plan.channel:'')});updateEscPanel();return;}
  if(!window.confirm(fillText(t('escCalConfirm'),{channels:escChannelsText(plan.outputs)})))return;
  e.writing=true;e.error='';e.message='';updateEscPanel();
  // The record is saved before the first write: if the page dies after it, the next visit still knows what to restore.
  escSavePending({v:1,outputs:plan.outputs.map(o=>({channel:o.channel,func:o.func})),at:Date.now()});
+ // The zero level is the signal the controller outputs right now: measured BEFORE the output is taken over, so the take-over does not change what the ESC sees.
+ e.zeroSide=core.escZeroSide(plan.outputs[0],escMeasured(plan.outputs[0].channel));
  try{
   for(const o of plan.outputs)await api.writeServoConfig(o.channel,{FUNCTION:0});
-  Object.assign(e,{phase:'active',outputs:plan.outputs,range:{...plan.range},reversed:plan.reversed,percent:0,fullAck:false,pwm:null,applied:null,writing:false});
+  Object.assign(e,{phase:'active',outputs:plan.outputs,pwm:core.escEnds(plan.outputs[0],e.zeroSide).zero,fullAck:false,writing:false});   // the first signal is the zero-throttle end, never full throttle
   await escSend();escStartKeepAlive();
  }catch(error){
   e.error=fillText(t('escCalFail'),{error:error.message});
@@ -607,79 +661,70 @@ async function escRestorePending(pending){
  try{await escRestore(pending);e.message=t('escCalRestored');}catch(error){e.error=fillText(t('escCalFail'),{error:error.message});}
  finally{e.writing=false;escRefresh();}
 }
-async function escApply(){
+async function escFinish(){
  const e=qs.esc;if(e.phase!=='active'||e.writing)return;
  if(!safeLink(state())||!api.canWrite()){e.error=t('escCalNoLink');updateEscPanel();return;}
  e.writing=true;e.error='';escStopKeepAlive();updateEscPanel();
  try{
-  while(escSending)await sleep(20);
-  const channels=e.outputs.map(o=>o.channel);
-  // Park the ESC at the zero signal of the new range while the parameters change, then give the throttle function back last.
-  await api.sendEscCalibrationPwm(channels,core.escPwm(0,e.range.min,e.range.max,e.reversed));
-  for(const o of e.outputs)await api.writeServoConfig(o.channel,core.escFinalWrites(o,e.range,e.reversed));
+  while(escSending||e.fieldBusy>0)await sleep(20);
+  // Park the ESC at the zero-throttle end of the current range while the throttle function is restored.
+  const live=escOutputs()[0];
+  try{if(live)await api.sendEscCalibrationPwm(e.outputs.map(o=>o.channel),escEndsFor(live).zero);}catch{}
   await escRestore(e.outputs);
-  e.applied={min:e.range.min,max:e.range.max,reversed:e.reversed,channels:escChannelsText(e.outputs)};
-  e.phase='done';e.ack1=false;e.ack2=false;e.fullAck=false;e.percent=0;
-  e.message=fillText(t('escCalApplied'),{min:e.range.min,max:e.range.max,rev:t(e.reversed?'escCalOn':'escCalOff')});
+  e.phase='done';e.ack1=false;e.ack2=false;e.fullAck=false;e.pwm=null;e.zeroSide=null;e.message=t('escCalFinished');
  }catch(error){e.error=fillText(t('escCalFail'),{error:error.message});escStartKeepAlive();}
  finally{e.writing=false;escRefresh();}
 }
-async function escCancel(){
- const e=qs.esc;if(e.phase!=='active'||e.writing)return;
- if(!safeLink(state())||!api.canWrite()){e.error=t('escCalNoLink');updateEscPanel();return;}
- e.writing=true;e.error='';escStopKeepAlive();updateEscPanel();
- try{
-  while(escSending)await sleep(20);
-  try{await api.sendEscCalibrationPwm(e.outputs.map(o=>o.channel),core.escPwm(0,e.range.min,e.range.max,e.reversed));}catch{}
-  await escRestore(e.outputs);
-  e.phase='idle';e.ack1=false;e.ack2=false;e.fullAck=false;e.percent=0;e.message=t('escCalCancelled');
- }catch(error){e.error=fillText(t('escCalFail'),{error:error.message});escStartKeepAlive();}
- finally{e.writing=false;escRefresh();}
-}
-function escSetRange(key,raw){
- const e=qs.esc,next={...e.range,[key]:Number(raw)};
- if(core.validateEscRange(next.min,next.max).error){e.error=fillText(t('escCalRangeBad'),{min:next.min,max:next.max});updateEscPanel();return;}
- e.range=next;e.error='';escSend();updateEscPanel();
+function buildEscRow(channel){
+ const row=el('div','esc-row'),r={channel,row};
+ const cell=(cls,label)=>{const c=el('div','esc-cell '+cls);c.append(el('small','',label));row.append(c);return c;};
+ appendText(cell('esc-no','#'),'b',String(channel));
+ const pos=cell('esc-pos',t('escCalColPos'));
+ r.bar=el('div','esc-bar');r.fill=el('i','esc-fill');r.zeroTick=el('i','esc-tick');r.fullTick=el('i','esc-tick esc-tick-full');r.value=el('span','esc-val','—');
+ r.slider=el('input');r.slider.type='range';r.slider.min=String(core.ESC_PWM_LIMITS.min);r.slider.max=String(core.ESC_PWM_LIMITS.max);r.slider.step='1';
+ r.slider.addEventListener('input',()=>{const e=qs.esc;if(!e.fullAck||e.phase!=='active')return;e.pwm=Number(r.slider.value);escSend();updateEscPanel();});
+ r.bar.append(r.fill,r.zeroTick,r.fullTick,r.value,r.slider);pos.append(r.bar);
+ const rev=cell('esc-rev',t('escCalColRev'));r.reverse=el('input');r.reverse.type='checkbox';r.reverse.addEventListener('change',()=>escSetField(channel,'REVERSED',r.reverse.checked));rev.append(r.reverse);
+ const fn=cell('esc-fn',t('escCalColFn'));r.fn=el('div','esc-select','—');fn.append(r.fn);
+ for(const [field,label] of [['MIN','escCalColMin'],['TRIM','escCalColTrim'],['MAX','escCalColMax']]){
+  const c=cell('esc-num',t(label)),input=el('input');
+  input.type='number';input.min=String(core.ESC_PWM_LIMITS.min);input.max=String(core.ESC_PWM_LIMITS.max);input.step='1';input.inputMode='numeric';
+  input.addEventListener('change',()=>escSetFieldSoon(channel,field,input.value));c.append(input);r[field]=input;
+ }
+ return r;
 }
 function buildEscPanel(){
- const e=qs.esc,ui={},root=el('section','qs-esc-cal');
+ const e=qs.esc,ui={rows:new Map()},root=el('section','qs-esc-cal');
  appendText(root,'h3',t('escCalTitle'));appendText(root,'p',t('escCalIntro'),'qs-global-status');
  const steps=el('ol','qs-esc-steps');for(const text of t('escCalSteps'))appendText(steps,'li',text);root.append(steps);
  ui.pending=el('div','qs-esc-pending');root.append(ui.pending);
+ ui.protocol=el('div','qs-esc-protocol');root.append(ui.protocol);
+ ui.table=el('div','esc-table');root.append(ui.table);
+ ui.hint=appendText(root,'p',t('escCalRowHint'),'qs-global-status');
+ ui.manual=el('div','qs-esc-manual');appendText(ui.manual,'strong',t('escCalManualTitle'));appendText(ui.manual,'p',t('escCalManualIntro'),'qs-global-status');
  ui.start=el('div','qs-esc-start');
  ui.ack1=checkbox(ui.start,t('escCalAck1'),e.ack1,value=>{e.ack1=value;updateEscPanel();});
  ui.ack2=checkbox(ui.start,t('escCalAck2'),e.ack2,value=>{e.ack2=value;updateEscPanel();});
  ui.startButton=button(ui.start,t('escCalStart'),()=>escStart(),'cc-button primary');
- root.append(ui.start);
+ ui.why=appendText(ui.start,'p','','qs-global-status');
+ ui.manual.append(ui.start);
  ui.live=el('div','qs-esc-live');
  appendText(ui.live,'div',t('escCalActive'),'qs-callout warning');
- appendText(ui.live,'strong',t('escCalRange'));
- const row=el('div','qs-esc-row');
- const field=(label,key)=>{const wrap=el('label','qs-esc-field'),input=el('input');wrap.append(el('small','',label));input.type='number';input.min=String(core.ESC_PWM_LIMITS.min);input.max=String(core.ESC_PWM_LIMITS.max);input.step='1';input.inputMode='numeric';input.addEventListener('change',()=>escSetRange(key,input.value));wrap.append(input);row.append(wrap);return input;};
- ui.min=field(t('escCalMin'),'min');ui.max=field(t('escCalMax'),'max');ui.live.append(row);
- ui.rangeHint=appendText(ui.live,'p','','qs-global-status');
- ui.reverse=checkbox(ui.live,t('escCalReverse'),false,value=>{e.reversed=value?1:0;e.error='';escSend();updateEscPanel();});
- appendText(ui.live,'p',t('escCalReverseHint'),'qs-global-status');
- const slide=el('div','qs-esc-slider');appendText(slide,'strong',t('escCalThrottle'));
- ui.slider=el('input');ui.slider.type='range';ui.slider.min='0';ui.slider.max='100';ui.slider.step='1';
- ui.slider.addEventListener('input',()=>{e.percent=Number(ui.slider.value);escSend();updateEscPanel();});
- slide.append(ui.slider);ui.live.append(slide);
  const actions=el('div','qs-esc-actions');
- ui.zero=button(actions,t('escCalZero'),()=>{e.percent=0;escSend();updateEscPanel();},'cc-button ghost');
- ui.full=button(actions,t('escCalFull'),()=>{if(!e.fullAck)return;e.percent=100;escSend();updateEscPanel();},'cc-button ghost');
+ ui.zero=button(actions,'',()=>{const o=escOutputs()[0];if(o){qs.esc.pwm=escEndsFor(o).zero;escSend();updateEscPanel();}},'cc-button ghost');
+ ui.full=button(actions,'',()=>{const o=escOutputs()[0];if(o&&qs.esc.fullAck){qs.esc.pwm=escEndsFor(o).full;escSend();updateEscPanel();}},'cc-button ghost');
  ui.live.append(actions);
  ui.fullAck=checkbox(ui.live,t('escCalFullAck'),e.fullAck,value=>{e.fullAck=value;updateEscPanel();});
- ui.signal=appendText(ui.live,'p','','qs-esc-signal');ui.observed=appendText(ui.live,'p','','qs-global-status');
- const finish=el('div','qs-esc-actions');
- ui.apply=button(finish,t('escCalApply'),()=>escApply(),'cc-button primary');
- ui.cancel=button(finish,t('escCalCancel'),()=>escCancel(),'cc-button ghost');
- ui.live.append(finish);root.append(ui.live);
+ ui.signal=appendText(ui.live,'p','','qs-esc-signal');
+ ui.finish=button(ui.live,t('escCalFinish'),()=>escFinish(),'cc-button primary');
+ ui.manual.append(ui.live);root.append(ui.manual);
  ui.message=appendText(root,'p','','qs-callout success');ui.error=appendText(root,'p','','qs-callout danger');
  e.ui=ui;return root;
 }
-function updateEscPanel(){
+const escPercent=pwm=>Math.max(0,Math.min(100,(pwm-core.ESC_PWM_LIMITS.min)/(core.ESC_PWM_LIMITS.max-core.ESC_PWM_LIMITS.min)*100));
+function updateEscPanel(forceFields=false){
  const e=qs.esc,ui=e.ui;escBadge();if(!ui||!e.node)return;
- const s=state(),link=safeLink(s)&&paramReady(s),active=e.phase==='active',pending=e.pending||[];
+ const s=state(),link=safeLink(s)&&paramReady(s),active=e.phase==='active',pending=e.pending||[],outputs=escOutputs(),editing=document.activeElement;
  const pendingKey=JSON.stringify([pending.map(p=>p.channel),e.writing,link,lang()]);
  if(ui.pendingKey!==pendingKey){
   ui.pendingKey=pendingKey;ui.pending.replaceChildren();
@@ -688,22 +733,38 @@ function updateEscPanel(){
    const restore=button(ui.pending,e.writing?t('escCalWriting'):t('escCalRestore'),()=>escRestorePending(pending),'cc-button primary');restore.disabled=!link||e.writing;
   }
  }
- ui.start.hidden=active||pending.length>0;ui.live.hidden=!active;
- const plan=e.result&&e.result.kind==='pwm'?core.escCalibrationPlan(s.params,e.result.channels):{error:'protocol'};
+ // the table: one row per throttle output, rebuilt only when the set of outputs changes
+ const rowsKey=outputs.map(o=>o.channel).join(',')+'|'+lang();
+ if(ui.rowsKey!==rowsKey){ui.rowsKey=rowsKey;ui.rows.clear();ui.table.replaceChildren();for(const o of outputs){const r=buildEscRow(o.channel);ui.rows.set(o.channel,r);ui.table.append(r.row);}}
+ const canEdit=link&&api.canWrite()&&!e.writing;
+ for(const o of outputs){
+  const r=ui.rows.get(o.channel);if(!r)continue;
+  const raw=e.servo[o.channel-1],fresh=Date.now()-e.servoAt<3000&&Number.isFinite(raw)&&raw>0;
+  const pwm=fresh?raw:(active&&Number.isInteger(e.pwm)?e.pwm:null);
+  r.fill.style.width=pwm===null?'0%':escPercent(pwm).toFixed(1)+'%';r.value.textContent=pwm===null?'—':String(pwm);
+  const ends=escEndsFor(o);r.zeroTick.style.left=escPercent(ends.zero).toFixed(1)+'%';r.fullTick.style.left=escPercent(ends.full).toFixed(1)+'%';
+  if(forceFields||editing!==r.slider)r.slider.value=String(Number.isInteger(e.pwm)?e.pwm:ends.zero);
+  r.slider.disabled=!(active&&e.fullAck&&link&&!e.writing);r.bar.className='esc-bar'+(active&&e.fullAck?' is-live':'');
+  for(const [field,key] of [['MIN','min'],['TRIM','trim'],['MAX','max']])if(forceFields||editing!==r[field])r[field].value=String(o[key]);
+  if(forceFields||editing!==r.reverse)r.reverse.checked=o.reversed===1;
+  r.fn.textContent=core.ESC_FUNCTION_NAMES[o.func]||('FUNCTION '+o.func);
+  r.fn.dataset.manual=active?'1':'0';
+  for(const control of [r.MIN,r.TRIM,r.MAX,r.reverse])control.disabled=!canEdit;
+ }
+ // no throttle output: say so (the table is empty)
+ const noOutputs=outputs.length?'':t('escCalNoOutputs');
+ if(ui.protocolText!==noOutputs){ui.protocolText=noOutputs;ui.protocol.replaceChildren();if(noOutputs)callout(ui.protocol,noOutputs,'warning');}
+ // manual mode
+ ui.manual.hidden=!outputs.length;ui.start.hidden=active||pending.length>0;ui.live.hidden=!active;
+ const reasons=active?[]:escManualReasons();
  ui.ack1.checked=!!e.ack1;ui.ack2.checked=!!e.ack2;
- ui.startButton.disabled=!(e.ack1&&e.ack2)||!link||e.writing||!!plan.error;ui.startButton.textContent=e.writing?t('escCalWriting'):t('escCalStart');
+ ui.startButton.disabled=reasons.length>0||e.writing;ui.startButton.textContent=e.writing?t('escCalWriting'):t('escCalStart');
+ ui.why.textContent=reasons.join(' ');
  if(active){
-  const editing=document.activeElement;
-  if(editing!==ui.min)ui.min.value=String(e.range.min);if(editing!==ui.max)ui.max.value=String(e.range.max);
-  ui.rangeHint.textContent=fillText(t('escCalRangeHint'),{min:core.ESC_PWM_LIMITS.min,max:core.ESC_PWM_LIMITS.max});
-  ui.reverse.checked=e.reversed===1;if(editing!==ui.slider)ui.slider.value=String(e.percent);ui.fullAck.checked=!!e.fullAck;
-  const pwm=core.escPwm(e.percent,e.range.min,e.range.max,e.reversed);
-  ui.signal.textContent=fillText(t('escCalSignal'),{pwm:pwm??'—',percent:e.percent});
-  const raw=e.servo[(e.outputs[0]?.channel||1)-1],fresh=Date.now()-e.servoAt<3000&&Number.isFinite(raw)&&raw>0;
-  ui.observed.textContent=fresh?fillText(t('escCalObserved'),{pwm:raw}):t('escCalObservedNone');
-  const off=!link||e.writing;
-  for(const control of [ui.min,ui.max,ui.reverse,ui.slider,ui.zero,ui.fullAck,ui.apply,ui.cancel])control.disabled=off;
-  ui.full.disabled=off||!e.fullAck;
+  const first=outputs[0];
+  ui.zero.textContent=fillText(t('escCalZero'),{pwm:first?escEndsFor(first).zero:'—'});ui.full.textContent=fillText(t('escCalFull'),{pwm:first?escEndsFor(first).full:'—'});
+  ui.fullAck.checked=!!e.fullAck;ui.signal.textContent=fillText(t('escCalSignal'),{pwm:Number.isInteger(e.pwm)?e.pwm:'—'});
+  const off=!link||e.writing;ui.zero.disabled=off;ui.full.disabled=off||!e.fullAck;ui.fullAck.disabled=off;ui.finish.disabled=off;
  }
  ui.message.hidden=!e.message;ui.message.textContent=e.message||'';
  ui.error.hidden=!e.error;ui.error.textContent=e.error||'';
@@ -711,13 +772,13 @@ function updateEscPanel(){
 function renderEscCalibration(box,result,pending){
  const e=qs.esc;
  e.result=result||e.result;e.pending=pending;
- if(!e.node||e.lang!==lang()){e.node=buildEscPanel();e.lang=lang();e.ui.pendingKey=null;}
+ if(!e.node||e.lang!==lang()){e.node=buildEscPanel();e.lang=lang();e.ui.pendingKey=null;e.ui.rowsKey=null;}
  box.append(e.node);updateEscPanel();
 }
 window.addEventListener('atlas:message',event=>{
  const d=event.detail;if(!d||d.type!=='servo_output'||!Array.isArray(d.pwm))return;
  const offset=(d.port||0)*8;d.pwm.forEach((value,index)=>{if(offset+index<16)qs.esc.servo[offset+index]=value;});
- qs.esc.servoAt=Date.now();if(wizardActive&&qs.step===7&&qs.esc.phase==='active')updateEscPanel();
+ qs.esc.servoAt=Date.now();if(wizardActive&&qs.step===7)updateEscPanel();else if(escTabActive)updateEscPanel();
 });
 function renderEsc(box,standalone=false){
  if(!standalone)addHeading(box,t('escTitle'),t('escBody'));
@@ -738,12 +799,13 @@ function renderEsc(box,standalone=false){
  else if(result.kind==='mixed'){message='escMixed';confirmLabel='escOtherConfirm';}
  else if(result.kind==='dshot-board-limit'){message='escCubeLimit';confirmLabel='escOtherConfirm';}
  else if(result.kind==='no-throttle'){message='escNone';confirmLabel='escNoneConfirm';}
+ else if(result.kind==='unknown'){message='escCalProtocolUnknown';confirmLabel='escOtherConfirm';}   // no SERVO_BLH_* parameters: the table and the manual mode stay available
  callout(box,t(message),result.kind==='dshot'?'success':'warning');
  if(result.reason)appendText(box,'p',result.reason,'qs-global-status');
  callout(box,t(result.source==='profile+controller'?'escProfileSource':'escLiveSource'));
  if(result.source==='profile+controller')callout(box,t('escVerifyHardware'),'warning');
- if(result.kind==='pwm')link(box,t('escDocs'),'https://ardupilot.org/plane/docs/common-esc-calibration.html');
- if(result.kind==='pwm'||qs.esc.phase==='done')renderEscCalibration(box,result,[]);
+ if(core.escManualAllowed(result.kind))link(box,t('escDocs'),'https://ardupilot.org/plane/docs/common-esc-calibration.html');
+ if(core.escManualAllowed(result.kind)||qs.esc.phase==='done')renderEscCalibration(box,result,[]);
  if(!standalone)checkbox(box,t(confirmLabel),!!qs.escConfirmed,value=>{qs.escConfirmed=value;if(value)complete(7,status);else{delete qs.completed[7];render();}});
 }
 // ---- standalone ESC calibration tab (sidebar group "Calibration of the flight controller"): the same panel and the same session as step 8 of the wizard.

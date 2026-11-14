@@ -170,24 +170,18 @@
   const rebooted=counterAvailable?current.boot>before.boot:options.manualReboot===true&&options.sawDisconnect===true;
   return {kind:rebooted?'ready':'reboot-required',reason:counterAvailable?'boot-counter':'manual-reboot-required',saved:true,reportVerified:options.reportVerified===true,evidence:evidence.kind==='evidence'};
  }
- // ---- ESC calibration for normal PWM throttle outputs.
- // The firmware refuses DO_SET_SERVO on a throttle output (AP_ServoRelayEvents::do_set_servo), so the wizard takes the throttle outputs over by an explicit
- // user action (SERVOx_FUNCTION 0, restored at the end) and drives them with exactly the PWM the controller will use for 0 % and 100 % throttle.
- const ESC_PWM_LIMITS=Object.freeze({min:1000,max:2200}),ESC_MIN_SPAN=100;
- function validateEscRange(min,max){
-  if(!Number.isInteger(min)||!Number.isInteger(max))return {error:'integer'};
-  if(min<ESC_PWM_LIMITS.min||max>ESC_PWM_LIMITS.max)return {error:'limits'};
-  if(max-min<ESC_MIN_SPAN)return {error:'span'};
-  return {ok:true};
+ // ---- ESC calibration of a plain PWM regulator, laid out like a servo-output table (POSITION, REVERSE, FUNCTION, MIN, TRIM, MAX).
+ // MIN / TRIM / MAX / REVERSED are written live. The signal itself can only be driven by hand after an explicit, confirmed step: the firmware refuses
+ // DO_SET_SERVO on a throttle output (AP_ServoRelayEvents::do_set_servo), so the wizard switches the throttle outputs to SERVOx_FUNCTION 0 and restores them.
+ const ESC_PWM_LIMITS=Object.freeze({min:1000,max:2200}),ESC_MIN_SPAN=100,ESC_FIELDS=Object.freeze(['MIN','TRIM','MAX']);
+ const ESC_FUNCTION_NAMES=Object.freeze({70:'Throttle',73:'Throttle Left',74:'Throttle Right'});
+ /** Output channels that carry a throttle function (the protocol is judged separately). */
+ function escThrottleChannels(liveParams){
+  const params=mapOf(liveParams),channels=[];
+  for(let channel=1;channel<=16;channel++){const fn=Number(params.get(`SERVO${channel}_FUNCTION`)?.value);if(THROTTLE_FUNCTIONS.includes(fn))channels.push(channel);}
+  return channels;
  }
- /** The PWM (us) for a throttle position: 0 % is the low end and 100 % the high end of the range, swapped when the output is reversed. */
- function escPwm(percent,min,max,reversed){
-  const p=Math.min(100,Math.max(0,Number(percent)));
-  if(!Number.isFinite(p)||!Number.isInteger(min)||!Number.isInteger(max)||max<=min)return null;
-  const offset=Math.round((max-min)*p/100);
-  return reversed?max-offset:min+offset;
- }
- /** Throttle outputs that can be taken over and the starting range, taken from the first output and clamped to the allowed window. */
+ /** The rows of the table: the live values of the throttle outputs. Returns {outputs} or {error, channel}. */
  function escCalibrationPlan(liveParams,channels){
   const params=mapOf(liveParams),outputs=[],read=(channel,field)=>{const p=params.get(`SERVO${channel}_${field}`);return p&&Number.isFinite(p.value)?p.value:null;};
   for(const channel of channels||[]){
@@ -198,12 +192,34 @@
    outputs.push(output);
   }
   if(!outputs.length)return {error:'none'};
-  const first=outputs[0],min=Math.min(ESC_PWM_LIMITS.max-ESC_MIN_SPAN,Math.max(ESC_PWM_LIMITS.min,first.min)),max=Math.min(ESC_PWM_LIMITS.max,Math.max(min+ESC_MIN_SPAN,first.max));
-  return {outputs,range:{min,max},reversed:first.reversed};
+  return {outputs};
  }
- /** SERVOx_MIN / TRIM / MAX / REVERSED written when the calibration is applied; TRIM is kept unless it falls outside the new range. */
- function escFinalWrites(output,range,reversed){
-  return {MIN:range.min,TRIM:Math.min(range.max,Math.max(range.min,output.trim)),MAX:range.max,REVERSED:reversed?1:0};
+ /** The two ends of the signal: zero throttle is the low end, full throttle the high end, swapped when the output is reversed. */
+ const escZeroEnd=output=>output.reversed?output.max:output.min;
+ const escFullEnd=output=>output.reversed?output.min:output.max;
+ /** Which end of the range is zero throttle: the end the controller was outputting before the wizard took the output over (measured, so it does not depend on how the firmware treats Reverse);
+  *  without a measurement, the low end, or the high end when the output is reversed. */
+ function escZeroSide(output,measured){
+  if(Number.isFinite(measured)&&measured>0&&output.max>output.min)return Math.abs(measured-output.min)<=Math.abs(measured-output.max)?'min':'max';
+  return output.reversed?'max':'min';
+ }
+ const escEnds=(output,side)=>side==='max'?{zero:output.max,full:output.min}:{zero:output.min,full:output.max};
+ /** The parameter writes for one edited cell. TRIM follows MIN / MAX when they would cross it; MIN, TRIM, MAX stay inside 1000-2200 with MIN <= TRIM <= MAX.
+  *  Returns {updates:{MIN|TRIM|MAX|REVERSED:value}} or {error}. */
+ function escFieldWrites(field,value,output){
+  if(field==='REVERSED')return value===0||value===1?{updates:{REVERSED:value}}:{error:'reversed'};
+  if(!ESC_FIELDS.includes(field))return {error:'field'};
+  if(!Number.isInteger(value)||value<ESC_PWM_LIMITS.min||value>ESC_PWM_LIMITS.max)return {error:'limits'};
+  const next={min:output.min,trim:output.trim,max:output.max},clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
+  next[field.toLowerCase()]=value;
+  if(field!=='TRIM')next.trim=clamp(next.trim,next.min,next.max);
+  if(next.max-next.min<ESC_MIN_SPAN)return {error:'span'};
+  if(!(next.min<=next.trim&&next.trim<=next.max))return {error:'order'};
+  const updates={};
+  if(next.min!==output.min)updates.MIN=next.min;
+  if(next.trim!==output.trim)updates.TRIM=next.trim;
+  if(next.max!==output.max)updates.MAX=next.max;
+  return {updates};
  }
  /** Outputs that the wizard switched to Disabled and that still are: they must get their throttle function back. */
  function escPendingChannels(record,liveParams){
@@ -211,6 +227,8 @@
   const params=mapOf(liveParams);
   return record.outputs.filter(o=>THROTTLE_FUNCTIONS.includes(o.func)&&Number.isInteger(o.channel)&&params.get(`SERVO${o.channel}_FUNCTION`)?.value===0);
  }
+ /** Which protocols allow the manual signal: a plain PWM output, or one whose protocol could not be determined (the user is warned). */
+ const escManualAllowed=kind=>kind==='pwm'||kind==='unknown';
  function canMarkManualComplete(confirmed,required){return confirmed===true&&required===true;}
- return Object.freeze({THROTTLE_FUNCTIONS,DSHOT_TYPES,INTEGER_TYPES,parseParamText,writeBlockers,readEscProfile,classifyEscFromProfile,classifyEscProtocol,detectCompass,snapshotCompassOffsets,assessPostCompassCalibration,snapshotCompassSession,assessCompassRecovery,verifiedEvent,canMarkManualComplete,ESC_PWM_LIMITS,validateEscRange,escPwm,escCalibrationPlan,escFinalWrites,escPendingChannels});
+ return Object.freeze({THROTTLE_FUNCTIONS,DSHOT_TYPES,INTEGER_TYPES,parseParamText,writeBlockers,readEscProfile,classifyEscFromProfile,classifyEscProtocol,detectCompass,snapshotCompassOffsets,assessPostCompassCalibration,snapshotCompassSession,assessCompassRecovery,verifiedEvent,canMarkManualComplete,ESC_PWM_LIMITS,ESC_FUNCTION_NAMES,escThrottleChannels,escCalibrationPlan,escZeroEnd,escFullEnd,escZeroSide,escEnds,escFieldWrites,escPendingChannels,escManualAllowed});
 });

@@ -97,7 +97,8 @@
     if(id===251 && v.byteLength>=9) return {type:'named_float',name:ascii16(frame.payload.slice(8,18)),value:v.getFloat32(4,true),timeBootMs:v.getUint32(0,true)};
     if(id===65 && v.byteLength>=4) return {type:'rc_channels',channels:Array.from({length:18},(_,i)=>(v.byteLength>=6+i*2?v.getUint16(4+i*2,true):0)),count:v.byteLength>=41?v.getUint8(40):0,rssi:v.byteLength>=42?v.getUint8(41):null};
     if(id===110 && v.byteLength>=15) return {type:'mavftp',data:frame.payload.slice(3)};
-    if(id===36 && v.byteLength>=21) return {type:'servo_output',port:v.getUint8(20),pwm:Array.from({length:8},(_,i)=>v.getUint16(4+i*2,true)).concat(v.byteLength>=37?Array.from({length:8},(_,i)=>v.getUint16(21+i*2,true)):[])};
+    // MAVLink 2 drops trailing zero bytes: the first output group (port 0) always loses its port byte, and unused channels lose their values. Missing bytes are zeros.
+    if(id===36 && v.byteLength>=4) {const u16=o=>o+2<=v.byteLength?v.getUint16(o,true):0;return {type:'servo_output',port:v.byteLength>20?v.getUint8(20):0,pwm:Array.from({length:8},(_,i)=>u16(4+i*2)).concat(v.byteLength>21?Array.from({length:8},(_,i)=>u16(21+i*2)):[])};}
     if(id===147 && v.byteLength>=36) return {type:'battery_status',id:v.getUint8(32),voltageCells:Array.from({length:10},(_,i)=>v.getUint16(10+i*2,true)),current:v.getInt16(30,true),consumed:v.getInt32(0,true),remaining:v.getInt8(35),temperature:v.getInt16(8,true)};
     if(id===191 && v.byteLength>=17) return {type:'mag_progress',compassId:v.getUint8(12),mask:v.getUint8(13),status:v.getUint8(14),attempt:v.getUint8(15),pct:v.getUint8(16)};
     if(id===192 && v.byteLength>=40) return {type:'mag_report',compassId:v.getUint8(36),mask:v.getUint8(37),status:v.getUint8(38),autosaved:!!v.getUint8(39),fitness:v.getFloat32(0,true)};
