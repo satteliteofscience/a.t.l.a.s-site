@@ -31,7 +31,9 @@ assert.match(config,/if\(!state\.paramLoading&&!startParamLoad\(true\)\)/,'two-p
 assert.match(config,/const report=window\.AtlasQuickSetupCore\?\.parseParamText\(name\+' '\+value/,'advanced parameter writes must validate type/range/read-only');
 assert.match(script,/ORIGINS\.has\(origin\)/,'local bridge must enforce browser Origin');
 assert.match(script,/url\.searchParams\.get\('token'\)!==TOKEN/,'local bridge must enforce session token');
-assert.match(page,/landAtSupport\(\)/,'support deep link should be aligned after page load');
+{const helper=require('node:fs').readFileSync('js/site/anchor-land.js','utf8'),index=require('node:fs').readFileSync('index.html','utf8');
+ assert.match(index,/js\/site\/anchor-land\.js/,'the landing page must load the hash-link helper');
+ for(const part of [/addEventListener\('load',run/,/fonts\.ready/,/hashchange/,/pageshow/])assert.match(helper,part,'support deep link must be re-aligned after load, fonts, hashchange and pageshow');}
 
 function getFreePort(){
  return new Promise((resolve,reject)=>{

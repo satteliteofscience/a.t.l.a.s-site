@@ -287,23 +287,8 @@
   });
   el('copyrightYear').textContent = new Date().getFullYear();
   loadData();
-  // Direct navigation from the configurator to index.html#support is restored
-  // after asynchronous catalogue/font layout. Avoid stopping above the section.
-  let supportJump=null;
-  function landAtSupport(){
-    if(location.hash!=='#support')return;
-    const target=document.getElementById('support');
-    if(!target)return;
-    const y=target.getBoundingClientRect().top+window.scrollY-84;
-    window.scrollTo({top:Math.max(0,y),behavior:'instant'});
-  }
-  if(location.hash==='#support'){
-    window.addEventListener('load',landAtSupport,{once:true});
-    window.addEventListener('pageshow',landAtSupport);
-    requestAnimationFrame(()=>requestAnimationFrame(landAtSupport));
-    setTimeout(landAtSupport,500);
-  }
-  window.addEventListener('hashchange',landAtSupport);
+  // Hash links (including index.html#support from the configurator) are aligned by js/site/anchor-land.js: offsets come from CSS, and the target is kept in place
+  // while the catalogue, fonts and images settle.
   // Pick up newly published releases without requiring a hard reload.
   setInterval(()=>{if(document.visibilityState==='visible')loadData();},60000);
 })();

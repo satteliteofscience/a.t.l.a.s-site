@@ -57,7 +57,8 @@ for(const key of ['escCalTitle','escCalIntro','escCalSteps','escCalAck1','escCal
 
 // ---- the whole flow on a fake controller
 function makeEl(tag){return {tag,children:[],listeners:{},className:'',textContent:'',hidden:false,disabled:false,checked:false,value:'',type:'',
- append(...k){this.children.push(...k);},replaceChildren(...k){this.children=k;},addEventListener(n,f){(this.listeners[n]||(this.listeners[n]=[])).push(f);},fire(n){for(const f of this.listeners[n]||[])f({target:this});}};}
+ append(...k){this.children.push(...k);},replaceChildren(...k){this.children=k;},contains(node){return this.children.includes(node);},addEventListener(n,f){(this.listeners[n]||(this.listeners[n]=[])).push(f);},fire(n){for(const f of this.listeners[n]||[])f({target:this});}};}
+const wait=()=>new Promise(resolve=>setTimeout(resolve,25));   // the bounce back is a setTimeout(0)
 const plain=value=>JSON.parse(JSON.stringify(value));   // objects made inside the vm context have another prototype
 const tick=async()=>{for(let i=0;i<12;i++)await new Promise(resolve=>setImmediate(resolve));};
 function harness({language='ru',params=P(base),failWrite=null}={}){
@@ -68,20 +69,26 @@ function harness({language='ru',params=P(base),failWrite=null}={}){
    if(failWrite&&failWrite(channel,updates))throw Error('PARAM_SET timeout');
    writes.push(plain([channel,updates]));for(const [field,value] of Object.entries(updates))params.set(`SERVO${channel}_${field}`,{value,type:9});},
   sendEscCalibrationPwm:async(channels,pwm)=>{for(const c of channels)if(params.get(`SERVO${c}_FUNCTION`).value!==0)throw Error('not Disabled');sent.push(plain([channels,pwm]));}};
+ const host=makeEl('div'),badge=makeEl('span'),winHandlers={},navigations=[];let replaced=0;
+ {const original=host.replaceChildren;host.replaceChildren=function(...k){replaced++;return original.apply(this,k);};}
  const confirms=[],renders={count:0};let exposedRef=null;   // render() of the wizard rebuilds the step and so refreshes the panel
  const context={qs:{esc:null},api:fake,core,copy:{ru:{},uk:{},en:{}},lang:()=>language,render:()=>{renders.count++;if(exposedRef)exposedRef.updateEscPanel();},wizardActive:true,
-  window:{confirm:text=>{confirms.push(text);return true;},addEventListener(){}},
-  document:{createElement:makeEl,activeElement:null},localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>{store[k]=String(v);},removeItem:k=>{delete store[k];}},
+  window:{confirm:text=>{confirms.push(text);return true;},addEventListener(name,fn){winHandlers[name]=fn;}},
+  document:{createElement:makeEl,activeElement:null,querySelector:()=>null},
+  $:id=>id==='escCalContent'?host:id==='escCalStatusBadge'?badge:null,addHeading(parent,title){parent.append(makeEl('heading'));},addUsbButton(){},complete(){},localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>{store[k]=String(v);},removeItem:k=>{delete store[k];}},
   setInterval:fn2=>{timers.push(fn2);return timers.length;},clearInterval(){},setTimeout,Date,JSON,Map};   // Map: the wizard checks params instanceof Map, the params come from this realm
+ Object.assign(context.qs,{step:7,paramsMode:'keep',fileText:null,previewBoard:null,completed:{},escConfirmed:false});
+ context.api.navigate=tab=>navigations.push(tab);
  context.qs.esc={phase:'idle',outputs:[],range:{min:1000,max:2000},reversed:0,percent:0,ack1:false,ack2:false,fullAck:false,writing:false,error:'',message:'',node:null,ui:null,lang:null,result:null,pending:[],pwm:null,servo:[],servoAt:0,timer:null,applied:null};
  const helpers=wizard.slice(wizard.indexOf('function el(tag,cls,text)'),wizard.indexOf('function persist()'));
- const esc=wizard.slice(wizard.indexOf('// ---- ESC calibration of a normal PWM regulator'),wizard.indexOf('function renderEsc(box){'));
+ const esc=wizard.slice(wizard.indexOf('// ---- ESC calibration of a normal PWM regulator'),wizard.indexOf('function renderEsc(box'));
+ const renderBlock=wizard.slice(wizard.indexOf('function renderEsc(box'),wizard.indexOf('async function verifyCompassBatteryResult('));   // the step renderer and the standalone tab
  vm.createContext(context);
  const t="function t(key){return (copy[lang()]||copy.ru)[key]||copy.ru[key]||key;}";
- const exposed=vm.runInContext(`${t}\n${helpers}\n${esc}\n({escStart,escApply,escCancel,escRestorePending,renderEscCalibration,updateEscPanel,escSetRange,escSend})`,context);
+ const exposed=vm.runInContext(`${t}\n${helpers}\n${esc}\n${renderBlock}\n({escStart,escApply,escCancel,escRestorePending,renderEscCalibration,updateEscPanel,escSetRange,escSend,renderEsc,renderEscTab})`,context);
  exposedRef=exposed;
  const box=makeEl('div'),result=core.classifyEscProtocol(params,'matek-h743-wing-v3');
- return {...exposed,qs:context.qs,sent,writes,confirms,store,timers,box,result,params,live,renders,show:()=>exposed.renderEscCalibration(box,result,[]),ui:()=>context.qs.esc.ui};
+ return {...exposed,qs:context.qs,sent,writes,confirms,store,timers,box,result,params,live,renders,host,badge,winHandlers,navigations,replaced:()=>replaced,show:()=>exposed.renderEscCalibration(box,result,[]),ui:()=>context.qs.esc.ui};
 }
 (async()=>{
  const h=harness();h.show();let ui=h.ui();
@@ -137,5 +144,41 @@ function harness({language='ru',params=P(base),failWrite=null}={}){
  assert.notEqual(core.classifyEscProtocol(P({...base,SERVO_BLH_MASK:4,SERVO_BLH_OTYPE:6}),'matek-h743-wing-v3').kind,'pwm');
  assert.match(wizard,/if\(result\.kind==='pwm'\|\|qs\.esc\.phase==='done'\)renderEscCalibration\(box,result,\[\]\)/);
  const en=harness({language:'en'});en.show();assert.equal(en.ui().startButton.textContent,'Start calibration');
- console.log('PASS: ESC PWM calibration: range 1000-2200, live reverse, confirmed take-over of the throttle outputs, restore on cancel / failure / interruption.');
+ // ---- the standalone tab in the sidebar group "Calibration of the flight controller": same panel, same session, no wizard checkbox
+ {
+  const tab=harness();tab.renderEscTab();
+  assert.ok(tab.host.children.includes(tab.qs.esc.node),'the tab shows the calibration panel for a plain PWM output');
+  assert.equal(tab.host.children.some(c=>c.className==='qs-check'),false,'the tab has no wizard confirmation checkbox');
+  assert.equal(tab.host.children.some(c=>c.tag==='heading'),false,'the tab has its own title, not the wizard heading');
+  assert.equal(tab.badge.textContent,'DISARMED · USB');
+  const wizardBox=makeEl('div');tab.renderEsc(wizardBox,false);
+  assert.ok(wizardBox.children.some(c=>c.className==='qs-check'),'the wizard step keeps its confirmation checkbox');assert.ok(wizardBox.children.some(c=>c.tag==='heading'));
+  tab.live.armed=true;tab.renderEscTab();assert.equal(tab.badge.textContent,'LINK','armed: no safe link');
+  const dshot=harness({params:P({...base,SERVO_BLH_MASK:4,SERVO_BLH_OTYPE:6})});dshot.renderEscTab();
+  assert.equal(dshot.qs.esc.node,null,'DShot: no calibration panel');assert.ok(dshot.host.children.length>=3,'DShot: the protocol and the "no calibration needed" message are shown');
+  const off=harness({params:P({})});off.renderEscTab();assert.equal(off.qs.esc.node,null,'no parameters: no panel');
+  // a running calibration is not rebuilt on every heartbeat and cannot be left by navigation
+  const run=harness();run.renderEscTab();run.qs.esc.ack1=run.qs.esc.ack2=true;run.updateEscPanel();run.ui().startButton.fire('click');await tick();
+  assert.equal(run.qs.esc.phase,'active');assert.equal(run.badge.textContent,'CALIBRATING');
+  const node=run.qs.esc.node,rebuilt=run.replaced();run.renderEscTab();run.renderEscTab();
+  assert.equal(run.qs.esc.node,node);assert.equal(run.replaced(),rebuilt,'the running panel is not rebuilt');
+  run.winHandlers['atlas:navigate']({detail:{tab:'basic'}});await wait();
+  assert.deepEqual(run.navigations,['esccal'],'leaving to another tab bounces back to the calibration');assert.match(run.qs.esc.error,/Калибровка ESC идёт/);
+  run.navigations.length=0;run.winHandlers['atlas:navigate']({detail:{tab:'esccal'}});await wait();assert.deepEqual(run.navigations,[]);
+  run.qs.step=7;run.winHandlers['atlas:navigate']({detail:{tab:'quicksetup'}});await wait();assert.deepEqual(run.navigations,[],'the wizard ESC step may continue the session');
+  run.qs.step=3;run.winHandlers['atlas:navigate']({detail:{tab:'quicksetup'}});await wait();assert.deepEqual(run.navigations,['esccal'],'other wizard steps may not');
+  let prevented=0;run.winHandlers.beforeunload({preventDefault(){prevented++;}});assert.equal(prevented,1,'closing the page during a calibration asks first');
+  const idle=harness();let prevented2=0;idle.winHandlers.beforeunload({preventDefault(){prevented2++;}});assert.equal(prevented2,0,'no prompt without a calibration');
+  // wiring: sidebar entry in the calibration group, the panel, the tab whitelists and the translations
+  const html=read('../configurator.html'),cfgText=read('../js/configurator/configurator.js');
+  const group=html.slice(html.indexOf('data-t="calgroup"'),html.indexOf('cc-osd-menu'));
+  assert.match(group,/data-tab="esccal"[^>]*>[^]*?data-qs-t="escCalNav"/,'the ESC calibration entry is in the "Calibration of the flight controller" group');
+  assert.ok(group.indexOf('data-tab="servos"')<group.indexOf('data-tab="esccal"')&&group.indexOf('data-tab="esccal"')<group.indexOf('data-tab="battery"'));
+  assert.match(html,/<section class="cc-tab" data-panel="esccal"[^>]*>[^]*?id="escCalContent"[^]*?<\/section>/);
+  assert.equal((cfgText.match(/'servos','esccal','battery'/g)||[]).length,3,'navigate, hashchange and first load accept the tab');
+  assert.ok(cfgText.includes("['servos','esccal','osd'"),'opening the tab without parameters starts the parameter read');
+  for(const key of ['escCalNav','escCalTabTitle','escCalTabIntro'])assert.equal((wizard.match(new RegExp(`\\b${key}:`,'g'))||[]).length,3,key+' in ru, uk and en');
+  assert.match(wizard,/if\(escTabActive\)renderEscTab\(\)/,'the tab is drawn when the page opens on it');
+ }
+ console.log('PASS: ESC PWM calibration: range 1000-2200, live reverse, confirmed take-over of the throttle outputs, restore on cancel / failure / interruption, standalone sidebar tab.');
 })().catch(error=>{console.error(error);process.exit(1);});

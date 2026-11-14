@@ -11,7 +11,7 @@
 .ch-versions{display:flex;flex-wrap:wrap;gap:8px}
 .ch-versions a{display:inline-block;border:1px solid #526438;padding:6px 12px;color:#eadfac;text-decoration:none}
 .ch-versions a:hover,.ch-versions a:focus-visible{background:#26351b}
-.ch-release{border:1px solid #536a32;background:rgba(7,17,8,.47);padding:clamp(14px,2.5vw,26px);margin-top:22px;scroll-margin-top:110px}
+.ch-release{border:1px solid #536a32;background:rgba(7,17,8,.47);padding:clamp(14px,2.5vw,26px);margin-top:22px}
 .ch-release-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid #41582a;padding-bottom:15px;margin-bottom:9px}
 .ch-release-id{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .ch-release-id span{font:750 clamp(21px,2.7vw,30px)/1.1 'IBM Plex Mono',monospace;color:#efdf9b}
@@ -34,3 +34,5 @@
 
 /* Update 2.0 banner: same shape as the O.R.D.E.R. banner, blue accent. */
 .ch-global-banner{border-left-color:#78b3eb;background:repeating-linear-gradient(0deg,transparent,transparent 4px,#ffffff03 5px),linear-gradient(110deg,#0f2233,#142a2a 60%,#2c2f1a)}.ch-global-banner .ch-order-code{color:#9cc8f0}.ch-global-banner h2{color:#e6efb4;text-shadow:2px 2px #365a78}
+/* hash links land 16px below the sticky header; its height is measured by js/site/anchor-land.js (it wraps on phones) */
+html{scroll-padding-top:calc(var(--ch-head-h,60px) + 16px)}

@@ -99,12 +99,14 @@ function setLang(next){if(!words[next])return;lang=next;try{localStorage.setItem
  updateConnectionUI();renderBasic();renderParams();renderBoards();renderReleases();updateTelemetryUI();renderImportDiff();renderCategoryNav();showProgress();window.dispatchEvent(new Event('atlas:language'));
 }
 function navigate(tab){
- if(!['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))return;
+ if(!['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','esccal','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))return;
  const previous=state.selectedTab;
  state.selectedTab=tab;
  document.body.classList.toggle('cc-quick-setup',tab==='quicksetup');
  window.dispatchEvent(new CustomEvent('atlas:navigate',{detail:{tab}}));
  document.querySelectorAll('.cc-tab').forEach(el=>el.classList.toggle('active',el.dataset.panel===tab));
+ // A tab opened while the page is scrolled down starts where its title is visible: the sticky top bar covers the first pixels, so the panel is aligned just below it.
+ if(previous!==tab){const panel=document.querySelector('.cc-tab.active'),bar=document.querySelector('.cc-topbar');if(panel){const edge=(bar?bar.getBoundingClientRect().height:0)+16,top=panel.getBoundingClientRect().top;if(top<edge)window.scrollTo({top:Math.max(0,window.scrollY+top-edge),behavior:'instant'});}}
  document.querySelectorAll('.cc-nav').forEach(el=>{let active=el.dataset.tab===tab;el.classList.toggle('active',active);el.setAttribute('aria-current',active?'page':'false');});
  scheduleHorizon();
  window.location.hash=tab;
@@ -114,7 +116,7 @@ function navigate(tab){
  if(tab==='params'&&previous!=='params'){renderParams();showProgress();}
  if(tab==='basic'&&previous!=='basic')renderBasic();
  if(state.params.size===0&&!state.paramTransfer&&
-    (tab==='params'||['servos','osd','tuning','modes','radio','gimbal','parachute','temperature'].includes(tab))&&
+    (tab==='params'||['servos','esccal','osd','tuning','modes','radio','gimbal','parachute','temperature'].includes(tab))&&
     state.connected&&state.sysid!==null&&!state.paramLoading&&!state.bulk?.running&&!state.servoConfigBusy){
    startParamLoad(false);
  }
@@ -1046,7 +1048,7 @@ function wire(){
  $('apjDropzone').addEventListener('dragover',ev=>{ev.preventDefault();$('apjDropzone').classList.add('dragging');});$('apjDropzone').addEventListener('dragleave',()=>$('apjDropzone').classList.remove('dragging'));$('apjDropzone').addEventListener('drop',ev=>{ev.preventDefault();$('apjDropzone').classList.remove('dragging');parseApj(ev.dataTransfer?.files?.[0]);});
  document.querySelectorAll('[data-group]').forEach(btn=>btn.addEventListener('click',()=>{state.group=btn.dataset.group;document.querySelectorAll('[data-group]').forEach(n=>n.classList.toggle('active',n===btn));renderBasic();}));
  $('closeEdit').addEventListener('click',()=>$('editDialog').close());$('cancelEdit').addEventListener('click',()=>$('editDialog').close());$('editForm').addEventListener('submit',saveEdit);
- window.addEventListener('hashchange',()=>{const tab=location.hash.replace('#','');if(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))navigate(tab);});
+ window.addEventListener('hashchange',()=>{const tab=location.hash.replace('#','');if(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','esccal','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(tab))navigate(tab);});
  const leavePage=()=>{cleanupForNavigation().catch(()=>{});};
  window.addEventListener('pagehide',leavePage,{capture:true});
  window.addEventListener('beforeunload',leavePage,{capture:true});
@@ -1054,6 +1056,6 @@ function wire(){
  window.addEventListener('pageshow',ev=>{if(ev.persisted){state.pageLeaving=false;state.hudLoopActive=true;state.lastHeartbeat=0;updateConnectionUI();scheduleHorizon();}});
 }
 const oneClickToken=consumeOneClickTcpToken();
-wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Release 2.0 A.T.L.A.S-G.L.O.B.A.L');state.hudLoopActive=true;scheduleHorizon();
+wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','esccal','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Release 2.0 A.T.L.A.S-G.L.O.B.A.L');state.hudLoopActive=true;scheduleHorizon();
 if(oneClickToken)startOneClickTcp(oneClickToken);
 })();

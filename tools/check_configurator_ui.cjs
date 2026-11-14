@@ -17,8 +17,8 @@ assert.match(core,/const LIVE_FIELDS=Object\.freeze\(\['MIN','TRIM','MAX','REVER
 assert.match(core,/function selectLiveChanges\(validation,field='ALL'\)/,'live draft selector missing');
 
 const styles=read('css/styles.css');
-assert.match(styles,/\.support-section\{padding-top:34px;padding-bottom:38px;scroll-margin-top:84px\}/,'desktop support anchor offset must be aligned');
-assert.match(styles,/@media\(max-width:560px\)\{\.support-section\{padding-top:26px;padding-bottom:10px;scroll-margin-top:58px\}/,'mobile support anchor offset must be aligned');
+assert.match(styles,/\.support-section\{--section-pt:34px;padding-bottom:38px\}/,'desktop support section padding feeds its anchor offset (see tools/check_anchor_links.cjs)');
+assert.match(styles,/@media\(max-width:560px\)\{\.support-section\{--section-pt:26px;padding-bottom:10px\}/,'mobile support section padding feeds its anchor offset (see tools/check_anchor_links.cjs)');
 
 const html=read('configurator.html');
 assert.ok(html.includes('href="https://ardupilot.org/planner/docs/common-loading-firmware-onto-pixhawk.html"'),'Mission Planner must point to verified ArduPilot firmware instructions');
