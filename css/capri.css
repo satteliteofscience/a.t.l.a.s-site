@@ -25,3 +25,5 @@
 .order-how ul{margin:6px 0 0;padding:0 0 0 16px;font-size:12px;line-height:1.55;color:#c3c9a3}
 .order-how li{margin:0 0 5px}
 .order-notice{margin:6px 0 8px;padding:10px 12px;border:1px solid #4d9886;background:#0e1f1a;color:#bfe8d9;font-size:12px;line-height:1.55;border-radius:4px}
+.order-card #orderModesHint{margin:8px 0 0;font:11px/1.55 "IBM Plex Mono",monospace;color:#9aa27b}
+.order-card .order-preset{margin:12px 0 8px}

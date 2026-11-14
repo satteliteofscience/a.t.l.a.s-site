@@ -62,17 +62,17 @@ for(const lang of ['ru','uk','en']){
  for(const key of ['preset','presetConfirm','presetWritten','howTitle','noticePreset','noticeAlways','howSwitch','howSwitchHigh','howAlways','howWhere','howRoll','howRudder','howPitchBoth','howSignal','howLimit'])assert.ok(new RegExp(`\\b${key}:'`).test(block),`${lang}: ${key}`);
 }
 // ---- behaviour of the card: the preset click confirms the full diff, writes it, then explains what the saved configuration does
-function runCard(language,initial,{confirm=true}={}){
+function runCard(language,initial,{confirm=true,canWrite=true}={}){
  const els=new Map(),make=()=>({children:[],dataset:{},hidden:false,disabled:false,textContent:'',className:'',open:false,append(...k){this.children.push(...k);},prepend(...k){this.children.unshift(...k);},replaceChildren(...k){this.children=k;}});
  const byId=id=>{if(!els.has(id))els.set(id,make());return els.get(id);};
  const params=P(initial),calls=[],confirms=[],handlers={};
  const api={getState:()=>({connected:true,demo:false,sysid:1,compid:1,armed:false,lastHeartbeat:Date.now(),lastAttitude:Date.now(),params,telemetry:{roll:0,pitch:0},connectionId:1,paramLoading:false}),
-  canWrite:()=>true,navigateOrder(){},orderCommand:async enable=>{params.set('ORDER_MODE',{value:enable?2:0});},
+  canWrite:()=>canWrite,navigateOrder(){},orderCommand:async enable=>{params.set('ORDER_MODE',{value:enable?2:0});},
   writeOrderPreset:async(updates,cb)=>{calls.push(updates);let n=0;for(const[k,v]of Object.entries(updates)){cb({done:n,total:Object.keys(updates).length,name:k});params.set(k,{value:v});n++;}return{done:n,total:n};}};
  const window={AtlasCC:api,AtlasOrderCore:core,AtlasLanguage:()=>language,addEventListener:(e,f)=>{handlers[e]=f;},confirm:text=>{confirms.push(text);return confirm;}};
  const document={createElement:()=>make(),getElementById:byId,querySelector:()=>make(),hidden:false};
  vm.runInNewContext(fs.readFileSync(require.resolve('../js/configurator/capri-ui.js'),'utf8'),{window,document,setInterval:()=>1,clearInterval(){},Date,Math,JSON,Number,Object,String,Error,Promise});
- return {byId,calls,confirms,params,lines:()=>byId('orderHowList').children.map(x=>x.textContent)};
+ return {byId,calls,confirms,params,handlers,lines:()=>byId('orderHowList').children.map(x=>x.textContent)};
 }
 (async()=>{
  const card=runCard('ru',{...zero,ROLL_LIMIT_DEG:45,STALL_PREVENTION:1});
@@ -94,5 +94,25 @@ function runCard(language,initial,{confirm=true}={}){
  assert.match(always.lines().join('\n'),/без тумблера/);assert.match(always.lines().join('\n'),/не заменяется/);assert.match(always.lines().join('\n'),/Тангаж: не ограничивается/);
  const off=runCard('ru',zero);assert.deepEqual(off.lines(),['Протокол выключен (ORDER_MODE=0): ограничения не действуют.']);
  const old=runCard('ru',{ORDER_MODE:0});assert.equal(old.byId('orderHow').hidden,true,'firmware without interface revision 2: no explanation, no preset');assert.equal(old.byId('orderPreset').disabled,true);
- console.log('PASS: O.R.D.E.R. ranges, command guards, stale/reconnect state, real MAVLink framing, the RC13 preset and its explanation.');
+ // ---- activation does not need a limit typed in by hand: on a fresh controller (all limits zero) "Activate" writes the preset limits first
+ const fresh=runCard('ru',zero);
+ assert.equal(fresh.byId('orderEnable').disabled,false,'Activate is available on a fresh controller');
+ await fresh.byId('orderEnable').onclick();
+ assert.equal(fresh.confirms.length,1);
+ for(const line of ['RUD_LIMIT_DEG: 0 → 30','ORDER_RLL_LIM: 0 → 15','ORDER_PIT_MIN: 0 → -5','ORDER_PIT_MAX: 0 → 5'])assert.ok(fresh.confirms[0].includes(line),'confirm shows '+line);
+ assert.ok(!/ORDER_RC_CH|ORDER_MODE/.test(fresh.confirms[0].split('\n\n')[1]),'always-on activation writes only the limits through the preset writer');
+ assert.deepEqual(Object.keys(fresh.calls[0]),['RUD_LIMIT_DEG','ORDER_RLL_LIM','ORDER_PIT_MIN','ORDER_PIT_MAX']);
+ assert.equal(fresh.params.get('ORDER_MODE').value,2,'then the protocol is on without a switch');assert.match(fresh.byId('orderNotice').textContent,/включён настройкой/);
+ const declinedActivation=runCard('ru',zero,{confirm:false});await declinedActivation.byId('orderEnable').onclick();assert.equal(declinedActivation.calls.length,0);assert.equal(declinedActivation.params.get('ORDER_MODE').value,0,'declined: nothing is written');
+ const withLimits=runCard('ru',{...zero,ORDER_RLL_LIM:20});await withLimits.byId('orderEnable').onclick();assert.equal(withLimits.calls.length,0,'limits exist: activation does not touch them');assert.equal(withLimits.params.get('ORDER_MODE').value,2);
+ const partial=runCard('ru',{...zero,RUD_LIMIT_DEG:30});assert.equal(partial.byId('orderEnable').disabled,false);
+ const locked=runCard('ru',zero,{canWrite:false});assert.equal(locked.byId('orderEnable').disabled,true,'armed or busy link and no limits: nothing can be written, so Activate waits');
+ // the combined button says so, a short hint explains the two ways, and a configured but low switch is READY, not OFF
+ assert.match(fresh.byId('orderPreset').textContent,/Пресет и активация/);assert.match(fresh.byId('orderModesHint').textContent,/Активировать/);
+ const rc=runCard('ru',applied),message=value=>rc.handlers['atlas:message']({detail:{sourceSysid:1,sourceCompid:1,type:'named_float',name:'ORDER_ON',value}});
+ message(0);assert.match(rc.byId('orderStatus').textContent,/ГОТОВ · включится тумблером RC13/,'switch mode with the switch low is READY');assert.doesNotMatch(rc.byId('orderStatus').textContent,/ВЫКЛЮЧЕН/);
+ message(1);assert.equal(rc.byId('orderStatus').textContent,'АКТИВЕН');
+ const enReady=runCard('en',applied);enReady.handlers['atlas:message']({detail:{sourceSysid:1,sourceCompid:1,type:'named_float',name:'ORDER_ON',value:0}});assert.match(enReady.byId('orderStatus').textContent,/READY · turns on with the switch RC13/);
+ for(const key of ['activateLimits','switchReady','modesHint'])assert.equal((uiSource.match(new RegExp(`\\b${key}:'`,'g'))||[]).length,3,key+' in ru, uk and en');
+ console.log('PASS: O.R.D.E.R. ranges, command guards, stale/reconnect state, real MAVLink framing, the RC13 preset, activation without a hand-set limit and the explanation.');
 })().catch(error=>{console.error(error);process.exit(1);});
