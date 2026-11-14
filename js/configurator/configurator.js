@@ -731,6 +731,37 @@ window.AtlasCC = Object.freeze({
     }catch(e){throw Error(`Recorded ${done}/${changes.length}: ${e.message}`);}
     finally{state.servoConfigBusy=false;renderParams();renderBasic();}
   },
+  // O.R.D.E.R. preset (rudder 30, bank 15, pitch -5..5, switch on channel 13): only these six parameters, exactly the preset values, DISARMED,
+  // one verified write at a time. The limits and the channel go first and ORDER_MODE last, so an interrupted write never leaves the protocol armed without limits.
+  writeOrderPreset:async (updates,onProgress=()=>{})=>{
+    const core=window.AtlasOrderCore;
+    if(!core)throw Error('O.R.D.E.R. module missing');
+    if(!canWrite())throw Error('Live USB, confirmed DISARMED, completed parameter read and idle writer required');
+    if(!(state.params.get('ORDER_REV')?.value>=2))throw Error('O.R.D.E.R.: firmware interface revision 2 required');
+    const target=new Map(core.PRESET),changes=[];
+    for(const name of Object.keys(updates))if(!target.has(name))throw Error(`Invalid O.R.D.E.R. preset parameter: ${name}`);
+    for(const [name,wanted] of core.PRESET){
+      if(!Object.prototype.hasOwnProperty.call(updates,name))continue;
+      if(updates[name]!==wanted||!core.valid(name,wanted))throw Error(`Invalid O.R.D.E.R. preset value: ${name}=${updates[name]}`);
+      const p=state.params.get(name);
+      if(!p)throw Error(`${name}: not present on FC`);
+      if(p.value!==wanted)changes.push({name,value:wanted,type:p.type});
+    }
+    const generation=txGeneration;
+    state.servoConfigBusy=true;
+    let done=0;
+    try{
+      for(const change of changes){
+        if(txGeneration!==generation||!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>=4000)throw Error('Disconnected or ARM state changed');
+        onProgress({done,total:changes.length,name:change.name});
+        await writeParameterWithAck(change.name,change.value,change.type);
+        done++;
+      }
+      onProgress({done,total:changes.length,name:''});
+      return {done,total:changes.length};
+    }catch(e){throw Error(`Recorded ${done}/${changes.length}: ${e.message}`);}
+    finally{state.servoConfigBusy=false;renderParams();renderBasic();}
+  },
   // DO_SET_SERVO is supported only on Disabled / passthrough channels. Never override throttle/flight functions.
   sendServoPwm:async(channel,pwm)=>{
     if(!Number.isInteger(channel)||channel<1||channel>16||!Number.isInteger(pwm)||pwm<1000||pwm>2000)throw Error('Invalid direct servo PWM');
@@ -740,6 +771,15 @@ window.AtlasCC = Object.freeze({
       throw Error(`SERVO${channel}_FUNCTION=${func??'?'}: direct DO_SET_SERVO not supported; command was not sent`);
     await transmit(76,M.commandLong(state.sysid,state.compid,183,[channel,pwm,0,0,0,0,0]));
     return {channel,pwm,submitted:true}; // COMMAND_ACK or SERVO_OUTPUT_RAW required for confirmation.
+  },
+  // ESC PWM calibration (Quick Setup). The firmware refuses DO_SET_SERVO on a throttle output, so the wizard first switches the throttle outputs to Disabled
+  // by an explicit, confirmed user action (and restores them at the end). Only outputs that are Disabled right now accept the signal; 1000-2200 us; DISARMED link.
+  sendEscCalibrationPwm:async(channels,pwm)=>{
+    if(!Array.isArray(channels)||!channels.length||channels.length>16||channels.some(c=>!Number.isInteger(c)||c<1||c>16)||!Number.isInteger(pwm)||pwm<1000||pwm>2200)throw Error('Invalid ESC calibration PWM');
+    if(!window.AtlasCC.canCalibrate()||state.servoConfigBusy||state.bulk?.running||state.paramLoading)throw Error('Live DISARMED link required');
+    for(const channel of channels)if(state.params.get(`SERVO${channel}_FUNCTION`)?.value!==0)throw Error(`SERVO${channel}_FUNCTION is not Disabled: command was not sent`);
+    for(const channel of channels)await transmit(76,M.commandLong(state.sysid,state.compid,183,[channel,pwm,0,0,0,0,0]));
+    return {channels,pwm,submitted:true};
   },
   writeAdvancedParams:async (updates,onProgress=()=>{},shouldCancel=()=>false,options={})=>{
     if(!canWrite())throw Error('Live USB + confirmed DISARMED + idle PARAM transfer required');

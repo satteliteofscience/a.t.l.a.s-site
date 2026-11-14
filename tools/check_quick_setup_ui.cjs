@@ -84,7 +84,7 @@ assert.match(wizard,/escDshot/,'DShot no-calibration branch missing');
 assert.match(wizard,/escPwm/,'PWM manual calibration branch missing');
 assert.match(wizard,/https:\/\/ardupilot\.org\/plane\/docs\/common-esc-calibration\.html/,'Plane-specific ESC instructions link missing');
 assert.doesNotMatch(wizard,/api\.command\(/,'Quick Setup must not send MAVLink commands directly');
-assert.doesNotMatch(wizard,/api\.sendServoPwm\(/,'Quick Setup must not send servo/motor PWM');
+assert.doesNotMatch(wizard,/api\.sendServoPwm\(/,'Quick Setup must not use the generic servo bench; PWM goes only through the confirmed ESC calibration (tools/check_esc_calibration.cjs)');
 assert.match(wizard,/not flight clearance|не допуск к полёту|не є допуском до польоту/i,'final stage must not claim unconditional flight readiness');
 assert.match(wizard,/Для проверенной конфигурации/,'RU scope text missing');
 assert.match(wizard,/Для перевіреної конфігурації/,'UA scope text missing');

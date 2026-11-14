@@ -170,6 +170,47 @@
   const rebooted=counterAvailable?current.boot>before.boot:options.manualReboot===true&&options.sawDisconnect===true;
   return {kind:rebooted?'ready':'reboot-required',reason:counterAvailable?'boot-counter':'manual-reboot-required',saved:true,reportVerified:options.reportVerified===true,evidence:evidence.kind==='evidence'};
  }
+ // ---- ESC calibration for normal PWM throttle outputs.
+ // The firmware refuses DO_SET_SERVO on a throttle output (AP_ServoRelayEvents::do_set_servo), so the wizard takes the throttle outputs over by an explicit
+ // user action (SERVOx_FUNCTION 0, restored at the end) and drives them with exactly the PWM the controller will use for 0 % and 100 % throttle.
+ const ESC_PWM_LIMITS=Object.freeze({min:1000,max:2200}),ESC_MIN_SPAN=100;
+ function validateEscRange(min,max){
+  if(!Number.isInteger(min)||!Number.isInteger(max))return {error:'integer'};
+  if(min<ESC_PWM_LIMITS.min||max>ESC_PWM_LIMITS.max)return {error:'limits'};
+  if(max-min<ESC_MIN_SPAN)return {error:'span'};
+  return {ok:true};
+ }
+ /** The PWM (us) for a throttle position: 0 % is the low end and 100 % the high end of the range, swapped when the output is reversed. */
+ function escPwm(percent,min,max,reversed){
+  const p=Math.min(100,Math.max(0,Number(percent)));
+  if(!Number.isFinite(p)||!Number.isInteger(min)||!Number.isInteger(max)||max<=min)return null;
+  const offset=Math.round((max-min)*p/100);
+  return reversed?max-offset:min+offset;
+ }
+ /** Throttle outputs that can be taken over and the starting range, taken from the first output and clamped to the allowed window. */
+ function escCalibrationPlan(liveParams,channels){
+  const params=mapOf(liveParams),outputs=[],read=(channel,field)=>{const p=params.get(`SERVO${channel}_${field}`);return p&&Number.isFinite(p.value)?p.value:null;};
+  for(const channel of channels||[]){
+   const func=read(channel,'FUNCTION');
+   if(!THROTTLE_FUNCTIONS.includes(func))return {error:'function',channel};
+   const output={channel,func,min:read(channel,'MIN'),trim:read(channel,'TRIM'),max:read(channel,'MAX'),reversed:read(channel,'REVERSED')===1?1:0};
+   if([output.min,output.trim,output.max].some(v=>v===null))return {error:'missing',channel};
+   outputs.push(output);
+  }
+  if(!outputs.length)return {error:'none'};
+  const first=outputs[0],min=Math.min(ESC_PWM_LIMITS.max-ESC_MIN_SPAN,Math.max(ESC_PWM_LIMITS.min,first.min)),max=Math.min(ESC_PWM_LIMITS.max,Math.max(min+ESC_MIN_SPAN,first.max));
+  return {outputs,range:{min,max},reversed:first.reversed};
+ }
+ /** SERVOx_MIN / TRIM / MAX / REVERSED written when the calibration is applied; TRIM is kept unless it falls outside the new range. */
+ function escFinalWrites(output,range,reversed){
+  return {MIN:range.min,TRIM:Math.min(range.max,Math.max(range.min,output.trim)),MAX:range.max,REVERSED:reversed?1:0};
+ }
+ /** Outputs that the wizard switched to Disabled and that still are: they must get their throttle function back. */
+ function escPendingChannels(record,liveParams){
+  if(!record||record.v!==1||!Array.isArray(record.outputs))return [];
+  const params=mapOf(liveParams);
+  return record.outputs.filter(o=>THROTTLE_FUNCTIONS.includes(o.func)&&Number.isInteger(o.channel)&&params.get(`SERVO${o.channel}_FUNCTION`)?.value===0);
+ }
  function canMarkManualComplete(confirmed,required){return confirmed===true&&required===true;}
- return Object.freeze({THROTTLE_FUNCTIONS,DSHOT_TYPES,INTEGER_TYPES,parseParamText,writeBlockers,readEscProfile,classifyEscFromProfile,classifyEscProtocol,detectCompass,snapshotCompassOffsets,assessPostCompassCalibration,snapshotCompassSession,assessCompassRecovery,verifiedEvent,canMarkManualComplete});
+ return Object.freeze({THROTTLE_FUNCTIONS,DSHOT_TYPES,INTEGER_TYPES,parseParamText,writeBlockers,readEscProfile,classifyEscFromProfile,classifyEscProtocol,detectCompass,snapshotCompassOffsets,assessPostCompassCalibration,snapshotCompassSession,assessCompassRecovery,verifiedEvent,canMarkManualComplete,ESC_PWM_LIMITS,validateEscRange,escPwm,escCalibrationPlan,escFinalWrites,escPendingChannels});
 });

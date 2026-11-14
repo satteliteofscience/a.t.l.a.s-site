@@ -5,3 +5,23 @@
 .global-options{display:flex;flex-direction:column;gap:7px;margin:12px 0 4px}.global-options>div{display:flex;justify-content:space-between;gap:12px;font:12px "IBM Plex Mono",monospace;color:#a6ad85;padding:6px 9px;border:1px solid #3d4f2d;border-radius:4px;background:#0e1810}.global-options>div[data-on="true"]{border-color:#4d9886;color:#bfe8d9}.global-options b{font-weight:700;color:#e5eac7}
 .global-details{margin:8px 0}.global-details summary{cursor:pointer;font:700 11px "IBM Plex Mono",monospace;color:#d8c15b;letter-spacing:.05em;padding:4px 0}.global-details ul{margin:6px 0 0;padding:0 0 0 16px;max-height:170px;overflow:auto;font:11px/1.6 "IBM Plex Mono",monospace;color:#a6ad85}
 .global-card .order-actions{margin-top:10px}
+.global-flight h4{margin:12px 0 5px;font:700 11px "IBM Plex Mono",monospace;color:#d8c15b;letter-spacing:.04em}
+.global-details .global-flight #globalFlight{max-height:none;overflow:visible;font-size:12px;line-height:1.55;color:#c3c9a3}
+.global-details .global-flight #globalFlight li{margin:0 0 5px}
+.global-cmp{display:flex;flex-direction:column;gap:4px}
+.global-cmp-row{display:grid;grid-template-columns:minmax(0,1fr) 64px 64px;gap:8px;align-items:center;font:11px/1.35 "IBM Plex Mono",monospace;color:#a6ad85;padding:5px 8px;border:1px solid #3d4f2d;border-radius:4px;background:#0e1810}
+.global-cmp-head{border:0;background:none;padding-bottom:0;color:#d8c15b;font-weight:700}
+.global-cmp-head span:nth-child(n+2){text-align:right}
+.global-cmp-row b{text-align:right;color:#e5eac7;font-weight:700}
+.global-cmp-row b[data-estimator="ekf3"]{color:#bfe8d9}
+.global-cmp-row b[data-estimator="dcm"]{color:#e9a17f}
+.global-cmp-note{margin:8px 0 4px;font-size:11px;line-height:1.55;color:#9aa27b}
+#globalCmpLink{font:11px "IBM Plex Mono",monospace;color:#d8c15b}
+.order-preset{margin:10px 0 4px}
+.order-preset .cc-button{width:100%;height:auto;min-height:40px;padding:10px 12px;white-space:normal;line-height:1.35;text-align:center}
+.order-preset p{margin:6px 0 0;font:11px "IBM Plex Mono",monospace;color:#a6ad85}
+.order-how{margin:8px 0}
+.order-how summary{cursor:pointer;font:700 11px "IBM Plex Mono",monospace;color:#d8c15b;letter-spacing:.05em;padding:4px 0}
+.order-how ul{margin:6px 0 0;padding:0 0 0 16px;font-size:12px;line-height:1.55;color:#c3c9a3}
+.order-how li{margin:0 0 5px}
+.order-notice{margin:6px 0 8px;padding:10px 12px;border:1px solid #4d9886;background:#0e1f1a;color:#bfe8d9;font-size:12px;line-height:1.55;border-radius:4px}

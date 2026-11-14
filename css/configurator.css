@@ -447,3 +447,16 @@
   .dfu-release-picker{padding:12px}
   .dfu-release-picker select{min-width:0;width:100%}
 }
+.qs-esc-cal{margin:16px 0;padding:14px 16px;border:1px solid #48563a;background:#0e1710}
+.qs-esc-cal [hidden]{display:none!important}
+.qs-esc-cal h3{margin:0 0 6px;font-size:14px;color:#e5eac7}
+.qs-esc-steps{margin:8px 0 12px;padding-left:20px;font-size:12px;line-height:1.65;color:#c3c9a3}
+.qs-esc-start,.qs-esc-live{display:flex;flex-direction:column;gap:8px}
+.qs-esc-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qs-esc-field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#a6ad85}
+.qs-esc-field input{padding:8px 10px;background:#0b120a;border:1px solid #3d4f2d;color:#e5eac7;font:14px "IBM Plex Mono",monospace}
+.qs-esc-slider{display:flex;flex-direction:column;gap:6px}
+.qs-esc-slider input{width:100%}
+.qs-esc-actions{display:flex;flex-wrap:wrap;gap:8px}
+.qs-esc-signal{margin:4px 0;font:700 13px "IBM Plex Mono",monospace;color:#bfe8d9}
+@media (max-width:560px){.qs-esc-row{grid-template-columns:1fr}}
