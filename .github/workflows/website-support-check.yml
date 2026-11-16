@@ -5,6 +5,12 @@ on:
       - 'index.html'
       - 'tools/check_release_ready.cjs'
       - 'tools/check_release_21.cjs'
+      - 'tools/check_control21.cjs'
+      - 'js/site/control21.js'
+      - 'css/control21.css'
+      - 'css/release21.css'
+      - 'sitl-demo-21.html'
+      - 'assets/sitl21/**'
       - 'tools/check_global_demo.cjs'
       - 'tools/check_anchor_links.cjs'
       - 'tools/check_r2_publish.cjs'
@@ -111,6 +117,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify recorded 2.1 control flights and replay assets
+        run: node tools/check_control21.cjs
       - name: Check JavaScript syntax
         run: node --check js/site/support.js && node --check js/site/page-meta.js && node --check js/site/app.js && node --check js/site/contact-support.js && node --check js/configurator/configurator.js && node --check tools/check_dashboard_demo_arm.cjs && node --check js/configurator/mavlink.js && node --check js/configurator/mavlink-status-core.js && node --check js/configurator/ahrs-filter-core.js && node --check js/configurator/mavftp-param.js && node --check js/configurator/battery-cal-core.js && node --check js/configurator/tempcal-core.js && node --check js/configurator/tempcal-ui.js && node --check tools/mavlink-bridge.cjs && node --check js/configurator/servo-config-core.js && node --check js/configurator/quick-setup-core.js && node --check js/configurator/quick-setup.js && node --check js/configurator/calibration.js && node --check js/site/i18n.js && node --check js/site/faq.js && node --check js/site/changelog.js && node --check js/site/sitl-demo.js && node --check tools/check_sitl_demo.cjs &&node --check js/configurator/dfu-ui.js && node --check js/configurator/dfu-flasher.js && node --check tools/check_cube_plus_local_dfu.cjs && node --check tools/check_cube_plus_dfu.cjs && node --check tools/check_uni_mini_and_transport.cjs && node --check tools/check_uni_release_metadata.cjs && node --check tools/check_catalog_resilience.cjs && node --check js/site/firmware-access.js && node --input-type=module --check < firmware-gateway/src/index.js && node --check tools/check_monobank_support.cjs && node --check tools/check_social_preview.cjs && node --check tools/check_firmware_access.cjs
       - name: Verify monobank/Tally URLs, labels, privacy, no legacy form

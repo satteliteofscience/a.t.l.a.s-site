@@ -285,6 +285,9 @@
   "Публичный релиз": "Public release"
  }
 };
+ // Release picker labels refer to A.T.L.A.S., independently of the ArduPlane base.
+ Object.assign(dictionary.uk, {'Версия ':'Версія '});
+ Object.assign(dictionary.en, {'Версия ':'Version '});
  const headlines = {"hero": {"ru": "ПОЛЁТ. БЕЗ ГРАНИЦ ПРИВЫЧНОГО.", "uk": "ПОЛІТ. ПОЗА МЕЖАМИ ЗВИЧНОГО.", "en": "FLIGHT. BEYOND THE ORDINARY."}, "features": {"ru": "Больше, чем обычная прошивка.", "uk": "Більше ніж звичайна прошивка.", "en": "More than just firmware."}, "downloads": {"ru": "Выбери свою платформу.", "uk": "Обери свою платформу.", "en": "Choose your controller."}, "guide": {"ru": "От выбора платы до первого старта.", "uk": "Від вибору плати до першого запуску.", "en": "From board to first flight."}, "safety": {"ru": "Экспериментальная прошивка. Ответственная эксплуатация.", "uk": "Експериментальна прошивка. Безпека.", "en": "Experimental firmware. Fly safely."}, "project": {"ru": "Исходники открыты для сообщества.", "uk": "Відкритий код для спільноти.", "en": "Open source. Built for community."}};
  const valid = ['ru', 'uk', 'en'];
  let lang = 'ru';

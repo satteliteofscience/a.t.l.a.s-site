@@ -54,7 +54,7 @@
     const meta = $('div', 'board-meta');
     const version = $('span');
     const versionValue=$('b', '', board.version || '—');
-    version.append(tr('База '), versionValue);
+    version.append(tr('Версия '), versionValue);
     const target = $('span'); target.append('Target: ', $('b', '', board[`target_${window.AtlasI18n?.lang}`] || tr(board.target || '—')));
     meta.append(version, target); card.append(meta);
     const actions = $('div', 'board-actions');
@@ -105,6 +105,12 @@
       group.setAttribute('role','group');
       group.setAttribute('aria-label',localText('choose')+' — '+(board.name||board.id));
       if(names.length>4)group.dataset.scroll='true';
+      const versionArchive=$('details','board-version-archive');
+      const versionToggle=$('summary','board-version-toggle');
+      const currentVersion=$('strong','board-version-active');
+      versionToggle.append($('span','board-version-caption',localText('choose')),currentVersion,$('span','board-version-caret','⌄'));
+      versionArchive.append(versionToggle,group);
+      group.addEventListener('keydown',event=>{if(event.key==='Escape'){versionArchive.open=false;versionToggle.focus();}});
       const view=$('div','board-version-result');
       const buttons=new Map();
       const releaseDescription=name=>{
@@ -119,6 +125,7 @@
         const published=ready&&board.status==='available';
         state.selectedVersions[board.id]=name;
         versionValue.textContent=name;
+        currentVersion.textContent=name;versionToggle.dataset.version=name;
         description.textContent=releaseDescription(name);
         status.className='board-status '+(published?'available':'planned');
         status.textContent=published?tr('● ОПУБЛИКОВАНО'):tr('◷ ПОДГОТОВКА');
@@ -152,7 +159,7 @@
         const stamp=Number(entry?.timestamp);
         const when=stamp>0?new Date(stamp*1000):null;
         button.append($('span','board-version-date',when&&Number.isFinite(when.getTime())?when.toLocaleDateString(window.AtlasI18n?.lang||'ru'):''));
-        button.addEventListener('click',()=>renderSelection(name));
+        button.addEventListener('click',()=>{renderSelection(name);versionArchive.open=false;versionToggle.focus({preventScroll:true});});
         button.addEventListener('keydown',event=>{
           if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;
           const order=names,at=order.indexOf(name),next=order[at+(event.key==='ArrowDown'?1:-1)];
@@ -162,7 +169,7 @@
         buttons.set(name,button);
         group.append(button);
       }
-      chooser.append(legend,group);
+      chooser.append(legend,versionArchive);
       actions.append(chooser,view);
       const preferred=state.selectedVersions[board.id];
       renderSelection(names.includes(preferred)?preferred:String(latestReady||downloadable[0].version||''));

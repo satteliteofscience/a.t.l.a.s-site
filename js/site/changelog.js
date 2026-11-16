@@ -25,15 +25,17 @@ function renderRelease(release,u){
   head.append(version,add('p','ch-release-sub',release.hint?.[lang] ?? u.versionHint));
   group.append(head);
   const content=add('div','ch-release-content');group.append(content);
+  if(release.version==='2.1'){const demo=add('a','ch-sitl-cta',({ru:'45 минут: EKF3 и DCM · запись SITL и измеренные результаты ↗',uk:'45 хвилин: EKF3 та DCM · запис SITL і виміряні результати ↗',en:'45 minutes: EKF3 and DCM · SITL recording and measured results ↗'})[lang]);demo.href='sitl-demo-21.html';content.append(demo);}
 
   const list=add('ol','ch-comparisons');
   for(const item of release.changes){
     const entry=item[lang],li=add('li');
-    li.append(add('h2','ch-compare-title',entry[0]));
+    const change=add('details','ch-change'),title=add('summary','ch-change-toggle'),body=add('div','ch-change-body');
+    title.append(add('h2','ch-compare-title',entry[0]));change.append(title,body);li.append(change);
     for(const [label,value,kind] of [[release.baseLabel?.[lang] ?? u.base,entry[1],'base'],[release.modLabel?.[lang] ?? u.mod,entry[2],'atlas']]){
       const row=add('div','ch-comparison '+kind);
       row.append(add('div','ch-compare-label',label),add('p','',value));
-      li.append(row);
+      body.append(row);
     }
     list.append(li);
   }
@@ -71,6 +73,12 @@ function render(){
   $('chSitlDemo').textContent=({ru:'Демонстрация работы SITL на модели 6,3 кг',uk:'Демонстрація роботи SITL на моделі 6,3 кг',en:'SITL demonstration on the 6.3 kg model'})[lang];
   $('chSitlDemo72').textContent=({ru:'Демонстрация работы SITL на модели 7,2 кг',uk:'Демонстрація роботи SITL на моделі 7,2 кг',en:'SITL demonstration on the 7.2 kg model'})[lang];
    $('chSitlDemoStress').textContent=({ru:'Стресс-тест SITL на модели 7,2 кг: EKF3 и DCM',uk:'Стрес-тест SITL на моделі 7,2 кг: EKF3 і DCM',en:'SITL stress test on the 7.2 kg model: EKF3 and DCM'})[lang];
+  if($('chLegacySummary'))$('chLegacySummary').textContent=({ru:'Предыдущие демонстрации · 2.0 / 1.2',uk:'Попередні демонстрації · 2.0 / 1.2',en:'Earlier demonstrations · 2.0 / 1.2'})[lang];
+  if($('ch21Title')){
+    $('ch21Title').textContent=({ru:'Контроль 2.1 · EKF3 и DCM',uk:'Контроль 2.1 · EKF3 та DCM',en:'2.1 control flights · EKF3 and DCM'})[lang];
+    $('ch21Intro').textContent=({ru:'Модель 7,2 кг · без GPS в полёте · штиль · карта Днепра · оценки против истины SIM',uk:'Модель 7,2 кг · без GPS у польоті · штиль · карта Дніпра · оцінки проти істини SIM',en:'7.2 kg model · no GPS in flight · zero wind · Dnipro map · estimates against SIM truth'})[lang];
+    $('chSitl21').textContent=({ru:'Открыть контрольные полёты и отчёт ↗',uk:'Відкрити контрольні польоти та звіт ↗',en:'Open the control flights and report ↗'})[lang];
+  }
   $('chFooter').textContent=u.footer;
   for(const button of document.querySelectorAll('[data-language]')){
     const active=button.dataset.language===lang;
