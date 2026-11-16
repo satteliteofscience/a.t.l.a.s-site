@@ -78,5 +78,16 @@ assert.ok(Object.values(additions.builds).every(b=>b.published===false&&b.versio
 assert.ok(fs.existsSync(path.join(out,'r2-upload-2.0.ps1'))&&!fs.readdirSync(out).some(n=>/\.hex$/i.test(n)),'no HEX may be copied next to the metadata');
 const wrong=cp.spawnSync(process.execPath,[path.join(__dirname,'r2_publish_release.cjs'),'prepare','--version','2.0','--uni',cubeHex,'--out',path.join(tmp,'o2')],{encoding:'utf8'});
 assert.equal(wrong.status,1);assert.match(wrong.stderr,/not a Uni-IC743 Mini build/);
+
+// Version 2.1 uses new keys; earlier published entries and credentials stay untouched.
+const entry21=tool.entryFor('cube','2.1',cube,false);
+assert.equal(entry21.object_key,'release/cube-orange-plus-release-2-1.hex');
+const publish21=tool.merge(current,{builds:{[tool.buildId('cube','2.1')]:entry21}},true);
+for(const [id,old] of Object.entries(current.builds))assert.deepEqual(publish21.builds[id],old);
+assert.equal(publish21.builds['cube-orange-plus-release-2-1'].published,true);
+const script21=tool.uploadScript('2.1',[{object_key:entry21.object_key,path:cubeHex}],tmp,false);
+assert.equal((script21.match(/if \(\$LASTEXITCODE -ne 0\)/g)||[]).length,4,'stop after any failed native upload, read or merge');
+assert.ok(!script21.includes('--publish'),'preparation must not silently publish files');
+
 fs.rmSync(tmp,{recursive:true,force:true});
 console.log('PASS: R2 release tool: HEX validation, board markers, index entries, merge rules and upload script.');

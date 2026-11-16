@@ -1,0 +1,11 @@
+# Local credentials and build artefacts never belong in the public site.
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+.wrangler/
+node_modules/
+.private/
+*.hex
+firmware-gateway/release-*/

@@ -5,9 +5,10 @@
     "repository_url": "https://github.com/satteliteofscience/a.t.l.a.s-site",
     "issues_url": "https://github.com/satteliteofscience/a.t.l.a.s-site/issues",
     "release_channel": "release",
-    "latest_release": "2.0",
+    "latest_release": "2.1",
     "release_names": {
-      "2.0": "A.T.L.A.S-G.L.O.B.A.L"
+      "2.0": "A.T.L.A.S-G.L.O.B.A.L",
+      "2.1": "A.T.L.A.S-G.L.O.B.A.L"
     }
   },
   "boards": [

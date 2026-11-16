@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* A.T.L.A.S. — prepare and merge a firmware release for the private R2 bucket (metadata only; the HEX never enters this repository).
  *
- *   node tools/r2_publish_release.cjs prepare --version 2.0 --matek F.hex --cube F.hex --uni F.hex [--out DIR] [--publish]
+ *   node tools/r2_publish_release.cjs prepare --version 2.1 --matek F.hex --cube F.hex --uni F.hex [--out DIR] [--publish]
  *       Validates each Intel HEX exactly like the configurator does (contiguous image from 0x08000000, bootloader included, board marker),
  *       computes SHA-256 / bytes / timestamp and writes release-<version>-index-additions.json and r2-upload-<version>.ps1 into DIR
  *       (default firmware-gateway/release-<version>). Entries are "published": false unless --publish is given.
@@ -91,12 +91,16 @@ function uploadScript(version,rows,dir,publish){
   "$ErrorActionPreference = 'Stop'",
   `$dir = ${q(dir)}`
  ];
- for(const r of rows)lines.push(`npx wrangler r2 object put ${BUCKET}/${r.object_key} --file ${q(r.path)} --content-type application/octet-stream --remote`);
+ for(const r of rows)lines.push(`npx wrangler r2 object put ${BUCKET}/${r.object_key} --file ${q(r.path)} --content-type application/octet-stream --remote`,
+  `if ($LASTEXITCODE -ne 0) { throw 'Firmware upload failed; the index has not been changed.' }`);
  lines.push(
   `npx wrangler r2 object get ${BUCKET}/_internal/firmware-index.json --file "$dir/current-index.json" --remote`,
+  `if ($LASTEXITCODE -ne 0) { throw 'Reading the current private index failed; publication stopped.' }`,
   `node tools/r2_publish_release.cjs merge --index "$dir/current-index.json" --additions "$dir/release-${version}-index-additions.json" --out "$dir/merged-index.json"${publish?' --publish':''}`,
+  `if ($LASTEXITCODE -ne 0) { throw 'Index merge failed; publication stopped.' }`,
   `# Keep a copy of the old index: "$dir/current-index.json" is the rollback.`,
-  `npx wrangler r2 object put ${BUCKET}/_internal/firmware-index.json --file "$dir/merged-index.json" --content-type application/json --remote`
+  `npx wrangler r2 object put ${BUCKET}/_internal/firmware-index.json --file "$dir/merged-index.json" --content-type application/json --remote`,
+  `if ($LASTEXITCODE -ne 0) { throw 'Index upload failed; verify the remote index before retrying.' }`
  );
  return lines.join('\r\n')+'\r\n';
 }
@@ -105,7 +109,7 @@ function main(argv){
  const a=args(argv),cmd=a._[0];
  if(cmd==='prepare'){
   const version=String(a.version||'');
-  if(!/^[0-9]+[.][0-9]+$/.test(version))throw Error('--version 2.0 required');
+  if(!/^[0-9]+[.][0-9]+$/.test(version))throw Error('--version N.N required (for example 2.1)');
   const parse=loadParser(),builds={},rows=[],now=Math.floor(Date.now()/1000);
   for(const kind of Object.keys(BOARDS)){
    if(!a[kind])continue;

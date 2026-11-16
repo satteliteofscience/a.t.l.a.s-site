@@ -18,9 +18,9 @@ assert.match(html,/id="chGlobalTitle"[^>]*>A\.T\.L\.A\.S EKF3 NoAID G\.L\.O\.B\.
 assert.match(html,/id="chSitlGlobal"[^>]*href="sitl-demo-global\.html"|href="sitl-demo-global\.html"[^>]*id="chSitlGlobal"|id="chSitlGlobal" class="ch-sitl-demo" href="sitl-demo-global\.html"/,'2.0 demo button missing');
 const scripts=[...html.matchAll(/<script src="([^"?]+)/g)].map(m=>m[1]);
 assert.ok(scripts.indexOf('data/changelog/2.0.js')>=0&&scripts.indexOf('data/changelog/2.0.js')<scripts.indexOf('js/site/changelog.js'),'2.0.js must load before the renderer');
-assert.match(log,/const releases=\[window\.AtlasRelease20,window\.AtlasRelease12,/,'release 2.0 must be the first release');
-for(const text of ['ОБНОВЛЕНИЕ 2.0','ОНОВЛЕННЯ 2.0','UPDATE 2.0','Часовой полёт SITL на модели 7,2 кг: EKF3 NoAID G.L.O.B.A.L. и DCM','Годинний політ SITL на моделі 7,2 кг: EKF3 NoAID G.L.O.B.A.L. і DCM','One-hour SITL flight on the 7.2 kg model: EKF3 NoAID G.L.O.B.A.L. and DCM','Release 2.0'])assert.ok(log.includes(text),'changelog text missing: '+text);
-assert.match(log,/release-\(1-\[012\]\|2-0\)/,'#release-2-0 must open its section');
+assert.match(log,/const releases=\[window\.AtlasRelease21,window\.AtlasRelease20,window\.AtlasRelease12,/,'release 2.1 is the first release, 2.0 follows it');
+for(const text of ['ОБНОВЛЕНИЕ 2.0','ОНОВЛЕННЯ 2.0','UPDATE 2.0','Часовой полёт SITL на модели 7,2 кг: EKF3 NoAID G.L.O.B.A.L. и DCM','Годинний політ SITL на моделі 7,2 кг: EKF3 NoAID G.L.O.B.A.L. і DCM','One-hour SITL flight on the 7.2 kg model: EKF3 NoAID G.L.O.B.A.L. and DCM','Release 2.1'])assert.ok(log.includes(text),'changelog text missing: '+text);
+assert.match(log,/release-\(1-\[012\]\|2-\[01\]\)/,'#release-2-0 and #release-2-1 must open their sections');
 // replay page wiring
 const page=read('sitl-demo-global.html'),js=read('js/site/global-demo.js');
 assert.match(page,/data-src="data\/sitl\/atlas-global-hour\.json"/);assert.match(page,/<script src="js\/site\/global-demo\.js(\?[^"]*)?" defer>/);assert.match(page,/href="css\/global-demo\.css(\?[^"]*)?"/);
