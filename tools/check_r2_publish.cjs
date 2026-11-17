@@ -89,5 +89,17 @@ const script21=tool.uploadScript('2.1',[{object_key:entry21.object_key,path:cube
 assert.equal((script21.match(/if \(\$LASTEXITCODE -ne 0\)/g)||[]).length,4,'stop after any failed native upload, read or merge');
 assert.ok(!script21.includes('--publish'),'preparation must not silently publish files');
 
+// Version 2.2: the same tool, new keys for every board; the 2.0 and 2.1 records and credentials stay untouched.
+const rows22=[['matek','matek-h743-v3'],['cube','cube-orange-plus'],['uni','uni-ic743-mini']];
+assert.deepEqual(rows22.map(([kind])=>tool.buildId(kind,'2.2')),rows22.map(([,stem])=>stem+'-release-2-2'));
+const entry22=tool.entryFor('cube','2.2',cube,false);
+assert.equal(entry22.object_key,'release/cube-orange-plus-release-2-2.hex');assert.equal(entry22.version,'2.2');assert.equal(entry22.published,false);
+const publish22=tool.merge(publish21,{builds:{[tool.buildId('cube','2.2')]:entry22}},true);
+for(const [id,old] of Object.entries(publish21.builds))assert.deepEqual(publish22.builds[id],old);
+assert.equal(publish22.builds['cube-orange-plus-release-2-2'].published,true);
+const script22=tool.uploadScript('2.2',[{object_key:entry22.object_key,path:cubeHex}],tmp,false);
+assert.equal((script22.match(/if \(\$LASTEXITCODE -ne 0\)/g)||[]).length,4,'stop after any failed native upload, read or merge');
+assert.ok(!script22.includes('--publish')&&script22.includes('release-2.2-index-additions.json'),'2.2 preparation must not silently publish files');
+
 fs.rmSync(tmp,{recursive:true,force:true});
 console.log('PASS: R2 release tool: HEX validation, board markers, index entries, merge rules and upload script.');

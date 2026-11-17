@@ -5,6 +5,7 @@ on:
       - 'index.html'
       - 'tools/check_release_ready.cjs'
       - 'tools/check_release_21.cjs'
+      - 'tools/check_release_22.cjs'
       - 'tools/check_control21.cjs'
       - 'js/site/control21.js'
       - 'css/control21.css'
@@ -171,6 +172,8 @@ jobs:
         run: node tools/check_post_hardware_audit.cjs
       - name: Verify release 2.1 content, links and private R2 publication
         run: node tools/check_release_21.cjs && node tools/check_global_demo.cjs && node tools/check_r2_publish.cjs && node tools/check_anchor_links.cjs
+      - name: Verify release 2.2 changelog and the G.L.O.B.A.L. profile with the station-correction parameters
+        run: node tools/check_release_22.cjs && node tools/check_global_profile.cjs
       - name: Verify INS temperature calibration modes, readback and diagnostic coefficients
         run: node tools/check_tempcal.cjs
       - name: Verify Quick Setup protocol, parameter and safety gates

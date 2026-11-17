@@ -1,17 +1,23 @@
 /* EKF3 G.L.O.B.A.L. activation profile: the validated parameter set, status and diff. No MAVLink and no aircraft outputs here.
- * The values are the EKF3 block of atlas.param shipped with the 2.0 firmware (flown in the one-hour SITL test, see sitl-demo-global.html). */
+ * The values are the EKF3 block of atlas.param shipped with the 2.0 firmware (flown in the one-hour SITL test, see sitl-demo-global.html).
+ * Firmware 2.2 adds the two station-correction parameters (EK3_MAV_POS, EK3_MAV_HGT, both 1). A board whose firmware lacks them is
+ * diffed and written without them, so the profile keeps working on 2.0 and 2.1. */
 ((root,factory)=>{const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.AtlasGlobalCore=api;})(globalThis,()=>{
  'use strict';
  const OPTIONS=Object.freeze(['EK3_NOAID_POS','EK3_NOAID_GPS','EK3_NOAID_AUTO']);
+ /** Firmware 2.2: the operator correction from the station (the EKF3 correction button) and the height tie to HOME on the ground. */
+ const CORRECTION=Object.freeze(['EK3_MAV_POS','EK3_MAV_HGT']);
  // Order matters: the source sets and AHRS first, the three options last, so an interrupted write never leaves NOAID_AUTO on without a GPS source set.
+ // The two correction parameters only act while EK3_NOAID_POS is on, so they come before the options as well.
  const PROFILE=Object.freeze([
   ['EK3_SRC2_POSXY',3],['EK3_SRC2_POSZ',1],['EK3_SRC2_VELXY',3],['EK3_SRC2_VELZ',3],['EK3_SRC2_YAW',1],
   ['EK3_SRC1_POSXY',0],['EK3_SRC1_POSZ',1],['EK3_SRC1_VELXY',0],['EK3_SRC1_VELZ',0],['EK3_SRC1_YAW',1],
   ['AHRS_EKF_TYPE',3],['AHRS_GPS_USE',1],['EK3_NOAID_M_NSE',5],
+  ['EK3_MAV_POS',1],['EK3_MAV_HGT',1],
   ['EK3_NOAID_POS',1],['EK3_NOAID_GPS',1],['EK3_NOAID_AUTO',1]
  ].map(Object.freeze));
  const specs=Object.freeze({
-  EK3_NOAID_POS:[0,1],EK3_NOAID_GPS:[0,1],EK3_NOAID_AUTO:[0,1],EK3_NOAID_M_NSE:[0.5,50],AHRS_EKF_TYPE:[0,3],AHRS_GPS_USE:[0,1],
+  EK3_NOAID_POS:[0,1],EK3_NOAID_GPS:[0,1],EK3_NOAID_AUTO:[0,1],EK3_MAV_POS:[0,1],EK3_MAV_HGT:[0,1],EK3_NOAID_M_NSE:[0.5,50],AHRS_EKF_TYPE:[0,3],AHRS_GPS_USE:[0,1],
   EK3_SRC1_POSXY:[0,6],EK3_SRC1_POSZ:[0,3],EK3_SRC1_VELXY:[0,6],EK3_SRC1_VELZ:[0,6],EK3_SRC1_YAW:[0,8],
   EK3_SRC2_POSXY:[0,6],EK3_SRC2_POSZ:[0,3],EK3_SRC2_VELXY:[0,6],EK3_SRC2_VELZ:[0,6],EK3_SRC2_YAW:[0,8]
  });
@@ -32,5 +38,5 @@
  /** The updates that switch the three options off (EK3_NOAID_AUTO first), nothing else is touched. */
  const disableUpdates=()=>Object.fromEntries(['EK3_NOAID_AUTO','EK3_NOAID_GPS','EK3_NOAID_POS'].map(name=>[name,0]));
  const applyUpdates=params=>Object.fromEntries(diff(params).map(({name,target})=>[name,target]));
- return Object.freeze({OPTIONS,PROFILE,specs,valid,supported,diff,status,disableUpdates,applyUpdates});
+ return Object.freeze({OPTIONS,CORRECTION,PROFILE,specs,valid,supported,diff,status,disableUpdates,applyUpdates});
 });

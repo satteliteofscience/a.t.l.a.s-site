@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* A.T.L.A.S. — prepare and merge a firmware release for the private R2 bucket (metadata only; the HEX never enters this repository).
  *
- *   node tools/r2_publish_release.cjs prepare --version 2.1 --matek F.hex --cube F.hex --uni F.hex [--out DIR] [--publish]
+ *   node tools/r2_publish_release.cjs prepare --version 2.2 --matek F.hex --cube F.hex --uni F.hex [--out DIR] [--publish]
  *       Validates each Intel HEX exactly like the configurator does (contiguous image from 0x08000000, bootloader included, board marker),
  *       computes SHA-256 / bytes / timestamp and writes release-<version>-index-additions.json and r2-upload-<version>.ps1 into DIR
  *       (default firmware-gateway/release-<version>). Entries are "published": false unless --publish is given.

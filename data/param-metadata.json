@@ -1201,7 +1201,7 @@
   },
   "EK3_NOAID_POS": {
    "DisplayName": "Navigation position from EKF3 dead reckoning",
-   "Description": "When 1, AHRS_GPS_USE is not 0, EKF3 is the active AHRS and runs without position aiding (NOAID), the horizontal position of the AHRS (used by L1 navigation, the mission, loiter, distance to home, MAVLink GLOBAL_POSITION_INT and the POS log message) is the EKF3 dead-reckoning position, never a GPS or DCM position. While the DCM is the active AHRS (fallback, or AHRS_EKF_TYPE=0) the DCM position is used. Altitude is not changed. When 0 the behaviour is unchanged.",
+   "Description": "When 1, AHRS_GPS_USE is not 0, EKF3 is the active AHRS and runs without position aiding (NOAID), the horizontal position of the AHRS (used by L1 navigation, the mission, loiter, distance to home, MAVLink GLOBAL_POSITION_INT and the POS log message) is the EKF3 dead-reckoning position, never a GPS or DCM position. While the DCM is the active AHRS (fallback, or AHRS_EKF_TYPE=0) the DCM position is used. Altitude comes from the same EKF3 vertical solution as the relative height, avoiding GPS or DCM height jumps. When 0 the behaviour is unchanged.",
    "Values": {
     "0": "Disabled",
     "1": "EKF3 dead reckoning"
@@ -1239,6 +1239,26 @@
    "User": "Advanced",
    "Units": "m",
    "Default": "10.0"
+  },
+  "EK3_MAV_POS": {
+   "DisplayName": "Ground station position correction on a MAVLink GPS input",
+   "Description": "When enabled, the ground station button that corrects the EKF3 position (a packet on the input of a MAVLink GPS, GPS TYPE=14) is an operator command: it puts the NoAID position at the station's HOME once per press and is never used as a GPS measurement. Any other packet on the same input is a real GPS and is used as usual. The correction works on the ground before launch only; in flight it is refused with a message, and the map position command still works. Requires EK3_NOAID_POS=1 and AHRS_GPS_USE enabled. When 0 the behaviour is unchanged.",
+   "Values": {
+    "0": "Disabled",
+    "1": "Enabled"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "EK3_MAV_HGT": {
+   "DisplayName": "Tie NoAID height to HOME on the ground",
+   "Description": "With EK3_MAV_POS enabled, the aircraft height is tied to the HOME height when HOME is set at the aircraft or the station correction is made at HOME, only while the aircraft is stationary, disarmed and not flying. The relative height on the ground is then about zero, and a GPS that appears or disappears on the ground does not move it. The height is never changed while armed or flying. Requires EK3_OGN_HGT_MASK=0. When 0 the behaviour is unchanged.",
+   "Values": {
+    "0": "Disabled",
+    "1": "Ground alignment to HOME"
+   },
+   "User": "Advanced",
+   "Default": "0"
   }
  }
 }
