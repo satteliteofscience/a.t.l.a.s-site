@@ -58,7 +58,7 @@ const i18n=read('js/site/i18n.js');
 assert.ok(i18n.includes('Актуальная версия A.T.L.A.S. — 2.2')&&i18n.includes('Core A.T.L.A.S. 2.2 features.')&&!/Release 2\.1 A\.T\.L\.A\.S-G/.test(i18n),'translations follow the home page');
 assert.match(read('js/configurator/dfu-ui.js'),/ANNOUNCED_RELEASE='2\.2'/,'DFU lists 2.2 as coming soon until it is published');
 assert.ok((read('js/site/changelog.js').match(/Release 2\.2 ·/g)||[]).length===3,'changelog footer in ru, uk and en');
-assert.match(config,/global-profile-core\.js\?v=release-2-2-global/);assert.match(config,/global-profile-ui\.js\?v=2-2-global-ui/);
+assert.match(config,/global-profile-core\.js\?v=release-2-2-global/);assert.match(config,/global-profile-ui\.js\?v=2-2-layout/);
 const catalog=JSON.parse(read('data/releases.json'));
 assert.equal(catalog.project.latest_release,'2.2','the newest release is announced; a card stays "coming soon" until its HEX is published');
 assert.equal(catalog.project.release_names['2.2'],'A.T.L.A.S-G.L.O.B.A.L');assert.ok(catalog.project.release_names['2.1']&&catalog.project.release_names['2.0']);

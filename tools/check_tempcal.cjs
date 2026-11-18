@@ -63,6 +63,6 @@ const pm=(...pairs)=>new Map(pairs.map(([name,value])=>[name,{value,type:9}]));
  assert.match(wizard,/stepTemp/,'Quick Setup temperature step must exist');
  assert.match(wizard,/else if\(qs\.step===9\)renderTemperature\(box\)/,'temperature step 10 must precede final');
  assert.match(wizard,/qs\.step===10/,'final step must become 11');
- assert.match(workflow,/check_tempcal\.cjs/,'CI must execute temperature regression suite');
+ assert.match(workflow,/for f in tools\/check_\*\.cjs/,'CI must execute the temperature regression suite (it runs every tools/check_*.cjs)');
 })();
 console.log('PASS: INS 0/1/2 modes, temperature ranges, polynomial coefficients, baseline calibration, Quick Setup 11 stages and auto reread.');

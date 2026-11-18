@@ -15,5 +15,18 @@ type = "ratelimit"
 namespace_id = "1001"
 simple = { limit = 10, period = 60 }
 
+# The public catalog (GET /api/catalog) is cached at the edge for 60 s; only a cache miss reads the private bucket,
+# so only a miss is throttled per client IP. The binding is optional: without it the catalog is simply not throttled.
+[[unsafe.bindings]]
+name = "CATALOG_LIMITER"
+type = "ratelimit"
+namespace_id = "1002"
+simple = { limit = 30, period = 60 }
+
+# Optional plain variable: the shortest accepted PIN or tester key. The default is 12 characters (the documented minimum).
+# Set a lower value only while an older, shorter release PIN is still in use; a new PIN of 12+ random characters is the real fix.
+# [vars]
+# MIN_PIN_LENGTH = "8"
+
 # Set ACCESS_CODES_JSON via Wrangler SECRET or Cloudflare dashboard;
 # DO NOT place real keys or hashes in this file.

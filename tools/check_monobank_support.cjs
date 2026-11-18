@@ -39,5 +39,14 @@ assert.ok(css.includes('.atlas-donate-cta:hover .atlas-donation-glitch'));
 assert.ok(css.includes('.atlas-donate-cta:active .atlas-donation-glitch'));
 assert.ok(css.includes('prefers-reduced-motion:reduce'));
 assert.ok(script.includes("for(const link of [$('atlasQuickDonate'),$('atlasTesterLink')])"));
+const privacyJs=fs.readFileSync('js/site/privacy.js','utf8'),supportJs=fs.readFileSync('js/site/contact-support.js','utf8');
 assert.ok(privacy.includes('Tally')&&privacy.includes('Google Sheets'));
+// the privacy page has no inline script (Content-Security-Policy); its texts are in js/site/privacy.js, in three languages with the same slots
+assert.ok(!/<script(?![^>]*\bsrc=)[^>]*>/.test(privacy),'privacy.html must not hold an inline script');assert.ok(privacy.includes('src="js/site/privacy.js"'));
+const dict=JSON.parse(privacyJs.match(/const d=(\{.*\});\r?\nconst keys/)[1]),slots=[...privacyJs.match(/const keys=\[(.*?)\]/)[1].matchAll(/'(\w+)'/g)].map(m=>m[1]);
+for(const l of ['ru','uk','en'])assert.equal(dict[l].length,slots.length,'every language fills every slot: '+l);
+for(const id of slots)assert.ok(privacy.includes('id="'+id+'"'),'slot element '+id);
+// the operator contact is the support address already shown on the site; the third-party services and the retention are named in every language
+const mail=privacy.match(/id="privacyMailLink" href="mailto:([^"]+)"/)[1];assert.ok(supportJs.includes(mail)&&html.includes(mail),'the privacy contact is the site support address');
+for(const l of ['ru','uk','en']){const all=dict[l].join(' ');for(const w of ['Google Fonts','OpenStreetMap','Esri','Cloudflare','GitHub Pages','PIN','Tally','Google Sheet'])assert.ok(all.includes(w),l+' mentions '+w);assert.ok(!/ещё требуется|ще потрібно|still needs|необходим опубликованный|потрібен опублікований/.test(all),l+' no longer says the contact is missing');}
 console.log('PASS: single one-click monobank CTA, glitch animations, Tally and three languages.');

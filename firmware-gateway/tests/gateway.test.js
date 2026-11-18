@@ -99,3 +99,75 @@ test('public catalog only lists explicitly published, existing, correctly sized 
   headers:{Origin:'https://another.example'}
  }),env)).status,403);
 });
+
+function catalogOf(count){
+ const builds={};
+ for(let i=1;i<=count;i++)builds['matek-h743-v3-release-1-'+i]={
+  channel:'release',board_id:'matek-h743-wing-v3',version:'1.'+i,object_key:'release/matek-'+i+'.hex',
+  filename:'ATLAS-Matek-1.'+i+'.hex',sha256:'c'.repeat(64),bytes:11,timestamp:1794480000+i,published:true
+ };
+ return {schema:1,builds};
+}
+const askCatalog=(env,origin=ORIGIN)=>gateway.fetch(new Request('https://gateway.example/api/catalog',{headers:{Origin:origin}}),env);
+
+test('a PIN shorter than the documented minimum is refused even when its hash is configured; MIN_PIN_LENGTH can lower the limit',async()=>{
+ const env=await fakeEnv();
+ const short='Short-PIN-9',twelve='Twelve-chars';   // 11 and 12 characters
+ env.ACCESS_CODES_JSON=JSON.stringify({release:{enabled:true,pin_sha256:await hash(short)},testers:[]});
+ assert.equal((await call(env,'release-test-1',short)).status,401);
+ env.MIN_PIN_LENGTH='8';
+ assert.equal((await call(env,'release-test-1',short)).status,200);
+ env.MIN_PIN_LENGTH='0';   // nonsense falls back to the documented minimum
+ assert.equal((await call(env,'release-test-1',short)).status,401);
+ delete env.MIN_PIN_LENGTH;
+ env.ACCESS_CODES_JSON=JSON.stringify({release:{enabled:true,pin_sha256:await hash(twelve)},testers:[]});
+ assert.equal((await call(env,'release-test-1',twelve)).status,200);
+});
+
+test('the catalog reads the private index once and checks the object sizes side by side',async()=>{
+ const env=await fakeEnv();
+ const catalog=catalogOf(6);
+ let indexReads=0,inFlight=0,maxInFlight=0;
+ env.FIRMWARE.get=async key=>{if(key==='_internal/firmware-index.json'){indexReads++;return {text:async()=>JSON.stringify(catalog)};}return null;};
+ env.FIRMWARE.head=async()=>{inFlight++;maxInFlight=Math.max(maxInFlight,inFlight);await new Promise(r=>setTimeout(r,5));inFlight--;return {size:11};};
+ const response=await askCatalog(env);
+ assert.equal(response.status,200);
+ assert.equal((await response.json()).builds.length,6);
+ assert.equal(indexReads,1);            // it used to read the index once per build (7 reads here)
+ assert.ok(maxInFlight>1);              // and to ask for the sizes one after another
+ assert.match(response.headers.get('Cache-Control'),/public, max-age=60/);
+ // one failing size lookup drops that build only
+ env.FIRMWARE.head=async key=>{if(key==='release/matek-2.hex')throw new Error('bucket hiccup');return {size:11};};
+ const partial=await (await askCatalog(env)).json();
+ assert.equal(partial.builds.length,5);
+ assert.ok(!partial.builds.some(b=>b.version==='1.2'));
+});
+
+test('after the first answer the catalog comes from the edge cache: only a miss reads the bucket and counts against the limiter',async()=>{
+ const stored=new Map();let puts=0;
+ globalThis.caches={default:{match:async req=>stored.get(req.url)?.clone(),put:async(req,res)=>{puts++;stored.set(req.url,res);}}};
+ try{
+  const env=await fakeEnv();let reads=0,limits=0;
+  const catalog=catalogOf(1);
+  env.FIRMWARE.get=async key=>{reads++;return key==='_internal/firmware-index.json'?{text:async()=>JSON.stringify(catalog)}:null;};
+  env.FIRMWARE.head=async()=>({size:11});
+  env.CATALOG_LIMITER={limit:async()=>{limits++;return {success:true};}};
+  const first=await askCatalog(env),second=await askCatalog(env);
+  assert.equal(first.status,200);assert.equal(second.status,200);
+  assert.deepEqual(await second.json(),await first.json());
+  assert.equal(reads,1);assert.equal(limits,1);assert.equal(puts,1);
+  assert.equal(second.headers.get('Access-Control-Allow-Origin'),ORIGIN);
+  // another origin is refused before the cache is consulted
+  assert.equal((await askCatalog(env,'https://another.example')).status,403);
+ }finally{delete globalThis.caches;}
+});
+
+test('a catalog miss over the limit gets 429 with Retry-After; without the binding the catalog still works',async()=>{
+ const env=await fakeEnv();
+ env.FIRMWARE.get=async key=>key==='_internal/firmware-index.json'?{text:async()=>JSON.stringify({schema:1,builds:{}})}:null;
+ env.CATALOG_LIMITER={limit:async()=>({success:false})};
+ const refused=await askCatalog(env);
+ assert.equal(refused.status,429);assert.equal(refused.headers.get('Retry-After'),'60');
+ delete env.CATALOG_LIMITER;
+ assert.equal((await askCatalog(env)).status,200);
+});

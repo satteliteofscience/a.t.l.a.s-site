@@ -28,6 +28,8 @@ const scripts=[...page.matchAll(/<script src="([^"?]+)/g)].map(m=>m[1]);
 assert.ok(scripts.indexOf('data/faq-20.js')>=0&&scripts.indexOf('data/faq-20.js')<scripts.indexOf('js/site/faq.js'));
 for(const id of ['faqSearch','faqCats','faqCount','faqList'])assert.ok(page.includes(`id="${id}"`),'#'+id);
 assert.match(faqJs,/FAQ\.push\(\.\.\.\(window\.AtlasFaq20\|\|\[\]\)\)/);assert.match(faqJs,/faqSearch/);assert.match(faqJs,/location\.hash/);
+// a malformed percent sequence in the address (faq.html#%E0%A4%A) must not stop the list from rendering: the decode stays inside try, and is the only decode of the hash
+assert.match(faqJs,/try\{hashId=decodeURIComponent\(location\.hash\.slice\(1\)\);\}catch\{\}/);assert.equal((faqJs.match(/decodeURIComponent\(location\.hash/g)||[]).length,1);
 
 // --- facts: parameter names that belong to this firmware exist in the configurator's metadata
 const meta=JSON.parse(read('data/param-metadata.json')).parameters;

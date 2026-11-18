@@ -13,16 +13,17 @@ This is the server-side component for PIN/key-controlled downloads and site-init
 
 1. Create/sign in to [Cloudflare](https://dash.cloudflare.com/) using your own account.
 2. Create an **R2 Standard** bucket `atlas-firmware-private`. **Do not enable public access, r2.dev or a custom public bucket hostname.**
-3. Create a Worker with this `wrangler.toml` and `src/index.js`, or deploy using Wrangler (`npx wrangler deploy` from this folder). Create the rate-limiter binding if using the Cloudflare dashboard.
+3. Create a Worker with this `wrangler.toml` and `src/index.js`, or deploy using Wrangler (`npx wrangler deploy` from this folder). Create the rate-limiter bindings (`ACCESS_LIMITER` and `CATALOG_LIMITER`) if using the Cloudflare dashboard.
 4. Upload the firmware binaries to the private bucket as `release/<build>.hex` and `early/<build>.hex`. The corresponding files may also be backed up in the private Google Drive folders already created.
 5. Create `_internal/firmware-index.json` based on `firmware-index.example.json`, with real `object_key`, safe `filename` and file SHA-256 digests. Upload it privately to R2. Do not use an entry before the file and digest have been checked.
-6. Generate a **random release PIN at least 12 characters long** and a **different random key of at least 20 characters** for each tester. Hash UTF-8 values with SHA-256. Populate `access-codes.example.json`, then save the **whole JSON as a secret** named `ACCESS_CODES_JSON` using `npx wrangler secret put ACCESS_CODES_JSON` or Cloudflare's Secret UI. Never commit the real JSON, codes or hashes, even to a private copy that is then published.
+6. Generate a **random release PIN at least 12 characters long** and a **different random key of at least 20 characters** for each tester. Hash UTF-8 values with SHA-256. Populate `access-codes.example.json`, then save the **whole JSON as a secret** named `ACCESS_CODES_JSON` using `npx wrangler secret put ACCESS_CODES_JSON` or Cloudflare's Secret UI. Never commit the real JSON, codes or hashes, even to a private copy that is then published. The Worker refuses shorter codes: the variable `MIN_PIN_LENGTH` (default 12) can lower the limit only while an older, shorter release PIN is still in use.
 7. Test `POST https://<worker-name>.<account>.workers.dev/api/firmware/<build-id>` using `Origin: https://satteliteofscience.github.io`, `Content-Type: application/json` and JSON `{"pin":"<test-pin>"}` with a real and a deliberately wrong code. The valid response must contain the expected bytes; invalid keys must return 401 and repeated attempts must be rate-limited.
 8. Verified: the Worker is deployed and the gateway API returns the real 4,654,592-byte firmware image on a correct PIN and HTTP 401 on an invalid PIN. The website catalog and DFU loader have secure_id/channel metadata; no direct public HEX fallback remains on the current branch. Test the UX in-browser as well; real hardware flashing remains unverified.
 9. Verify the matching GNU GPL corresponding source accompanies all distributed binaries; a PIN gate is not a way to deny code recipients GPL freedoms. Existing public HEX files and Git history are NOT made private retroactively.
 
 ## API
 - `GET /health`: non-sensitive health response.
+- `GET /api/catalog`: the public, metadata-only list of published releases (no object keys). The index is read once per request, the object sizes are checked side by side, and the answer is cached at the edge for 60 seconds (`Cache-Control: public, max-age=60`); only a cache miss reads the bucket and counts against `CATALOG_LIMITER`.
 - `POST /api/firmware/<build-id>`: JSON `{"pin":"your-code"}`; successful response is an attachment body with `X-ATLAS-SHA256` and `Cache-Control: no-store`.
 - `OPTIONS /api/firmware/<build-id>`: CORS preflight for the published GitHub Pages origin.
 - There are **no public asset GET** or upload endpoints.

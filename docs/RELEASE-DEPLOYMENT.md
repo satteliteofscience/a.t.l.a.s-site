@@ -6,7 +6,7 @@ The website is hosted on GitHub Pages. **Actual HEX files are stored only in pri
 
 - Cloudflare Worker: https://atlas-firmware-gateway.gamingchanel57.workers.dev/
 - Private R2 bucket: atlas-firmware-private; public access and r2.dev disabled.
-- Worker bindings: FIRMWARE (bucket), ACCESS_LIMITER (10 attempts / 60s, approximately per IP), ACCESS_CODES_JSON (encrypted Cloudflare Secret).
+- Worker bindings: FIRMWARE (bucket), ACCESS_LIMITER (10 attempts / 60s, approximately per IP), CATALOG_LIMITER (30 catalog cache misses / 60s per IP; optional), ACCESS_CODES_JSON (encrypted Cloudflare Secret). Optional variable MIN_PIN_LENGTH (default 12): the shortest PIN or key the Worker accepts.
 - Private R2 paths: release/matek-h743-v3-release-1.hex and _internal/firmware-index.json.
 - Release secure_id: matek-h743-v3-release-1, channel: release.
 - Verified release file: 4,654,592 bytes, SHA-256 db18bb8cda5805508a4834ee40388c8f493ceaa4498a3c778d37c600b24bcda9.

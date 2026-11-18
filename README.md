@@ -4,10 +4,10 @@
 
 # A.T.L.A.S. — Control Center
 
-**Independent ArduPlane 4.7.2 Release 2.0 · A.T.L.A.S-G.L.O.B.A.L · Browser-based configurator · Flight-controller tooling**
+**Independent ArduPlane 4.7.3 Release 2.2 · A.T.L.A.S-G.L.O.B.A.L · Browser-based configurator · Flight-controller tooling**
 
-![Status](https://img.shields.io/badge/CHANNEL-RELEASE%202.0-86ac64?style=flat-square&labelColor=152010)
-![Base](https://img.shields.io/badge/ARDUPLANE-4.7.2-b7c56b?style=flat-square&labelColor=152010)
+![Status](https://img.shields.io/badge/CHANNEL-RELEASE%202.2-86ac64?style=flat-square&labelColor=152010)
+![Base](https://img.shields.io/badge/ARDUPLANE-4.7.3-b7c56b?style=flat-square&labelColor=152010)
 ![Languages](https://img.shields.io/badge/LANG-RU%20%7C%20UA%20%7C%20EN-dbc980?style=flat-square&labelColor=152010)
 ![License](https://img.shields.io/badge/FIRMWARE-GPLv3--or--later-90ac64?style=flat-square&labelColor=152010)
 
@@ -16,11 +16,11 @@
 </div>
 
 > [!IMPORTANT]
-> **A.T.L.A.S. Release 2.0 (A.T.L.A.S-G.L.O.B.A.L) is published per board as each build is verified: Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini.** Select the exact hardware revision, back up existing parameters and remove the propeller for bench configuration. GPS-denied navigation can accumulate position drift; verify sensor health, failsafes and aircraft-specific settings before flight.
+> **A.T.L.A.S. Release 2.2 (A.T.L.A.S-G.L.O.B.A.L) is published per board as each build is verified: Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini.** Select the exact hardware revision, back up existing parameters and remove the propeller for bench configuration. GPS-denied navigation can accumulate position drift; verify sensor health, failsafes and aircraft-specific settings before flight.
 
 ## What is A.T.L.A.S.?
 
-A.T.L.A.S. is an independently developed and tested modification of **ArduPlane 4.7.2**, accompanied by the **Control Center** website. Release 2.0 includes GPS-denied EKF3/NOAID estimation with the G.L.O.B.A.L. options (dead-reckoned map position, automatic switch to GPS and back, display-only GPS marker), launch without GPS, adapted TAKEOFF and CRUISE logic, the O.R.D.E.R. protocol, navigation features, telemetry, calibration tools, a web-based firmware catalog and an EKF3 G.L.O.B.A.L. activation profile in the configurator.
+A.T.L.A.S. is an independently developed and tested modification of **ArduPlane 4.7.3**, accompanied by the **Control Center** website. Release 2.2 includes GPS-denied EKF3/NOAID estimation with the G.L.O.B.A.L. options (dead-reckoned map position, automatic switch to GPS and back, display-only GPS marker), launch without GPS, adapted TAKEOFF and CRUISE logic, the O.R.D.E.R. protocol, position correction from the ground station, a custom startup melody, navigation features, telemetry, calibration tools, a web-based firmware catalog and an EKF3 G.L.O.B.A.L. activation profile in the configurator.
 
 The public repository is for the **website and published artifacts**. The developer's private working repository is not linked. Recipients of GPL-covered firmware must nonetheless have access to the corresponding firmware source for each distributed binary.
 
@@ -29,10 +29,10 @@ The public repository is for the **website and published artifacts**. The develo
 | System | Included capability |
 | :--- | :--- |
 | Flight data | Attitude readout, MAVLink telemetry, simulated aircraft |
-| Settings | Full parameter list, Basic Tuning, Flight Modes, Servo Output, EKF3 G.L.O.B.A.L. activation profile |
+| Settings | Full parameter list, Basic Tuning, Flight Modes, Servo Output, EKF3 G.L.O.B.A.L. activation profile, radio-failsafe and log presets |
 | Calibration | Accelerometer, compass, INS temperature compensation, radio, analog battery monitor |
 | Video | Onboard OSD layout editor, gimbal configuration |
-| Firmware | PIN-protected Intel HEX catalog (any number of versions per board), SHA-256 verification and web-DFU loading |
+| Firmware | PIN-protected Intel HEX catalog (any number of versions per board), SHA-256 verification, web-DFU loading and a Windows installer for the STM32 DFU driver |
 | Documentation | FAQ and release-by-release changelog, translated to RU / UA / EN |
 | Community | Voluntary monobank Jar donations and Tally Early Tester applications |
 
@@ -59,7 +59,7 @@ The static GitHub Pages site prompts for a PIN, but **server-side Cloudflare Wor
 
 Visitors can support A.T.L.A.S. using the public **[monobank Jar](https://send.monobank.ua/jar/7jkKfdWREX)** named `A.T.L.A.S. — Підтримка розробки`. The link is configured in `data/support.json`; the earlier IBAN is intentionally hidden. Donations are **voluntary**, independent from newsletter registration and do not buy early-test access. The website never handles card details or verifies transfer settlement: visitors choose the amount and supported methods directly on monobank.
 
-Early Tester applications now use the public [Tally form](https://tally.so/r/ArKQJl) linked from the Support section. Submissions are stored in the owner's **private Google Sheets**; the public site never stores email addresses or subscriber data. Applicants give explicit consent, and the maintainer manually reviews requests, verifies email and optionally checks donations before granting private test access. Donation is not a requirement and does not imply approval. This integration does **not** automatically send newsletters or verify email ownership. See [docs/PROVIDER-SETUP.md](docs/PROVIDER-SETUP.md) for operational steps; the legacy private SMTP backend is optional.
+Early Tester applications now use the public [Tally form](https://tally.so/r/ArKQJl) linked from the Support section. Submissions are stored in the owner's **private Google Sheets**; the public site never stores email addresses or subscriber data. Applicants give explicit consent, and the maintainer manually reviews requests, verifies email and optionally checks donations before granting private test access. Donation is not a requirement and does not imply approval. This integration does **not** automatically send newsletters or verify email ownership.
 
 ## Firmware releases and source compliance
 
@@ -73,11 +73,9 @@ The repository cover under `assets/github-social-preview.jpg` may be uploaded in
 
 - [FAQ](faq.html) — modified flight modes and minimum NOAID sensor requirements.
 - [Post-hardware configurator audit](docs/POST-HARDWARE-AUDIT-2026-11-09.md) — actual real-FC checks, MAVLink hardening and software regression coverage.
-- [Changelog](changelog.html) — Release 2.0 (A.T.L.A.S-G.L.O.B.A.L) and earlier updates.
+- [Changelog](changelog.html) — Release 2.2 (A.T.L.A.S-G.L.O.B.A.L) and earlier updates.
 - [Release process](docs/RELEASE-DEPLOYMENT.md) — private R2 uploads, version catalog, keys and matching GPL source.
-- [Publishing 2.0 to R2](firmware-gateway/RELEASE-2.0-UPLOAD.md) — `tools/r2_publish_release.cjs` validates the HEX, writes the index additions and the upload script.
-- [No-server provider setup](docs/PROVIDER-SETUP.md) — Brevo hosted forms, LiqPay, release notifications and private early testing.
-- [Legacy mail service setup](docs/MAIL-SERVICE-SETUP.md) — optional self-hosted SMTP/SQLite alternative.
+- [Publishing 2.2 to R2](firmware-gateway/RELEASE-2.2-UPLOAD.md) — `tools/r2_publish_release.cjs` validates the HEX, writes the index additions and the upload script.
 - [Suggested commits](docs/GITHUB-COMMITS.md) — ready-to-use commit titles and short descriptions.
 - [History](docs/LEGACY-README.md) — archived development documentation.
 - SITL replays: [6.3 kg model](sitl-demo.html), [7.2 kg model](sitl-demo-72.html), the [7.2 kg stress test, EKF3 and DCM](sitl-demo-stress.html) and the [one-hour EKF3 NoAID G.L.O.B.A.L. / DCM flight from Dnipro airport (UKDD) with satellite position maps](sitl-demo-global.html) (update 2.0) — recorded simulation data, not live telemetry. The map page loads Esri World Imagery tiles from the internet (the grid still works without them).
@@ -95,6 +93,7 @@ Public pages stay in the repository root so their URLs do not change; everything
 | `data/` | release catalog, changelog, parameter metadata, recorded SITL data (`data/sitl/`) |
 | `assets/` | icons, social preview, headline images |
 | `docs/` | deployment, audit and status documents |
+| `drivers/` | the unmodified, Microsoft-signed STMicroelectronics STM32 DFU driver package (WinUSB) with its licence and checksums; installed by `tools/A.T.L.A.S.-USB-Drivers.cmd` |
 | `tools/` | regression checks (`node tools/check_*.cjs`), release tooling and the local MAVLink bridge |
 | `firmware-gateway/` | Cloudflare Worker that serves private firmware |
 | `Firmware/`, `deploy/` | board manifests and server examples |
@@ -103,4 +102,4 @@ Public pages stay in the repository root so their URLs do not change; everything
 
 **A.T.L.A.S.** is an independent project developed by Oleksandr with AI-assisted tooling, built on top of the ArduPilot ecosystem. This is **not an official ArduPilot release**. Keep the upstream copyright notices and license conditions. Firmware modifications derived from ArduPilot remain subject to applicable **GNU GPLv3-or-later** obligations.
 
-<div align="center"><sub>A.T.L.A.S. Control Center • Release 2.0 • A.T.L.A.S-G.L.O.B.A.L</sub></div>
+<div align="center"><sub>A.T.L.A.S. Control Center • Release 2.2 • A.T.L.A.S-G.L.O.B.A.L</sub></div>

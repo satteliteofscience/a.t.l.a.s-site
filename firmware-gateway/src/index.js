@@ -4,6 +4,11 @@ const ORIGIN='https://satteliteofscience.github.io';
 const MANIFEST_KEY='_internal/firmware-index.json';
 const HEX_ID=/^[a-z0-9][a-z0-9-]{2,90}$/;
 const SHA256=/^[a-f0-9]{64}$/i;
+// Shortest accepted PIN or tester key: the documented minimum. An older, shorter release PIN can be kept working by setting the plain variable
+// MIN_PIN_LENGTH (for example "8") in the Worker settings; the better fix is a new PIN of at least 12 random characters.
+const MIN_PIN_LENGTH=12;
+// The public catalog may be served from the edge cache (and the browser) for this many seconds: only a cache miss reads the bucket.
+const CATALOG_TTL=60;
 const respond=(body,status=200,headers={})=>new Response(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...headers}});
 const json=(message,status=400,headers={})=>respond(JSON.stringify({error:message}),status,{'Content-Type':'application/json; charset=utf-8',...headers});
 async function digestPin(pin){
@@ -17,8 +22,12 @@ function sameHash(a,b){
  for(let i=0;i<64;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);
  return diff===0;
 }
+function minPinLength(env){
+ const configured=Number(env?.MIN_PIN_LENGTH);
+ return Number.isInteger(configured)&&configured>=1?configured:MIN_PIN_LENGTH;
+}
 async function allowed(env,build,pin){
- if(typeof pin!=='string'||pin.length<8||pin.length>128)return false;
+ if(typeof pin!=='string'||pin.length<minPinLength(env)||pin.length>128)return false;
  let config;
  try{config=JSON.parse(env.ACCESS_CODES_JSON||'{}');}catch{return false;}
  const h=await digestPin(pin);
@@ -31,12 +40,15 @@ async function allowed(env,build,pin){
    (!Array.isArray(t.build_ids)||t.build_ids.includes(build.id))
  );
 }
-async function lookupBuild(env,id){
- if(!HEX_ID.test(id))return null;
+/** The private index of builds, or null when it is missing or not valid JSON. */
+async function loadIndex(env){
  const indexFile=await env.FIRMWARE.get(MANIFEST_KEY);
  if(!indexFile)return null;
- let index;
- try{index=JSON.parse(await indexFile.text());}catch{return null;}
+ try{return JSON.parse(await indexFile.text());}catch{return null;}
+}
+/** One build of an already loaded index, or null when its entry is not well formed. */
+function checkBuild(index,id){
+ if(!HEX_ID.test(id))return null;
  const build=index?.builds?.[id];
  if(!build||!['release','early'].includes(build.channel))return null;
  const key=build.object_key;
@@ -45,8 +57,40 @@ async function lookupBuild(env,id){
  if(!SHA256.test(build.sha256||''))return null;
  return {...build,id};
 }
+async function lookupBuild(env,id){
+ if(!HEX_ID.test(id))return null;
+ const index=await loadIndex(env);
+ return index?checkBuild(index,id):null;
+}
+/** The public catalog: the index is read once and the object sizes are checked side by side. */
+async function buildCatalog(env){
+ const index=await loadIndex(env);
+ if(!index)return null;
+ const approved=new Set(['matek-h743-wing-v3','cube-orange-plus','uni-ic743-mini']);
+ const candidates=[];
+ for(const [id,entry] of Object.entries(index?.builds||{}).slice(0,100)){
+  if(entry?.published!==true||entry.channel!=='release'||!approved.has(entry.board_id)||
+     !/^[0-9]+[.][0-9]+$/.test(entry.version||'')||
+     !Number.isSafeInteger(entry.bytes)||entry.bytes<=0)continue;
+  const build=checkBuild(index,id);
+  if(build)candidates.push({id,entry,build});
+ }
+ const heads=await Promise.all(candidates.map(c=>Promise.resolve(env.FIRMWARE.head(c.build.object_key)).catch(()=>null)));
+ const published=[];
+ candidates.forEach((c,i)=>{
+  const head=heads[i];
+  if(!head||head.size!==c.entry.bytes)return;
+  published.push({
+   board_id:c.entry.board_id,version:c.entry.version,secure_id:c.id,channel:'release',
+   filename:c.build.filename,sha256:c.build.sha256.toLowerCase(),bytes:c.entry.bytes,
+   timestamp:Number.isSafeInteger(c.entry.timestamp)?c.entry.timestamp:0,
+   label:typeof c.entry.label==='string'?c.entry.label.slice(0,160):'A.T.L.A.S. Release '+c.entry.version
+  });
+ });
+ return {schema:1,builds:published};
+}
 export default {
- async fetch(request,env){
+ async fetch(request,env,ctx){
   const url=new URL(request.url),origin=request.headers.get('Origin');
   const cors=origin===ORIGIN?{
    'Access-Control-Allow-Origin':ORIGIN,
@@ -61,30 +105,22 @@ export default {
   if(origin!==ORIGIN)return json('Forbidden',403,cors);
   if(url.pathname==='/api/catalog'&&request.method==='GET'){
    if(!env.FIRMWARE)return json('Catalog not configured',503,cors);
-   const indexFile=await env.FIRMWARE.get(MANIFEST_KEY);
-   if(!indexFile)return json('Catalog unavailable',503,cors);
-   let index;
-   try{index=JSON.parse(await indexFile.text());}catch{return json('Invalid catalog',503,cors);}
-   const approved=new Set(['matek-h743-wing-v3','cube-orange-plus','uni-ic743-mini']);
-   const published=[];
-   for(const [id,entry] of Object.entries(index?.builds||{}).slice(0,100)){
-    if(entry?.published!==true||entry.channel!=='release'||!approved.has(entry.board_id)||
-       !/^[0-9]+[.][0-9]+$/.test(entry.version||'')||
-       !Number.isSafeInteger(entry.bytes)||entry.bytes<=0)continue;
-    const build=await lookupBuild(env,id);
-    if(!build)continue;
-    const head=await env.FIRMWARE.head(build.object_key);
-    if(!head||head.size!==entry.bytes)continue;
-    published.push({
-     board_id:entry.board_id,version:entry.version,secure_id:id,channel:'release',
-     filename:build.filename,sha256:build.sha256.toLowerCase(),bytes:entry.bytes,
-     timestamp:Number.isSafeInteger(entry.timestamp)?entry.timestamp:0,
-     label:typeof entry.label==='string'?entry.label.slice(0,160):'A.T.L.A.S. Release '+entry.version
-    });
+   // Only the allowed origin gets here, so one cached answer serves everybody.
+   const cache=typeof caches!=='undefined'?caches.default:null;
+   const cacheKey=new Request(url.origin+'/api/catalog');
+   if(cache){const hit=await cache.match(cacheKey);if(hit)return hit;}
+   // A miss reads the private bucket, so only a miss is rate limited (the CATALOG_LIMITER binding is optional).
+   if(env.CATALOG_LIMITER){
+    const limited=await env.CATALOG_LIMITER.limit({key:request.headers.get('CF-Connecting-IP')||'unknown'});
+    if(!limited.success)return json('Too many requests',429,{...cors,'Retry-After':'60'});
    }
-   return respond(JSON.stringify({schema:1,builds:published}),200,{
-    ...cors,'Content-Type':'application/json; charset=utf-8'
+   const catalog=await buildCatalog(env);
+   if(!catalog)return json('Catalog unavailable',503,cors);
+   const response=respond(JSON.stringify(catalog),200,{
+    ...cors,'Content-Type':'application/json; charset=utf-8','Cache-Control':'public, max-age='+CATALOG_TTL
    });
+   if(cache){const store=cache.put(cacheKey,response.clone());if(typeof ctx?.waitUntil==='function')ctx.waitUntil(store);else await store;}
+   return response;
   }
   if(request.method!=='POST'||!url.pathname.startsWith('/api/firmware/'))return json('Not found',404,cors);
   if(request.headers.get('Content-Type')?.split(';')[0]!=='application/json')return json('JSON required',415,cors);

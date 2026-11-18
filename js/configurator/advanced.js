@@ -26,9 +26,9 @@ const defs={
   ['Servo Yaw',[['YAW2SRV_RLL','Yaw to roll',.01],['YAW2SRV_INT','Integral',.01],['YAW2SRV_DAMP','Damping',.01],['YAW2SRV_IMAX','Integrator max',1]]],
   ['L1 Control',[['NAVL1_PERIOD','Period',.1],['NAVL1_DAMPING','Damping',.01]]],
   ['TECS',[['TECS_CLMB_MAX','Climb max (m/s)',.1],['TECS_SINK_MIN','Sink min (m/s)',.1],['TECS_SINK_MAX','Sink max (m/s)',.1],['TECS_PTCH_DAMP','Pitch damping',.05],['TECS_TIME_CONST','Time constant',.1]]],
-  ['Navigation angles',[['ROLL_LIMIT_DEG','Bank max (deg)',1],['PITCH_MAX','Pitch max (centideg)',100],['PITCH_MIN','Pitch min (centideg)',100]]],
+  ['Navigation angles',[['ROLL_LIMIT_DEG','Bank max (deg)',1],['PTCH_LIM_MAX_DEG','Pitch max (deg)',1],['PTCH_LIM_MIN_DEG','Pitch min (deg)',1]]],
   ['Throttle',[['THR_CRUISE','Cruise (%)',1],['THR_MIN','Min (%)',1],['THR_MAX','Max (%)',1],['THR_SLEWRATE','Slew rate',1]]],
-  ['Airspeed',[['TRIM_ARSPD_CM','Cruise (cm/s)',100],['AIRSPEED_MIN','Minimum (m/s)',.5],['AIRSPEED_MAX','Maximum (m/s)',.5],['ARSPD_RATIO','Ratio',.1]]]
+  ['Airspeed',[['AIRSPEED_CRUISE','Cruise (m/s)',.5],['AIRSPEED_MIN','Minimum (m/s)',.5],['AIRSPEED_MAX','Maximum (m/s)',.5],['ARSPD_RATIO','Ratio',.1]]]
  ],
  gimbal:[
   ['Camera / Mount type',[['MNT1_TYPE','Mount driver',1],['MNT1_DEFLT_MODE','Default mode',1],['MNT1_RC_RATE','RC rate',1],['CAM1_TYPE','Camera driver',1]]],

@@ -49,11 +49,11 @@ window.AtlasLanguage=()=>lang;
 window.AtlasSelectedBoard=()=>state.selectedBoard;
 const settingDefs=[
  {key:'ROLL_LIMIT_DEG',group:'control',desc:['Ограничение крена в обычном FBWA','Обмеження крену у FBWA','Bank limit in standard FBWA']},
- {key:'PITCH_MAX',group:'control',desc:['Максимальный тангаж','Максимальний тангаж','Maximum pitch angle']},
- {key:'PITCH_MIN',group:'control',desc:['Минимальный тангаж','Мінімальний тангаж','Minimum pitch angle']},
+ {key:'PTCH_LIM_MAX_DEG',group:'control',desc:['Максимальный тангаж, градусы','Максимальний тангаж, градуси','Maximum pitch angle, degrees']},
+ {key:'PTCH_LIM_MIN_DEG',group:'control',desc:['Минимальный тангаж, градусы','Мінімальний тангаж, градуси','Minimum pitch angle, degrees']},
  {key:'AIRSPEED_MIN',group:'speed',desc:['Минимальная воздушная скорость','Мінімальна повітряна швидкість','Minimum airspeed']},
  {key:'AIRSPEED_MAX',group:'speed',desc:['Максимальная воздушная скорость','Максимальна повітряна швидкість','Maximum airspeed']},
- {key:'TRIM_ARSPD_CM',group:'speed',desc:['Крейсерская скорость × 100','Крейсерська швидкість × 100','Cruise airspeed × 100']},
+ {key:'AIRSPEED_CRUISE',group:'speed',desc:['Крейсерская воздушная скорость, м/с','Крейсерська повітряна швидкість, м/с','Cruise airspeed, m/s']},
  {key:'THR_MIN',group:'speed',desc:['Нижний предел газа','Нижня межа газу','Minimum throttle']},
  {key:'THR_MAX',group:'speed',desc:['Верхний предел газа','Верхня межа газу','Maximum throttle']},
  {key:'STALL_PREVENTION',group:'safety',desc:['Защита от сваливания','Захист від звалювання','Stall prevention']},
@@ -272,7 +272,7 @@ function updateTelemetryUI(){const t=state.demo||heartbeatLive()?state.telemetry
  $('flightMode').textContent=state.demo?'FBWA / SIM':heartbeatLive()&&state.mode!==null?(modes[state.mode]||`CUSTOM ${state.mode}`):'—';renderAhrsFilter();
 }
 function enterDemo(){if(state.connected||state.connecting){toast(tr('needlink'),true);return;}state.demo=!state.demo;stopParamRepair();state.paramTransfer=null;state.params.clear();state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramCount=null;state.armed=null;
- if(state.demo){const demo={'ROLL_LIMIT_DEG':45,'PITCH_MAX':2000,'PITCH_MIN':-1500,'AIRSPEED_MIN':16,'AIRSPEED_MAX':45,'TRIM_ARSPD_CM':2200,'THR_MIN':0,'THR_MAX':100,'STALL_PREVENTION':1,'FS_LONG_ACTN':0,'ARSPD_USE':1,'RUD_LIMIT_DEG':30,'EK3_PRIMARY':0,'EK3_IMU_MASK':3,'TECS_SPDWEIGHT':1,'TKOFF_ALT':150,'SERVO1_FUNCTION':4,'SERVO2_FUNCTION':19,'SERVO3_FUNCTION':70,'OSD_TYPE':1,'OSD_UNITS':0,'OSD1_ENABLE':1,'OSD1_ALTITUDE_EN':1,'OSD1_ALTITUDE_X':24,'OSD1_ALTITUDE_Y':2,'OSD1_ASPEED_EN':1,'OSD1_ASPEED_X':1,'OSD1_ASPEED_Y':3,'OSD1_BAT_VOLT_EN':1,'OSD1_BAT_VOLT_X':2,'OSD1_BAT_VOLT_Y':13,'OSD1_HORIZON_EN':1,'OSD1_HORIZON_X':15,'OSD1_HORIZON_Y':8,'OSD1_RSSI_EN':1,'OSD1_RSSI_X':2,'OSD1_RSSI_Y':1,'OSD1_MESSAGE_EN':0,'OSD1_MESSAGE_X':1,'OSD1_MESSAGE_Y':12};for(const [name,value]of Object.entries(demo))state.params.set(name,{value,type:Number.isInteger(value)?6:9,index:state.params.size});state.paramCount=state.params.size;toast('SIM DEMO · no USB hardware connected');}else toast('Demo exited');
+ if(state.demo){const demo={'ROLL_LIMIT_DEG':45,'PTCH_LIM_MAX_DEG':20,'PTCH_LIM_MIN_DEG':-15,'AIRSPEED_MIN':16,'AIRSPEED_MAX':45,'AIRSPEED_CRUISE':22,'THR_MIN':0,'THR_MAX':100,'STALL_PREVENTION':1,'FS_LONG_ACTN':0,'ARSPD_USE':1,'RUD_LIMIT_DEG':30,'EK3_PRIMARY':0,'EK3_IMU_MASK':3,'TECS_SPDWEIGHT':1,'TKOFF_ALT':150,'SERVO1_FUNCTION':4,'SERVO2_FUNCTION':19,'SERVO3_FUNCTION':70,'OSD_TYPE':1,'OSD_UNITS':0,'OSD1_ENABLE':1,'OSD1_ALTITUDE_EN':1,'OSD1_ALTITUDE_X':24,'OSD1_ALTITUDE_Y':2,'OSD1_ASPEED_EN':1,'OSD1_ASPEED_X':1,'OSD1_ASPEED_Y':3,'OSD1_BAT_VOLT_EN':1,'OSD1_BAT_VOLT_X':2,'OSD1_BAT_VOLT_Y':13,'OSD1_HORIZON_EN':1,'OSD1_HORIZON_X':15,'OSD1_HORIZON_Y':8,'OSD1_RSSI_EN':1,'OSD1_RSSI_X':2,'OSD1_RSSI_Y':1,'OSD1_MESSAGE_EN':0,'OSD1_MESSAGE_X':1,'OSD1_MESSAGE_Y':12};for(const [name,value]of Object.entries(demo))state.params.set(name,{value,type:Number.isInteger(value)?6:9,index:state.params.size});state.paramCount=state.params.size;toast('SIM DEMO · no USB hardware connected');}else toast('Demo exited');
  updateConnectionUI();renderParams();renderBasic();updateTelemetryUI();window.dispatchEvent(new Event('atlas:state'));}
 async function cleanupForNavigation(){
  txGeneration++;state.pageLeaving=true;state.hudLoopActive=false;if(state.hudRaf){cancelAnimationFrame(state.hudRaf);state.hudRaf=0;}
@@ -790,6 +790,38 @@ window.AtlasCC = Object.freeze({
       for(const change of changes){
         if(txGeneration!==generation||!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>=4000)throw Error('Disconnected or ARM state changed');
         onProgress({done,total:changes.length,name:change.name});
+        await writeParameterWithAck(change.name,change.value,change.type);
+        done++;
+      }
+      onProgress({done,total:changes.length,name:''});
+      return {done,total:changes.length};
+    }catch(e){throw Error(`Recorded ${done}/${changes.length}: ${e.message}`);}
+    finally{state.servoConfigBusy=false;renderParams();renderBasic();}
+  },
+  // Radio-failsafe and logging presets of the main screen (CIRCLE/LOG OFF, RTL/LOG ON, RTL/LOG OFF): only the whitelisted FS_*, ARSPD_USE and LOG_* parameters
+  // with values inside their limits, DISARMED, one verified write at a time in the order of the plan (the long action and the long timeout never meet in a worse pair).
+  writeFailsafeLogPreset:async (updates,onProgress=()=>{})=>{
+    const core=window.AtlasFailsafeLog;
+    if(!core)throw Error('Failsafe and log module missing');
+    if(!canWrite())throw Error('Live USB, confirmed DISARMED, completed parameter read and idle writer required');
+    if(!Array.isArray(updates)||!updates.length||updates.length>core.NAMES.length)throw Error('Invalid failsafe and log write');
+    const changes=[],seen=new Set();
+    for(const entry of updates){
+      const [name,value]=Array.isArray(entry)?entry:[];
+      if(!core.valid(name,value)||seen.has(name))throw Error(`Invalid failsafe and log parameter: ${name}=${value}`);
+      seen.add(name);
+      const p=state.params.get(name);
+      if(!p)throw Error(`${name}: not present on FC`);
+      changes.push({name,value,type:p.type});
+    }
+    const generation=txGeneration;
+    state.servoConfigBusy=true;
+    let done=0;
+    try{
+      for(const change of changes){
+        if(txGeneration!==generation||!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>=4000)throw Error('Disconnected or ARM state changed');
+        onProgress({done,total:changes.length,name:change.name});
+        // PARAM_VALUE echoes the accepted value; success is reported only after it arrives.
         await writeParameterWithAck(change.name,change.value,change.type);
         done++;
       }

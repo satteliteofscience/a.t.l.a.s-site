@@ -31,7 +31,8 @@ const tr=key=>(words[window.AtlasLanguage?.()]||words.ru)[key];
 const $=id=>document.getElementById(id);
 const card=document.createElement('article');card.className='cc-card order-card global-card';card.id='globalPanel';
 card.innerHTML='<div class="cc-card-title"><span>◈</span><strong id="globalTitle"></strong><small>EKF3</small></div><strong id="globalStatus" role="status" aria-live="polite"></strong><div class="global-options" id="globalOptions"></div><details class="global-details" open><summary id="globalDetailsLabel"></summary><div class="global-flight"><h4 id="globalFlightTitle"></h4><ul id="globalFlight"></ul><h4 id="globalCmpTitle"></h4><div class="global-cmp" id="globalCmp"></div><p class="global-cmp-note" id="globalCmpNote"></p><a id="globalCmpLink" href="sitl-demo-global.html"></a><h4 id="globalParamsTitle"></h4><ul id="globalChanges"></ul></div></details><div class="order-actions"><button id="globalApply" class="cc-button primary" type="button"></button><button id="globalDisable" class="cc-button ghost" type="button"></button></div><p id="globalHelp"></p><p id="globalResult" role="status" aria-live="polite"></p>';
-const order=$('orderPanel');if(order)order.after(card);else document.querySelector('.cc-dashboard-right')?.prepend(card);
+// Under the horizon, right after the O.R.D.E.R. card.
+const order=$('orderPanel');if(order)order.after(card);else (document.getElementById('dashBelow')||document.querySelector('.cc-dashboard-right'))?.append(card);
 let busy=false;
 // Static text of the card (what changes in flight, DCM comparison). Rebuilt only when the language changes, not on every state event.
 let drawnLanguage=null;
