@@ -42,6 +42,7 @@ const e=tool.entryFor('cube','2.0',cube,false);
 assert.equal(e.object_key,'release/cube-orange-plus-release-2-0.hex');assert.equal(e.filename,'ATLAS-Cube-Orange-Plus-release-2.0.hex');assert.equal(e.board_id,'cube-orange-plus');assert.equal(e.version,'2.0');
 assert.equal(e.label,'A.T.L.A.S. Release 2.0 · A.T.L.A.S-G.L.O.B.A.L · ArduPlane 4.7.2 · Cube Orange Plus');assert.equal(e.published,false);assert.equal(tool.buildId('cube','2.0'),'cube-orange-plus-release-2-0');
 assert.deepEqual(tool.validEntry(tool.buildId('cube','2.0'),e),[]);
+const e22=tool.entryFor('cube','2.2',cube,false);assert.equal(e22.label,'A.T.L.A.S. Release 2.2 · A.T.L.A.S-G.L.O.B.A.L · ArduPlane 4.7.3 · Cube Orange Plus','release 2.2 is built on ArduPlane 4.7.3');assert.deepEqual(tool.validEntry(tool.buildId('cube','2.2'),e22),[]);
 assert.equal(tool.entryFor('matek','2.0',cube,false).filename,'ATLAS-Matek-H743-V3-release-2.0.hex');assert.equal(tool.buildId('uni','2.0'),'uni-ic743-mini-release-2-0');assert.equal(tool.buildId('matek','2.0'),'matek-h743-v3-release-2-0');
 assert.deepEqual(tool.validEntry('x',e).includes('id'),true);
 

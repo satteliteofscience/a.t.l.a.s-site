@@ -16,6 +16,9 @@ const crypto=require('node:crypto');
 const ROOT=path.resolve(__dirname,'..');
 const BUCKET='atlas-firmware-private';
 const NAME='A.T.L.A.S-G.L.O.B.A.L';
+// The ArduPlane base of each release, shown on the catalogue cards; a release that is not listed is on 4.7.2.
+const BASE_BY_VERSION=Object.freeze({'2.2':'4.7.3'});
+const baseOf=v=>BASE_BY_VERSION[String(v)]||'4.7.2';
 const BOARDS=Object.freeze({
  matek:{board_id:'matek-h743-wing-v3',slug:'matek-h743-v3',file:'Matek-H743-V3',title:'Matek H743-WING V3',marker:'matek-h743-wing-v3',markerRequired:false},
  cube:{board_id:'cube-orange-plus',slug:'cube-orange-plus',file:'Cube-Orange-Plus',title:'Cube Orange Plus',marker:'cube-orange-plus',markerRequired:true},
@@ -36,7 +39,7 @@ function entryFor(kind,version,info,publish){
  return {
   channel:'release',object_key:`release/${buildId(kind,version)}.hex`,filename:`ATLAS-${b.file}-release-${version}.hex`,
   board_id:b.board_id,version:String(version),sha256:info.sha256,bytes:info.bytes,image_bytes:info.image_bytes,timestamp:info.timestamp,
-  label:`A.T.L.A.S. Release ${version} · ${NAME} · ArduPlane 4.7.2 · ${b.title}`,published:!!publish
+  label:`A.T.L.A.S. Release ${version} · ${NAME} · ArduPlane ${baseOf(version)} · ${b.title}`,published:!!publish
  };
 }
 function inspect(kind,file,parse,now=Math.floor(Date.now()/1000)){

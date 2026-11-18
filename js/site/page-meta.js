@@ -4,9 +4,9 @@
   'use strict';
   const pages = {
     'index.html': {
-      ru: {title:'Конфигуратор A.T.L.A.S. 2.2 — ArduPlane 4.7.2', description:'A.T.L.A.S. Release 2.2 A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3, Cube Orange Plus и Uni-IC743 Mini: PIN-загрузки прошивок, EKF3 NoAID G.L.O.B.A.L. без GPS и веб-конфигуратор с USB/MAVLink, мастером настройки и профилем активации.'},
-      uk: {title:'Конфігуратор A.T.L.A.S. 2.2 — ArduPlane 4.7.2', description:'A.T.L.A.S. Release 2.2 A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3, Cube Orange Plus і Uni-IC743 Mini: прошивки з PIN-захистом, EKF3 NoAID G.L.O.B.A.L. без GPS і вебконфігуратор з USB/MAVLink, майстром налаштування та профілем активації.'},
-      en: {title:'Configurator A.T.L.A.S. 2.2 — ArduPlane 4.7.2', description:'A.T.L.A.S. Release 2.2 A.T.L.A.S-G.L.O.B.A.L for Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini; PIN-protected HEX downloads, EKF3 NoAID G.L.O.B.A.L. GPS-denied navigation, and a browser configurator with USB/MAVLink, guided setup and the activation profile.'}
+      ru: {title:'Конфигуратор A.T.L.A.S. 2.2 — ArduPlane 4.7.3', description:'A.T.L.A.S. Release 2.2 A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3, Cube Orange Plus и Uni-IC743 Mini: PIN-загрузки прошивок, EKF3 NoAID G.L.O.B.A.L. без GPS и веб-конфигуратор с USB/MAVLink, мастером настройки и профилем активации.'},
+      uk: {title:'Конфігуратор A.T.L.A.S. 2.2 — ArduPlane 4.7.3', description:'A.T.L.A.S. Release 2.2 A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3, Cube Orange Plus і Uni-IC743 Mini: прошивки з PIN-захистом, EKF3 NoAID G.L.O.B.A.L. без GPS і вебконфігуратор з USB/MAVLink, майстром налаштування та профілем активації.'},
+      en: {title:'Configurator A.T.L.A.S. 2.2 — ArduPlane 4.7.3', description:'A.T.L.A.S. Release 2.2 A.T.L.A.S-G.L.O.B.A.L for Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini; PIN-protected HEX downloads, EKF3 NoAID G.L.O.B.A.L. GPS-denied navigation, and a browser configurator with USB/MAVLink, guided setup and the activation profile.'}
     },
     'configurator.html': {
       ru: {title:'A.T.L.A.S. — Конфигуратор полётного контроллера', description:'A.T.L.A.S. — конфигуратор 2.2: USB/MAVLink, протокол П.Р.И.К.А.З, профиль EKF3 G.L.O.B.A.L., параметры, калибровки и OSD.'},

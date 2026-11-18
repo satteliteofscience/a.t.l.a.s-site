@@ -5,6 +5,7 @@ assert.equal(d.schema,1);assert.equal(d.release,'2.2');assert.equal(d.control_se
 assert.ok(Math.abs(d.home.lat-48.35722222)<1e-6&&Math.abs(d.home.lon-35.10055556)<1e-6);
 assert.equal(d.columns.length,27);assert.equal(new Set(d.columns).size,27);
 assert.match(d.binary.sha256,/^[0-9a-f]{64}$/);assert.ok(d.binary.controller_files_verified>2000);
+assert.ok(/4\.7\.3/.test(d.binary.base)&&d.binary.main_unchanged===true&&/4\.7\.3/.test(d.scope)&&/4\.7\.2/.test(d.scope),'the dataset records the 4.7.3 base of the 2.2 build and the 4.7.2 base of the 2.1 comparison build');
 let samples=0;
 for(const [key,f] of Object.entries(d.flights)){
  const m=f.metrics;assert.equal(f.status,'completed');assert.match(f.log_sha256,/^[0-9a-f]{64}$/);assert.ok(f.capture_bytes>1e6);
@@ -44,7 +45,9 @@ assert.ok(A.rel_after_arm<-100,'2.1 control: the height after ARM is wrong');ass
 // the same programme on the 2.1 build
 for(const k of ['ekf3','dcm']){const b=d.baseline21[k];assert.match(b.log_sha256,/^[0-9a-f]{64}$/);assert.equal(b.unexpected_primary_samples,0);assert.ok(Number.isFinite(b.tilt.rms)&&Number.isFinite(b.position.rms)&&Number.isFinite(b.height_error_m.rms));assert.ok(b.aerobatic_height_range[0]>=480&&b.aerobatic_height_range[1]<=720);}
 for(const p of ['assets/sitl22/rms.png','assets/sitl22/ground.png','data/sitl/atlas-22-rms.csv','data/sitl/atlas-22-report.md','sitl-demo-22.html','css/control22.css','css/release22.css'])assert.ok(fs.statSync(p).size>100,p);
-const report=read('data/sitl/atlas-22-report.md');for(const s of ['500–700','DISARM','EAS/TAS','GSPD','визуального пилота','EK3_MAV_POS','EK3_MAV_HGT','без спутников'])assert.ok(report.includes(s),'report mentions '+s);
+const report=read('data/sitl/atlas-22-report.md');for(const s of ['500–700','DISARM','EAS/TAS','GSPD','визуального пилота','EK3_MAV_POS','EK3_MAV_HGT','без спутников','ArduPlane 4.7.3','ArduPlane 4.7.2'])assert.ok(report.includes(s),'report mentions '+s);
+assert.ok(report.includes(d.binary.sha256)&&report.includes(d.flights.ekf3.log_sha256)&&report.includes(d.flights.dcm.log_sha256),'the report quotes the hashes of the recorded binary and logs');
+const ui=read('js/site/control22.js');for(const s of ['2.2 (база ArduPlane 4.7.3)','2.2 (база ArduPlane 4.7.3)','2.2 (ArduPlane 4.7.3 base)','on the ArduPlane 4.7.3 base'])assert.ok(ui.includes(s),'SITL page states the base: '+s);
 new vm.Script(read('js/site/control22.js'));
 const page=read('sitl-demo-22.html');for(const id of ['ground','gRel','gErr','gHome','groundRows','groundMsgs','panels','range','prepOption','operator','compare','boosts','metrics','notes','method','events','scrub','phase','play'])assert.ok(page.includes('id="'+id+'"'),'page element '+id);
 assert.ok(page.includes('js/site/control22.js')&&page.includes('css/control22.css')&&page.includes('css/control21.css'));

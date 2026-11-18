@@ -12,6 +12,33 @@ function p(...rows){return new Map(rows.map(([name,value])=>[name,{value,type:9,
   assert.equal(core.activeFromText(t),null,'untrusted text must not mark a runtime estimator confirmed: '+t);
  assert.equal(core.activeFromText(null),null);
 })();
+(function testStatusLineNamesTheBackend(){
+ // the A.T.L.A.S. status line "AHRS: <backend>; POS: <source>" (every 30 s and on every position-source change) is as authoritative as "AHRS: X active"
+ assert.equal(core.activeFromText('AHRS: EKF3; POS: EKF3 DR'),'EKF3');
+ assert.equal(core.activeFromText('AHRS: DCM; POS: DCM'),'DCM');
+ assert.equal(core.activeFromText('AHRS: EKF2; POS: EKF2'),'EKF2');
+ assert.equal(core.activeFromText('AHRS: EXTERNAL; POS: EXTERNAL'),'EXTERNAL');
+ assert.equal(core.activeFromText(' AHRS: EKF3; POS: UNAVAILABLE '),'EKF3','the backend is known even when there is no position');
+ for(const t of ['AHRS: EKF3;','AHRS: EKF3; POS:','AHRS: UNKNOWN; POS: DCM','AHRS: EKF3 POS: EKF3','noise AHRS: EKF3; POS: EKF3','HOME: SET; EKF origin: SET','Filter: EKF3','AHRS: EKF3; HOME: SET'])
+  assert.equal(core.activeFromText(t),null,'not the backend status line: '+t);
+})();
+(function testPeriodicStatusCorrectsAStaleBadge(){
+ // the real bench case: the board announces "AHRS: DCM active" while EKF3 starts, the single "AHRS: EKF3 active" is missed (or sent before
+ // the configurator connected); until the fix the badge kept DCM although EKF3 was in use
+ let announced=null;
+ const feed=text=>{const found=core.activeFromText(text);if(found)announced=found;return core.indication({connected:true,live:true,announced,params:p(['AHRS_EKF_USE',1],['AHRS_EKF_TYPE',3]),language:'ru'});};
+ assert.equal(feed('Platform MatekH743 CPU: 480MHz Loop: 100Hz').label,'EKF3 · CFG','no announcement yet: the configured estimator, marked as not confirmed');
+ let s=feed('AHRS: DCM active');
+ assert.equal(s.label,'DCM');assert.equal(s.verified,true);
+ assert.equal(feed('CPU Load:9% FreeRAM:321KB').label,'DCM','unrelated texts change nothing');
+ s=feed('AHRS: EKF3; POS: EKF3 DR');
+ assert.equal(s.label,'EKF3','the status line repeated every 30 s replaces the stale DCM');
+ assert.equal(s.verified,true);
+ assert.equal(feed('HOME: SET; EKF origin: SET').label,'EKF3');
+ // and the other way: a real fall back to the DCM is shown by the next status line as well
+ assert.equal(feed('AHRS: DCM; POS: DCM').label,'DCM');
+ assert.equal(feed('AHRS: EKF3 active').label,'EKF3');
+})();
 (function testConfiguredIsNotActive(){
  const selected=p(['AHRS_EKF_USE',1],['AHRS_EKF_TYPE',3]);
  assert.equal(core.configured(selected),'EKF3');

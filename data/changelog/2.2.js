@@ -15,9 +15,9 @@ window.AtlasRelease22 = {
     "en": "In version 2.2"
   },
   "hint": {
-    "ru": "Обновление относительно 2.1: корректировка EKF3 со станции вместе с настоящим GPS, перетаскивание самолёта на карте в схеме NoAID, привязка высоты к HOME на земле, HOME после перезапуска платы, своя мелодия запуска полётного контроллера. Новые параметры: EK3_MAV_POS и EK3_MAV_HGT (корректировка со станции) и BUZ_CSTM_SONG (мелодия запуска). Проверено в SITL на модели 7,2 кг, включая повтор реальных стендовых записей; стендовая и лётная проверка этой версии на реальном самолёте ещё предстоит. Доступность HEX определяется каталогом сборок каждой платы.",
-    "uk": "Оновлення відносно 2.1: корекція EKF3 зі станції разом зі справжнім GPS, перетягування літака на карті в схемі NoAID, прив’язка висоти до HOME на землі, HOME після перезавантаження плати, власна мелодія запуску польотного контролера. Нові параметри: EK3_MAV_POS і EK3_MAV_HGT (корекція зі станції) та BUZ_CSTM_SONG (мелодія запуску). Перевірено в SITL на моделі 7,2 кг, зокрема повтором реальних стендових записів; стендова й льотна перевірка цієї версії на реальному літаку ще попереду. Наявність HEX визначає каталог збірок кожної плати.",
-    "en": "Changes from 2.1: the EKF3 correction from the station together with a real GPS, dragging the aircraft on the map in the NoAID scheme, height tied to HOME on the ground, HOME after a board restart, a custom startup melody of the flight controller. New parameters: EK3_MAV_POS and EK3_MAV_HGT (station correction) and BUZ_CSTM_SONG (startup melody). Tested in SITL on the 7.2 kg model, including a replay of real bench recordings; bench and flight validation of this version on a real aircraft is still pending. HEX availability is shown separately for each board in the build catalogue."
+    "ru": "Обновление относительно 2.1: корректировка EKF3 со станции вместе с настоящим GPS, перетаскивание самолёта на карте в схеме NoAID, привязка высоты к HOME на земле, HOME после перезапуска платы, своя мелодия запуска полётного контроллера; база прошивки обновлена с ArduPlane 4.7.2 до 4.7.3. Новые параметры: EK3_MAV_POS и EK3_MAV_HGT (корректировка со станции) и BUZ_CSTM_SONG (мелодия запуска). Проверено в SITL на модели 7,2 кг, включая повтор реальных стендовых записей; стендовая и лётная проверка этой версии на реальном самолёте ещё предстоит. Доступность HEX определяется каталогом сборок каждой платы.",
+    "uk": "Оновлення відносно 2.1: корекція EKF3 зі станції разом зі справжнім GPS, перетягування літака на карті в схемі NoAID, прив’язка висоти до HOME на землі, HOME після перезавантаження плати, власна мелодія запуску польотного контролера; база прошивки оновлена з ArduPlane 4.7.2 до 4.7.3. Нові параметри: EK3_MAV_POS і EK3_MAV_HGT (корекція зі станції) та BUZ_CSTM_SONG (мелодія запуску). Перевірено в SITL на моделі 7,2 кг, зокрема повтором реальних стендових записів; стендова й льотна перевірка цієї версії на реальному літаку ще попереду. Наявність HEX визначає каталог збірок кожної плати.",
+    "en": "Changes from 2.1: the EKF3 correction from the station together with a real GPS, dragging the aircraft on the map in the NoAID scheme, height tied to HOME on the ground, HOME after a board restart, a custom startup melody of the flight controller; the firmware base moves from ArduPlane 4.7.2 to 4.7.3. New parameters: EK3_MAV_POS and EK3_MAV_HGT (station correction) and BUZ_CSTM_SONG (startup melody). Tested in SITL on the 7.2 kg model, including a replay of real bench recordings; bench and flight validation of this version on a real aircraft is still pending. HEX availability is shown separately for each board in the build catalogue."
   },
   "changes": [
     {
@@ -158,19 +158,36 @@ window.AtlasRelease22 = {
     },
     {
       "ru": [
+        "База прошивки: ArduPlane 4.7.3",
+        "Версии 2.0 и 2.1 основаны на ArduPlane 4.7.2.",
+        "Версия 2.2 основана на ArduPlane 4.7.3, официальном релизе ArduPilot. Все доработки A.T.L.A.S, описанные в списке изменений, перенесены на новую базу без изменений; в сообщениях станции о версии прошивки теперь значится V4.7.3. На новой базе повторён показательный часовой прогон в SITL (EKF3 и DCM, подготовка на станции, все режимы, тяжёлое пилотирование): результаты в пределах разброса между прогонами. Сборки для Matek H743-WING V3, Cube Orange Plus и Uni-IC743 Mini компилируются без предупреждений."
+      ],
+      "uk": [
+        "База прошивки: ArduPlane 4.7.3",
+        "Версії 2.0 і 2.1 засновані на ArduPlane 4.7.2.",
+        "Версія 2.2 заснована на ArduPlane 4.7.3, офіційному релізі ArduPilot. Усі доопрацювання A.T.L.A.S, описані у списку змін, перенесено на нову базу без змін; у повідомленнях станції про версію прошивки тепер значиться V4.7.3. На новій базі повторено показовий годинний політ у SITL (EKF3 і DCM, підготовка на станції, усі режими, важке пілотування): результати в межах розкиду між прогонами. Збірки для Matek H743-WING V3, Cube Orange Plus і Uni-IC743 Mini компілюються без попереджень."
+      ],
+      "en": [
+        "Firmware base: ArduPlane 4.7.3",
+        "Versions 2.0 and 2.1 are based on ArduPlane 4.7.2.",
+        "Version 2.2 is based on ArduPlane 4.7.3, the official ArduPilot release. All A.T.L.A.S changes listed in this changelog were carried onto the new base unchanged; the station messages that report the firmware version now say V4.7.3. The one-hour showcase flight in SITL was repeated on the new base (EKF3 and DCM, station preparation, all modes, heavy piloting): the results are within the run-to-run scatter. The builds for Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini compile without warnings."
+      ]
+    },
+    {
+      "ru": [
         "Проверки 2.2 и границы подтверждённого результата",
         "Подготовка на стенде проверялась отдельными командами, а не полной последовательностью действий оператора: HOME, перетаскивания, кнопка и окна GPS в разные моменты.",
-        "В SITL на модели 7,2 кг воспроизведены две реальные записи стендовой подготовки: команды станции и окна GPS в том же порядке и в те же моменты. Четырнадцать контрольных сценариев, включая четыре двухчасовых полёта, совпали с результатами 2.1 в пределах разброса между прогонами; сборки для Matek H743-WING V3, Cube Orange Plus и Uni-IC743 Mini компилируются без предупреждений. Это проверка алгоритма на модели; стендовая и лётная проверка на реальном самолёте ещё предстоит."
+        "В SITL на модели 7,2 кг воспроизведены две реальные записи стендовой подготовки: команды станции и окна GPS в том же порядке и в те же моменты. Четырнадцать контрольных сценариев, включая четыре двухчасовых полёта, на базе ArduPlane 4.7.2 совпали с результатами 2.1 в пределах разброса между прогонами; после перехода на базу 4.7.3 повторён показательный часовой прогон, его результаты в тех же пределах; сборки для Matek H743-WING V3, Cube Orange Plus и Uni-IC743 Mini компилируются без предупреждений. Это проверка алгоритма на модели; стендовая и лётная проверка на реальном самолёте ещё предстоит."
       ],
       "uk": [
         "Перевірки 2.2 і межі підтвердженого результату",
         "Підготовка на стенді перевірялася окремими командами, а не повною послідовністю дій оператора: HOME, перетягування, кнопка та вікна GPS у різні моменти.",
-        "У SITL на моделі 7,2 кг відтворено два реальні записи стендової підготовки: команди станції та вікна GPS у тому самому порядку й у ті самі моменти. Чотирнадцять контрольних сценаріїв, зокрема чотири двогодинні польоти, збіглися з результатами 2.1 у межах розкиду між прогонами; збірки для Matek H743-WING V3, Cube Orange Plus і Uni-IC743 Mini компілюються без попереджень. Це перевірка алгоритму на моделі; стендова й льотна перевірка на реальному літаку ще попереду."
+        "У SITL на моделі 7,2 кг відтворено два реальні записи стендової підготовки: команди станції та вікна GPS у тому самому порядку й у ті самі моменти. Чотирнадцять контрольних сценаріїв, зокрема чотири двогодинні польоти, на базі ArduPlane 4.7.2 збіглися з результатами 2.1 у межах розкиду між прогонами; після переходу на базу 4.7.3 повторено показовий годинний політ, його результати в тих самих межах; збірки для Matek H743-WING V3, Cube Orange Plus і Uni-IC743 Mini компілюються без попереджень. Це перевірка алгоритму на моделі; стендова й льотна перевірка на реальному літаку ще попереду."
       ],
       "en": [
         "2.2 validation and its limits",
         "Bench preparation was checked with separate commands, not with the full sequence of operator actions: HOME, drags, the button and GPS windows at different moments.",
-        "In SITL on the 7.2 kg model, two real bench-preparation recordings were replayed: the station commands and the GPS windows in the same order and at the same moments. Fourteen control scenarios, including four two-hour flights, matched the 2.1 results within the run-to-run scatter; the builds for Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini compile without warnings. This validates the algorithm on a model; bench and flight validation on a real aircraft is still pending."
+        "In SITL on the 7.2 kg model, two real bench-preparation recordings were replayed: the station commands and the GPS windows in the same order and at the same moments. Fourteen control scenarios, including four two-hour flights, matched the 2.1 results within the run-to-run scatter on the 4.7.2 base; after the move to the 4.7.3 base the one-hour showcase flight was repeated and its results stay within the same limits; the builds for Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini compile without warnings. This validates the algorithm on a model; bench and flight validation on a real aircraft is still pending."
       ]
     }
   ],

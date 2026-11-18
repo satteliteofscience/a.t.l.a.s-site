@@ -1,5 +1,7 @@
 /* A.T.L.A.S. AHRS estimator indication.
- * Only an explicit FC AHRS activation STATUSTEXT confirms the runtime backend.
+ * Only an explicit FC AHRS STATUSTEXT confirms the runtime backend: the stock "AHRS: X active" (printed once, when the
+ * active backend changes, so the first seconds after power-up can leave a stale DCM) and the A.T.L.A.S. status line
+ * "AHRS: X; POS: Y", repeated every 30 s and on every position-source change, which always names the backend in use.
  * Parameters indicate requested configuration, not proof of the active estimator.
  */
 (function(root,factory){
@@ -11,7 +13,9 @@
  'use strict';
  function activeFromText(text){
   if(typeof text!=='string')return null;
-  const match=/^AHRS:\s*(DCM|EKF2|EKF3|External)\s+active\b/i.exec(text.trim());
+  const line=text.trim();
+  const match=/^AHRS:\s*(DCM|EKF2|EKF3|External)\s+active\b/i.exec(line)
+   ||/^AHRS:\s*(DCM|EKF2|EKF3|External)\s*;\s*POS:\s*\S/i.exec(line);
   if(!match)return null;
   return match[1].toUpperCase()==='EXTERNAL'?'EXTERNAL':match[1].toUpperCase();
  }
