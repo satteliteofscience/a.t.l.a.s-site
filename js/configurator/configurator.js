@@ -735,6 +735,38 @@ window.AtlasCC = Object.freeze({
     }catch(e){throw Error(`Recorded ${done}/${changes.length}: ${e.message}`);}
     finally{state.servoConfigBusy=false;renderParams();renderBasic();}
   },
+  // Startup melody (BUZ_CSTM_SONG*): only the 48 melody parameters, integers 0..16777215, DISARMED, one verified write at a time in the order of the plan
+  // (an active melody is switched off first and BUZ_CSTM_SONG is written last). The echoed value must equal the written one exactly: a text cannot
+  // use the generic relative tolerance of the acknowledgement.
+  writeBuzzerSong:async (updates,onProgress=()=>{})=>{
+    const core=window.AtlasBuzzerSong;
+    if(!core)throw Error('Startup melody module missing');
+    if(!canWrite())throw Error('Live USB, confirmed DISARMED, completed parameter read and idle writer required');
+    if(!Array.isArray(updates)||!updates.length||updates.length>core.CHUNKS+2)throw Error('Invalid startup melody write');
+    const changes=[];
+    for(const entry of updates){
+      const [name,value]=Array.isArray(entry)?entry:[];
+      if(!core.valid(name,value))throw Error(`Invalid startup melody parameter: ${name}=${value}`);
+      const p=state.params.get(name);
+      if(!p)throw Error(`${name}: not present on FC`);
+      changes.push({name,value,type:p.type});
+    }
+    const generation=txGeneration;
+    state.servoConfigBusy=true;
+    let done=0;
+    try{
+      for(const change of changes){
+        if(txGeneration!==generation||!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>=4000)throw Error('Disconnected or ARM state changed');
+        onProgress({done,total:changes.length,name:change.name});
+        const echoed=await writeParameterWithAck(change.name,change.value,change.type);
+        if(echoed!==change.value)throw Error(`${change.name}: the controller reports ${echoed}, expected ${change.value}`);
+        done++;
+      }
+      onProgress({done,total:changes.length,name:''});
+      return {done,total:changes.length};
+    }catch(e){throw Error(`Recorded ${done}/${changes.length}: ${e.message}`);}
+    finally{state.servoConfigBusy=false;renderParams();renderBasic();window.dispatchEvent(new Event('atlas:parameters'));}
+  },
   // O.R.D.E.R. preset (rudder 30, bank 15, pitch -5..5, switch on channel 13): only these six parameters, exactly the preset values, DISARMED,
   // one verified write at a time. The limits and the channel go first and ORDER_MODE last, so an interrupted write never leaves the protocol armed without limits.
   writeOrderPreset:async (updates,onProgress=()=>{})=>{

@@ -1259,6 +1259,486 @@
    },
    "User": "Advanced",
    "Default": "0"
+  },
+  "BUZ_CSTM_SONG": {
+   "DisplayName": "Custom startup melody, characters 1-3",
+   "Description": "A.T.L.A.S. custom flight controller startup melody in MML. ArduPilot parameters are numbers, so the text is stored three characters per parameter: value = char0 + char1*256 + char2*65536. This parameter holds characters 1-3, BUZ_CSTM_SONG2 characters 4-6 and so on up to BUZ_CSTM_SONG48 (144 characters at most). The text ends at the first zero byte. 0 means no custom melody: the standard startup melody is played. Write and read the melody with the Startup melody card of the configurator.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Standard",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG2": {
+   "DisplayName": "Custom startup melody, characters 4-6",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 4-6 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG3": {
+   "DisplayName": "Custom startup melody, characters 7-9",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 7-9 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG4": {
+   "DisplayName": "Custom startup melody, characters 10-12",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 10-12 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG5": {
+   "DisplayName": "Custom startup melody, characters 13-15",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 13-15 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG6": {
+   "DisplayName": "Custom startup melody, characters 16-18",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 16-18 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG7": {
+   "DisplayName": "Custom startup melody, characters 19-21",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 19-21 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG8": {
+   "DisplayName": "Custom startup melody, characters 22-24",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 22-24 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG9": {
+   "DisplayName": "Custom startup melody, characters 25-27",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 25-27 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG10": {
+   "DisplayName": "Custom startup melody, characters 28-30",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 28-30 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG11": {
+   "DisplayName": "Custom startup melody, characters 31-33",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 31-33 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG12": {
+   "DisplayName": "Custom startup melody, characters 34-36",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 34-36 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG13": {
+   "DisplayName": "Custom startup melody, characters 37-39",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 37-39 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG14": {
+   "DisplayName": "Custom startup melody, characters 40-42",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 40-42 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG15": {
+   "DisplayName": "Custom startup melody, characters 43-45",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 43-45 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG16": {
+   "DisplayName": "Custom startup melody, characters 46-48",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 46-48 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG17": {
+   "DisplayName": "Custom startup melody, characters 49-51",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 49-51 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG18": {
+   "DisplayName": "Custom startup melody, characters 52-54",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 52-54 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG19": {
+   "DisplayName": "Custom startup melody, characters 55-57",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 55-57 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG20": {
+   "DisplayName": "Custom startup melody, characters 58-60",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 58-60 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG21": {
+   "DisplayName": "Custom startup melody, characters 61-63",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 61-63 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG22": {
+   "DisplayName": "Custom startup melody, characters 64-66",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 64-66 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG23": {
+   "DisplayName": "Custom startup melody, characters 67-69",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 67-69 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG24": {
+   "DisplayName": "Custom startup melody, characters 70-72",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 70-72 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG25": {
+   "DisplayName": "Custom startup melody, characters 73-75",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 73-75 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG26": {
+   "DisplayName": "Custom startup melody, characters 76-78",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 76-78 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG27": {
+   "DisplayName": "Custom startup melody, characters 79-81",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 79-81 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG28": {
+   "DisplayName": "Custom startup melody, characters 82-84",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 82-84 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG29": {
+   "DisplayName": "Custom startup melody, characters 85-87",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 85-87 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG30": {
+   "DisplayName": "Custom startup melody, characters 88-90",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 88-90 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG31": {
+   "DisplayName": "Custom startup melody, characters 91-93",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 91-93 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG32": {
+   "DisplayName": "Custom startup melody, characters 94-96",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 94-96 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG33": {
+   "DisplayName": "Custom startup melody, characters 97-99",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 97-99 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG34": {
+   "DisplayName": "Custom startup melody, characters 100-102",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 100-102 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG35": {
+   "DisplayName": "Custom startup melody, characters 103-105",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 103-105 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG36": {
+   "DisplayName": "Custom startup melody, characters 106-108",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 106-108 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG37": {
+   "DisplayName": "Custom startup melody, characters 109-111",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 109-111 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG38": {
+   "DisplayName": "Custom startup melody, characters 112-114",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 112-114 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG39": {
+   "DisplayName": "Custom startup melody, characters 115-117",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 115-117 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG40": {
+   "DisplayName": "Custom startup melody, characters 118-120",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 118-120 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG41": {
+   "DisplayName": "Custom startup melody, characters 121-123",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 121-123 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG42": {
+   "DisplayName": "Custom startup melody, characters 124-126",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 124-126 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG43": {
+   "DisplayName": "Custom startup melody, characters 127-129",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 127-129 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG44": {
+   "DisplayName": "Custom startup melody, characters 130-132",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 130-132 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG45": {
+   "DisplayName": "Custom startup melody, characters 133-135",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 133-135 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG46": {
+   "DisplayName": "Custom startup melody, characters 136-138",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 136-138 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG47": {
+   "DisplayName": "Custom startup melody, characters 139-141",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 139-141 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
+  },
+  "BUZ_CSTM_SONG48": {
+   "DisplayName": "Custom startup melody, characters 142-144",
+   "Description": "Continuation of BUZ_CSTM_SONG: characters 142-144 of the custom startup melody, value = char0 + char1*256 + char2*65536. Ignored while BUZ_CSTM_SONG is 0.",
+   "Range": {
+    "low": "0",
+    "high": "16777215"
+   },
+   "User": "Advanced",
+   "Default": "0"
   }
  }
 }

@@ -26,6 +26,7 @@ function renderRelease(release,u){
   group.append(head);
   const content=add('div','ch-release-content');group.append(content);
   if(release.version==='2.1'){const demo=add('a','ch-sitl-cta',({ru:'45 минут: EKF3 и DCM · запись SITL и измеренные результаты ↗',uk:'45 хвилин: EKF3 та DCM · запис SITL і виміряні результати ↗',en:'45 minutes: EKF3 and DCM · SITL recording and measured results ↗'})[lang]);demo.href='sitl-demo-21.html';content.append(demo);}
+  if(release.version==='2.2'){const demo=add('a','ch-sitl-cta',({ru:'Подготовка 2.1 против 2.2 и полёты EKF3 / DCM · запись SITL и измеренные результаты ↗',uk:'Підготовка 2.1 проти 2.2 і польоти EKF3 / DCM · запис SITL і виміряні результати ↗',en:'2.1 versus 2.2 preparation and EKF3 / DCM flights · SITL recording and measured results ↗'})[lang]);demo.href='sitl-demo-22.html';content.append(demo);}
 
   const list=add('ol','ch-comparisons');
   for(const item of release.changes){
@@ -73,7 +74,12 @@ function render(){
   $('chSitlDemo').textContent=({ru:'Демонстрация работы SITL на модели 6,3 кг',uk:'Демонстрація роботи SITL на моделі 6,3 кг',en:'SITL demonstration on the 6.3 kg model'})[lang];
   $('chSitlDemo72').textContent=({ru:'Демонстрация работы SITL на модели 7,2 кг',uk:'Демонстрація роботи SITL на моделі 7,2 кг',en:'SITL demonstration on the 7.2 kg model'})[lang];
    $('chSitlDemoStress').textContent=({ru:'Стресс-тест SITL на модели 7,2 кг: EKF3 и DCM',uk:'Стрес-тест SITL на моделі 7,2 кг: EKF3 і DCM',en:'SITL stress test on the 7.2 kg model: EKF3 and DCM'})[lang];
-  if($('chLegacySummary'))$('chLegacySummary').textContent=({ru:'Предыдущие демонстрации · 2.0 / 1.2',uk:'Попередні демонстрації · 2.0 / 1.2',en:'Earlier demonstrations · 2.0 / 1.2'})[lang];
+  if($('chLegacySummary'))$('chLegacySummary').textContent=({ru:'Предыдущие демонстрации · 2.1 / 2.0 / 1.2',uk:'Попередні демонстрації · 2.1 / 2.0 / 1.2',en:'Earlier demonstrations · 2.1 / 2.0 / 1.2'})[lang];
+  if($('ch22Title')){
+    $('ch22Title').textContent=({ru:'Показательный тест 2.2 · EKF3 и DCM',uk:'Показовий тест 2.2 · EKF3 та DCM',en:'2.2 showcase · EKF3 and DCM'})[lang];
+    $('ch22Intro').textContent=({ru:'Подготовка на станции на сборках 2.1 и 2.2 · модель 7,2 кг · без спутников в полёте · все режимы, тяжёлое пилотирование, разгоны до 420 км/ч · карта Днепра',uk:'Підготовка на станції на збірках 2.1 і 2.2 · модель 7,2 кг · без супутників у польоті · усі режими, важке пілотування, розгони до 420 км/год · карта Дніпра',en:'Station preparation on the 2.1 and 2.2 builds · 7.2 kg model · no satellites in flight · all modes, heavy piloting, boosts to 420 km/h · Dnipro map'})[lang];
+    $('chSitl22').textContent=({ru:'Открыть подготовку, полёты и отчёт ↗',uk:'Відкрити підготовку, польоти та звіт ↗',en:'Open the preparation, flights and report ↗'})[lang];
+  }
   if($('ch21Title')){
     $('ch21Title').textContent=({ru:'Контроль 2.1 · EKF3 и DCM',uk:'Контроль 2.1 · EKF3 та DCM',en:'2.1 control flights · EKF3 and DCM'})[lang];
     $('ch21Intro').textContent=({ru:'Модель 7,2 кг · без GPS в полёте · штиль · карта Днепра · оценки против истины SIM',uk:'Модель 7,2 кг · без GPS у польоті · штиль · карта Дніпра · оцінки проти істини SIM',en:'7.2 kg model · no GPS in flight · zero wind · Dnipro map · estimates against SIM truth'})[lang];

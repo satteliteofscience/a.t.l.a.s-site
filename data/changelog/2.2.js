@@ -15,26 +15,26 @@ window.AtlasRelease22 = {
     "en": "In version 2.2"
   },
   "hint": {
-    "ru": "Обновление относительно 2.1: корректировка EKF3 со станции вместе с настоящим GPS, привязка высоты к HOME на земле, HOME после перезапуска платы. Два новых параметра: EK3_MAV_POS и EK3_MAV_HGT. Проверено в SITL на модели 7,2 кг, включая повтор реальных стендовых записей; стендовая и лётная проверка этой версии на реальном самолёте ещё предстоит. Доступность HEX определяется каталогом сборок каждой платы.",
-    "uk": "Оновлення відносно 2.1: корекція EKF3 зі станції разом зі справжнім GPS, прив’язка висоти до HOME на землі, HOME після перезавантаження плати. Два нові параметри: EK3_MAV_POS і EK3_MAV_HGT. Перевірено в SITL на моделі 7,2 кг, зокрема повтором реальних стендових записів; стендова й льотна перевірка цієї версії на реальному літаку ще попереду. Наявність HEX визначає каталог збірок кожної плати.",
-    "en": "Changes from 2.1: the EKF3 correction from the station together with a real GPS, height tied to HOME on the ground, HOME after a board restart. Two new parameters: EK3_MAV_POS and EK3_MAV_HGT. Tested in SITL on the 7.2 kg model, including a replay of real bench recordings; bench and flight validation of this version on a real aircraft is still pending. HEX availability is shown separately for each board in the build catalogue."
+    "ru": "Обновление относительно 2.1: корректировка EKF3 со станции вместе с настоящим GPS, перетаскивание самолёта на карте в схеме NoAID, привязка высоты к HOME на земле, HOME после перезапуска платы. Два новых параметра: EK3_MAV_POS и EK3_MAV_HGT. Проверено в SITL на модели 7,2 кг, включая повтор реальных стендовых записей; стендовая и лётная проверка этой версии на реальном самолёте ещё предстоит. Доступность HEX определяется каталогом сборок каждой платы.",
+    "uk": "Оновлення відносно 2.1: корекція EKF3 зі станції разом зі справжнім GPS, перетягування літака на карті в схемі NoAID, прив’язка висоти до HOME на землі, HOME після перезавантаження плати. Два нові параметри: EK3_MAV_POS і EK3_MAV_HGT. Перевірено в SITL на моделі 7,2 кг, зокрема повтором реальних стендових записів; стендова й льотна перевірка цієї версії на реальному літаку ще попереду. Наявність HEX визначає каталог збірок кожної плати.",
+    "en": "Changes from 2.1: the EKF3 correction from the station together with a real GPS, dragging the aircraft on the map in the NoAID scheme, height tied to HOME on the ground, HOME after a board restart. Two new parameters: EK3_MAV_POS and EK3_MAV_HGT. Tested in SITL on the 7.2 kg model, including a replay of real bench recordings; bench and flight validation of this version on a real aircraft is still pending. HEX availability is shown separately for each board in the build catalogue."
   },
   "changes": [
     {
       "ru": [
         "Корректировка EKF3 со станции и настоящий GPS на одном входе",
         "Кнопка «Корректировка EKF3» передаёт координаты точки HOME станции пакетом GPS, и прошивка принимала его за обычный GPS. Позиция EKF3 при этом не возвращалась к точке HOME, а настоящий GPS на том же входе нельзя было совместить с рабочей кнопкой.",
-        "Параметр EK3_MAV_POS = 1 включает корректировку: пакет кнопки принимается как команда оператора и один раз за нажатие ставит позицию EKF3 в точку HOME станции, GPS-измерением он не становится. Любой другой пакет на том же входе по-прежнему настоящий GPS. Корректировка выполняется на земле до взлёта; в полёте кнопка отклоняется сообщением, перетаскивание самолёта на карте работает как раньше."
+        "Параметр EK3_MAV_POS = 1 включает корректировку: пакет кнопки принимается как команда оператора и один раз за нажатие ставит позицию EKF3 в точку HOME станции, GPS-измерением он не становится. Любой другой пакет на том же входе по-прежнему настоящий GPS. Корректировка выполняется на земле до взлёта; в полёте кнопка отклоняется сообщением. Перетаскивание самолёта на карте станции при EK3_NOAID_POS = 1 принимается и на земле, и в полёте: позиция EKF3 встаёт в указанную точку (в 2.1 эта команда в схеме NoAID отклонялась)."
       ],
       "uk": [
         "Корекція EKF3 зі станції та справжній GPS на одному вході",
         "Кнопка «Корекція EKF3» передає координати точки HOME станції пакетом GPS, і прошивка сприймала його як звичайний GPS. Позиція EKF3 при цьому не поверталася до точки HOME, а справжній GPS на тому самому вході не можна було поєднати з робочою кнопкою.",
-        "Параметр EK3_MAV_POS = 1 вмикає корекцію: пакет кнопки приймається як команда оператора й один раз за натискання ставить позицію EKF3 у точку HOME станції, вимірюванням GPS він не стає. Будь-який інший пакет на тому самому вході, як і раніше, справжній GPS. Корекція виконується на землі до зльоту; у польоті кнопку відхиляє повідомленням, перетягування літака на карті працює як раніше."
+        "Параметр EK3_MAV_POS = 1 вмикає корекцію: пакет кнопки приймається як команда оператора й один раз за натискання ставить позицію EKF3 у точку HOME станції, вимірюванням GPS він не стає. Будь-який інший пакет на тому самому вході, як і раніше, справжній GPS. Корекція виконується на землі до зльоту; у польоті кнопку відхиляє повідомленням. Перетягування літака на карті станції за EK3_NOAID_POS = 1 приймається і на землі, і в польоті: позиція EKF3 стає в указану точку (у 2.1 ця команда в схемі NoAID відхилялася)."
       ],
       "en": [
         "EKF3 correction from the station and a real GPS on the same input",
         "The “EKF3 correction” button sends the station’s HOME coordinates as a GPS packet, and the firmware took it for an ordinary GPS. The EKF3 position did not return to HOME, and a real GPS on the same input could not be combined with a working button.",
-        "EK3_MAV_POS = 1 enables the correction: the button packet is accepted as an operator command and puts the EKF3 position at the station’s HOME once per press; it never becomes a GPS measurement. Any other packet on the same input is still a real GPS. The correction works on the ground before launch; in flight the button is refused with a message, and dragging the aircraft on the map works as before."
+        "EK3_MAV_POS = 1 enables the correction: the button packet is accepted as an operator command and puts the EKF3 position at the station’s HOME once per press; it never becomes a GPS measurement. Any other packet on the same input is still a real GPS. The correction works on the ground before launch; in flight the button is refused with a message. With EK3_NOAID_POS = 1 dragging the aircraft on the station map is accepted on the ground and in flight: the EKF3 position goes to the chosen point (in 2.1 this command was refused in the NoAID scheme)."
       ]
     },
     {
@@ -91,17 +91,17 @@ window.AtlasRelease22 = {
     {
       "ru": [
         "HOME не сдвигается сам",
-        "Незафиксированный HOME мог сдвинуться за самолётом после перетаскивания на карте или при появлении настоящего GPS на земле, а первый захват GPS уже после ARM ставил HOME в точку самолёта и сдвигал все высоты относительно HOME.",
+        "Незафиксированный HOME мог сдвинуться при появлении настоящего GPS на земле: в HOME переносилась высота этого GPS, а первый захват GPS уже после ARM ставил HOME в точку самолёта и сдвигал все высоты относительно HOME.",
         "Зафиксированный HOME остаётся на месте при перетаскиваниях и при появлении GPS. В схеме NoAID первый захват GPS после ARM HOME не ставит. Без NoAID поведение штатное: самолёт, взведённый до первого захвата GPS, получает HOME при захвате."
       ],
       "uk": [
         "HOME не зсувається сам",
-        "Незафіксований HOME міг зсунутися за літаком після перетягування на карті або за появи справжнього GPS на землі, а перше захоплення GPS уже після ARM ставило HOME у точку літака й зсувало всі висоти відносно HOME.",
+        "Незафіксований HOME міг зсунутися за появи справжнього GPS на землі: у HOME переносилася висота цього GPS, а перше захоплення GPS уже після ARM ставило HOME у точку літака й зсувало всі висоти відносно HOME.",
         "Зафіксований HOME лишається на місці під час перетягувань і за появи GPS. У схемі NoAID перше захоплення GPS після ARM HOME не ставить. Без NoAID поведінка штатна: літак, взведений до першого захоплення GPS, отримує HOME під час захоплення."
       ],
       "en": [
         "HOME does not move by itself",
-        "An unlocked HOME could follow the aircraft after a drag on the map or when a real GPS appeared on the ground, and the first GPS fix after ARM put HOME at the aircraft and shifted every height relative to HOME.",
+        "An unlocked HOME could move when a real GPS appeared on the ground: the height of that GPS was carried into HOME, and the first GPS fix after ARM put HOME at the aircraft and shifted every height relative to HOME.",
         "A locked HOME stays where it is during drags and when a GPS appears. In the NoAID scheme the first GPS fix after ARM does not set HOME. Without NoAID the behaviour is the standard one: an aircraft armed before its first GPS fix gets HOME at that fix."
       ]
     },

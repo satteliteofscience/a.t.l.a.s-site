@@ -1,0 +1,14 @@
+/* Startup melody card (BUZ_CSTM_SONG*), under the G.L.O.B.A.L. card */
+.song-card[data-state="custom"]>strong#songStatus{color:#8fe7bf}.song-card[data-state="standard"]>strong#songStatus{color:#c7cd99}.song-card[data-state="unsupported"]>strong#songStatus,.song-card[data-state="noparams"]>strong#songStatus{color:#a6ad85}
+.song-label{display:block;margin:12px 0 5px;font:700 11px "IBM Plex Mono",monospace;color:#d8c15b;letter-spacing:.04em}
+.song-text{display:block;width:100%;min-height:96px;box-sizing:border-box;resize:vertical;padding:9px 10px;border:1px solid #3d4f2d;border-radius:4px;background:#0e1810;color:#e5eac7;font:12px/1.55 "IBM Plex Mono",monospace;letter-spacing:.02em;overflow-wrap:anywhere}
+.song-text:focus-visible{outline:2px solid #4d9886;outline-offset:2px}
+.song-info{margin:7px 0 4px;font:11px/1.6 "IBM Plex Mono",monospace;color:#a6ad85}.song-info b{color:#e5eac7;font-weight:700}.song-info[data-bad="true"] b.song-count{color:#e9a17f}
+.song-notes{margin:6px 0;padding:0;list-style:none;font:11px/1.55 "IBM Plex Mono",monospace}
+.song-notes li{margin:0 0 5px;padding:6px 9px;border:1px solid #3d4f2d;border-radius:4px;background:#0e1810;color:#a6ad85}
+.song-notes li[data-kind="error"]{border-color:#9b5d49;color:#e9a17f}.song-notes li[data-kind="warn"]{border-color:#8f7a3a;color:#d5b770}.song-notes li[data-kind="info"]{border-color:#4d9886;color:#bfe8d9}
+.song-actions{margin-top:8px}.song-card .order-actions{margin-top:10px}
+.song-card .order-actions .cc-button[disabled]{opacity:.45;cursor:not-allowed}
+.song-help ul{max-height:none;overflow:visible;font-size:12px;line-height:1.55;color:#c3c9a3}.song-help li{margin:0 0 6px}
+#songResult{min-height:1.2em;margin:8px 0 0;font:11px/1.55 "IBM Plex Mono",monospace;color:#bfe8d9;overflow-wrap:anywhere}
+@media(max-width:600px){.song-card .order-actions .cc-button{flex:1 1 100%}}
