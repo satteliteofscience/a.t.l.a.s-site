@@ -4,20 +4,26 @@ const read=p=>fs.readFileSync(p,'utf8');
 const window={};vm.runInNewContext(read('data/changelog/2.2.js'),{window});
 const r=window.AtlasRelease22;
 assert.equal(r.version,'2.2');assert.equal(r.id,'release-2-2');assert.equal(r.channel,'UPDATE');
-assert.equal(r.changes.length,8,'station correction, height tie, GPS on the ground, restart, HOME, one solution, profile, validation');
+assert.equal(r.changes.length,9,'station correction, height tie, GPS on the ground, restart, HOME, one solution, profile, startup melody, validation');
 const texts=[];
 for(const lang of ['ru','uk','en']){
  for(const label of ['hint','baseLabel','modLabel','sourceLabel']) assert.ok(r[label][lang].length>10);
  for(const c of r.changes){assert.equal(c[lang].length,3);assert.ok(c[lang].every(t=>t.trim().length>20));texts.push(...c[lang]);}
  assert.match(r.hint[lang],/SITL/,'the hint states how the version was tested');
- assert.match(r.hint[lang],/EK3_MAV_POS/);assert.match(r.hint[lang],/EK3_MAV_HGT/);
+ assert.match(r.hint[lang],/EK3_MAV_POS/);assert.match(r.hint[lang],/EK3_MAV_HGT/);assert.match(r.hint[lang],/BUZ_CSTM_SONG/);
  texts.push(r.hint[lang]);
- // the two new parameters and the profile are described in every language
+ // the two station-correction parameters, the profile and the startup melody are described in every language
  const all=r.changes.map(c=>c[lang].join(' ')).join(' ');
- for(const name of ['EK3_MAV_POS','EK3_MAV_HGT','EK3_NOAID_POS','G.L.O.B.A.L.'])assert.ok(all.includes(name),lang+': '+name);
+ for(const name of ['EK3_MAV_POS','EK3_MAV_HGT','EK3_NOAID_POS','G.L.O.B.A.L.','BUZ_CSTM_SONG'])assert.ok(all.includes(name),lang+': '+name);
+ // the melody item says where to set it (the configurator card) and states that a real board has not been tried yet
+ const melody=r.changes.find(c=>c[lang].join(' ').includes('BUZ_CSTM_SONG'))[lang].join(' ');
+ assert.ok(/MML/.test(melody)&&({ru:/ARM/,uk:/ARM/,en:/disarmed/})[lang].test(melody),lang+': melody item names the format and the disarmed-only write');
+ assert.ok(({ru:/«Мелодия запуска»/,uk:/«Мелодія запуску»/,en:/“Startup melody”/})[lang].test(melody),lang+': melody item names the configurator card');
+ assert.ok(({ru:/на реальной плате ещё не проверялось/,uk:/на реальній платі ще не перевірялося/,en:/real board has not been checked/})[lang].test(melody),lang+': melody item states the hardware limit');
 }
 assert.equal(new Set(r.sources).size,r.sources.length);
 for(const p of ['ArduPlane/Plane.cpp','libraries/AP_AHRS/AP_AHRS.cpp','libraries/AP_AHRS/AP_AHRS.h','libraries/GCS_MAVLink/GCS_Common.cpp','libraries/AP_NavEKF3/AP_NavEKF3.cpp','libraries/AP_NavEKF3/AP_NavEKF3_PosVelFusion.cpp'])assert.ok(r.sources.includes(p),p);
+for(const p of ['libraries/AP_Notify/AP_BuzzerSong.cpp','libraries/AP_Notify/AP_BuzzerSong.h','libraries/AP_Notify/ToneAlarm.cpp','ArduPlane/Parameters.cpp'])assert.ok(r.sources.includes(p),p);
 for(const p of r.sources)assert.match(p,/^(ArduPlane|libraries)\/[\w/]+\.(cpp|h)$/);
 // wiring: the data file loads after 2.1 and before the renderer, the newest release is the first, the page descriptions name 2.2
 const page=read('changelog.html'),log=read('js/site/changelog.js');

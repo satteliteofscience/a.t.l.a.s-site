@@ -15,9 +15,9 @@ window.AtlasRelease22 = {
     "en": "In version 2.2"
   },
   "hint": {
-    "ru": "Обновление относительно 2.1: корректировка EKF3 со станции вместе с настоящим GPS, перетаскивание самолёта на карте в схеме NoAID, привязка высоты к HOME на земле, HOME после перезапуска платы. Два новых параметра: EK3_MAV_POS и EK3_MAV_HGT. Проверено в SITL на модели 7,2 кг, включая повтор реальных стендовых записей; стендовая и лётная проверка этой версии на реальном самолёте ещё предстоит. Доступность HEX определяется каталогом сборок каждой платы.",
-    "uk": "Оновлення відносно 2.1: корекція EKF3 зі станції разом зі справжнім GPS, перетягування літака на карті в схемі NoAID, прив’язка висоти до HOME на землі, HOME після перезавантаження плати. Два нові параметри: EK3_MAV_POS і EK3_MAV_HGT. Перевірено в SITL на моделі 7,2 кг, зокрема повтором реальних стендових записів; стендова й льотна перевірка цієї версії на реальному літаку ще попереду. Наявність HEX визначає каталог збірок кожної плати.",
-    "en": "Changes from 2.1: the EKF3 correction from the station together with a real GPS, dragging the aircraft on the map in the NoAID scheme, height tied to HOME on the ground, HOME after a board restart. Two new parameters: EK3_MAV_POS and EK3_MAV_HGT. Tested in SITL on the 7.2 kg model, including a replay of real bench recordings; bench and flight validation of this version on a real aircraft is still pending. HEX availability is shown separately for each board in the build catalogue."
+    "ru": "Обновление относительно 2.1: корректировка EKF3 со станции вместе с настоящим GPS, перетаскивание самолёта на карте в схеме NoAID, привязка высоты к HOME на земле, HOME после перезапуска платы, своя мелодия запуска полётного контроллера. Новые параметры: EK3_MAV_POS и EK3_MAV_HGT (корректировка со станции) и BUZ_CSTM_SONG (мелодия запуска). Проверено в SITL на модели 7,2 кг, включая повтор реальных стендовых записей; стендовая и лётная проверка этой версии на реальном самолёте ещё предстоит. Доступность HEX определяется каталогом сборок каждой платы.",
+    "uk": "Оновлення відносно 2.1: корекція EKF3 зі станції разом зі справжнім GPS, перетягування літака на карті в схемі NoAID, прив’язка висоти до HOME на землі, HOME після перезавантаження плати, власна мелодія запуску польотного контролера. Нові параметри: EK3_MAV_POS і EK3_MAV_HGT (корекція зі станції) та BUZ_CSTM_SONG (мелодія запуску). Перевірено в SITL на моделі 7,2 кг, зокрема повтором реальних стендових записів; стендова й льотна перевірка цієї версії на реальному літаку ще попереду. Наявність HEX визначає каталог збірок кожної плати.",
+    "en": "Changes from 2.1: the EKF3 correction from the station together with a real GPS, dragging the aircraft on the map in the NoAID scheme, height tied to HOME on the ground, HOME after a board restart, a custom startup melody of the flight controller. New parameters: EK3_MAV_POS and EK3_MAV_HGT (station correction) and BUZ_CSTM_SONG (startup melody). Tested in SITL on the 7.2 kg model, including a replay of real bench recordings; bench and flight validation of this version on a real aircraft is still pending. HEX availability is shown separately for each board in the build catalogue."
   },
   "changes": [
     {
@@ -141,6 +141,23 @@ window.AtlasRelease22 = {
     },
     {
       "ru": [
+        "Своя мелодия запуска полётного контроллера",
+        "При включении платы всегда звучала одна стандартная мелодия, и заменить её можно было только пересборкой прошивки.",
+        "Параметр BUZ_CSTM_SONG включает свою мелодию запуска в формате MML; пока он равен 0, звучит стандартная. Мелодия записывается в группу параметров BUZ_CSTM_SONG … BUZ_CSTM_SONG48, но заполнять их вручную не нужно: в конфигураторе появилась карточка «Мелодия запуска», где мелодию можно ввести, прослушать в браузере, записать на плату и вернуть стандартную. Конфигуратор записывает мелодию только при снятом ARM. Мелодия проверена в SITL по последовательности нот, сборки для трёх плат компилируются без предупреждений; звучание на реальной плате ещё не проверялось."
+      ],
+      "uk": [
+        "Власна мелодія запуску польотного контролера",
+        "Під час вмикання плати завжди звучала одна стандартна мелодія, і замінити її можна було лише перекомпіляцією прошивки.",
+        "Параметр BUZ_CSTM_SONG вмикає власну мелодію запуску у форматі MML; поки він дорівнює 0, звучить стандартна. Мелодія записується в групу параметрів BUZ_CSTM_SONG … BUZ_CSTM_SONG48, але заповнювати їх вручну не потрібно: у конфігураторі з’явилася картка «Мелодія запуску», де мелодію можна ввести, прослухати в браузері, записати на плату й повернути стандартну. Конфігуратор записує мелодію лише за знятого ARM. Мелодію перевірено в SITL за послідовністю нот, збірки для трьох плат компілюються без попереджень; звучання на реальній платі ще не перевірялося."
+      ],
+      "en": [
+        "A custom startup melody for the flight controller",
+        "The board always played one standard melody at power-up, and the only way to change it was to rebuild the firmware.",
+        "The BUZ_CSTM_SONG parameter switches on a custom startup melody written in MML; while it is 0, the standard melody plays. The melody is stored in the parameter group BUZ_CSTM_SONG … BUZ_CSTM_SONG48, but there is no need to fill them in by hand: the configurator has a new “Startup melody” card where you can type the melody, listen to it in the browser, write it to the board and return to the standard one. The configurator writes the melody only while the board is disarmed. The melody was checked in SITL against its note sequence and the builds for the three boards compile without warnings; the sound on a real board has not been checked yet."
+      ]
+    },
+    {
+      "ru": [
         "Проверки 2.2 и границы подтверждённого результата",
         "Подготовка на стенде проверялась отдельными командами, а не полной последовательностью действий оператора: HOME, перетаскивания, кнопка и окна GPS в разные моменты.",
         "В SITL на модели 7,2 кг воспроизведены две реальные записи стендовой подготовки: команды станции и окна GPS в том же порядке и в те же моменты. Четырнадцать контрольных сценариев, включая четыре двухчасовых полёта, совпали с результатами 2.1 в пределах разброса между прогонами; сборки для Matek H743-WING V3, Cube Orange Plus и Uni-IC743 Mini компилируются без предупреждений. Это проверка алгоритма на модели; стендовая и лётная проверка на реальном самолёте ещё предстоит."
@@ -167,7 +184,14 @@ window.AtlasRelease22 = {
     "libraries/AP_NavEKF3/AP_NavEKF3_Outputs.cpp",
     "libraries/AP_NavEKF3/AP_NavEKF3_PosVelFusion.cpp",
     "libraries/AP_NavEKF3/AP_NavEKF3_core.cpp",
-    "libraries/AP_NavEKF3/AP_NavEKF3_core.h"
+    "libraries/AP_NavEKF3/AP_NavEKF3_core.h",
+    "ArduPlane/Parameters.cpp",
+    "ArduPlane/Parameters.h",
+    "libraries/AP_Notify/AP_BuzzerSong.cpp",
+    "libraries/AP_Notify/AP_BuzzerSong.h",
+    "libraries/AP_Notify/AP_Notify.h",
+    "libraries/AP_Notify/ToneAlarm.cpp",
+    "libraries/AP_Notify/ToneAlarm.h"
   ],
   "sourceLabel": {
     "ru": "Файлы подтверждённых изменений",
