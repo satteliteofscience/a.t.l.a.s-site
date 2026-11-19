@@ -175,7 +175,7 @@
     // Simplified engine trail increases when left mouse button is held.
     const engine=project(placed([0,.07,-2.58]));
     const far=project(placed([0,.06,-3.9-state.speed*.006]));
-    const len=state.boosted?1:0.25;
+    const len=Math.max(state.boosted?1:0.25,(hooks.layer&&hooks.layer.sprint)||0);      // the afterburner of the game lengthens the trail too
     const grad=ctx.createLinearGradient(engine[0],engine[1],far[0],far[1]);
     grad.addColorStop(0,state.boosted?'rgba(255,236,126,.75)':'rgba(198,207,93,.25)');
     grad.addColorStop(1,'rgba(228,189,70,0)');
@@ -204,9 +204,10 @@
     [state.pitch,state.pitchVel]=spring(state.pitch,state.pitchVel,state.aimPitch,3.5,dt);
     [state.yaw,state.yawVel]=spring(state.yaw,state.yawVel,state.aimYaw,2.5,dt);
     // A visually suggestive, not aerodynamically accurate flight model.
-    const speedAim=state.boosted?307:148;
-    state.speed=mix(state.speed,speedAim,1-Math.exp(-dt*(state.boosted?1.05:.26)));
-    state.throttle=mix(state.throttle,state.boosted?100:40,1-Math.exp(-dt*(state.boosted?3.5:2.2)));
+    const burn=(hooks.layer&&hooks.layer.sprint)||0;      // the game's afterburner sprint (0..1) raises the speed readout and the throttle like the boost
+    const speedAim=Math.max(state.boosted?307:148,148+159*burn);
+    state.speed=mix(state.speed,speedAim,1-Math.exp(-dt*(state.boosted||burn>.3?1.05:.26)));
+    state.throttle=mix(state.throttle,Math.max(state.boosted?100:40,40+60*burn),1-Math.exp(-dt*(state.boosted||burn>.3?3.5:2.2)));
     const rollSign=hooks.layer&&hooks.layer.engaged?hooks.layer.rollSign:1;     // in the game a right bank is a negative roll of the model
     const rate=9.81*Math.tan(bound(state.roll*rollSign,-68,68)*deg)/(state.speed/3.6)*180/Math.PI;
     state.heading=(state.heading+rate*dt+360)%360;

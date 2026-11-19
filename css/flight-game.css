@@ -84,6 +84,30 @@
 @keyframes gameTip{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}
 .game-bar[hidden],.game-tip[hidden],.game-modes[hidden],.game-landing[hidden]{display:none}
 
+/* the music button: next to the exit button, only while the game runs (the M key does the same) */
+.game-music{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 11px;border:1px solid #7a8a4a;border-radius:4px;background:#1a2413;color:#f0e08a;font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,box-shadow .15s,color .15s}
+.game-music:hover{background:#2a361b;border-color:#e6d05f;box-shadow:0 0 16px #e6d05f33;color:#fff2b0}
+.game-music:focus-visible{outline:2px solid #e7d56d;outline-offset:2px}
+.game-music[hidden]{display:none}
+.game-music-icon{font-size:13px;line-height:1}
+.game-music.is-off{color:#8a956e;border-color:#556635}
+.game-music.is-off .game-music-icon{text-decoration:line-through;opacity:.6}
+
+/* the wind in the score line: an arrow that points where the wind blows, its speed, five pips of strength; in a gust the arrow lights up */
+.game-wind{display:flex;align-items:center;gap:6px;align-self:center;margin-left:4px;padding-left:10px;border-left:1px solid #55663599;font:700 9px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#abb48c;white-space:nowrap}
+.game-wind b{color:#e6d9a0;font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.game-wind-arrow{display:inline-block;flex:none;width:16px;height:12px;background:#d7c457;clip-path:polygon(0 38%,58% 38%,58% 6%,100% 50%,58% 94%,58% 62%,0 62%);transition:transform .3s ease-out}
+.game-wind-pips{display:inline-flex;gap:2px;align-items:flex-end}
+.game-wind-pips i{display:block;width:4px;height:8px;background:#3a4a24}
+.game-wind-pips i.is-on{background:#e6d05f;box-shadow:0 0 6px #e6d05f77}
+.game-wind.is-gust .game-wind-arrow{background:#fff2b0;filter:drop-shadow(0 0 5px #e6d05f)}
+.game-wind.is-gust b{color:#fff2b0}
+
+/* the afterburner: the edges of the card glow while it burns (the speed streaks and the camera are drawn by the layer) */
+.game-glow{position:absolute;z-index:5;inset:0;pointer-events:none;opacity:0;transition:opacity .35s;box-shadow:inset 0 0 56px 4px #f0d65e55,inset 0 0 150px #f0d65e26}
+.flight-playground.is-sprint .game-glow{opacity:1;animation:gameGlow .45s ease-in-out infinite alternate}
+@keyframes gameGlow{from{opacity:.55}to{opacity:1}}
+
 /* a missed gate: a red-orange flash at the edges and a short shake of the display */
 .game-flash{position:absolute;z-index:6;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,#e07b4f00 40%,#e07b4f77 100%)}
 .game-flash.is-miss{animation:gameFlash .5s ease-out}
@@ -99,9 +123,16 @@
 .flight-playground.is-game.is-narrow .game-mode:not(.is-active) .game-mode-left{display:none}
 .flight-playground.is-game.is-narrow .game-ult-meter{width:74px}
 .flight-playground.is-game.is-narrow .game-meta{gap:8px}
+.flight-playground.is-game.is-narrow .game-wind-pips,.flight-playground.is-game.is-narrow .game-music-text{display:none}
+@media(max-width:400px){
+ .game-music-text{display:none}
+ .game-music{padding:0 9px}
+}
 @media(max-width:560px){
  .scope-dots{display:none}
  .game-toggle{height:30px;padding:0 11px}
+ .game-music{height:30px;padding:0 10px}
+ .scope-actions{gap:8px}
  .game-hud{top:10px;padding:5px 12px 6px}
  .game-score strong{font-size:17px}
  .game-meta{gap:9px;font-size:8px}
@@ -112,4 +143,6 @@
  .game-count,.game-ult.is-ready,.game-tip,.game-ult.is-denied{animation:none}
  .game-dwell{transition:none}
  .game-flash.is-miss,.game-flash.is-ult,.flight-playground.is-hit .flight-canvas{animation:none}
+ .flight-playground.is-sprint .game-glow{animation:none}
+ .game-glow,.game-wind-arrow{transition:none}
 }
