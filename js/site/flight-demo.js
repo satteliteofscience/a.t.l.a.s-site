@@ -23,6 +23,8 @@
   };
   const deg = Math.PI/180;
   const bound = (a, lo, hi) => Math.max(lo,Math.min(hi,a));
+  // Hooks for the mini-game layer (js/site/flight-game.js). Without a layer the demo runs exactly as before.
+  const hooks = window.AtlasFlightDemo = { host, canvas, state, project, bound, layer: null, wake: () => scheduleFrame() };
   const mix = (a,b,t) => a+(b-a)*t;
   const digits = (val, places=1) => `${val >= 0 ? '+' : '−'}${String(Math.abs(val).toFixed(places)).padStart(places ? 4 : 3,'0')}°`;
   function targetFromPointer(ev){
@@ -45,9 +47,12 @@
     if(ev.button!==0 && ev.pointerType!=='touch')return;
     enter(ev);
     state.pointerId=ev.pointerId;
-    state.boosted=true;
-    state.speed=Math.min(310,state.speed+11);
-    host.classList.add('is-boosting');
+    // in the game a finger only steers; the boost belongs to the mouse button and Space
+    if(!(ev.pointerType==='touch' && hooks.layer && hooks.layer.touchBlocksBoost)){
+      state.boosted=true;
+      state.speed=Math.min(310,state.speed+11);
+      host.classList.add('is-boosting');
+    }
     try { host.setPointerCapture(ev.pointerId); }catch{}
     if(ev.pointerType==='mouse') ev.preventDefault();
   });
@@ -110,7 +115,9 @@
   function drawBackground(){
     const w=state.w,h=state.h;
     // Dynamic background horizon: follows simulated attitude, separate from the aircraft model.
-    ctx.save();ctx.translate(w/2,h/2);ctx.rotate(state.roll*deg*.28);ctx.translate(0,state.pitch*.7);
+    // While the game runs the horizon stays level on the vanishing point of its rings (the game's camera rolls everything).
+    const lay=hooks.layer,own=!!(lay&&lay.engaged&&lay.cameraOwnsHorizon);
+    ctx.save();ctx.translate(w/2,h/2+(own?lay.horizonShift||0:0));ctx.rotate(own?0:state.roll*deg*.28);ctx.translate(0,own?0:state.pitch*.7);
     ctx.fillStyle='rgba(98,118,39,.055)';ctx.fillRect(-w*1.7,0,w*3.4,h*2.5);
     ctx.beginPath();ctx.moveTo(-w*1.7,0);ctx.lineTo(w*1.7,0);
     ctx.strokeStyle='rgba(211,204,98,.19)';ctx.lineWidth=1.2;ctx.stroke();
@@ -131,43 +138,48 @@
   }
   function drawPlane(){
     const rotate=planeRotation();
+    // the game layer shrinks the aircraft and moves it inside the card (size 1 and no offset = the demo as it was)
+    const pl=hooks.layer&&hooks.layer.plane;
+    const gs=pl?pl.scale:1,gx=pl?pl.x:0,gy=pl?pl.y:0,sz=Math.max(gs,.45);
+    const placed=p=>{const q=rotate(p);return gs===1&&!gx&&!gy?q:[q[0]*gs+gx,q[1]*gs+gy,q[2]*gs];};
     const projected=mesh.map(s=>{
-      const verts=s.points.map(rotate);
+      const verts=s.points.map(placed);
       return {s,pts:verts.map(project),depth:verts.reduce((a,p)=>a+p[2],0)/verts.length};
     }).sort((a,b)=>b.depth-a.depth);
     ctx.save();
-    ctx.shadowColor='rgba(224,208,80,.36)';ctx.shadowBlur=13;
+    if(pl&&pl.alpha!==undefined&&pl.alpha<1)ctx.globalAlpha=pl.alpha;       // the game makes the aircraft blink after a hit
+    ctx.shadowColor='rgba(224,208,80,.36)';ctx.shadowBlur=13*sz;
     for(const poly of projected){
       const {s,pts}=poly;
-      path(pts);ctx.fillStyle=s.fill;ctx.fill();ctx.strokeStyle=s.line;ctx.lineWidth=s.width;ctx.lineJoin='round';ctx.stroke();
+      path(pts);ctx.fillStyle=s.fill;ctx.fill();ctx.strokeStyle=s.line;ctx.lineWidth=s.width*Math.max(.75,sz);ctx.lineJoin='round';ctx.stroke();
     }
     ctx.shadowBlur=0;
-    function line(a,b,col,width,dash=[]){ctx.beginPath();const pa=project(rotate(a)),pb=project(rotate(b));ctx.moveTo(pa[0],pa[1]);ctx.lineTo(pb[0],pb[1]);ctx.strokeStyle=col;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);}
+    function line(a,b,col,width,dash=[]){ctx.beginPath();const pa=project(placed(a)),pb=project(placed(b));ctx.moveTo(pa[0],pa[1]);ctx.lineTo(pb[0],pb[1]);ctx.strokeStyle=col;ctx.lineWidth=width*Math.max(.75,sz);ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);}
     line([0,.2,2.43],[0,.12,-2.38],'rgba(255,235,142,.51)',1.15,[3,6]);
     line([-2.78,.018,-.15],[2.78,.018,-.15],'rgba(252,236,144,.36)',1.1);
     line([-.76,.74,-1.96],[-.12,.1,-2.12],'rgba(196,223,124,.55)',.9);
     line([.76,.74,-1.96],[.12,.1,-2.12],'rgba(255,229,119,.55)',.9);
-    const center=project(rotate([0,.22,.82]));
-    const shade=ctx.createRadialGradient(center[0],center[1],1,center[0],center[1],26);
+    const center=project(placed([0,.22,.82]));
+    const shade=ctx.createRadialGradient(center[0],center[1],1,center[0],center[1],26*sz);
     shade.addColorStop(0,'rgba(249,238,161,.25)');shade.addColorStop(1,'rgba(230,193,74,0)');
-    ctx.fillStyle=shade;ctx.beginPath();ctx.arc(center[0],center[1],26,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=shade;ctx.beginPath();ctx.arc(center[0],center[1],26*sz,0,Math.PI*2);ctx.fill();
     // Pusher propeller at the tail with a light blur so the aircraft reads as a rear-prop airframe.
-    const propHub=project(rotate([0,.09,-2.48]));
-    const propSpan=Math.max(14,Math.min(state.w,state.h)*0.052);
+    const propHub=project(placed([0,.09,-2.48]));
+    const propSpan=Math.max(14*sz,Math.min(state.w,state.h)*0.052*sz);
     const propGlow=ctx.createRadialGradient(propHub[0],propHub[1],1,propHub[0],propHub[1],propSpan*1.35);
     propGlow.addColorStop(0,'rgba(246,228,126,.28)');propGlow.addColorStop(1,'rgba(246,228,126,0)');
     ctx.fillStyle=propGlow;ctx.beginPath();ctx.arc(propHub[0],propHub[1],propSpan*1.15,0,Math.PI*2);ctx.fill();
     const spin=(state.elapsed*(state.boosted?34:20))%(Math.PI*2);
-    ctx.save();ctx.translate(propHub[0],propHub[1]);ctx.rotate(spin);ctx.strokeStyle=state.boosted?'rgba(255,235,136,.58)':'rgba(205,205,132,.34)';ctx.lineWidth=state.boosted?3.2:2.1;ctx.beginPath();ctx.moveTo(-propSpan,0);ctx.lineTo(propSpan,0);ctx.moveTo(0,-propSpan*.78);ctx.lineTo(0,propSpan*.78);ctx.stroke();ctx.restore();
-    ctx.fillStyle='rgba(255,238,149,.82)';ctx.beginPath();ctx.arc(propHub[0],propHub[1],3.6,0,Math.PI*2);ctx.fill();
+    ctx.save();ctx.translate(propHub[0],propHub[1]);ctx.rotate(spin);ctx.strokeStyle=state.boosted?'rgba(255,235,136,.58)':'rgba(205,205,132,.34)';ctx.lineWidth=(state.boosted?3.2:2.1)*Math.max(.7,sz);ctx.beginPath();ctx.moveTo(-propSpan,0);ctx.lineTo(propSpan,0);ctx.moveTo(0,-propSpan*.78);ctx.lineTo(0,propSpan*.78);ctx.stroke();ctx.restore();
+    ctx.fillStyle='rgba(255,238,149,.82)';ctx.beginPath();ctx.arc(propHub[0],propHub[1],3.6*Math.max(.6,sz),0,Math.PI*2);ctx.fill();
     // Simplified engine trail increases when left mouse button is held.
-    const engine=project(rotate([0,.07,-2.58]));
-    const far=project(rotate([0,.06,-3.9-state.speed*.006]));
+    const engine=project(placed([0,.07,-2.58]));
+    const far=project(placed([0,.06,-3.9-state.speed*.006]));
     const len=state.boosted?1:0.25;
     const grad=ctx.createLinearGradient(engine[0],engine[1],far[0],far[1]);
     grad.addColorStop(0,state.boosted?'rgba(255,236,126,.75)':'rgba(198,207,93,.25)');
     grad.addColorStop(1,'rgba(228,189,70,0)');
-    ctx.strokeStyle=grad;ctx.lineWidth=state.boosted?4:1;
+    ctx.strokeStyle=grad;ctx.lineWidth=(state.boosted?4:1)*Math.max(.75,sz);
     ctx.beginPath();ctx.moveTo(engine[0],engine[1]);ctx.lineTo(mix(engine[0],far[0],len),mix(engine[1],far[1],len));ctx.stroke();
     ctx.restore();
   }
@@ -187,6 +199,7 @@
       state.aimPitch=Math.sin(state.elapsed*.4)*1.5;
       state.aimYaw=Math.sin(state.elapsed*.25)*2;
     }
+    if(hooks.layer&&hooks.layer.steer)hooks.layer.steer(dt);
     [state.roll,state.rollVel]=spring(state.roll,state.rollVel,state.aimRoll,3.9,dt);
     [state.pitch,state.pitchVel]=spring(state.pitch,state.pitchVel,state.aimPitch,3.5,dt);
     [state.yaw,state.yawVel]=spring(state.yaw,state.yawVel,state.aimYaw,2.5,dt);
@@ -194,17 +207,21 @@
     const speedAim=state.boosted?307:148;
     state.speed=mix(state.speed,speedAim,1-Math.exp(-dt*(state.boosted?1.05:.26)));
     state.throttle=mix(state.throttle,state.boosted?100:40,1-Math.exp(-dt*(state.boosted?3.5:2.2)));
-    const rate=9.81*Math.tan(bound(state.roll,-68,68)*deg)/(state.speed/3.6)*180/Math.PI;
+    const rollSign=hooks.layer&&hooks.layer.engaged?hooks.layer.rollSign:1;     // in the game a right bank is a negative roll of the model
+    const rate=9.81*Math.tan(bound(state.roll*rollSign,-68,68)*deg)/(state.speed/3.6)*180/Math.PI;
     state.heading=(state.heading+rate*dt+360)%360;
+    if(hooks.layer&&hooks.layer.update)hooks.layer.update(dt);
   }
   function setUi(){
-    ui.roll.textContent=digits(state.roll);
+    const lay=hooks.layer,rollSign=lay&&lay.engaged?lay.rollSign:1;
+    ui.roll.textContent=digits(state.roll*rollSign);
     ui.pitch.textContent=digits(state.pitch);
     ui.yaw.textContent=`${state.heading.toFixed(1).padStart(5,'0')}°`;
     ui.speed.textContent=Math.round(state.speed);
     ui.throttle.textContent=`${Math.round(state.throttle)}%`;
     ui.speedbar.style.height=`${bound((state.speed-90)/(310-90)*100,10,100)}%`;
-    ui.status.textContent=window.AtlasI18n?.t(state.boosted?'BOOST ACTIVE':state.hovered?'FLIGHT CONTROL':'HOVER TO CONTROL') ?? (state.boosted?'BOOST ACTIVE':state.hovered?'FLIGHT CONTROL':'HOVER TO CONTROL');
+    const gameText=lay&&lay.status?lay.status():null;
+    ui.status.textContent=gameText||(window.AtlasI18n?.t(state.boosted?'BOOST ACTIVE':state.hovered?'FLIGHT CONTROL':'HOVER TO CONTROL') ?? (state.boosted?'BOOST ACTIVE':state.hovered?'FLIGHT CONTROL':'HOVER TO CONTROL'));
   }
   function resize(){
     const rect=host.getBoundingClientRect();
@@ -224,12 +241,17 @@
     frameQueued=false;
     if(!state.running || !state.inView || document.hidden){state.last=0;return;}
     if(!state.last)state.last=t;
-    // The visual demo is intentionally capped at ~30 FPS to reduce mobile CPU/GPU load.
-    if(t-state.lastDraw<30){scheduleFrame();return;}
+    // The visual demo is intentionally capped at ~30 FPS to reduce mobile CPU/GPU load; the game asks for full speed while it runs.
+    if(t-state.lastDraw<(hooks.layer&&hooks.layer.active?12:30)){scheduleFrame();return;}
     const dt=bound((t-state.last)/1000,0,.035);state.last=t;state.lastDraw=t;
     physics(dt);
     ctx.clearRect(0,0,state.w,state.h);
-    drawBackground();drawPlane();
+    if(hooks.layer&&hooks.layer.cameraBegin)hooks.layer.cameraBegin(ctx);     // the game rolls the camera with the aircraft
+    drawBackground();
+    if(hooks.layer&&hooks.layer.drawBack)hooks.layer.drawBack(ctx);
+    drawPlane();
+    if(hooks.layer&&hooks.layer.drawFront)hooks.layer.drawFront(ctx);
+    if(hooks.layer&&hooks.layer.cameraEnd)hooks.layer.cameraEnd(ctx);
     if(t-state.lastUi>95){setUi();state.lastUi=t;}
     scheduleFrame();
   }
@@ -238,7 +260,7 @@
   else window.addEventListener('resize',resize,{passive:true});
   if('IntersectionObserver' in window){
     new IntersectionObserver(entries=>{const visible=entries.some(e=>e.isIntersecting);
-      if(state.inView!==visible){state.inView=visible;state.last=0;}
+      if(state.inView!==visible){state.inView=visible;state.last=0;if(!visible&&hooks.layer&&hooks.layer.onView)hooks.layer.onView(false);}
       if(visible)scheduleFrame();
     },{threshold:0.04}).observe(host);
   }
