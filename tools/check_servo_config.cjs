@@ -130,7 +130,7 @@ function testConfiguratorUsesOneQueue(){
  const writer=fs.readFileSync('js/configurator/configurator.js','utf8');
  assert.match(writer,/for\(const field of \['FUNCTION','MIN','TRIM','MAX','REVERSED'\]\)/,'servo parameters must use deterministic write order');
  const html=fs.readFileSync('configurator.html','utf8');
- assert.match(html,/<script src="js\/configurator\/servo-config-core\.js" defer><\/script><script src="js\/configurator\/battery-cal-core\.js" defer><\/script><script src="js\/configurator\/calibration\.js(?:\?v=[^"\s]+)?" defer>/);
+ assert.match(html,/<script src="js\/configurator\/servo-config-core\.js(?:\?v=[^"\s]+)?" defer><\/script><script src="js\/configurator\/battery-cal-core\.js" defer><\/script><script src="js\/configurator\/calibration\.js(?:\?v=[^"\s]+)?" defer>/);
  assert.match(html,/<details class="servo-bench-details">/);
 }
 
