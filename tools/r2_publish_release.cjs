@@ -17,7 +17,7 @@ const ROOT=path.resolve(__dirname,'..');
 const BUCKET='atlas-firmware-private';
 const NAME='A.T.L.A.S-G.L.O.B.A.L';
 // The ArduPlane base of each release, shown on the catalogue cards; a release that is not listed is on 4.7.2.
-const BASE_BY_VERSION=Object.freeze({'2.2':'4.7.3'});
+const BASE_BY_VERSION=Object.freeze({'2.2':'4.7.3','3.0':'4.7.3'});
 const baseOf=v=>BASE_BY_VERSION[String(v)]||'4.7.2';
 const BOARDS=Object.freeze({
  matek:{board_id:'matek-h743-wing-v3',slug:'matek-h743-v3',file:'Matek-H743-V3',title:'Matek H743-WING V3',marker:'matek-h743-wing-v3',markerRequired:false},

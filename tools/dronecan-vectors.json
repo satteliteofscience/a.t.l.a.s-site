@@ -1,0 +1,767 @@
+{
+ "vectors": [
+  {
+   "name": "NodeStatus",
+   "kind": "NodeStatus",
+   "source": 42,
+   "dest": null,
+   "tid": 7,
+   "prio": 20,
+   "service": false,
+   "request": false,
+   "frames": [
+    {
+     "id": 335631658,
+     "data": "40e2010053efbec7"
+    }
+   ],
+   "expect": {
+    "uptime": 123456,
+    "health": 1,
+    "mode": 2,
+    "sub": 3,
+    "vendor": 48879
+   }
+  },
+  {
+   "name": "NodeStatus max",
+   "kind": "NodeStatus",
+   "source": 125,
+   "dest": null,
+   "tid": 31,
+   "prio": 20,
+   "service": false,
+   "request": false,
+   "frames": [
+    {
+     "id": 335631741,
+     "data": "ffffffffffffffdf"
+    }
+   ],
+   "expect": {
+    "uptime": 4294967295,
+    "health": 3,
+    "mode": 7,
+    "sub": 7,
+    "vendor": 65535
+   }
+  },
+  {
+   "name": "GetNodeInfo response",
+   "kind": "GetNodeInfo.Response",
+   "source": 42,
+   "dest": 126,
+   "tid": 3,
+   "prio": 24,
+   "service": true,
+   "request": false,
+   "frames": [
+    {
+     "id": 402751146,
+     "data": "25054d0000000083"
+    },
+    {
+     "id": 402751146,
+     "data": "0500010203785623"
+    },
+    {
+     "id": 402751146,
+     "data": "3412080706050403"
+    },
+    {
+     "id": 402751146,
+     "data": "0302010304000123"
+    },
+    {
+     "id": 402751146,
+     "data": "0203040506070803"
+    },
+    {
+     "id": 402751146,
+     "data": "090a0b0c0d0e0f23"
+    },
+    {
+     "id": 402751146,
+     "data": "006f72672e617203"
+    },
+    {
+     "id": 402751146,
+     "data": "647570696c6f7423"
+    },
+    {
+     "id": 402751146,
+     "data": "2e546573744e6f03"
+    },
+    {
+     "id": 402751146,
+     "data": "646563"
+    }
+   ],
+   "expect": {
+    "status": {
+     "uptime": 77,
+     "health": 0,
+     "mode": 0,
+     "sub": 0,
+     "vendor": 5
+    },
+    "sw": {
+     "major": 1,
+     "minor": 2,
+     "flags": 3,
+     "vcs": 305419896,
+     "crc": "0102030405060708"
+    },
+    "hw": {
+     "major": 3,
+     "minor": 4,
+     "uid": "000102030405060708090a0b0c0d0e0f",
+     "coa": ""
+    },
+    "name": "org.ardupilot.TestNode"
+   }
+  },
+  {
+   "name": "GetNodeInfo response coa",
+   "kind": "GetNodeInfo.Response",
+   "source": 9,
+   "dest": 126,
+   "tid": 31,
+   "prio": 24,
+   "service": true,
+   "request": false,
+   "frames": [
+    {
+     "id": 402751113,
+     "data": "0b8101000000889f"
+    },
+    {
+     "id": 402751113,
+     "data": "000000000000003f"
+    },
+    {
+     "id": 402751113,
+     "data": "000000000000001f"
+    },
+    {
+     "id": 402751113,
+     "data": "0000000000ffff3f"
+    },
+    {
+     "id": 402751113,
+     "data": "ffffffffffffff1f"
+    },
+    {
+     "id": 402751113,
+     "data": "ffffffffffffff3f"
+    },
+    {
+     "id": 402751113,
+     "data": "03010203785f"
+    }
+   ],
+   "expect": {
+    "status": {
+     "uptime": 1,
+     "health": 2,
+     "mode": 1,
+     "sub": 0,
+     "vendor": 0
+    },
+    "sw": {
+     "major": 0,
+     "minor": 0,
+     "flags": 0,
+     "vcs": 0,
+     "crc": "0000000000000000"
+    },
+    "hw": {
+     "major": 0,
+     "minor": 0,
+     "uid": "ffffffffffffffffffffffffffffffff",
+     "coa": "010203"
+    },
+    "name": "x"
+   }
+  },
+  {
+   "name": "GetNodeInfo request",
+   "kind": "GetNodeInfo.Request",
+   "source": 126,
+   "dest": 42,
+   "tid": 5,
+   "prio": 24,
+   "service": true,
+   "request": true,
+   "frames": [
+    {
+     "id": 402762494,
+     "data": "c5"
+    }
+   ],
+   "expect": {}
+  },
+  {
+   "name": "GetSet request by index",
+   "kind": "GetSet.Request",
+   "source": 126,
+   "dest": 42,
+   "tid": 1,
+   "prio": 24,
+   "service": true,
+   "request": true,
+   "frames": [
+    {
+     "id": 403417854,
+     "data": "0500c1"
+    }
+   ],
+   "expect": {
+    "index": 5,
+    "value": null,
+    "name": ""
+   }
+  },
+  {
+   "name": "GetSet request set real",
+   "kind": "GetSet.Request",
+   "source": 126,
+   "dest": 42,
+   "tid": 2,
+   "prio": 24,
+   "service": true,
+   "request": true,
+   "frames": [
+    {
+     "id": 403417854,
+     "data": "f1f800020000c082"
+    },
+    {
+     "id": 403417854,
+     "data": "3f41525350445f22"
+    },
+    {
+     "id": 403417854,
+     "data": "524154494f42"
+    }
+   ],
+   "expect": {
+    "index": 0,
+    "value": {
+     "real": 1.5
+    },
+    "name": "ARSPD_RATIO"
+   }
+  },
+  {
+   "name": "GetSet request set int",
+   "kind": "GetSet.Request",
+   "source": 126,
+   "dest": 42,
+   "tid": 3,
+   "prio": 24,
+   "service": true,
+   "request": true,
+   "frames": [
+    {
+     "id": 403417854,
+     "data": "41730001ece56683"
+    },
+    {
+     "id": 403417854,
+     "data": "41e3ffffff434123"
+    },
+    {
+     "id": 403417854,
+     "data": "4e5f44315f554303"
+    },
+    {
+     "id": 403417854,
+     "data": "5f4e4f444563"
+    }
+   ],
+   "expect": {
+    "index": 0,
+    "value": {
+     "int": -123456789012
+    },
+    "name": "CAN_D1_UC_NODE"
+   }
+  },
+  {
+   "name": "GetSet request set bool",
+   "kind": "GetSet.Request",
+   "source": 126,
+   "dest": 42,
+   "tid": 4,
+   "prio": 24,
+   "service": true,
+   "request": true,
+   "frames": [
+    {
+     "id": 403417854,
+     "data": "8691000301454e84"
+    },
+    {
+     "id": 403417854,
+     "data": "41424c4564"
+    }
+   ],
+   "expect": {
+    "index": 0,
+    "value": {
+     "bool": 1
+    },
+    "name": "ENABLE"
+   }
+  },
+  {
+   "name": "GetSet request set string",
+   "kind": "GetSet.Request",
+   "source": 126,
+   "dest": 42,
+   "tid": 5,
+   "prio": 24,
+   "service": true,
+   "request": true,
+   "frames": [
+    {
+     "id": 403417854,
+     "data": "49cafffc0a686585"
+    },
+    {
+     "id": 403417854,
+     "data": "6c6c6f206e6f6425"
+    },
+    {
+     "id": 403417854,
+     "data": "654c4142454c45"
+    }
+   ],
+   "expect": {
+    "index": 8191,
+    "value": {
+     "str": "hello node"
+    },
+    "name": "LABEL"
+   }
+  },
+  {
+   "name": "GetSet response real",
+   "kind": "GetSet.Response",
+   "source": 42,
+   "dest": 126,
+   "tid": 9,
+   "prio": 24,
+   "service": true,
+   "request": false,
+   "frames": [
+    {
+     "id": 403406506,
+     "data": "7855020000004089"
+    },
+    {
+     "id": 403406506,
+     "data": "0200000040020029"
+    },
+    {
+     "id": 403406506,
+     "data": "00a0400200000009"
+    },
+    {
+     "id": 403406506,
+     "data": "3f41525350445f29"
+    },
+    {
+     "id": 403406506,
+     "data": "524154494f49"
+    }
+   ],
+   "expect": {
+    "value": {
+     "real": 2.0
+    },
+    "default": {
+     "real": 2.0
+    },
+    "max": {
+     "real": 5.0
+    },
+    "min": {
+     "real": 0.5
+    },
+    "name": "ARSPD_RATIO"
+   }
+  },
+  {
+   "name": "GetSet response int",
+   "kind": "GetSet.Response",
+   "source": 42,
+   "dest": 126,
+   "tid": 10,
+   "prio": 24,
+   "service": true,
+   "request": false,
+   "frames": [
+    {
+     "id": 403406506,
+     "data": "87cf01070000008a"
+    },
+    {
+     "id": 403406506,
+     "data": "000000000100002a"
+    },
+    {
+     "id": 403406506,
+     "data": "000000000000010a"
+    },
+    {
+     "id": 403406506,
+     "data": "e80300000000002a"
+    },
+    {
+     "id": 403406506,
+     "data": "000118fcffffff0a"
+    },
+    {
+     "id": 403406506,
+     "data": "ffffff43414e5f2a"
+    },
+    {
+     "id": 403406506,
+     "data": "44315f50524f540a"
+    },
+    {
+     "id": 403406506,
+     "data": "4f434f4c6a"
+    }
+   ],
+   "expect": {
+    "value": {
+     "int": 7
+    },
+    "default": {
+     "int": 0
+    },
+    "max": {
+     "int": 1000
+    },
+    "min": {
+     "int": -1000
+    },
+    "name": "CAN_D1_PROTOCOL"
+   }
+  },
+  {
+   "name": "GetSet response string",
+   "kind": "GetSet.Response",
+   "source": 42,
+   "dest": 126,
+   "tid": 11,
+   "prio": 24,
+   "service": true,
+   "request": false,
+   "frames": [
+    {
+     "id": 403406506,
+     "data": "e8d80407626f618b"
+    },
+    {
+     "id": 403406506,
+     "data": "72642d410000002b"
+    },
+    {
+     "id": 403406506,
+     "data": "4e414d454b"
+    }
+   ],
+   "expect": {
+    "value": {
+     "str": "board-A"
+    },
+    "default": null,
+    "max": null,
+    "min": null,
+    "name": "NAME"
+   }
+  },
+  {
+   "name": "GetSet response empty (end of list)",
+   "kind": "GetSet.Response",
+   "source": 42,
+   "dest": 126,
+   "tid": 12,
+   "prio": 24,
+   "service": true,
+   "request": false,
+   "frames": [
+    {
+     "id": 403406506,
+     "data": "00000000cc"
+    }
+   ],
+   "expect": {
+    "value": null,
+    "default": null,
+    "max": null,
+    "min": null,
+    "name": ""
+   }
+  },
+  {
+   "name": "GetSet response bool",
+   "kind": "GetSet.Response",
+   "source": 42,
+   "dest": 126,
+   "tid": 13,
+   "prio": 24,
+   "service": true,
+   "request": false,
+   "frames": [
+    {
+     "id": 403406506,
+     "data": "412603010300008d"
+    },
+    {
+     "id": 403406506,
+     "data": "00464c41476d"
+    }
+   ],
+   "expect": {
+    "value": {
+     "bool": 1
+    },
+    "default": {
+     "bool": 0
+    },
+    "max": null,
+    "min": null,
+    "name": "FLAG"
+   }
+  },
+  {
+   "name": "ExecuteOpcode request save",
+   "kind": "ExecuteOpcode.Request",
+   "source": 126,
+   "dest": 42,
+   "tid": 6,
+   "prio": 24,
+   "service": true,
+   "request": true,
+   "frames": [
+    {
+     "id": 403352318,
+     "data": "00000000000000c6"
+    }
+   ],
+   "expect": {
+    "opcode": 0,
+    "argument": 0
+   }
+  },
+  {
+   "name": "ExecuteOpcode response",
+   "kind": "ExecuteOpcode.Response",
+   "source": 42,
+   "dest": 126,
+   "tid": 6,
+   "prio": 24,
+   "service": true,
+   "request": false,
+   "frames": [
+    {
+     "id": 403340970,
+     "data": "fbffffffffff80c6"
+    }
+   ],
+   "expect": {
+    "argument": -5,
+    "ok": true
+   }
+  },
+  {
+   "name": "ExecuteOpcode response not ok",
+   "kind": "ExecuteOpcode.Response",
+   "source": 42,
+   "dest": 126,
+   "tid": 7,
+   "prio": 24,
+   "service": true,
+   "request": false,
+   "frames": [
+    {
+     "id": 403340970,
+     "data": "15cd5b07000000c7"
+    }
+   ],
+   "expect": {
+    "argument": 123456789,
+    "ok": false
+   }
+  },
+  {
+   "name": "RestartNode request",
+   "kind": "RestartNode.Request",
+   "source": 126,
+   "dest": 42,
+   "tid": 8,
+   "prio": 24,
+   "service": true,
+   "request": true,
+   "frames": [
+    {
+     "id": 403024638,
+     "data": "1e1b55ceacc8"
+    }
+   ],
+   "expect": {
+    "magic": 742196058910
+   }
+  },
+  {
+   "name": "RestartNode response",
+   "kind": "RestartNode.Response",
+   "source": 42,
+   "dest": 126,
+   "tid": 8,
+   "prio": 24,
+   "service": true,
+   "request": false,
+   "frames": [
+    {
+     "id": 403013290,
+     "data": "80c8"
+    }
+   ],
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "RawAirData",
+   "kind": "RawAirData",
+   "source": 22,
+   "dest": null,
+   "tid": 4,
+   "prio": 16,
+   "service": false,
+   "request": false,
+   "frames": [
+    {
+     "id": 268698390,
+     "data": "b5630380e6c54784"
+    },
+    {
+     "id": 268698390,
+     "data": "0000f742885c8c24"
+    },
+    {
+     "id": 268698390,
+     "data": "5c805c865c44"
+    }
+   ],
+   "expect": {
+    "flags": 3,
+    "static": 101325.0,
+    "diff": 123.5,
+    "ts": 290.0,
+    "td": 291.0,
+    "sat": 288.0,
+    "pt": 289.5
+   }
+  },
+  {
+   "name": "BatteryInfo",
+   "kind": "BatteryInfo",
+   "source": 31,
+   "dest": null,
+   "tid": 2,
+   "prio": 20,
+   "service": false,
+   "request": false,
+   "frames": [
+    {
+     "id": 335823903,
+     "data": "5c04b05c604e2082"
+    },
+    {
+     "id": 335823903,
+     "data": "4ab05c0055405622"
+    },
+    {
+     "id": 335823903,
+     "data": "00000118e8020102"
+    },
+    {
+     "id": 335823903,
+     "data": "efbeadde534d4122"
+    },
+    {
+     "id": 335823903,
+     "data": "52542d3142"
+    }
+   ],
+   "expect": {
+    "temperature": 300.0,
+    "voltage": 25.5,
+    "current": 12.25,
+    "soc": 80,
+    "flags": 1,
+    "id": 1,
+    "model_name": "SMART-1"
+   }
+  },
+  {
+   "name": "Fix2",
+   "kind": "Fix2",
+   "source": 11,
+   "dest": null,
+   "tid": 1,
+   "prio": 20,
+   "service": false,
+   "request": false,
+   "frames": [
+    {
+     "id": 335816459,
+     "data": "39c1000000000081"
+    },
+    {
+     "id": 335816459,
+     "data": "0000000000000021"
+    },
+    {
+     "id": 335816459,
+     "data": "0000600012e04301"
+    },
+    {
+     "id": 335816459,
+     "data": "37d10201d9d90021"
+    },
+    {
+     "id": 335816459,
+     "data": "7c1240863e7fff01"
+    },
+    {
+     "id": 335816459,
+     "data": "0000c03f00002021"
+    },
+    {
+     "id": 335816459,
+     "data": "c00000803e3b0001"
+    },
+    {
+     "id": 335816459,
+     "data": "00003d61"
+    }
+   ],
+   "expect": {
+    "lon": 35.1006,
+    "lat": 48.3572,
+    "hmsl": -12.345,
+    "sats": 14,
+    "status": 3,
+    "mode": 0
+   }
+  }
+ ]
+}

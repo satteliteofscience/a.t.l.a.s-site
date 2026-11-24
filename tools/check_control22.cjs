@@ -52,7 +52,7 @@ new vm.Script(read('js/site/control22.js'));
 const page=read('sitl-demo-22.html');for(const id of ['ground','gRel','gErr','gHome','groundRows','groundMsgs','panels','range','prepOption','operator','compare','boosts','metrics','notes','method','events','scrub','phase','play'])assert.ok(page.includes('id="'+id+'"'),'page element '+id);
 assert.ok(page.includes('js/site/control22.js')&&page.includes('css/control22.css')&&page.includes('css/control21.css'));
 const log=read('js/site/changelog.js'),html=read('changelog.html');assert.ok(log.includes("demo.href='sitl-demo-22.html'"));assert.ok(html.includes('id="chSitl22"')&&html.includes('href="sitl-demo-22.html"')&&html.includes('css/release22.css'));
-assert.ok(html.indexOf('ch22-banner')<html.indexOf('ch-legacy-intro')&&html.indexOf('ch-legacy-intro')<html.indexOf('ch21-banner'),'2.2 banner is the newest, 2.1 moved into the earlier demonstrations');
+assert.ok(html.indexOf('ch30-banner')<html.indexOf('ch-legacy-intro')&&html.indexOf('ch-legacy-intro')<html.indexOf('ch22-banner')&&html.indexOf('ch22-banner')<html.indexOf('ch21-banner'),'3.0 banner is the newest, 2.2 and 2.1 sit in the earlier demonstrations');
 // public wording: nothing marked as generated, no credentials or private paths
 const texts=[report,read('js/site/control22.js'),page].join('\n');
 assert.ok(!/generated|сгенерир|згенерова/i.test(report),'no "generated" wording in the report');

@@ -1,0 +1,24 @@
+/* AI-assisted. DroneCAN tab of the configurator. */
+.dc-root{display:grid;gap:14px}
+.dc-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px 14px}
+.dc-bar label{display:flex;gap:8px;align-items:center;font:500 13px "IBM Plex Mono",monospace;color:var(--cc-pale)}
+.dc-bar select,.dc-bar input{min-height:36px;padding:0 10px;border:1px solid var(--cc-border);border-radius:4px;background:var(--cc-ink);color:var(--cc-pale);font:500 13px "IBM Plex Mono",monospace}
+.dc-bar input[type=number]{width:84px}.dc-bar input[type=search]{min-width:220px}
+.dc-bar select:focus-visible,.dc-bar input:focus-visible,.dc-val:focus-visible{outline:2px solid var(--cc-yellow);outline-offset:2px}
+.dc-bar select:disabled,.dc-bar input:disabled{opacity:.6}
+.dc-status{color:var(--cc-green);font:500 13px "IBM Plex Mono",monospace;overflow-wrap:anywhere}.dc-status.bad{color:#f0a37f}
+.dc-warn,.dc-note{margin:0;color:var(--cc-muted);font-size:13px;line-height:1.5}
+.dc-warn{border-left:3px solid var(--cc-yellow);padding:8px 12px;background:var(--cc-panel2)}
+.dc-note{padding:0 14px 8px}
+.dc-tablewrap{overflow-x:auto;padding:0 8px 10px}.dc-tall{max-height:520px;overflow-y:auto}
+.dc-table{width:100%;border-collapse:collapse;font:500 13px "IBM Plex Mono",monospace;color:var(--cc-pale)}
+.dc-table th,.dc-table td{padding:7px 9px;text-align:left;border-bottom:1px solid var(--cc-border);vertical-align:middle;white-space:nowrap}
+.dc-table th{color:var(--cc-muted);font-weight:600;position:sticky;top:0;background:var(--cc-panel2);z-index:1}
+.dc-table tr.dc-off{opacity:.55}
+.dc-h0{color:var(--cc-green)}.dc-h1{color:var(--cc-yellow)}.dc-h2,.dc-h3{color:#f0a37f}
+.dc-actions{display:flex;gap:6px}.dc-actions .cc-button,.dc-table td .cc-button{min-height:30px;padding:0 10px}
+.dc-val{width:140px;min-height:30px;padding:0 8px;border:1px solid var(--cc-border);border-radius:4px;background:var(--cc-ink);color:var(--cc-pale);font:500 13px "IBM Plex Mono",monospace}
+.dc-empty{color:var(--cc-muted);padding:14px 10px!important;white-space:normal!important}
+.dc-rowmsg{margin-left:8px;color:var(--cc-green);font-size:12px}
+.mono{font-family:"IBM Plex Mono",monospace}
+@media (max-width:700px){.dc-bar{gap:8px}.dc-bar input[type=search]{min-width:0;flex:1}}

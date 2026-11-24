@@ -3,7 +3,8 @@
    No auto-arming, motor output or firmware-writing commands are implemented. */
 (() => {
   'use strict';
-  const CRC_EXTRA = Object.freeze({0:50,1:124,20:214,21:159,22:220,23:168,30:39,66:148,74:20,76:152,77:143,36:222,65:118,110:84,147:154,191:92,192:36,251:170,253:83});
+  // 386 CAN_FRAME and 387 CANFD_FRAME carry the DroneCAN tab (MAV_CMD_CAN_FORWARD)
+  const CRC_EXTRA = Object.freeze({0:50,1:124,20:214,21:159,22:220,23:168,30:39,66:148,74:20,76:152,77:143,36:222,65:118,110:84,147:154,191:92,192:36,251:170,253:83,386:132,387:4});
   const enc = new TextEncoder();
   const decoder = new TextDecoder('ascii');
   function crcX25(data, extra) {
@@ -80,6 +81,11 @@
     return b;
   }
   function paramSet(sysid,compid,name,value,type) {const b=new Uint8Array(23);view(b).setFloat32(0,value,true);b[4]=sysid;b[5]=compid;putName(b,6,name);b[22]=type;return b;}
+  // CAN_FRAME payload: id (uint32; with the 0x80000000 flag for a 29-bit id), target system and component, bus (0 = first), len, data[8]
+  function canFrame(sysid,compid,bus,canId,data) {
+    if(!Number.isInteger(bus)||bus<0||bus>7||!data||data.length>8)throw Error('Invalid CAN frame');
+    const b=new Uint8Array(16);view(b).setUint32(0,canId>>>0,true);b[4]=sysid;b[5]=compid;b[6]=bus;b[7]=data.length;b.set(data,8);return b;
+  }
   function commandLong(sysid,compid,command,parameters) {const b=new Uint8Array(33);const v=view(b);for(let i=0;i<7;i++)v.setFloat32(i*4,parameters[i]??0,true);v.setUint16(28,command,true);b[30]=sysid;b[31]=compid;b[32]=0;return b;}
   function parseMessage(frame) {
     const v=view(frame.payload),id=frame.id;
@@ -117,6 +123,8 @@
       return {type:'text',severity:v.getUint8(0),text:asciiText(textBytes),textBytes,
         statustextId,chunkSeq,terminated:textBytes.length<50||textBytes.indexOf(0)>=0};
     }
+    // CAN_FRAME / CANFD_FRAME forwarded from a CAN bus: id (with flags), target system and component, bus, len, data. MAVLink 2 trims trailing zero bytes of the payload, so the data is zero-extended.
+    if((id===386||id===387)&&v.byteLength>=8){const cap=id===386?8:64,full=new Uint8Array(8+cap);full.set(frame.payload.subarray(0,Math.min(frame.payload.length,full.length)));const fv=view(full),len=Math.min(full[7],cap);return {type:'can_frame',fd:id===387,canId:fv.getUint32(0,true),targetSystem:full[4],targetComponent:full[5],bus:full[6],len,data:full.slice(8,8+len)};}
     return null;
   }
   // One flight controller per session: a second vehicle on a UDP/TCP stream must not
@@ -131,5 +139,5 @@
     return activeSysId!==null && frame.sysid===activeSysId;
   }
   function ftpFrame(sysid,compid,header){if(header.length>251)throw Error('MAVFTP payload too large');const payload=new Uint8Array(3+header.length);payload[0]=0;payload[1]=sysid;payload[2]=compid;payload.set(header,3);return payload;}
-  window.AtlasMAV={ftpFrame,Parser,createFrame,parseMessage,belongsToSelectedVehicle,heartbeat,paramList,requestDataStream,paramRead,paramReadByIndex,paramSet,commandLong,crcX25};
+  window.AtlasMAV={ftpFrame,Parser,createFrame,parseMessage,belongsToSelectedVehicle,heartbeat,paramList,requestDataStream,paramRead,paramReadByIndex,paramSet,commandLong,canFrame,crcX25};
 })();

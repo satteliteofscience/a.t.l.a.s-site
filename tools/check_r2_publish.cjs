@@ -102,5 +102,14 @@ const script22=tool.uploadScript('2.2',[{object_key:entry22.object_key,path:cube
 assert.equal((script22.match(/if \(\$LASTEXITCODE -ne 0\)/g)||[]).length,4,'stop after any failed native upload, read or merge');
 assert.ok(!script22.includes('--publish')&&script22.includes('release-2.2-index-additions.json'),'2.2 preparation must not silently publish files');
 
+// Version 3.0 is on ArduPlane 4.7.3 as well: an unlisted release would be labelled 4.7.2 on the cards.
+const entry30=tool.entryFor('cube','3.0',cube,false);
+assert.equal(entry30.label,'A.T.L.A.S. Release 3.0 · A.T.L.A.S-G.L.O.B.A.L · ArduPlane 4.7.3 · Cube Orange Plus','release 3.0 is built on ArduPlane 4.7.3');
+assert.equal(entry30.object_key,'release/cube-orange-plus-release-3-0.hex');assert.equal(entry30.filename,'ATLAS-Cube-Orange-Plus-release-3.0.hex');assert.equal(entry30.published,false);
+assert.deepEqual(tool.validEntry(tool.buildId('cube','3.0'),entry30),[]);
+const publish30=tool.merge(publish22,{builds:{[tool.buildId('cube','3.0')]:entry30}},true);
+for(const [id,old] of Object.entries(publish22.builds))assert.deepEqual(publish30.builds[id],old);
+assert.equal(publish30.builds['cube-orange-plus-release-3-0'].published,true);
+
 fs.rmSync(tmp,{recursive:true,force:true});
 console.log('PASS: R2 release tool: HEX validation, board markers, index entries, merge rules and upload script.');
