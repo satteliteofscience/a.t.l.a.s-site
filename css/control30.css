@@ -6,3 +6,4 @@
 .c30-run{display:inline-flex;align-items:center;margin-right:16px;white-space:nowrap}.c30-run i{display:inline-block;width:11px;height:11px;margin-right:6px}
 .c30-good{color:#9ee5cc}.c30-bad{color:#f0a37f}
 @media(max-width:980px){.c30-grid{grid-template-columns:1fr}}
+.c30-note{margin:10px 0;padding:10px 14px;border-left:3px solid #e7c477;background:rgba(231,196,119,.09);color:#f3e7c3;font:13px/1.55 'IBM Plex Mono',monospace}

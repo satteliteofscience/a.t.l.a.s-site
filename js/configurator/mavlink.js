@@ -3,8 +3,8 @@
    No auto-arming, motor output or firmware-writing commands are implemented. */
 (() => {
   'use strict';
-  // 386 CAN_FRAME and 387 CANFD_FRAME carry the DroneCAN tab (MAV_CMD_CAN_FORWARD)
-  const CRC_EXTRA = Object.freeze({0:50,1:124,20:214,21:159,22:220,23:168,30:39,66:148,74:20,76:152,77:143,36:222,65:118,110:84,147:154,191:92,192:36,251:170,253:83,386:132,387:4});
+  // 386 CAN_FRAME and 387 CANFD_FRAME carry the DroneCAN tab (MAV_CMD_CAN_FORWARD); 75 COMMAND_INT carries the operator wind (MAV_CMD_EXTERNAL_WIND_ESTIMATE)
+  const CRC_EXTRA = Object.freeze({0:50,1:124,20:214,21:159,22:220,23:168,30:39,66:148,74:20,75:158,76:152,77:143,36:222,65:118,110:84,147:154,191:92,192:36,251:170,253:83,386:132,387:4});
   const enc = new TextEncoder();
   const decoder = new TextDecoder('ascii');
   function crcX25(data, extra) {
@@ -87,6 +87,13 @@
     const b=new Uint8Array(16);view(b).setUint32(0,canId>>>0,true);b[4]=sysid;b[5]=compid;b[6]=bus;b[7]=data.length;b.set(data,8);return b;
   }
   function commandLong(sysid,compid,command,parameters) {const b=new Uint8Array(33);const v=view(b);for(let i=0;i<7;i++)v.setFloat32(i*4,parameters[i]??0,true);v.setUint16(28,command,true);b[30]=sysid;b[31]=compid;b[32]=0;return b;}
+  // COMMAND_INT payload (35 bytes): param1..param4 float, x and y int32, z float, command uint16, target system, target component, frame, current, autoconfirm
+  function commandInt(sysid,compid,command,parameters,x=0,y=0,z=0,frame=0) {
+    if(!Number.isInteger(command)||command<0||command>65535||!Array.isArray(parameters))throw new Error('Invalid COMMAND_INT');
+    const b=new Uint8Array(35);const v=view(b);
+    for(let i=0;i<4;i++)v.setFloat32(i*4,parameters[i]??0,true);
+    v.setInt32(16,x|0,true);v.setInt32(20,y|0,true);v.setFloat32(24,z,true);v.setUint16(28,command,true);b[30]=sysid;b[31]=compid;b[32]=frame;return b;
+  }
   function parseMessage(frame) {
     const v=view(frame.payload),id=frame.id;
     if(id===0 && v.byteLength>=9) return {type:'heartbeat',sysid:frame.sysid,compid:frame.compid,mode:v.getUint32(0,true),vehicleType:v.getUint8(4),autopilot:v.getUint8(5),baseMode:v.getUint8(6),systemStatus:v.getUint8(7),armed:!!(v.getUint8(6)&128)};
@@ -139,5 +146,5 @@
     return activeSysId!==null && frame.sysid===activeSysId;
   }
   function ftpFrame(sysid,compid,header){if(header.length>251)throw Error('MAVFTP payload too large');const payload=new Uint8Array(3+header.length);payload[0]=0;payload[1]=sysid;payload[2]=compid;payload.set(header,3);return payload;}
-  window.AtlasMAV={ftpFrame,Parser,createFrame,parseMessage,belongsToSelectedVehicle,heartbeat,paramList,requestDataStream,paramRead,paramReadByIndex,paramSet,commandLong,canFrame,crcX25};
+  window.AtlasMAV={ftpFrame,Parser,createFrame,parseMessage,belongsToSelectedVehicle,heartbeat,paramList,requestDataStream,paramRead,paramReadByIndex,paramSet,commandLong,commandInt,canFrame,crcX25};
 })();

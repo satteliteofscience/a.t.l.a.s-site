@@ -1,0 +1,18 @@
+/* AI-assisted. Wind profile card of the main screen (under the radio-failsafe and log card): NOAID_WIND presets and the operator's wind command */
+.wind-card[data-state="active"]>strong#windStatus{color:#8fe7bf}.wind-card[data-state="custom"]>strong#windStatus{color:#d5b770}.wind-card[data-state="unsupported"]>strong#windStatus,.wind-card[data-state="noparams"]>strong#windStatus{color:#a6ad85}
+.wind-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin:12px 0 4px}
+.wind-buttons .cc-button{height:auto;min-height:40px;padding:9px 4px;font-size:11px;letter-spacing:0;white-space:normal;line-height:1.3;text-align:center}
+.wind-buttons .cc-button[aria-pressed="true"]:disabled{opacity:1;cursor:default}
+.wind-card #windHelp{margin:8px 0 0;font:11px/1.55 "IBM Plex Mono",monospace;color:#9aa27b}
+.wind-card .wind-calm{margin:8px 0;padding:8px 10px;border-left:3px solid #d8c15b;background:rgba(216,193,91,.08);font:11px/1.55 "IBM Plex Mono",monospace;color:#e3d8a5}
+.wind-card #windResult,.wind-card #windCmdResult{margin:8px 0 0;font:11px/1.55 "IBM Plex Mono",monospace;color:#bfe8d9}
+.wind-cmd{margin-top:14px;padding-top:12px;border-top:1px solid #3d4f2d}
+.wind-cmd h4{margin:0 0 8px;font:700 11px "IBM Plex Mono",monospace;color:#d8c15b;letter-spacing:.04em}
+.wind-cmd-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wind-cmd-row label{display:flex;flex-direction:column;gap:4px;font:11px "IBM Plex Mono",monospace;color:#a6ad85}
+.wind-cmd-row input{width:100%;box-sizing:border-box;padding:8px 9px;border:1px solid #3d4f2d;border-radius:4px;background:#0e1810;color:#e5eac7;font:13px "IBM Plex Mono",monospace}
+.wind-cmd-row input:focus{outline:1px solid #8fe7bf;border-color:#8fe7bf}
+.wind-cmd .order-actions{margin-top:10px}
+.wind-card #windCmdHint{margin:8px 0 0;font:11px/1.55 "IBM Plex Mono",monospace;color:#9aa27b}
+.wind-card .wind-warn{margin:6px 0 0;font:11px/1.55 "IBM Plex Mono",monospace;color:#e9a17f}
+.wind-card .wind-warn:empty{display:none}

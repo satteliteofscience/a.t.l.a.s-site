@@ -85,7 +85,7 @@ for(const sel of ['.cc-dashboard-left','.cc-dashboard-below','.cc-dashboard-belo
 assert.ok(!/grid-template-rows:auto minmax\(180px,1fr\)/.test(css),'the right column no longer assumes two cards');
 for(const sel of ['.fslog-buttons','.fslog-card'])assert.ok(capriCss.includes(sel),'style '+sel);
 assert.ok(html.includes('css/capri.css?v=2-2-fslog')&&html.includes('css/configurator.css?v=2-2-servo-menu'),'new cache tags of the changed styles');
-assert.ok(/configurator\.js\?v=3-0-dronecan/.test(html)&&/capri-ui\.js\?v=2-2-layout/.test(html)&&/global-profile-ui\.js\?v=2-2-layout/.test(html)&&/buzzer-song-ui\.js\?v=2-2-layout/.test(html)&&/failsafe-log-ui\.js\?v=2-2-fslog2"/.test(html),'new cache tags of the changed scripts');
+assert.ok(/configurator\.js\?v=3-0-wind/.test(html)&&/capri-ui\.js\?v=2-2-layout/.test(html)&&/global-profile-ui\.js\?v=2-2-layout/.test(html)&&/buzzer-song-ui\.js\?v=2-2-layout/.test(html)&&/failsafe-log-ui\.js\?v=2-2-fslog2"/.test(html),'new cache tags of the changed scripts');
 
 // ---- the writer in configurator.js
 assert.match(cfg,/writeFailsafeLogPreset:async/);

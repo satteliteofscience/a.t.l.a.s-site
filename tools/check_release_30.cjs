@@ -45,9 +45,24 @@ assert.ok(demo.includes('js/site/control30.js')&&demo.includes('css/control30.cs
 assert.ok(js.includes("fetch('data/sitl/atlas-30-demo.json'"));
 const keys=lang=>{const m=js.match(new RegExp('\\n'+lang+':\\{([^]*?)\\n(?:uk|en|\\};)'));return m?[...m[1].matchAll(/(?:^|[,{ ]|\n)([a-z_]+[A-Za-z0-9_]*):/g)].map(x=>x[1]):[];};
 const ru=new Set(keys('ru')),uk=new Set(keys('uk')),en=new Set(keys('en'));
-for(const k of ['title','scope','mh','what','checks','limits','method','gt_test45','gt_pitot','legend'])assert.ok(ru.has(k)&&uk.has(k)&&en.has(k),'demo text '+k+' in ru, uk and en');
+for(const k of ['title','scope','mh','mh2','what','checks','limits','method','gt_test45','gt_pitot','gt_w3','gt_w11','gt_turn','gt_calm','gt_drop','nt_calm','nt_drop','g_w3','g_w11','g_turn','g_calm','g_drop','r_onbad','r_cmd','r_stale','m_wind0','m_cmd','m_turn','m_mistake','m_stopbad','homeName','metricsTitle2','metricsScope2','legend'])assert.ok(ru.has(k)&&uk.has(k)&&en.has(k),'demo text '+k+' in ru, uk and en');
+// the map is the satellite photo of the Dnipro airport (Esri World Imagery, credit shown) with the grid kept as the fallback; the calm note is on the page and in the changelog
+assert.ok(js.includes('World_Imagery/MapServer/tile/')&&js.includes('Esri, Maxar, Earthstar Geographics')&&js.includes('HOME=[48.357222,35.100556]'),'the Dnipro satellite map is missing');
+assert.ok(demo.includes('id="groupNote"')&&demo.includes('https://server.arcgisonline.com'),'the note element and the tile host in the CSP');
+for(const [lang,re] of [['ru',/в штиль обучение не нужно/],['uk',/у штиль навчання не потрібне/],['en',/calm air needs no learning/]])assert.ok(re.test(js),'the calm note on the page ('+lang+')');
+for(const [lang,re] of [['ru',/В штиль обучение не нужно[^.]*NOAID_WIND равным 1 или 0/],['uk',/У штиль навчання не потрібне[^.]*NOAID_WIND рівним 1 або 0/],['en',/In calm air the learning is not needed[^.]*NOAID_WIND at 1 or 0/]])assert.ok(re.test(r.changes[0][lang].join(' ')),'the calm note in the wind item of the changelog ('+lang+')');
 const data=JSON.parse(read('data/sitl/atlas-30-demo.json'));
-assert.equal(data.schema,1);assert.deepEqual(data.groups.map(g=>g.id),['test45','pitot']);
+assert.equal(data.schema,1);assert.deepEqual(data.groups.map(g=>g.id),['test45','w3','w11','turn','calm','drop','pitot']);
+{const by=Object.fromEntries(data.groups.map(g=>[g.id,g])),ids=g=>g.runs.map(x=>x.id);
+ assert.deepEqual(ids(by.w3),['off','on']);assert.deepEqual(ids(by.w11),['off','on']);assert.deepEqual(ids(by.turn),['off','on']);assert.deepEqual(ids(by.calm),['off','on','onbad']);assert.deepEqual(ids(by.drop),['on','cmd','stale']);
+ assert.equal(by.calm.truth_ep,0);assert.equal(by.calm.truth_dl,0);
+ for(const g of data.groups)for(const m of g.marks||[])if(m.key)for(const lang of [ru,uk,en])assert.ok(lang.has('m_'+m.key),'mark label m_'+m.key);
+ // the numbers behind the texts: learning on beats learning off in every wind; in calm air the mistaken click makes the third run drift; the wind command zeroes the estimate at once; without fixes and without the command the stale wind drifts on
+ const rmsOf=r=>Math.sqrt(r.d.err.reduce((s,x)=>s+x*x,0)/r.d.err.length),at=(r,k,t)=>r.d[k][Math.round(t/r.d.step)],w=(r,t)=>Math.hypot(at(r,'wen',t),at(r,'wee',t));
+ for(const id of ['w3','w11','turn'])assert.ok(rmsOf(by[id].runs[1])*3<rmsOf(by[id].runs[0]),id+': learning on is at least three times better');
+ assert.ok(rmsOf(by.calm.runs[2])>10*rmsOf(by.calm.runs[1]),'calm: the mistaken click drifts away');assert.ok(w(by.calm.runs[2],1400)>2,'calm: the false wind stays');assert.ok(w(by.calm.runs[1],1400)<1,'calm: the wind stays near zero without the mistake');
+ assert.ok(w(by.drop.runs[1],640)<0.2&&w(by.drop.runs[0],640)>5&&w(by.drop.runs[2],1400)>5,'sudden calm: the command zeroes the wind at once, the other runs keep the old wind');
+ assert.ok(Math.max(...by.drop.runs[2].d.err)>5*Math.max(...by.drop.runs[0].d.err),'sudden calm: stopping the fixes without the command is far worse');}
 for(const g of data.groups)for(const run of g.runs){const d=run.d;assert.ok(d.step>0&&d.n===d.err.length,run.id+': one error per grid point');for(const k of ['tn','te','en','ee','tilt'])assert.equal(d[k].length,d.n,run.id+' '+k);assert.ok(d.err.every(Number.isFinite),run.id+': finite errors');}
 const t45=data.groups[0];assert.deepEqual(t45.runs.map(x=>x.id),['base','off','on']);assert.equal(t45.stop,1200);
 assert.ok(t45.runs[2].d.ep&&t45.runs[2].d.wen,'the 3.0 run with the functions on carries the calibration and the wind estimate');

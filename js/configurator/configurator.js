@@ -647,6 +647,13 @@ window.AtlasCC = Object.freeze({
   // DroneCAN tab: MAV_CMD_CAN_FORWARD (bus 1 = CAN1, 2 = CAN2, 0 = stop) and CAN_FRAME out (bus 0 = CAN1). Frames in come as 'atlas:message' with type 'can_frame'. Not available in demo mode.
   canForward:(bus)=>{if(!state.connected||state.demo||state.sysid===null)return Promise.reject(Error('No MAVLink heartbeat'));if(!Number.isInteger(bus)||bus<0||bus>2)return Promise.reject(Error('Invalid CAN bus'));return transmit(76,M.commandLong(state.sysid,state.compid,32000,[bus,0,0,0,0,0,0]));},
   sendCanFrame:(bus,canId,data)=>{if(!state.connected||state.demo||state.sysid===null)return Promise.reject(Error('No MAVLink heartbeat'));return transmit(386,M.canFrame(state.sysid,state.compid,bus,canId,data));},
+  // Operator wind: MAV_CMD_EXTERNAL_WIND_ESTIMATE (43004) as COMMAND_INT. Speed 0..40 m/s (0 = the wind is zero), direction the wind blows FROM, 0..360 deg. Not a parameter write: it needs a live heartbeat, armed or not; not in demo mode.
+  sendWindEstimate:(speed,direction)=>{
+    const wind=window.AtlasWindProfile;if(!wind)return Promise.reject(Error('Wind profile module missing'));
+    let cmd;try{cmd=wind.windCommand(speed,direction);}catch(e){return Promise.reject(e);}
+    if(!state.connected||state.demo||state.sysid===null||Date.now()-state.lastHeartbeat>=4000)return Promise.reject(Error('No live MAVLink heartbeat'));
+    return transmit(75,M.commandInt(state.sysid,state.compid,cmd.command,cmd.params));
+  },
   editParam:(name)=>openEdit(name),
   writeServoConfig:async (channel,updates,onProgress=()=>{})=>{
     if(!Number.isInteger(channel)||channel<1||channel>16)throw Error('Invalid servo channel');
@@ -816,6 +823,36 @@ window.AtlasCC = Object.freeze({
       const p=state.params.get(name);
       if(!p)throw Error(`${name}: not present on FC`);
       changes.push({name,value,type:p.type});
+    }
+    const generation=txGeneration;
+    state.servoConfigBusy=true;
+    let done=0;
+    try{
+      for(const change of changes){
+        if(txGeneration!==generation||!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>=4000)throw Error('Disconnected or ARM state changed');
+        onProgress({done,total:changes.length,name:change.name});
+        // PARAM_VALUE echoes the accepted value; success is reported only after it arrives.
+        await writeParameterWithAck(change.name,change.value,change.type);
+        done++;
+      }
+      onProgress({done,total:changes.length,name:''});
+      return {done,total:changes.length};
+    }catch(e){throw Error(`Recorded ${done}/${changes.length}: ${e.message}`);}
+    finally{state.servoConfigBusy=false;renderParams();renderBasic();}
+  },
+  // Wind profile of the main screen (wind off / operator command only / learning): the one whitelisted parameter NOAID_WIND with a value 0..7, DISARMED, one verified write.
+  writeWindProfile:async (updates,onProgress=()=>{})=>{
+    const core=window.AtlasWindProfile;
+    if(!core)throw Error('Wind profile module missing');
+    if(!canWrite())throw Error('Live USB, confirmed DISARMED, completed parameter read and idle writer required');
+    if(!Array.isArray(updates)||updates.length!==1)throw Error('Invalid wind profile write');
+    const changes=[];
+    for(const entry of updates){
+      const [name,value]=Array.isArray(entry)?entry:[];
+      if(!core.valid(name,value))throw Error(`Invalid wind profile parameter: ${name}=${value}`);
+      const p=state.params.get(name);
+      if(!p)throw Error(`${name}: not present on FC`);
+      if(p.value!==value)changes.push({name,value,type:p.type});
     }
     const generation=txGeneration;
     state.servoConfigBusy=true;
