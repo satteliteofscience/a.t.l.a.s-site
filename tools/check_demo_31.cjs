@@ -43,7 +43,7 @@ for(const g of data.groups){
 const [v30,v31]=data.groups[0].runs.map(r=>r.m);
 assert.ok(v31.auto.mean_abs*3<v30.auto.mean_abs,'AUTO: the offset from the line is at least three times smaller in 3.1');
 assert.ok(v31.land.final_mean_abs*10<v30.land.final_mean_abs,'the final approach: the offset from the line is at least ten times smaller in 3.1');
-assert.ok(v31.rtl.max_abs*1.5<v30.rtl.max_abs&&v31.guided.max_abs*1.5<v30.guided.max_abs,'RTL and GUIDED: the bend of the path is clearly smaller in 3.1');
+assert.ok(v30.rtl.angle_med>4&&v31.rtl.angle_med<2&&v30.guided.angle_med>8&&v31.guided.angle_med<2,'RTL and GUIDED: the ground track points beside the target by the drift angle in 3.0 and at the target in 3.1');
 assert.ok(v31.loiter.sd<v30.loiter.sd,'LOITER: the circle is closer to the asked one in 3.1');
 assert.ok(v31.flight.rms/v30.flight.rms>0.7&&v31.flight.rms/v30.flight.rms<1.4,'the position error is of the same order in both versions: the navigation only follows the estimate');
 assert.ok(v30.flight.wind_est_err_1200<1&&v31.flight.wind_est_err_1200<1,'the learned wind is close to the real one in both');
