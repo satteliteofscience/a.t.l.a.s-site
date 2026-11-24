@@ -10,7 +10,7 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8').replace(/\r\n/g,'\n');
 const pages=fs.readdirSync(root).filter(f=>f.endsWith('.html'));
 
 // ids built by script: the changelog releases (js/site/changelog.js links them as '#'+release.id) and the FAQ items
-const releaseIds=new Set([...['data/changelog/1.1.js','data/changelog/1.2.js','data/changelog/2.0.js','data/changelog/2.1.js','data/changelog/2.2.js','data/changelog/3.0.js','js/site/changelog.js'].flatMap(f=>[...read(f).matchAll(/["']?\bid["']?:\s*['"](release-[\w-]+)['"]/g)].map(m=>m[1]))]);
+const releaseIds=new Set([...['data/changelog/1.1.js','data/changelog/1.2.js','data/changelog/2.0.js','data/changelog/2.1.js','data/changelog/2.2.js','data/changelog/3.0.js','data/changelog/3.1.js','js/site/changelog.js'].flatMap(f=>[...read(f).matchAll(/["']?\bid["']?:\s*['"](release-[\w-]+)['"]/g)].map(m=>m[1]))]);
 assert.ok(releaseIds.has('release-2-2')&&releaseIds.has('release-2-1')&&releaseIds.has('release-2-0')&&releaseIds.has('release-1-2'),'release ids found in data/changelog: '+[...releaseIds]);
 const staticIds=file=>new Set([...read(file).matchAll(/\sid="([^"]+)"/g)].map(m=>m[1]));
 const idsOf=file=>{

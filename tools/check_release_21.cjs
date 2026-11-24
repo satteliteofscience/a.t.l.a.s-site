@@ -16,7 +16,7 @@ const page=read('changelog.html'),log=read('js/site/changelog.js');
 const scripts=[...page.matchAll(/<script src="([^"?]+)/g)].map(m=>m[1]);
 assert.ok(scripts.indexOf('data/changelog/2.1.js')>scripts.indexOf('data/changelog/2.0.js'));
 assert.ok(scripts.indexOf('data/changelog/2.1.js')<scripts.indexOf('js/site/changelog.js'));
-assert.match(log,/const releases=\[window\.AtlasRelease30,window\.AtlasRelease22,window\.AtlasRelease21,window\.AtlasRelease20,window\.AtlasRelease12,window\.AtlasRelease11,/,'2.1 follows 2.2 in the history');
+assert.match(log,/const releases=\[window\.AtlasRelease31,window\.AtlasRelease30,window\.AtlasRelease22,window\.AtlasRelease21,window\.AtlasRelease20,window\.AtlasRelease12,window\.AtlasRelease11,/,'2.1 follows 2.2 in the history');
 assert.match(log,/group.open=openReleases.get\(release.id\) \?\? release===releases\[0\]/,'only newest release initially expanded');
 // the version labels of the pages, the metadata and the catalogue follow the newest release: see check_release_22.cjs
 assert.match(read('.gitignore'),/^\*\.hex$/m,'private HEX must be ignored');

@@ -4,7 +4,7 @@
 
 # A.T.L.A.S. — Control Center
 
-**Independent ArduPlane 4.7.3 Release 3.0 · A.T.L.A.S-G.L.O.B.A.L · Browser-based configurator · Flight-controller tooling**
+**Independent ArduPlane 4.7.3 Release 3.1 · A.T.L.A.S-G.L.O.B.A.L · Browser-based configurator · Flight-controller tooling**
 
 ![Status](https://img.shields.io/badge/CHANNEL-RELEASE%202.2-86ac64?style=flat-square&labelColor=152010)
 ![Base](https://img.shields.io/badge/ARDUPLANE-4.7.3-b7c56b?style=flat-square&labelColor=152010)
@@ -16,11 +16,11 @@
 </div>
 
 > [!IMPORTANT]
-> **A.T.L.A.S. Release 3.0 (A.T.L.A.S-G.L.O.B.A.L) is published per board as each build is verified: Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini.** Select the exact hardware revision, back up existing parameters and remove the propeller for bench configuration. GPS-denied navigation can accumulate position drift; verify sensor health, failsafes and aircraft-specific settings before flight.
+> **A.T.L.A.S. Release 3.1 (A.T.L.A.S-G.L.O.B.A.L) is published per board as each build is verified: Matek H743-WING V3, Cube Orange Plus and Uni-IC743 Mini.** Select the exact hardware revision, back up existing parameters and remove the propeller for bench configuration. GPS-denied navigation can accumulate position drift; verify sensor health, failsafes and aircraft-specific settings before flight.
 
 ## What is A.T.L.A.S.?
 
-A.T.L.A.S. is an independently developed and tested modification of **ArduPlane 4.7.3**, accompanied by the **Control Center** website. Release 3.0 includes GPS-denied EKF3/NOAID estimation with the G.L.O.B.A.L. options (dead-reckoned map position, automatic switch to GPS and back, display-only GPS marker), launch without GPS, adapted TAKEOFF and CRUISE logic, the O.R.D.E.R. protocol, position correction from the ground station, a custom startup melody, navigation features, telemetry, calibration tools, a web-based firmware catalog and an EKF3 G.L.O.B.A.L. activation profile in the configurator.
+A.T.L.A.S. is an independently developed and tested modification of **ArduPlane 4.7.3**, accompanied by the **Control Center** website. Release 3.1 includes GPS-denied EKF3/NOAID estimation with the G.L.O.B.A.L. options (dead-reckoned map position, automatic switch to GPS and back, display-only GPS marker), launch without GPS, adapted TAKEOFF and CRUISE logic, the O.R.D.E.R. protocol, position correction from the ground station, a custom startup melody, navigation features, telemetry, calibration tools, a web-based firmware catalog and an EKF3 G.L.O.B.A.L. activation profile in the configurator.
 
 The public repository is for the **website and published artifacts**. The developer's private working repository is not linked. Recipients of GPL-covered firmware must nonetheless have access to the corresponding firmware source for each distributed binary.
 
@@ -73,7 +73,7 @@ The repository cover under `assets/github-social-preview.jpg` may be uploaded in
 
 - [FAQ](faq.html) — modified flight modes and minimum NOAID sensor requirements.
 - [Post-hardware configurator audit](docs/POST-HARDWARE-AUDIT-2026-11-09.md) — actual real-FC checks, MAVLink hardening and software regression coverage.
-- [Changelog](changelog.html) — Release 3.0 (A.T.L.A.S-G.L.O.B.A.L) and earlier updates.
+- [Changelog](changelog.html) — Release 3.1 (A.T.L.A.S-G.L.O.B.A.L) and earlier updates.
 - [Release process](docs/RELEASE-DEPLOYMENT.md) — private R2 uploads, version catalog, keys and matching GPL source.
 - [Publishing 2.2 to R2](firmware-gateway/RELEASE-2.2-UPLOAD.md) — `tools/r2_publish_release.cjs` validates the HEX, writes the index additions and the upload script.
 - [Suggested commits](docs/GITHUB-COMMITS.md) — ready-to-use commit titles and short descriptions.
@@ -102,4 +102,4 @@ Public pages stay in the repository root so their URLs do not change; everything
 
 **A.T.L.A.S.** is an independent project developed by Oleksandr with AI-assisted tooling, built on top of the ArduPilot ecosystem. This is **not an official ArduPilot release**. Keep the upstream copyright notices and license conditions. Firmware modifications derived from ArduPilot remain subject to applicable **GNU GPLv3-or-later** obligations.
 
-<div align="center"><sub>A.T.L.A.S. Control Center • Release 3.0 • A.T.L.A.S-G.L.O.B.A.L</sub></div>
+<div align="center"><sub>A.T.L.A.S. Control Center • Release 3.1 • A.T.L.A.S-G.L.O.B.A.L</sub></div>

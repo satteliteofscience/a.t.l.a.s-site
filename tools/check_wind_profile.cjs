@@ -14,8 +14,15 @@ assert.equal(core.status(params({ARSPD_USE:1})).state,'unsupported','a board wit
 // plan: the one write, nothing when the board is there already
 assert.deepEqual(core.plan(params({NOAID_WIND:0}),'learn'),[['NOAID_WIND',7]]);assert.deepEqual(core.plan(params({NOAID_WIND:7}),'command'),[['NOAID_WIND',1]]);assert.deepEqual(core.plan(params({NOAID_WIND:3}),'off'),[['NOAID_WIND',0]]);
 assert.deepEqual(core.plan(params({NOAID_WIND:1}),'command'),[]);assert.throws(()=>core.plan(params({NOAID_WIND:1}),'nope'),/Unknown wind preset/);
-// limits: only NOAID_WIND, an integer 0..7
-assert.ok(core.valid('NOAID_WIND',0)&&core.valid('NOAID_WIND',7));for(const bad of [[ 'NOAID_WIND',8],['NOAID_WIND',-1],['NOAID_WIND',1.5],['NOAID_WIND',NaN],['NOAID_WIND','7'],['NOAID_WAGE',1],['NOAID_HOLD',2],['EK3_NOAID_POS',1]])assert.ok(!core.valid(...bad),'refused: '+bad.join('='));
+// limits: NOAID_WIND, an integer 0..7, and (3.1) NOAID_SLEW, an integer 0..120, nothing else
+assert.ok(core.valid('NOAID_WIND',0)&&core.valid('NOAID_WIND',7));for(const v of [0,20,120])assert.ok(core.valid('NOAID_SLEW',v),'NOAID_SLEW '+v);
+for(const bad of [[ 'NOAID_WIND',8],['NOAID_WIND',-1],['NOAID_WIND',1.5],['NOAID_WIND',NaN],['NOAID_WIND','7'],['NOAID_SLEW',121],['NOAID_SLEW',-1],['NOAID_SLEW',1.5],['NOAID_SLEW','20'],['NOAID_SLEW',NaN],['NOAID_WAGE',1],['NOAID_HOLD',2],['NOAID_PWATCH',7],['EK3_NOAID_POS',1]])assert.ok(!core.valid(...bad),'refused: '+bad.join('='));
+// 3.1: the gradual fix is recommended only while learning is on and the fix still moves the position at once; the one write never overwrites a value the owner chose
+assert.equal(core.slewAdvice(params({NOAID_WIND:7,NOAID_SLEW:0})),'recommend');assert.equal(core.slewAdvice(params({NOAID_WIND:3,NOAID_SLEW:0})),'recommend');assert.equal(core.slewAdvice(params({NOAID_WIND:2,NOAID_SLEW:0})),'recommend');
+assert.equal(core.slewAdvice(params({NOAID_WIND:7,NOAID_SLEW:20})),'ok');assert.equal(core.slewAdvice(params({NOAID_WIND:1,NOAID_SLEW:0})),'ok');assert.equal(core.slewAdvice(params({NOAID_WIND:0,NOAID_SLEW:0})),'ok');
+assert.equal(core.slewAdvice(params({NOAID_WIND:7})),'unknown');assert.equal(core.slewAdvice(params({ARSPD_USE:1})),'unknown');
+assert.deepEqual(core.slewPlan(params({NOAID_WIND:7,NOAID_SLEW:0})),[['NOAID_SLEW',20]]);assert.deepEqual(core.slewPlan(params({NOAID_WIND:7,NOAID_SLEW:30})),[]);assert.deepEqual(core.slewPlan(params({NOAID_WIND:7,NOAID_SLEW:20})),[]);assert.deepEqual(core.slewPlan(params({NOAID_WIND:7})),[]);
+assert.deepEqual([core.SLEW,core.SLEW_RECOMMENDED,core.SLEW_MAX],['NOAID_SLEW',20,120]);assert.ok(core.INFO.includes('NOAID_SLEW'));
 // the bits and the note that a learned wind stays when the learning goes
 assert.deepEqual(core.bits(7),{command:true,learn:true,calibrate:true});assert.deepEqual(core.bits(1),{command:true,learn:false,calibrate:false});assert.deepEqual(core.bits(null),{command:null,learn:null,calibrate:null});
 assert.ok(core.keepsLearnedWind(params({NOAID_WIND:7}),'command')&&core.keepsLearnedWind(params({NOAID_WIND:7}),'off')&&core.keepsLearnedWind(params({NOAID_WIND:3}),'command'));
@@ -49,7 +56,14 @@ const keys=lang=>new Set(Object.keys(words[lang]));
 const ru=keys('ru'),uk=keys('uk'),en=keys('en');
 for(const lang of ['uk','en'])assert.deepEqual(Object.keys(words[lang].tips).sort(),Object.keys(words.ru.tips).sort(),'the preset tips of '+lang);
 for(const lang of ['ru','uk','en'])for(const [k,v] of Object.entries(words[lang]))if(k!=='tips')assert.ok(typeof v==='string'&&v.length>1,'text '+k+' ('+lang+')');
-for(const k of ['title','noparams','unsupported','active','custom','p_off','p_command','p_learn','tips','details','help','calm','confirm','written','already','progress','keeps','cmdTitle','speed','dir','send','zero','cmdHint','bit0off','demo','nolink','badWind','sending','accepted','rejected','noAck','fc','confirmWind','confirmZero','bit0','bit1','bit2','wage','on','off'])assert.ok(ru.has(k)&&uk.has(k)&&en.has(k),'card text '+k+' in ru, uk and en');
+for(const k of ['title','noparams','unsupported','active','custom','p_off','p_command','p_learn','tips','details','help','calm','confirm','written','already','progress','keeps','cmdTitle','speed','dir','send','zero','cmdHint','bit0off','demo','nolink','badWind','sending','accepted','rejected','noAck','fc','confirmWind','confirmZero','bit0','bit1','bit2','wage','on','off','exp','expLink','howTitle','how1','how2','how3','how4','how5','how6','how7','slew','slewRec','slewBtn','slewConfirm'])assert.ok(ru.has(k)&&uk.has(k)&&en.has(k),'card text '+k+' in ru, uk and en');
+// 3.1: the recommendations "how to teach the wind" (seven points in three languages, the first names the launch confirmation) and the gradual-fix offer
+for(const lang of ['ru','uk','en']){assert.ok(/NOAID motion confirmed/.test(words[lang].how1),'how1 names the launch confirmation ('+lang+')');assert.ok(/NOAID_SLEW/.test(words[lang].slewRec)&&/NOAID_SLEW 20/.test(words[lang].slewConfirm)&&/20/.test(words[lang].slewBtn),'the gradual-fix texts name the parameter and the value ('+lang+')');}
+assert.ok(ui.includes('id="windHow"')&&ui.includes('id="windSlew"')&&ui.includes('id="windSlewBtn"')&&/for\(let i=1;i<=7;i\+\+\)/.test(ui)&&/core\.slewPlan\(/.test(ui)&&/core\.slewAdvice\(/.test(ui),'the card lists the seven points and offers the gradual fix through the same writer');
+// 3.1: the experimental warning sits on the card in three languages and links to the 3.1 section of the changelog
+assert.ok(words.ru.exp.startsWith('ЭКСПЕРИМЕНТАЛЬНАЯ ФУНКЦИЯ')&&words.uk.exp.startsWith('ЕКСПЕРИМЕНТАЛЬНА ФУНКЦІЯ')&&words.en.exp.startsWith('EXPERIMENTAL FUNCTION'),'the warning opens with the word experimental in three languages');
+for(const lang of ['ru','uk','en'])assert.ok(/GPS/.test(words[lang].exp)&&/3\.1/.test(words[lang].exp),'the warning says that it does not replace GPS and names 3.1 ('+lang+')');
+assert.ok(ui.includes('id="windExp"')&&ui.includes('href="changelog.html#release-3-1"'),'the warning element and its link');
 assert.deepEqual([...ru].sort(),[...uk].sort());assert.deepEqual([...ru].sort(),[...en].sort());
 for(const id of [...ui.matchAll(/\$\('([A-Za-z]+)'\)/g)].map(m=>m[1]))assert.ok(ui.includes(`id="${id}"`),'the card has #'+id);
 assert.ok(/getElementById\('fslogPanel'\)/.test(ui)&&/anchor\.after\(card\)/.test(ui),'the card sits under the radio-failsafe and log card');
@@ -61,8 +75,8 @@ assert.ok(/writeWindProfile:async \(updates,onProgress=\(\)=>\{\}\)=>\{[^]*?canW
 assert.ok(/sendWindEstimate:\(speed,direction\)=>\{[^]*?windCommand\(speed,direction\)[^]*?state\.demo[^]*?Date\.now\(\)-state\.lastHeartbeat>=4000[^]*?transmit\(75,M\.commandInt\(/.test(code),'the sender: validated, live link, not in demo mode, COMMAND_INT');
 // configurator.html: stylesheet, core before the configurator, UI after the failsafe card, cache tags
 const html=read('configurator.html'),pos=s=>html.indexOf(s);
-assert.ok(pos('css/wind-profile.css?v=3-0-wind')>0&&pos('js/configurator/wind-profile-core.js?v=3-0-wind')>pos('js/configurator/failsafe-log-core.js')&&pos('js/configurator/wind-profile-core.js')<pos('js/configurator/configurator.js'),'the core loads before the configurator');
-assert.ok(pos('js/configurator/wind-profile-ui.js?v=3-0-wind')>pos('js/configurator/failsafe-log-ui.js')&&pos('js/configurator/wind-profile-ui.js')>pos('js/configurator/configurator.js'),'the card loads after the failsafe card and the configurator');
+assert.ok(pos('css/wind-profile.css?v=3-1-wind3')>0&&pos('js/configurator/wind-profile-core.js?v=3-1-wind2')>pos('js/configurator/failsafe-log-core.js')&&pos('js/configurator/wind-profile-core.js')<pos('js/configurator/configurator.js'),'the core loads before the configurator');
+assert.ok(pos('js/configurator/wind-profile-ui.js?v=3-1-wind2')>pos('js/configurator/failsafe-log-ui.js')&&pos('js/configurator/wind-profile-ui.js')>pos('js/configurator/configurator.js'),'the card loads after the failsafe card and the configurator');
 assert.ok(/mavlink\.js\?v=3-0-wind/.test(html)&&/configurator\.js\?v=3-0-wind/.test(html),'cache tags of mavlink.js and configurator.js');
 assert.ok(read('css/wind-profile.css').includes('.wind-card'),'the stylesheet');
 console.log('PASS: wind profile: three NOAID_WIND presets, the operator wind command (COMMAND_INT bytes against pymavlink), the card in three languages and its wiring.');

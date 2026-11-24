@@ -111,5 +111,14 @@ const publish30=tool.merge(publish22,{builds:{[tool.buildId('cube','3.0')]:entry
 for(const [id,old] of Object.entries(publish22.builds))assert.deepEqual(publish30.builds[id],old);
 assert.equal(publish30.builds['cube-orange-plus-release-3-0'].published,true);
 
+// Version 3.1 is on ArduPlane 4.7.3 too (its HEX are compiled by the owner and published later)
+const entry31=tool.entryFor('cube','3.1',cube,false);
+assert.equal(entry31.label,'A.T.L.A.S. Release 3.1 · A.T.L.A.S-G.L.O.B.A.L · ArduPlane 4.7.3 · Cube Orange Plus','release 3.1 is built on ArduPlane 4.7.3');
+assert.equal(entry31.object_key,'release/cube-orange-plus-release-3-1.hex');assert.equal(entry31.filename,'ATLAS-Cube-Orange-Plus-release-3.1.hex');assert.equal(entry31.published,false);
+assert.deepEqual(tool.validEntry(tool.buildId('cube','3.1'),entry31),[]);
+const publish31=tool.merge(publish30,{builds:{[tool.buildId('cube','3.1')]:entry31}},true);
+for(const [id,old] of Object.entries(publish30.builds))assert.deepEqual(publish31.builds[id],old);
+assert.equal(publish31.builds['cube-orange-plus-release-3-1'].published,true);
+
 fs.rmSync(tmp,{recursive:true,force:true});
 console.log('PASS: R2 release tool: HEX validation, board markers, index entries, merge rules and upload script.');

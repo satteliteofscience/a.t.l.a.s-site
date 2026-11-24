@@ -1,0 +1,6 @@
+/* AI-assisted. 3.1 demonstration page (sitl-demo-31.html): the table of numbers and the notes; the rest comes from control21.css and control30.css */
+.c31-table td:not(:first-child),.c31-table th:not(:first-child){text-align:right;white-space:nowrap}
+.c31-table td i{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px}
+.c31-table td.c31-better{color:#9ee5cc}.c31-table td.c31-worse{color:#f0a37f}
+.c31-caption{margin:6px 0 0;font:12px/1.55 'IBM Plex Mono',monospace;color:#a7bda6}
+.c31-how{margin:8px 0 0;padding-left:18px;font:13px/1.6 'IBM Plex Mono',monospace;color:#c9d6bc}

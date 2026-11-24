@@ -33,12 +33,12 @@ for(const t of texts){
 const page=read('changelog.html'),log=read('js/site/changelog.js');
 const scripts=[...page.matchAll(/<script src="([^"?]+)/g)].map(m=>m[1]);
 assert.ok(scripts.indexOf('data/changelog/3.0.js')>scripts.indexOf('data/changelog/2.2.js'));assert.ok(scripts.indexOf('data/changelog/3.0.js')<scripts.indexOf('js/site/changelog.js'));
-assert.match(log,/const releases=\[window\.AtlasRelease30,window\.AtlasRelease22,/);
-assert.match(log,/release-\(1-\[012\]\|2-\[012\]\|3-0\)/,'#release-3-0 opens its section');
-assert.ok(page.indexOf('ch30-banner')>0&&page.indexOf('ch30-banner')<page.indexOf('ch-legacy-intro')&&page.indexOf('ch-legacy-intro')<page.indexOf('ch22-banner'),'the 3.0 banner is the newest, 2.2 sits in the earlier demonstrations');
+assert.match(log,/const releases=\[window\.AtlasRelease31,window\.AtlasRelease30,window\.AtlasRelease22,/);
+assert.match(log,/release-\(1-\[012\]\|2-\[012\]\|3-\[01\]\)/,'#release-3-0 opens its section');
+assert.ok(page.indexOf('id="ch30Title"')>page.indexOf('ch-legacy-intro')&&page.indexOf('id="ch30Title"')<page.indexOf('ch22-banner'),'since 3.1 the 3.0 banner sits first among the earlier demonstrations, 2.2 follows it');
 assert.ok(page.includes('href="sitl-demo-30.html"')&&page.includes('css/release30.css'),'the banner links the 45-minute test');
 assert.ok(log.includes("release.version==='3.0'")&&log.includes("demo.href='sitl-demo-30.html'"),'the 3.0 section carries the link to the test');
-for(const t of ['изменения 3.0 относительно 2.2','зміни 3.0 відносно 2.2','changes 3.0 compared with 2.2','Release 3.0 · Разработка','Release 3.0 · Розробка','Release 3.0 · Developed'])assert.ok(log.includes(t),t);
+for(const t of ['изменения 3.0 относительно 2.2','зміни 3.0 відносно 2.2','changes 3.0 compared with 2.2'])assert.ok(log.includes(t),t);
 // the page of the test: its own script, data and styles, no inline script, three languages with the same keys
 const demo=read('sitl-demo-30.html'),js=read('js/site/control30.js');
 assert.ok(demo.includes('js/site/control30.js')&&demo.includes('css/control30.css')&&!/<script(?![^>]*\ssrc=)[^>]*>/.test(demo.replace(/<script src="js\/site\/frame-guard\.js"><\/script>/,'')),'the demo page has external scripts only');
@@ -66,18 +66,9 @@ assert.equal(data.schema,1);assert.deepEqual(data.groups.map(g=>g.id),['test45',
 for(const g of data.groups)for(const run of g.runs){const d=run.d;assert.ok(d.step>0&&d.n===d.err.length,run.id+': one error per grid point');for(const k of ['tn','te','en','ee','tilt'])assert.equal(d[k].length,d.n,run.id+' '+k);assert.ok(d.err.every(Number.isFinite),run.id+': finite errors');}
 const t45=data.groups[0];assert.deepEqual(t45.runs.map(x=>x.id),['base','off','on']);assert.equal(t45.stop,1200);
 assert.ok(t45.runs[2].d.ep&&t45.runs[2].d.wen,'the 3.0 run with the functions on carries the calibration and the wind estimate');
-// the current-release labels
-const config=read('configurator.html'),code=read('js/configurator/configurator.js'),meta=read('js/site/page-meta.js'),home=read('index.html'),i18n=read('js/site/i18n.js');
-assert.match(config,/CONFIGURATOR 3\.0/);assert.ok(!/CONFIGURATOR 2\.[012]|КОНФИГУРАТОР 2\.[012]|КОНФІГУРАТОР 2\.[012]/.test(config+code),'no older configurator label');
-assert.ok(code.includes("experimental:'КОНФІГУРАТОР 3.0'")&&code.includes("experimental:'КОНФИГУРАТОР 3.0'")&&code.includes("experimental:'CONFIGURATOR 3.0'"));
-for(const t of ['Конфигуратор A.T.L.A.S. 3.0','Конфігуратор A.T.L.A.S. 3.0','Configurator A.T.L.A.S. 3.0','Release 3.0 A.T.L.A.S-G.L.O.B.A.L'])assert.ok(meta.includes(t),t);
-assert.ok(!/Release 2\.[012]|конфигуратор 2\.[012]|Configurator 2\.[012]|Конфигуратор A\.T\.L\.A\.S\. 2\.[012]/.test(meta),'no older label in the page metadata');
-for(const html of ['index.html','configurator.html','changelog.html','faq.html'])assert.ok(read(html).includes('js/site/page-meta.js?v=release-3.0'),'metadata cache refreshed: '+html);
-for(const t of ['RELEASE 3.0 · A.T.L.A.S-G.L.O.B.A.L','Release <span>3.0</span>','Актуальная версия A.T.L.A.S. — 3.0','Release 3.0 A.T.L.A.S-G.L.O.B.A.L by Oleksandr'])assert.ok(home.includes(t),t);
-assert.ok(!/Release 2\.[012]|RELEASE 2\.[012]/.test(home),'home page has no older label');
-assert.ok(i18n.includes('Актуальная версия A.T.L.A.S. — 3.0')&&i18n.includes('Core A.T.L.A.S. 3.0 features.')&&!/Release 2\.[012] A\.T\.L\.A\.S-G/.test(i18n),'translations follow the home page');
+// the current-release labels follow the newest release (since 3.1 they are pinned by check_release_31.cjs); the catalogue still knows 3.0
+const config=read('configurator.html'),code=read('js/configurator/configurator.js');
 const catalog=JSON.parse(read('data/releases.json'));
-assert.equal(catalog.project.latest_release,'3.0','the newest release is announced; a card stays "coming soon" until its HEX is published');
 assert.equal(catalog.project.release_names['3.0'],'A.T.L.A.S-G.L.O.B.A.L');
 // the DroneCAN tab is wired into the configurator: navigation, scripts, MAVLink messages
 assert.match(config,/data-tab="dronecan"/);assert.match(config,/data-panel="dronecan"/);assert.match(config,/id="dcRoot"/);

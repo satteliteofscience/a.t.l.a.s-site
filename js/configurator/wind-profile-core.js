@@ -2,7 +2,7 @@
  * (MAV_CMD_EXTERNAL_WIND_ESTIMATE). No MAVLink and no aircraft outputs here: the card reads the parameters, AtlasCC does the verified writes and the command.
  * NOAID_WIND (firmware 3.0) is a bitmask: 1 = the operator enters the wind with a command, 2 = the wind is learned from the operator's position fixes,
  * 4 = the scale error of the airspeed sensor and the heading bias are learned with it (needs 2). Switching the learning off does not clear a wind that has already been learned:
- * the command with speed 0 does (SITL, 24.11.2026). */
+ * the command with speed 0 does (SITL, 24.11.2026). Release 3.1 adds NOAID_SLEW (the gradual application of a fix) as the recommended companion of learning. */
 ((root,factory)=>{const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.AtlasWindProfile=api;})(globalThis,()=>{
  'use strict';
  const NAME='NOAID_WIND';
@@ -13,8 +13,11 @@
   {id:'learn',value:BIT.command|BIT.learn|BIT.calibrate}
  ].map(Object.freeze));
  /** Read-only values shown next to the buttons. */
- const INFO=Object.freeze(['NOAID_WIND','NOAID_WAGE']);
- const valid=(name,value)=>name===NAME&&typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<=7;
+ const INFO=Object.freeze(['NOAID_WIND','NOAID_WAGE','NOAID_SLEW']);
+ // NOAID_SLEW: the seconds over which an operator fix is applied in flight (0 = at once, the roll command of the navigation then jumps with the position). The card offers the recommended value
+ // as a second whitelisted write next to NOAID_WIND; nothing else is writable here.
+ const SLEW='NOAID_SLEW',SLEW_RECOMMENDED=20,SLEW_MAX=120;
+ const valid=(name,value)=>typeof value==='number'&&Number.isInteger(value)&&((name===NAME&&value>=0&&value<=7)||(name===SLEW&&value>=0&&value<=SLEW_MAX));
  const value=(params,name)=>{const p=params.get(name);return p&&Number.isFinite(p.value)?p.value:null;};
  const preset=id=>PRESETS.find(p=>p.id===id)||null;
  const supported=params=>params.has(NAME);
@@ -30,6 +33,10 @@
  const bits=v=>Number.isInteger(v)?{command:!!(v&BIT.command),learn:!!(v&BIT.learn),calibrate:!!(v&BIT.calibrate)}:{command:null,learn:null,calibrate:null};
  /** True when writing the preset takes the learning away from a board that may hold a learned wind: the card then says that the wind stays in memory. */
  const keepsLearnedWind=(params,id)=>{const cur=value(params,NAME),p=preset(id);return !!p&&Number.isInteger(cur)&&(cur&BIT.learn)!==0&&(p.value&BIT.learn)===0;};
+ /** What the card says about the gradual fix: 'unknown' (not read yet or the board has no NOAID_SLEW), 'recommend' (learning is on and a fix still moves the position at once), 'ok'. */
+ function slewAdvice(params){const w=value(params,NAME),s=value(params,SLEW);if(w===null||s===null)return 'unknown';return (w&BIT.learn)!==0&&s===0?'recommend':'ok';}
+ /** The one write that switches the gradual fix on: [[NOAID_SLEW,20]] while it is 0 (a value chosen by the owner is never overwritten), else nothing. */
+ const slewPlan=params=>value(params,SLEW)===0?[[SLEW,SLEW_RECOMMENDED]]:[];
  // The operator wind command
  const COMMAND=43004,ACCURACY=1,MAX_SPEED=40;
  const num=x=>typeof x==='number'?x:(typeof x==='string'&&x.trim()!==''?Number(x.trim().replace(',','.')):NaN);
@@ -44,5 +51,5 @@
  /** COMMAND_ACK result (MAV_RESULT) as a name. */
  const RESULTS=Object.freeze(['accepted','temporarily_rejected','denied','unsupported','failed','in_progress','cancelled']);
  const resultName=code=>RESULTS[code]||'unknown';
- return Object.freeze({NAME,BIT,PRESETS,INFO,COMMAND,ACCURACY,MAX_SPEED,valid,value,preset,supported,status,plan,bits,keepsLearnedWind,windCommand,commandAdvice,resultName});
+ return Object.freeze({NAME,SLEW,SLEW_RECOMMENDED,SLEW_MAX,BIT,PRESETS,INFO,COMMAND,ACCURACY,MAX_SPEED,valid,value,preset,supported,status,plan,bits,keepsLearnedWind,slewAdvice,slewPlan,windCommand,commandAdvice,resultName});
 });

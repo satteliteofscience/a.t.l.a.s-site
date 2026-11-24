@@ -1,1 +1,7 @@
 .ch30-banner{border-left-color:#7ee6c8;background:linear-gradient(115deg,#0f2d33,#133126 58%,#2d3a17);padding:22px}.ch30-banner h2{font-size:clamp(22px,3vw,34px);margin:12px 0;color:#d8f5e8}.ch30-banner .ch-order-code{color:#8fe9cf}.ch30-banner .ch-sitl-demo{margin-top:16px}@media(max-width:600px){.ch30-banner{padding:18px}}
+/* 3.1: the experimental notice in the banner and at the top of the 3.1 section */
+.ch31-banner{border-left-color:#e3b85c}.ch31-banner .ch-order-code{color:#f0cf86}
+.ch31-warn{margin:12px 0 0;padding:10px 12px;border-left:4px solid #e3b85c;background:rgba(227,184,92,.12);color:#f3e2b4;font:500 13px/1.55 "IBM Plex Sans",sans-serif}
+.ch-experimental{margin:0 0 16px;padding:12px 14px;border:1px solid #6f5a25;border-left:5px solid #e3b85c;border-radius:6px;background:rgba(227,184,92,.10)}
+.ch-experimental b{display:block;margin:0 0 6px;font:700 12px "IBM Plex Mono",monospace;letter-spacing:.08em;color:#f0cf86}
+.ch-experimental p{margin:0;font:500 14px/1.6 "IBM Plex Sans",sans-serif;color:#f1e7c8}
