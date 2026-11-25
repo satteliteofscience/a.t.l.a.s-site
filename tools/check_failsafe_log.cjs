@@ -75,7 +75,8 @@ const left=dash.slice(dash.indexOf('cc-dashboard-left'),dash.indexOf('cc-dashboa
 assert.ok(left.includes('cc-attitude-card')&&left.includes('id="dashBelow"'),'the horizon and the space under it share the left column');
 assert.ok(left.indexOf('cc-attitude-card')<left.indexOf('id="dashBelow"'),'the space for the cards is under the horizon');
 const right=dash.slice(dash.indexOf('cc-dashboard-right'));
-assert.ok(right.includes('cc-status-panel')&&right.includes('cc-messages-panel')&&!right.includes('orderPanel')&&!right.includes('globalPanel'),'the right column keeps the vehicle state and the messages');
+// the left column holds the live data (horizon, vehicle state, messages); the right one the tools panel that dashboard-ui.js fills with the cards
+assert.ok(left.includes('cc-status-panel')&&left.includes('cc-messages-panel')&&right.includes('id="atlasTools"')&&!right.includes('orderPanel')&&!right.includes('globalPanel'),'the live data on the left, the tools panel on the right');
 const capri=read('js/configurator/capri-ui.js'),glob=read('js/configurator/global-profile-ui.js'),song=read('js/configurator/buzzer-song-ui.js');
 assert.match(capri,/getElementById\('dashBelow'\)/);assert.ok(!/prepend\(card\)/.test(capri),'the O.R.D.E.R. card is not put into the right column any more');
 assert.match(glob,/order\.after\(card\)/);assert.match(glob,/getElementById\('dashBelow'\)/);

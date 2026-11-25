@@ -1,7 +1,8 @@
 /* A.T.L.A.S. mini-game layer for the attitude card on the home page (the rules are in flight-game-core.js).
-   Hold the pointer on the card for seven seconds and the game starts (no button). The aircraft follows the pointer (or a finger, or the arrow keys), the flight mode
-   changes by itself along the plan of the mission, the rings, pylons, other aircraft and the runway are drawn in perspective on the card's own canvas, the camera
-   rolls with the aircraft, left button / Space boosts (in AUTO the button is the gun), E or the right button fires the ULT.
+   Hold the pointer on the card for seven seconds and the game starts (no button). The goal is 20 km, as fast as possible. The aircraft follows the pointer (or a finger,
+   or the arrow keys), the flight mode changes by itself along the route, the rings, pylons, other aircraft, weapon boxes, feathers and the runway are drawn in perspective
+   on the card's own canvas, the camera rolls with the aircraft, left button / Space boosts (in AUTO the button is the gun), F or the right button uses the weapon of the
+   box, E fires the ULT (so does the right button when the slot is empty).
    Everything here is a game on a synthetic display. No MAVLink, USB, or flight-controller connection. */
 (() => {
  'use strict';
@@ -21,17 +22,23 @@
  const DWELL = 7, AWAY = 1.2;                  // seconds of holding the pointer on the card that start the game; seconds away from the card before the pause
  const KEY_X = 3.4, KEY_Y = 2.4;               // how fast the arrow keys move the aim (world units per second)
  const MODE_ORDER = ['FBWA', 'CRUISE', 'GUIDED', 'AUTO'];
+ const ROLL_TICK = .08;                        // the roulette of a weapon box shows another weapon this often (s)
+ const FX_COLOR = { turbo: '#ff9d52', gun: '#ffd36b', mask: '#ffe27a', barrier: '#8fe3ff' };
 
  // ---- texts (the card is translated by the layer itself; i18n.js only knows the static page)
  const TEXT = {
   ru: { exit: 'ВЫХОД', score: 'СЧЁТ', best: 'РЕКОРД', gates: 'ВОРОТА', level: 'УРОВЕНЬ', ready: 'ПРИГОТОВЬСЯ', go: 'СТАРТ',
    perfect: 'ТОЧНО', good: 'ПРОЛЁТ', miss: 'МИМО', life: '+1 ЖИЗНЬ', gust: 'ПОРЫВ ВЕТРА', paused: 'ПАУЗА', pausedHint: 'Верни курсор в карточку или нажми пробел',
    over: 'ПОЛЁТ ЗАВЕРШЁН', again: 'ЕЩЁ РАЗ', accuracy: 'ТОЧНОСТЬ', streak: 'СЕРИЯ', rank: 'ЗВАНИЕ', newBest: 'НОВЫЙ РЕКОРД',
-   hint: 'Веди самолёт курсором сквозь кольца', hintTouch: 'Веди самолёт пальцем сквозь кольца',
+   hint: 'Цель — 20 км: веди курсором сквозь кольца', hintTouch: 'Цель — 20 км: веди пальцем сквозь кольца',
    ranks: ['КУРСАНТ', 'ПИЛОТ', 'КОМАНДИР', 'АС A.T.L.A.S.'],
    ult: 'ULT', ultReady: 'ULT ГОТОВ', noTargets: 'НЕТ ЦЕЛЕЙ', shot: 'СБИТ', hitPylon: 'ОПОРА', hitEnemy: 'СТОЛКНОВЕНИЕ',
    modeTo: 'РЕЖИМ', finale: 'ЗАХОД НА ПОСАДКУ', final: 'ЗАХОД', touchdown: 'ПОСАДКА', gradePerfect: 'ИДЕАЛЬНО', gradeGood: 'ХОРОШО', gradeHard: 'ЖЁСТКАЯ',
-   won: 'ПОСАДКА ВЫПОЛНЕНА', landing: 'ПОСАДКА', kills: 'СБИТО',
+   won: 'ФИНИШ · 20 КМ', landing: 'ПОСАДКА', kills: 'СБИТО',
+   km: 'км', kmh: 'км/ч', time: 'ВРЕМЯ', distance: 'ДИСТАНЦИЯ', timeBonus: 'ЗА ВРЕМЯ', bestTime: 'ЛУЧШЕЕ ВРЕМЯ', newTime: 'ЛУЧШЕЕ ВРЕМЯ!', avgSpeed: 'СКОРОСТЬ',
+   feathers: 'ПЕРЬЯ', empty: 'ПУСТО', box: 'ЯЩИК', slotFull: 'СЛОТ ЗАНЯТ', weaponUp: 'ОРУЖИЕ: УР. {n}', weaponMax: 'ОРУЖИЕ: МАКС.', forgiven: 'МИМО · БЕЗ ШТРАФА', smashed: 'СНЕСЕНО', repelled: 'ОТБРОШЕН',
+   wTurbo: 'ТУРБО', wGun: 'ПУЛЕМЁТ', wMissiles: 'РАКЕТЫ', wMask: 'НЕУЯЗВИМОСТЬ', wBarrier: 'БАРЬЕР',
+   spaceKey: 'ПРОБЕЛ', weaponLabel: 'Применить оружие из ящика (пробел, F или правая кнопка)', weaponLabelTouch: 'Применить оружие из ящика', weaponEmptyLabel: 'Оружие: слот пуст', feathersLabel: 'каждые 10 перьев усиливают оружие',
    wind: 'ВЕТЕР', windUnit: 'м/с', windShift: 'ВЕТЕР ПОМЕНЯЛСЯ', sprintWarn: 'ФОРСАЖ!', sprint: 'ФОРСАЖ', sprintClean: 'ЧИСТЫЙ ФОРСАЖ', bonus: 'БОНУС', handover: 'УПРАВЛЕНИЕ У ТЕБЯ',
    music: 'МУЗЫКА', musicOn: 'ВКЛ', musicOff: 'ВЫКЛ', musicLabelOn: 'Музыка включена, нажми, чтобы выключить (клавиша M)', musicLabelOff: 'Музыка выключена, нажми, чтобы включить (клавиша M)',
    dwell: 'УДЕРЖИВАЙ КУРСОР — ИГРА ЧЕРЕЗ {n}', dwellTouch: 'УДЕРЖИВАЙ ПАЛЕЦ — ИГРА ЧЕРЕЗ {n}',
@@ -47,24 +54,38 @@
    tipHandover: 'Управление переходит к тебе: веди курсор к кольцу', tipHandoverTouch: 'Управление переходит к тебе: веди палец к кольцу',
    tipMusic: 'Музыка включится после первого клика или клавиши (M)', tipMusicTouch: 'Музыка включится после первого касания',
    tipHazard: 'Красный круг — опора или чужой борт: не заходи в него',
-   tipEnemy: 'Чужой борт! За кольца копится ULT: E или ПКМ — залп', tipEnemyTouch: 'Чужой борт! За кольца копится ULT: нажми кнопку ULT',
-   tipUlt: 'ULT готов: E, ПКМ или кнопка внизу', tipUltTouch: 'ULT готов: нажми кнопку ULT',
-   ultLabel: 'ULT: залп по чужим самолётам (клавиша E)',
-   caption: 'Самолёт летит за *курсором* (FBWA) · *ЛКМ* — ускорение ×2 · *M* — музыка · *Esc* — выход',
-   caption2: 'Режимы меняются сами: *FBWA → CRUISE → GUIDED → AUTO* · ветер и форсаж · *E* или *ПКМ* — ULT',
-   captionTouch: 'Самолёт летит за *пальцем* · *♪* — музыка · *ВЫХОД* — вернуться', caption2Touch: 'Режимы меняются сами · ветер и форсаж · *ULT* — кнопка внизу карточки',
+   tipEnemy: 'Чужой борт! За кольца копится ULT: пробел или E', tipEnemyTouch: 'Чужой борт! За кольца копится ULT: нажми кнопку ULT',
+   tipUlt: 'ULT готов: пробел или E', tipUltTouch: 'ULT готов: нажми кнопку ULT',
+   tipGoal: 'Цель — 20 км: чем быстрее долетишь, тем выше звание',
+   tipBox: 'Ящик «?» даёт оружие — залети в него',
+   tipUse: 'Оружие в слоте: пробел, F или ПКМ', tipUseTouch: 'Оружие в слоте: нажми кнопку внизу',
+   tipFeather: 'Перья: каждые 10 усиливают оружие',
+   tipTurbo: 'ТУРБО: рывок вперёд, мимо кольца — без штрафа',
+   tipGun: 'ПУЛЕМЁТ: сам бьёт по бортам у твоей линии',
+   tipMissiles: 'РАКЕТЫ: сами находят чужие борта и опоры',
+   tipMask: 'НЕУЯЗВИМОСТЬ: быстрее и сносишь всё на пути',
+   tipBarrier: 'БАРЬЕР: отталкивает опоры и чужие борта',
+   ultLabel: 'ULT: залп по чужим самолётам (пробел или E)',
+   caption: 'Цель — *20 км*, чем быстрее, тем выше звание · самолёт за *курсором* · *ЛКМ* — ускорение · *M* — музыка · *Esc* — выход',
+   caption2: 'Ящики «?» — оружие · *пробел* — применить его или ULT (также *F*, *E*, *ПКМ*) · 10 перьев — усиление · режимы *FBWA → CRUISE → GUIDED → AUTO* меняются сами',
+   captionTouch: 'Цель — *20 км*, чем быстрее, тем выше звание · самолёт за *пальцем* · *♪* — музыка · *ВЫХОД* — вернуться',
+   caption2Touch: 'Ящики «?» — оружие, кнопка внизу · 10 перьев — усиление · режимы меняются сами · *ULT* — рядом с оружием',
    pausedHintTouch: 'Коснись карточки, чтобы продолжить',
    buttonExit: 'Выйти из мини-игры',
-   liveStart: 'Игра началась. Самолёт летит за курсором (FBWA), режимы меняются сами, ветер сносит, E — ULT, M — музыка.', liveOver: 'Игра окончена. Счёт {score}, ворота {gates}.',
-   liveWon: 'Посадка выполнена. Счёт {score}, ворота {gates}.' },
+   liveStart: 'Игра началась. Пролети 20 км сквозь кольца: самолёт летит за курсором, пробел — оружие из ящика или ULT, M — музыка.', liveOver: 'Игра окончена. Счёт {score}, ворота {gates}.',
+   liveWon: 'Финиш: 20 км за {time}. Счёт {score}, ворота {gates}.' },
   uk: { exit: 'ВИХІД', score: 'РАХУНОК', best: 'РЕКОРД', gates: 'ВОРОТА', level: 'РІВЕНЬ', ready: 'ПРИГОТУЙСЯ', go: 'СТАРТ',
    perfect: 'ТОЧНО', good: 'ПРОЛІТ', miss: 'МИМО', life: '+1 ЖИТТЯ', gust: 'ПОРИВ ВІТРУ', paused: 'ПАУЗА', pausedHint: 'Поверни курсор у картку або натисни пробіл',
    over: 'ПОЛІТ ЗАВЕРШЕНО', again: 'ЩЕ РАЗ', accuracy: 'ТОЧНІСТЬ', streak: 'СЕРІЯ', rank: 'ЗВАННЯ', newBest: 'НОВИЙ РЕКОРД',
-   hint: 'Веди літак курсором крізь кільця', hintTouch: 'Веди літак пальцем крізь кільця',
+   hint: 'Ціль — 20 км: веди курсором крізь кільця', hintTouch: 'Ціль — 20 км: веди пальцем крізь кільця',
    ranks: ['КУРСАНТ', 'ПІЛОТ', 'КОМАНДИР', 'АС A.T.L.A.S.'],
    ult: 'ULT', ultReady: 'ULT ГОТОВИЙ', noTargets: 'НЕМАЄ ЦІЛЕЙ', shot: 'ЗБИТО', hitPylon: 'ОПОРА', hitEnemy: 'ЗІТКНЕННЯ',
    modeTo: 'РЕЖИМ', finale: 'ЗАХІД НА ПОСАДКУ', final: 'ЗАХІД', touchdown: 'ПОСАДКА', gradePerfect: 'ІДЕАЛЬНО', gradeGood: 'ДОБРЕ', gradeHard: 'ЖОРСТКА',
-   won: 'ПОСАДКУ ВИКОНАНО', landing: 'ПОСАДКА', kills: 'ЗБИТО',
+   won: 'ФІНІШ · 20 КМ', landing: 'ПОСАДКА', kills: 'ЗБИТО',
+   km: 'км', kmh: 'км/год', time: 'ЧАС', distance: 'ДИСТАНЦІЯ', timeBonus: 'ЗА ЧАС', bestTime: 'НАЙКРАЩИЙ ЧАС', newTime: 'НАЙКРАЩИЙ ЧАС!', avgSpeed: 'ШВИДКІСТЬ',
+   feathers: 'ПІР’Я', empty: 'ПОРОЖНЬО', box: 'ЯЩИК', slotFull: 'СЛОТ ЗАЙНЯТИЙ', weaponUp: 'ЗБРОЯ: РІВ. {n}', weaponMax: 'ЗБРОЯ: МАКС.', forgiven: 'МИМО · БЕЗ ШТРАФУ', smashed: 'ЗНЕСЕНО', repelled: 'ВІДКИНУТО',
+   wTurbo: 'ТУРБО', wGun: 'КУЛЕМЕТ', wMissiles: 'РАКЕТИ', wMask: 'НЕВРАЗЛИВІСТЬ', wBarrier: 'БАР’ЄР',
+   spaceKey: 'ПРОБІЛ', weaponLabel: 'Застосувати зброю з ящика (пробіл, F або права кнопка)', weaponLabelTouch: 'Застосувати зброю з ящика', weaponEmptyLabel: 'Зброя: слот порожній', feathersLabel: 'кожні 10 пір’їн підсилюють зброю',
    wind: 'ВІТЕР', windUnit: 'м/с', windShift: 'ВІТЕР ЗМІНИВСЯ', sprintWarn: 'ФОРСАЖ!', sprint: 'ФОРСАЖ', sprintClean: 'ЧИСТИЙ ФОРСАЖ', bonus: 'БОНУС', handover: 'КЕРУВАННЯ У ТЕБЕ',
    music: 'МУЗИКА', musicOn: 'УВІМК', musicOff: 'ВИМК', musicLabelOn: 'Музику ввімкнено, натисни, щоб вимкнути (клавіша M)', musicLabelOff: 'Музику вимкнено, натисни, щоб ввімкнути (клавіша M)',
    dwell: 'ТРИМАЙ КУРСОР — ГРА ЧЕРЕЗ {n}', dwellTouch: 'ТРИМАЙ ПАЛЕЦЬ — ГРА ЧЕРЕЗ {n}',
@@ -80,24 +101,38 @@
    tipHandover: 'Керування переходить до тебе: веди курсор до кільця', tipHandoverTouch: 'Керування переходить до тебе: веди палець до кільця',
    tipMusic: 'Музика ввімкнеться після першого кліку чи клавіші (M)', tipMusicTouch: 'Музика ввімкнеться після першого дотику',
    tipHazard: 'Червоне коло — опора або чужий борт: не заходь у нього',
-   tipEnemy: 'Чужий борт! За кільця накопичується ULT: E або ПКМ — залп', tipEnemyTouch: 'Чужий борт! За кільця накопичується ULT: натисни ULT',
-   tipUlt: 'ULT готовий: E, ПКМ або кнопка внизу', tipUltTouch: 'ULT готовий: натисни кнопку ULT',
-   ultLabel: 'ULT: залп по чужих літаках (клавіша E)',
-   caption: 'Літак летить за *курсором* (FBWA) · *ЛКМ* — прискорення ×2 · *M* — музика · *Esc* — вихід',
-   caption2: 'Режими змінюються самі: *FBWA → CRUISE → GUIDED → AUTO* · вітер і форсаж · *E* або *ПКМ* — ULT',
-   captionTouch: 'Літак летить за *пальцем* · *♪* — музика · *ВИХІД* — повернутися', caption2Touch: 'Режими змінюються самі · вітер і форсаж · *ULT* — кнопка внизу картки',
+   tipEnemy: 'Чужий борт! За кільця накопичується ULT: пробіл або E', tipEnemyTouch: 'Чужий борт! За кільця накопичується ULT: натисни ULT',
+   tipUlt: 'ULT готовий: пробіл або E', tipUltTouch: 'ULT готовий: натисни кнопку ULT',
+   tipGoal: 'Ціль — 20 км: чим швидше долетиш, тим вище звання',
+   tipBox: 'Ящик «?» дає зброю — залети в нього',
+   tipUse: 'Зброя в слоті: пробіл, F або ПКМ', tipUseTouch: 'Зброя в слоті: натисни кнопку внизу',
+   tipFeather: 'Пір’я: кожні 10 підсилюють зброю',
+   tipTurbo: 'ТУРБО: ривок уперед, повз кільце — без штрафу',
+   tipGun: 'КУЛЕМЕТ: сам б’є по бортах біля твоєї лінії',
+   tipMissiles: 'РАКЕТИ: самі знаходять чужі борти й опори',
+   tipMask: 'НЕВРАЗЛИВІСТЬ: швидше і зносиш усе на шляху',
+   tipBarrier: 'БАР’ЄР: відштовхує опори та чужі борти',
+   ultLabel: 'ULT: залп по чужих літаках (пробіл або E)',
+   caption: 'Ціль — *20 км*, чим швидше, тим вище звання · літак за *курсором* · *ЛКМ* — прискорення · *M* — музика · *Esc* — вихід',
+   caption2: 'Ящики «?» — зброя · *пробіл* — застосувати її або ULT (також *F*, *E*, *ПКМ*) · 10 пір’їн — підсилення · режими *FBWA → CRUISE → GUIDED → AUTO* змінюються самі',
+   captionTouch: 'Ціль — *20 км*, чим швидше, тим вище звання · літак за *пальцем* · *♪* — музика · *ВИХІД* — повернутися',
+   caption2Touch: 'Ящики «?» — зброя, кнопка внизу · 10 пір’їн — підсилення · режими змінюються самі · *ULT* — поруч зі зброєю',
    pausedHintTouch: 'Торкнись картки, щоб продовжити',
    buttonExit: 'Вийти з міні-гри',
-   liveStart: 'Гру розпочато. Літак летить за курсором (FBWA), режими змінюються самі, вітер зносить, E — ULT, M — музика.', liveOver: 'Гру закінчено. Рахунок {score}, ворота {gates}.',
-   liveWon: 'Посадку виконано. Рахунок {score}, ворота {gates}.' },
+   liveStart: 'Гру розпочато. Пролети 20 км крізь кільця: літак летить за курсором, пробіл — зброя з ящика або ULT, M — музика.', liveOver: 'Гру закінчено. Рахунок {score}, ворота {gates}.',
+   liveWon: 'Фініш: 20 км за {time}. Рахунок {score}, ворота {gates}.' },
   en: { exit: 'EXIT', score: 'SCORE', best: 'BEST', gates: 'GATE', level: 'LEVEL', ready: 'GET READY', go: 'GO',
    perfect: 'PERFECT', good: 'GATE', miss: 'MISSED', life: '+1 LIFE', gust: 'GUST', paused: 'PAUSED', pausedHint: 'Move the cursor back onto the card or press Space',
    over: 'FLIGHT OVER', again: 'AGAIN', accuracy: 'ACCURACY', streak: 'STREAK', rank: 'RANK', newBest: 'NEW BEST',
-   hint: 'Fly through the rings with the cursor', hintTouch: 'Fly through the rings with your finger',
+   hint: 'Goal 20 km: fly the cursor through the rings', hintTouch: 'Goal 20 km: fly your finger through the rings',
    ranks: ['CADET', 'PILOT', 'COMMANDER', 'A.T.L.A.S. ACE'],
    ult: 'ULT', ultReady: 'ULT READY', noTargets: 'NO TARGETS', shot: 'SHOT DOWN', hitPylon: 'PYLON', hitEnemy: 'COLLISION',
    modeTo: 'MODE', finale: 'FINAL APPROACH', final: 'FINAL', touchdown: 'TOUCHDOWN', gradePerfect: 'PERFECT', gradeGood: 'GOOD', gradeHard: 'HARD',
-   won: 'LANDED', landing: 'LANDING', kills: 'KILLS',
+   won: 'FINISH · 20 KM', landing: 'LANDING', kills: 'KILLS',
+   km: 'km', kmh: 'km/h', time: 'TIME', distance: 'DISTANCE', timeBonus: 'TIME BONUS', bestTime: 'BEST TIME', newTime: 'BEST TIME!', avgSpeed: 'SPEED',
+   feathers: 'FEATHERS', empty: 'EMPTY', box: 'BOX', slotFull: 'SLOT FULL', weaponUp: 'WEAPONS: LV {n}', weaponMax: 'WEAPONS: MAX', forgiven: 'MISSED · NO PENALTY', smashed: 'SMASHED', repelled: 'PUSHED',
+   wTurbo: 'TURBO', wGun: 'MACHINE GUN', wMissiles: 'MISSILES', wMask: 'INVINCIBLE', wBarrier: 'BARRIER',
+   spaceKey: 'SPACE', weaponLabel: 'Use the weapon from a box (Space, F or the right button)', weaponLabelTouch: 'Use the weapon from a box', weaponEmptyLabel: 'Weapon: the slot is empty', feathersLabel: 'every 10 feathers make the weapons stronger',
    wind: 'WIND', windUnit: 'm/s', windShift: 'WIND SHIFT', sprintWarn: 'AFTERBURNER!', sprint: 'AFTERBURNER', sprintClean: 'CLEAN BURN', bonus: 'BONUS', handover: 'YOUR CONTROL',
    music: 'MUSIC', musicOn: 'ON', musicOff: 'OFF', musicLabelOn: 'Music is on, press to turn it off (key M)', musicLabelOff: 'Music is off, press to turn it on (key M)',
    dwell: 'HOLD THE CURSOR HERE — GAME IN {n}', dwellTouch: 'HOLD YOUR FINGER HERE — GAME IN {n}',
@@ -113,28 +148,43 @@
    tipHandover: 'The controls come back to you: fly to the next ring', tipHandoverTouch: 'The controls come back to you: fly to the next ring',
    tipMusic: 'The music starts after the first click or key (M)', tipMusicTouch: 'The music starts after the first touch',
    tipHazard: 'A red circle is a pylon or an aircraft: stay out of it',
-   tipEnemy: 'Hostile aircraft! Rings charge the ULT: E or RMB fires', tipEnemyTouch: 'Hostile aircraft! Rings charge the ULT: tap ULT',
-   tipUlt: 'ULT ready: E, RMB or the button below', tipUltTouch: 'ULT ready: tap the ULT button',
-   ultLabel: 'ULT: salvo at the other aircraft (key E)',
-   caption: 'The aircraft follows the *cursor* (FBWA) · *LMB* — boost ×2 · *M* — music · *Esc* — exit',
-   caption2: 'Modes change by themselves: *FBWA → CRUISE → GUIDED → AUTO* · wind and afterburner · *E* or *RMB* — ULT',
-   captionTouch: 'The aircraft follows your *finger* · *♪* — music · *EXIT* — go back', caption2Touch: 'Modes change by themselves · wind and afterburner · *ULT* — button at the bottom of the card',
+   tipEnemy: 'Hostile aircraft! Rings charge the ULT: Space or E', tipEnemyTouch: 'Hostile aircraft! Rings charge the ULT: tap ULT',
+   tipUlt: 'ULT ready: Space or E', tipUltTouch: 'ULT ready: tap the ULT button',
+   tipGoal: 'Goal 20 km: the sooner you arrive, the higher your rank',
+   tipBox: 'A "?" box gives a weapon: fly into it',
+   tipUse: 'Weapon ready: Space, F or RMB', tipUseTouch: 'Weapon ready: tap the button below',
+   tipFeather: 'Feathers: every 10 make the weapons stronger',
+   tipTurbo: 'TURBO: a burst of speed, missed rings are free',
+   tipGun: 'MACHINE GUN: fires at what is near your line',
+   tipMissiles: 'MISSILES: they find aircraft and pylons',
+   tipMask: 'INVINCIBLE: faster, you smash all in the way',
+   tipBarrier: 'BARRIER: pushes pylons and aircraft away',
+   ultLabel: 'ULT: salvo at the other aircraft (Space or E)',
+   caption: 'Goal *20 km*, the faster the higher the rank · the aircraft follows the *cursor* · *LMB* — boost · *M* — music · *Esc* — exit',
+   caption2: '"?" boxes — weapons · *Space* — use the weapon or the ULT (also *F*, *E*, *RMB*) · 10 feathers — upgrade · modes *FBWA → CRUISE → GUIDED → AUTO* change by themselves',
+   captionTouch: 'Goal *20 km*, the faster the higher the rank · the aircraft follows your *finger* · *♪* — music · *EXIT* — go back',
+   caption2Touch: '"?" boxes — weapons, button below · 10 feathers — upgrade · modes change by themselves · *ULT* — next to the weapon',
    pausedHintTouch: 'Touch the card to continue',
    buttonExit: 'Leave the mini-game',
-   liveStart: 'Game started. The aircraft follows the cursor (FBWA), the modes change by themselves, the wind pushes, E fires the ULT, M toggles the music.', liveOver: 'Game over. Score {score}, gates {gates}.',
-   liveWon: 'Landed. Score {score}, gates {gates}.' }
+   liveStart: 'Game started. Fly 20 km through the rings: the aircraft follows the cursor, Space uses the weapon from a box or the ULT, M toggles the music.', liveOver: 'Game over. Score {score}, gates {gates}.',
+   liveWon: 'Finish: 20 km in {time}. Score {score}, gates {gates}.' }
  };
  const lang = () => { const l = window.AtlasI18n && window.AtlasI18n.lang; return TEXT[l] ? l : (TEXT[document.documentElement.lang] ? document.documentElement.lang : 'ru'); };
  const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);     // a touch screen: no mouse, no keys
  const tx = key => { const t = TEXT[lang()]; return (coarse && t[key + 'Touch']) || t[key]; };
  const pad = (n, d) => String(Math.max(0, Math.floor(n))).padStart(d, '0');
  const clock = s => `${pad(s / 60, 2)}:${pad(s % 60, 2)}`;
+ /** A flight time with tenths: 4:52.3 */
+ const clockT = s => { const t = Math.round(s * 10) / 10, m = Math.floor(t / 60); return `${m}:${(t - m * 60).toFixed(1).padStart(4, '0')}`; };
+ const kmText = metres => (metres / 1000).toFixed(1);
+ const weaponWord = name => tx('w' + name[0].toUpperCase() + name.slice(1));
+ const withSpace = text => (coarse ? text : `${text} · ${tx('spaceKey')}`);      // what can be used now, with the key that uses it
 
  // ---- small DOM helpers
  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
  const rich = (node, text) => { node.textContent = ''; text.split('*').forEach((part, i) => node.append(i % 2 ? el('strong', '', part) : document.createTextNode(part))); };
  const store = (() => { try { return window.localStorage; } catch { return null; } })();
- let best = store ? core.readBest(store) : 0, newBest = false;
+ let best = store ? core.readBest(store) : 0, newBest = false, bestTime = store ? core.readTime(store) : 0, newTime = false;
 
  // ---- music: an eight-bar chiptune loop (the notes are data in flight-game-core.js) synthesised with Web Audio: a square lead, a triangle bass, noise drums, and an arpeggio
  //      while the afterburner burns (the tempo goes up too). No audio files and no libraries. Browsers let sound start only after a click, a key or a touch; the pointer hold
@@ -253,9 +303,13 @@
  const hud = el('div', 'game-hud'); hud.hidden = true; hud.setAttribute('aria-hidden', 'true');
  const hudScore = el('div', 'game-score'), hudScoreLabel = el('span'), hudScoreValue = el('strong', '', '00000');
  hudScore.append(hudScoreLabel, hudScoreValue);
- const hudMeta = el('div', 'game-meta'), hudGate = el('span'), hudMult = el('span'), hudLives = el('span', 'game-lives'), hudTime = el('span', 'game-time');
+ const hudMeta = el('div', 'game-meta'), hudGate = el('span', 'game-gate'), hudMult = el('span'), hudLives = el('span', 'game-lives'), hudTime = el('span', 'game-time'), hudDist = el('span', 'game-dist');
  for (let i = 0; i < CFG.lives; i++) hudLives.append(el('i'));
- hudMeta.append(hudGate, hudMult, hudLives, hudTime);
+ hudMeta.append(hudGate, hudMult, hudLives, hudTime, hudDist);
+ // the route along the top edge of the card: how much of the 20 km is behind, with a tick where one mode gives way to the next
+ const route = el('div', 'game-route'), routeFill = el('i');
+ route.hidden = true; route.setAttribute('aria-hidden', 'true'); route.append(routeFill);
+ { let at = 0; for (const leg of core.PLAN) { at += leg.len; const tick = el('b'); tick.style.left = (100 * at / CFG.distance).toFixed(2) + '%'; route.append(tick); } }
  // the wind sits in the score line: an arrow that points where it blows, its speed and five pips of strength
  const hudWind = el('div', 'game-wind'), windArrow = el('i', 'game-wind-arrow'), windValue = el('b'), windPips = el('span', 'game-wind-pips');
  for (let i = 0; i < 5; i++) windPips.append(el('i'));
@@ -267,7 +321,15 @@
  const ultBtn = el('button', 'game-ult'); ultBtn.type = 'button';
  const ultLabel = el('span', 'game-ult-label'), ultMeter = el('span', 'game-ult-meter'), ultFill = el('i'), ultKey = el('span', 'game-ult-key', 'E');
  ultMeter.append(ultFill); ultBtn.append(ultLabel, ultMeter, ultKey);
- // the modes are not buttons: the plan of the mission changes them; the active one shows how far it has got and how long it lasts
+ // the weapon slot (one weapon at a time, from the boxes) and the feathers that make the weapons stronger, next to the ULT
+ const weaponBtn = el('button', 'game-weapon is-empty'); weaponBtn.type = 'button';
+ const weaponIcon = el('i', 'game-weapon-icon'), weaponName = el('span', 'game-weapon-name'), weaponKey = el('span', 'game-weapon-key', 'F');
+ weaponBtn.append(weaponIcon, weaponName, weaponKey);
+ const quill = el('span', 'game-feathers'), quillIcon = el('i', 'game-feather-icon'), quillCount = el('b'), quillLevels = el('span', 'game-weapon-level'), quillBar = el('span', 'game-feather-bar'), quillFill = el('i');
+ for (let i = 0; i < CFG.maxLevel; i++) quillLevels.append(el('i'));
+ quillBar.append(quillFill); quill.append(quillIcon, quillCount, quillLevels, quillBar);
+ const arsenal = el('div', 'game-arsenal'); arsenal.append(quill, weaponBtn, ultBtn);
+ // the modes are not buttons: the plan of the mission changes them; the active one shows how far it has got and how far it still goes
  const modesRow = el('div', 'game-modes'), chips = {};
  MODE_ORDER.forEach(name => {
   const chip = el('span', 'game-mode'), fill = el('i', 'game-mode-fill'), left = el('b', 'game-mode-left');
@@ -275,25 +337,27 @@
   chips[name] = { chip, fill, left }; modesRow.append(chip);
  });
  const landingLabel = el('div', 'game-landing', 'AUTOLAND'); landingLabel.hidden = true;
- bar.append(ultBtn, modesRow, landingLabel);
+ bar.append(arsenal, modesRow, landingLabel);
  const overlay = el('div', 'game-overlay'); overlay.hidden = true;
  const flash = el('div', 'game-flash'); flash.setAttribute('aria-hidden', 'true');
  const live = el('div', 'game-live'); live.setAttribute('role', 'status'); live.setAttribute('aria-live', 'polite');
  const glow = el('div', 'game-glow'); glow.setAttribute('aria-hidden', 'true');      // the glow at the edges of the card while the afterburner burns
- host.append(dwellBar, glow, hud, tip, bar, flash, overlay, live);
+ host.append(dwellBar, glow, route, hud, tip, bar, flash, overlay, live);
  const caption = el('div', 'scope-caption game-caption'), captionText = el('span'), captionText2 = el('span', 'game-caption2'); caption.hidden = true;
  const captionBody = el('span', 'game-caption-body'); captionBody.append(captionText, el('br'), captionText2);
  caption.append(el('span', 'mini-cross', '+'), captionBody);
  if (instructions) instructions.after(caption); else root.append(caption);
  // the overlay, the bars and the button must not start the demo's boost and pointer capture
  for (const node of [overlay, toggle, bar, musicBtn]) node.addEventListener('pointerdown', ev => ev.stopPropagation());
+ // a second finger on the weapon or the ULT button must not end the touch that steers (the demo lets go of the pointer on these events)
+ for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) bar.addEventListener(type, ev => { if (ev.pointerType === 'touch') ev.stopPropagation(); });
  const gridEl = root.querySelector('.scope-grid');
 
  // ---- state of the layer
  let mode = 'demo', game = null, pauseReason = '', engaged = false, lastPointer = 'mouse', inside = false, aimSource = 'pointer', firing = false;
  let goBanner = 0, banner = null, gustInfo = null, lastHud = '', overlayKey = '', markHidden = false, tipTimer = 0, seenHazard = false, away = 0, keyPlay = false;
  let hovering = false, dwellHeld = 0, dwellLock = false, dwellLast = 0, dwellText = '', dwellOn = false, lmbDown = false, tipPrio = 0;
- let sprintView = 0, lastWind = '', audioWait = 0, seenBonus = false, sprintOn = false;
+ let sprintView = 0, lastWind = '', audioWait = 0, seenBonus = false, sprintOn = false, lastArsenal = '', seenBox = false, seenFeather = false, shotSide = 1, tipNow = null;
  const aimOut = { x: 0, y: 0, neutral: false };
  const WIND_UNIT = 6;                          // world units per second -> the metres per second shown on the card
  // the streaks that show the wind (they drift with it) and the afterburner (they fly away from the vanishing point)
@@ -301,7 +365,7 @@
  const LINES = Array.from({ length: 34 }, (_, i) => ({ a: ((i * 137.508) % 360) * DEG, p: (i * .6180339) % 1, l: .5 + ((i * .37) % 1) * .8 }));
  const arrowOf = (dx, dy) => ['→', '↗', '↑', '↖', '←', '↙', '↓', '↘'][((Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8];
  const tipsShown = new Set(), tipQueue = [];
- const plane = { scale: 1, x: 0, y: 0, alpha: 1 }, popups = [], rings = [], sparks = [], beams = [], tracers = [], keys = new Set();
+ const plane = { scale: 1, x: 0, y: 0, alpha: 1 }, popups = [], rings = [], sparks = [], beams = [], tracers = [], shots = [], keys = new Set();
  const virt = { x: 0, y: 0 }, lastAim = { x: 0, y: 0 }, cam = { roll: 0, zoom: 1, kick: 0, px: 0, py: 0, active: false };
  const AXES = { arrowleft: ['x', -1], arrowright: ['x', 1], arrowup: ['y', 1], arrowdown: ['y', -1], a: ['x', -1], d: ['x', 1], w: ['y', 1], s: ['y', -1] };
  const announce = text => { live.textContent = ''; live.textContent = text; };
@@ -363,10 +427,16 @@
   else if (key === 'over' && game) {
    const s = core.summary(game);
    const row = (label, value, cls) => { const r = el('div', 'game-row' + (cls ? ' ' + cls : '')); r.append(el('span', '', label), el('strong', '', value)); return r; };
-   panel.append(el('div', 'game-title' + (s.won ? ' is-won' : ''), s.won ? tx('won') : tx('over')), el('div', 'game-rank', tx('ranks')[s.rank]), row(tx('score'), pad(s.score, 5), 'is-main'), row(tx('best'), pad(Math.max(best, s.score), 5)));
-   if (newBest) panel.append(el('div', 'game-newbest', tx('newBest')));
-   if (s.won && s.landing) panel.append(row(tx('landing'), tx('grade' + s.landing.grade[0].toUpperCase() + s.landing.grade.slice(1)) + ' +' + s.landing.bonus));
-   panel.append(row(tx('gates'), String(s.passed)), row(tx('kills'), String(s.kills)), row(tx('accuracy'), s.accuracy + '%'), row(tx('streak'), '×' + s.maxStreak));
+   // the time (a flight that was finished) or the distance (one that was not), the score and the records; the rank is the time
+   panel.append(el('div', 'game-title' + (s.won ? ' is-won' : ''), s.won ? tx('won') : tx('over')), el('div', 'game-rank', tx('ranks')[s.rank]),
+    s.won ? row(tx('time'), clockT(s.time), 'is-main') : row(tx('distance'), `${kmText(s.dist)} ${tx('km')}`, 'is-main'), row(tx('score'), pad(s.score, 5), 'is-main'),
+    row(tx('best'), pad(Math.max(best, s.score), 5)));
+   if (bestTime) panel.append(row(tx('bestTime'), clockT(bestTime)));
+   if (newTime || newBest) panel.append(el('div', 'game-newbest', newTime ? tx('newTime') : tx('newBest')));
+   const stats = el('div', 'game-stats');
+   if (s.won && s.landing) stats.append(row(tx('landing'), tx('grade' + s.landing.grade[0].toUpperCase() + s.landing.grade.slice(1)) + ' +' + s.landing.bonus), row(tx('timeBonus'), '+' + s.timeBonus));
+   stats.append(row(tx('avgSpeed'), `${s.avg} ${tx('kmh')}`), row(tx('feathers'), String(s.feathers)), row(tx('gates'), String(s.passed)), row(tx('kills'), String(s.kills)), row(tx('accuracy'), s.accuracy + '%'), row(tx('streak'), '×' + s.maxStreak));
+   panel.append(stats);
    const buttons = el('div', 'game-buttons'), again = button(tx('again'), 'is-primary', restart);
    buttons.append(again, button(tx('exit'), '', exit));
    panel.append(buttons);
@@ -390,9 +460,31 @@
   ultLabel.textContent = tx('ult');
   ultBtn.setAttribute('aria-label', tx('ultLabel'));
   rich(captionText, tx('caption')); rich(captionText2, tx('caption2'));
-  lastHud = ''; lastWind = ''; overlayKey = '__repaint__';
+  lastHud = ''; lastWind = ''; lastArsenal = ''; overlayKey = '__repaint__';
   paintMusic();
+  paintArsenal();
   syncOverlay();
+ }
+ /** The weapon slot (empty, the roulette of a box, the weapon that is ready) and the feathers with the upgrade level of the weapons. */
+ function paintArsenal() {
+  if (!game) return;
+  const R = game.roll, name = R ? core.WEAPONS[Math.floor(R.t / ROLL_TICK) % core.WEAPONS.length] : game.weapon, level = core.weaponLevel(game);
+  const step = level >= CFG.maxLevel ? CFG.feathersPerLevel : game.feathers % CFG.feathersPerLevel;
+  const key = [name, R ? 1 : 0, game.feathers, level, game.finale ? 1 : 0, lang(), coarse].join('|');
+  if (key === lastArsenal) return;
+  lastArsenal = key;
+  weaponIcon.dataset.weapon = name || '';
+  weaponName.textContent = name ? weaponWord(name) : tx('empty');
+  weaponBtn.classList.toggle('is-empty', !name);
+  weaponBtn.classList.toggle('is-rolling', !!R);
+  weaponBtn.classList.toggle('is-ready', !!game.weapon);
+  weaponBtn.classList.toggle('is-off', !!game.finale);
+  weaponBtn.setAttribute('aria-label', game.weapon ? `${weaponWord(game.weapon)}. ${tx('weaponLabel')}` : tx('weaponEmptyLabel'));
+  weaponKey.textContent = coarse ? '▶' : 'F';
+  quillCount.textContent = String(game.feathers);
+  quillFill.style.width = Math.round(100 * step / CFG.feathersPerLevel) + '%';
+  [...quillLevels.children].forEach((p, i) => p.classList.toggle('is-on', i < level));
+  quill.setAttribute('title', `${tx('feathers')} ${game.feathers}: ${tx('feathersLabel')}`);
  }
  /** The wind in the score line: the arrow, the speed, the strength. */
  function paintWind() {
@@ -409,40 +501,53 @@
  }
  function paintHud() {
   if (!game) return;
-  const info = core.modeInfo(game), pct = info.len ? Math.round(100 * info.t / info.len) : 0, secs = Math.ceil(info.left);
-  const mult = core.multiplier(game) * MODES[game.mode].score, boosted = game.boost > .6, next = core.nextGate(game);
-  const remaining = Math.max(0, Math.ceil(CFG.missionTime - game.runTime)), ultFull = game.ult >= 100;
-  const key = [game.score, game.lives, game.streak, boosted, next ? next.n : game.gateCount, lang(), game.mode, Math.round(game.ult), game.finale ? 1 : 0, game.finale ? 0 : remaining, pct, secs, info.next, coarse].join('|');
+  const info = core.modeInfo(game), pct = info.len ? Math.round(100 * info.t / info.len) : 0, left = kmText(info.left);
+  const mult = core.multiplier(game) * MODES[game.mode].score, boosted = game.boost > .6, next = core.nextGate(game), ultFull = game.ult >= 100;
+  const km = kmText(game.dist), secs = Math.floor(game.runTime);
+  const key = [game.score, game.lives, game.streak, boosted, next ? next.n : game.gateCount, lang(), game.mode, Math.round(game.ult), game.finale ? 1 : 0, km, secs, pct, left, info.next, coarse].join('|');
   if (key === lastHud) return;
   lastHud = key;
   hudScoreValue.textContent = pad(game.score, 5);
   hudGate.textContent = next && next.approach ? `${tx('final')} ${next.index}/${CFG.landing.gates}` : `${tx('gates')} ${pad(next ? next.n : game.gateCount, 2)}`;
   hudMult.textContent = `×${mult.toFixed(1)}`;
   hudMult.classList.toggle('is-boost', boosted);
-  hudTime.textContent = game.finale ? 'AUTOLAND' : 'T-' + clock(remaining);
-  hudTime.classList.toggle('is-final', !!game.finale);
+  hudTime.textContent = clock(secs);
+  hudDist.textContent = `${km}/${CFG.distance / 1000} ${tx('km')}`;
+  hudDist.classList.toggle('is-final', !!game.finale);
+  routeFill.style.width = (100 * game.dist / CFG.distance).toFixed(2) + '%';
   [...hudLives.children].forEach((dot, i) => dot.classList.toggle('is-off', i >= game.lives));
   ultFill.style.width = Math.round(game.ult) + '%';
-  ultBtn.classList.toggle('is-ready', ultFull);
+  ultBtn.classList.toggle('is-ready', ultFull && !game.finale);
+  ultBtn.classList.toggle('is-off', !!game.finale);
   ultKey.textContent = coarse ? '▶' : 'E';
   modesRow.hidden = !!game.finale; landingLabel.hidden = !game.finale;
   for (const name of MODE_ORDER) {
    const c = chips[name], active = game.mode === name && !game.finale;
    c.chip.classList.toggle('is-active', active); c.chip.classList.toggle('is-next', !active && info.next === name);
    c.fill.style.width = active ? pct + '%' : '0%';
-   c.left.textContent = active ? clock(secs) : '';
+   c.left.textContent = active ? `${left} ${tx('km')}` : '';
    if (active) c.chip.setAttribute('aria-current', 'true'); else c.chip.removeAttribute('aria-current');
   }
  }
- // one line of tips at a time: what a mode asks of the pilot (priority 2) is not pushed away by the hints that come while it is up, they wait their turn
- function setTip(text, prio) { tip.textContent = text; tip.hidden = false; tipTimer = 5.2; tipPrio = prio; }
+ // one line of tips at a time: what a mode asks of the pilot (priority 3), then what a weapon does (2), then the hints (1); the less urgent ones wait their turn
+ const TIP_TIME = 5.2;
+ function setTip(item) { tip.textContent = item.text; tip.hidden = false; tipTimer = TIP_TIME; tipPrio = item.prio; tipNow = item; }
+ /** Puts a tip into the queue, before the less urgent ones. A full queue refuses it: the hint comes up again later. */
+ function queueTip(item) {
+  if (tipQueue.some(q => q.id === item.id) || tipQueue.length >= 5) return false;
+  const at = tipQueue.findIndex(q => q.prio < item.prio);
+  if (at < 0) tipQueue.push(item); else tipQueue.splice(at, 0, item);
+  return true;
+ }
  function showTip(id, text, force, prio = 1) {
   if (!force && tipsShown.has(id)) return;
+  const item = { id, text, prio };
+  if (!tip.hidden && tipTimer > 0 && prio <= tipPrio) { if (queueTip(item)) tipsShown.add(id); return; }
+  if (!tip.hidden && tipTimer > TIP_TIME - 1.5 && tipNow) queueTip(tipNow);      // one that has only just come up waits and comes back
   tipsShown.add(id);
-  if (!tip.hidden && tipTimer > 0 && prio <= tipPrio) { if (tipQueue.length < 3 && !tipQueue.some(q => q.id === id)) tipQueue.push({ id, text, prio }); return; }
-  setTip(text, prio);
+  setTip(item);
  }
- function nextTip() { tipPrio = 0; const q = tipQueue.shift(); if (q) setTip(q.text, q.prio); else tip.hidden = true; }
+ function nextTip() { tipPrio = 0; tipNow = null; const q = tipQueue.shift(); if (q) setTip(q); else tip.hidden = true; }
 
  // ---- flow
  // How far the aircraft may go and how high or low a gate may be, worked out from the size of the card (world units of the card's camera).
@@ -463,11 +568,11 @@
   mode = 'count'; engaged = true; layer.active = true; pauseReason = ''; newBest = false; goBanner = 0; banner = null; gustInfo = null; seenHazard = false;
   firing = false; away = 0; aimSource = 'pointer'; keyPlay = false; lastAim.x = lastAim.y = 0;
   dwellHeld = 0; dwellText = ''; setDwellBar(false);
-  tipsShown.clear(); tipQueue.length = 0; tipPrio = 0; tip.hidden = true; tipTimer = 0;
-  popups.length = rings.length = sparks.length = beams.length = tracers.length = 0;
-  sprintView = 0; sprintOn = false; lastWind = ''; audioWait = 0; seenBonus = false; host.classList.remove('is-sprint');
+  tipsShown.clear(); tipQueue.length = 0; tipPrio = 0; tipNow = null; tip.hidden = true; tipTimer = 0;
+  popups.length = rings.length = sparks.length = beams.length = tracers.length = shots.length = 0;
+  sprintView = 0; sprintOn = false; lastWind = ''; lastArsenal = ''; audioWait = 0; seenBonus = false; seenBox = false; seenFeather = false; newTime = false; host.classList.remove('is-sprint');
   root.classList.add('is-game'); host.classList.add('is-game');
-  hud.hidden = false; caption.hidden = false; bar.hidden = false; toggle.hidden = false; musicBtn.hidden = !audio.supported;
+  hud.hidden = false; route.hidden = false; caption.hidden = false; bar.hidden = false; toggle.hidden = false; musicBtn.hidden = !audio.supported;
   paintStatic();
   try { host.focus({ preventScroll: true }); } catch { /* old browsers */ }
   announce(tx('liveStart'));
@@ -477,11 +582,11 @@
  function restart() { mode = 'demo'; game = null; start(); }
  function exit() {
   if (mode === 'demo') return;
-  mode = 'demo'; engaged = false; game = null; keys.clear(); firing = false; lmbDown = false; tipQueue.length = 0; tipPrio = 0;
+  mode = 'demo'; engaged = false; game = null; keys.clear(); firing = false; lmbDown = false; tipQueue.length = 0; tipPrio = 0; tipNow = null; tipTimer = 0;
   dwellHeld = 0; dwellText = ''; dwellLock = hovering; setDwellBar(false);       // the pointer is still on the card: the next game needs a new visit
-  popups.length = rings.length = sparks.length = beams.length = tracers.length = 0;
+  popups.length = rings.length = sparks.length = beams.length = tracers.length = shots.length = 0;
   root.classList.remove('is-game'); host.classList.remove('is-game', 'is-hit', 'is-narrow', 'is-sprint');
-  hud.hidden = true; caption.hidden = true; bar.hidden = true; tip.hidden = true; toggle.hidden = true; musicBtn.hidden = true; sprintView = 0; sprintOn = false;
+  hud.hidden = true; route.hidden = true; caption.hidden = true; bar.hidden = true; tip.hidden = true; toggle.hidden = true; musicBtn.hidden = true; sprintView = 0; sprintOn = false;
   audio.stop();
   showCentreMark();
   paintStatic();
@@ -512,6 +617,19 @@
   handle(core.drain(game));
   return n;
  }
+ /** The weapon of the slot. */
+ function useWeapon() {
+  if (!game || mode !== 'run') return null;
+  const name = core.useWeapon(game);
+  handle(core.drain(game));
+  paintArsenal();
+  return name;
+ }
+ /** The right mouse button: the weapon of the box, or the ULT when the slot is empty (not while a roulette turns: that weapon is on its way). */
+ function useOrUlt() {
+  if (!game || mode !== 'run') return;
+  if (game.weapon) useWeapon(); else if (!game.roll) fireUlt();
+ }
  /** The gun of the AUTO mode: a shot at the pointer. */
  function shootAtPointer() {
   if (!game || mode !== 'run' || game.mode !== 'AUTO') return null;
@@ -521,34 +639,63 @@
  }
  toggle.addEventListener('click', () => { if (mode !== 'demo') exit(); });
  musicBtn.addEventListener('click', ev => { ev.stopPropagation(); toggleMusic(); try { host.focus({ preventScroll: true }); } catch { /* old browsers */ } });      // the arrow keys and M go on working
- ultBtn.addEventListener('click', ev => { ev.stopPropagation(); fireUlt(); });
+ // the ULT and the weapon buttons act on the touch itself: a second finger works while the first one steers (a browser makes no click from a second finger);
+ // the click that may follow a touch is ignored
+ let touchedAt = -1e9;
+ for (const [button, act] of [[ultBtn, () => fireUlt()], [weaponBtn, () => useWeapon()]]) {
+  button.addEventListener('pointerdown', ev => { if (ev.pointerType === 'touch') { touchedAt = performance.now(); act(); } });
+  button.addEventListener('click', ev => { ev.stopPropagation(); if (performance.now() - touchedAt > 700) act(); try { host.focus({ preventScroll: true }); } catch { /* old browsers */ } });      // the keys go on working on the card
+ }
  // the first click, key or touch of the page is the moment a browser lets the music start
  for (const type of ['pointerdown', 'pointerup', 'keydown', 'touchend', 'click']) document.addEventListener(type, () => audio.unlock(), true);
 
- const keyName = ev => ev.key.toLowerCase();
- host.addEventListener('keydown', ev => {
+ // the letter keys are read by their place on the keyboard, so they work with a Russian or a Ukrainian layout too
+ const keyName = ev => (/^Key[A-Z]$/.test(ev.code || '') ? ev.code.slice(3) : ev.key).toLowerCase();
+ // Space is the one key for whatever the pilot has: the weapon of the box first, else the ULT when it is charged and an aircraft is ahead. With neither it stays the
+ // boost (in AUTO the gun). A press that has used something does not boost while it is held.
+ let spaceUsed = false;
+ function activate() {
+  if (!game || mode !== 'run' || game.roll) return false;
+  if (game.weapon) { useWeapon(); return true; }
+  if (game.ult >= 100 && game.ultCool <= 0 && !game.finale && game.enemies.some(e => e.state === 'ahead' && e.z > .15)) { fireUlt(); return true; }
+  return false;
+ }
+ const releaseBoost = () => { state.boosted = false; host.classList.remove('is-boosting'); };
+ function onKey(ev) {
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;      // the shortcuts of the browser
   const k = keyName(ev);
+  if (k === ' ' && (ev.target === ultBtn || ev.target === weaponBtn)) return;      // Space on one of those buttons presses that button (once)
   if (k === 'escape' && mode !== 'demo') { ev.preventDefault(); exit(); return; }
   if (mode === 'demo') { if (k === 'enter' && !ev.repeat) { ev.preventDefault(); start(); keyPlay = true; } return; }
   if (AXES[k]) { keys.add(k); keyPlay = true; ev.preventDefault(); if (mode === 'paused' && pauseReason !== 'manual') resume(); return; }
+  if (k === ' ' && !ev.repeat) spaceUsed = false;      // a new press (the release of the last one may have been lost: the window was left)
+  if (k === ' ' && spaceUsed) { ev.preventDefault(); releaseBoost(); }      // still held after it used something
   if (ev.repeat) return;
   if (k === 'm') { toggleMusic(); return; }
   if (k === 'e' || k === 'q') { fireUlt(); return; }
+  if (k === 'f') { useWeapon(); return; }
   if (k === 'p' && isRunning()) { pause('manual'); return; }
   if (k === ' ' || k === 'enter') {
    if (mode === 'paused') { ev.preventDefault(); resume(); }
    else if (mode === 'over') { ev.preventDefault(); restart(); }
-   else if (k === ' ' && game && game.mode === 'AUTO') shootAtPointer();
+   else if (k === ' ') { ev.preventDefault(); if (activate()) { spaceUsed = true; releaseBoost(); } else if (game && game.mode === 'AUTO') shootAtPointer(); }
   }
- });
- host.addEventListener('keyup', ev => keys.delete(keyName(ev)));
+ }
+ const onKeyUp = ev => { const k = keyName(ev); keys.delete(k); if (k === ' ') spaceUsed = false; };
+ host.addEventListener('keydown', onKey);
+ host.addEventListener('keyup', onKeyUp);
+ // a key pressed while the focus is elsewhere on the page (after a click beside the card) still reaches a running game, unless it is meant for a button or a field
+ const forThePage = t => !!(t.isContentEditable || (t.closest && t.closest('a,button,input,select,textarea,summary,[contenteditable]')));
+ document.addEventListener('keydown', ev => { if (ev.target && isRunning() && !host.contains(ev.target) && !forThePage(ev.target)) onKey(ev); });
+ document.addEventListener('keyup', ev => { if (ev.target && !host.contains(ev.target)) onKeyUp(ev); });
  host.addEventListener('blur', () => keys.clear());
  // where the pointer is: the aircraft follows it only while it is on the card (a stale position from an earlier visit must not steer);
  // holding it on the card for DWELL seconds starts the game
  host.addEventListener('pointerdown', ev => {
   lastPointer = ev.pointerType; inside = true; hovering = true; aimSource = 'pointer'; keyPlay = false;
   if (!engaged) return;                           // before the game the demo boosts and the dwell goes on
-  if (ev.button === 2) { fireUlt(); return; }    // the right button fires the ULT (the demo ignores it and keeps the context menu off)
+  try { host.focus({ preventScroll: true }); } catch { /* old browsers */ }      // the demo keeps a click from moving the focus: the keys come back to the card
+  if (ev.button === 2) { useOrUlt(); return; }    // the right button uses the weapon, or fires the ULT (the demo ignores it and keeps the context menu off)
   if (ev.button === 0 && ev.pointerType !== 'touch') lmbDown = true;
   if (ev.button === 0 || ev.pointerType === 'touch') { firing = true; shootAtPointer(); }
  });
@@ -674,7 +821,7 @@
    else if (e.type === 'level') setBanner(`${tx('level')} ${e.level}`, 1.8);
    else if (e.type === 'gust') { gustInfo = e.stage === 'end' ? null : { dirX: e.dirX, dirY: e.dirY, stage: e.stage }; if (e.stage === 'warn') showTip('gust', tx('tipGust')); }
    else if (e.type === 'enemy') showTip('enemy', tx('tipEnemy'));
-   else if (e.type === 'ultReady') { popups.push({ text: tx('ultReady'), x: 0, y: -1, z: 0, age: 0, life: 1.6, color: '#fff2b0' }); showTip('ult', tx('tipUlt'), true); }
+   else if (e.type === 'ultReady') { const key = game.weapon || game.roll ? 'E' : tx('spaceKey'); popups.push({ text: coarse ? tx('ultReady') : `${tx('ultReady')} · ${key}`, x: 0, y: -1, z: 0, age: 0, life: 1.6, color: '#fff2b0' }); showTip('ult', tx('tipUlt'), true); }
    else if (e.type === 'ultDenied') { popups.push({ text: tx('noTargets'), x: 0, y: -1, z: 0, age: 0, life: 1.1, color: '#e07b4f' }); ultBtn.classList.remove('is-denied'); void ultBtn.offsetWidth; ultBtn.classList.add('is-denied'); }
    else if (e.type === 'ult') {
     for (const t of e.targets) {
@@ -695,6 +842,35 @@
     popups.push({ text: `${tx('bonus')} +${e.points}`, x: e.x, y: e.y, z: 0, age: 0, life: 1.1, color: '#9ff0dc' });
     rings.push({ x: e.x, y: e.y, r: e.r, age: 0, life: .45, color: '#8fe3d0' });
     burst(e.x, e.y, 10, 90);
+   } else if (e.type === 'box') {
+    popups.push({ text: `${e.full ? tx('slotFull') : tx('box')} +${e.points}`, x: e.x, y: e.y, z: 0, age: 0, life: 1.1, color: '#ffc45a' });
+    rings.push({ x: e.x, y: e.y, r: CFG.boxR, age: 0, life: .45, color: '#ffc45a' });
+    burst(e.x, e.y, 12, 110);
+   } else if (e.type === 'weapon') {
+    setBanner(withSpace(weaponWord(e.weapon)), 1.8);
+    showTip('use', tx('tipUse'), false, 2);
+    showTip('weapon-' + e.weapon, tx('tip' + e.weapon[0].toUpperCase() + e.weapon.slice(1)), false, 2);
+   } else if (e.type === 'use') {
+    setBanner(`${weaponWord(e.weapon)}!`, 1.2);
+    burst(game.plane.x, game.plane.y, 18, 140);
+    rings.push({ x: game.plane.x, y: game.plane.y, r: CFG.planeR * 1.4, age: 0, life: .5, color: FX_COLOR[e.weapon] || '#fff2b0' });
+    if (!reduced) cam.kick = (Math.random() < .5 ? -1 : 1) * .02;
+   } else if (e.type === 'weaponDenied') { popups.push({ text: tx('noTargets'), x: 0, y: -1, z: 0, age: 0, life: 1.1, color: '#e07b4f' }); weaponBtn.classList.remove('is-denied'); void weaponBtn.offsetWidth; weaponBtn.classList.add('is-denied'); }
+   else if (e.type === 'upgrade') {
+    setBanner(e.max ? tx('weaponMax') : tx('weaponUp').replace('{n}', String(e.level)), 1.8);
+    rings.push({ x: game.plane.x, y: game.plane.y, r: CFG.planeR * 1.8, age: 0, life: .7, color: '#e6fbff' });
+    burst(game.plane.x, game.plane.y, 22, 130);
+   } else if (e.type === 'feather') burst(e.x, e.y, 5, 60);
+   else if (e.type === 'destroy') {
+    popups.push({ text: `${e.kind === 'enemy' ? tx('shot') : tx('smashed')} +${e.points}`, x: e.x, y: e.y, z: e.z, age: 0, life: 1.2, color: '#fff2b0' });
+    rings.push({ x: e.x, y: e.y, r: e.r * 1.5, age: 0, life: .5, color: '#fff2b0' });
+    burst(e.x, e.y, 14, 130, e.z);
+   } else if (e.type === 'repel') {
+    popups.push({ text: tx('repelled'), x: e.x, y: e.y, z: e.z, age: 0, life: .9, color: '#a9e8ff' });
+    rings.push({ x: e.x, y: e.y, r: .7, age: 0, life: .45, color: '#8fe3ff' });
+   } else if (e.type === 'gunShot') { shotSide = -shotSide; shots.push({ x: e.x, y: e.y, z: e.z, side: shotSide, age: 0, life: .09 }); }
+   else if (e.type === 'forgiven') {
+    popups.push({ text: tx('forgiven'), x: e.x, y: e.y, z: 0, age: 0, life: 1.1, color: '#c9d49a' });
    } else if (e.type === 'sprint') {
     if (e.stage === 'warn') { setBanner(tx('sprintWarn'), 1.5); showTip('sprint', tx('tipSprint'), false, 2); }
     else if (e.stage === 'start') { setBanner(`${tx('sprint')} ×${e.peak.toFixed(1)}`, 1.5); cam.kick = (Math.random() < .5 ? -1 : 1) * .025; }
@@ -703,16 +879,18 @@
    else if (e.type === 'mode') {
     firing = false;
     if (e.from) setBanner(`${tx('modeTo')} ${e.to}`, 1.8);
-    if (e.to !== 'AUTOLAND') showTip('mode-' + e.to, tx('tip' + e.to), false, 2);
-    if (e.handover) showTip('handover', tx('tipHandover'), false, 2);
-   } else if (e.type === 'finale') { setBanner(tx('finale'), 3.2); showTip('finale', tx('tipFinale'), true, 2); }
+    if (e.to !== 'AUTOLAND') showTip('mode-' + e.to, tx('tip' + e.to), false, 3);
+    if (e.handover) showTip('handover', tx('tipHandover'), false, 3);
+   } else if (e.type === 'finale') { setBanner(tx('finale'), 3.2); showTip('finale', tx('tipFinale'), true, 3); }
    else if (e.type === 'touchdown') popups.push({ text: `${tx('touchdown')} · ${tx('grade' + e.grade[0].toUpperCase() + e.grade.slice(1))}`, x: 0, y: -.8, z: 0, age: 0, life: 2.2, color: '#fff2b0' });
    else if (e.type === 'over' || e.type === 'won') {
     mode = 'over'; firing = false;
     newBest = e.summary.score > best && e.summary.score > 0;
     if (newBest) { best = e.summary.score; if (store) core.writeBest(store, best); }
-    keys.clear(); gustInfo = null; tip.hidden = true; audio.stop();
-    announce((e.type === 'won' ? tx('liveWon') : tx('liveOver')).replace('{score}', e.summary.score).replace('{gates}', e.summary.passed));
+    newTime = e.type === 'won' && (!bestTime || e.summary.time < bestTime);
+    if (newTime) { bestTime = e.summary.time; if (store) core.writeTime(store, bestTime); }
+    keys.clear(); gustInfo = null; tip.hidden = true; tipQueue.length = 0; tipTimer = 0; tipNow = null; audio.stop();
+    announce((e.type === 'won' ? tx('liveWon') : tx('liveOver')).replace('{score}', e.summary.score).replace('{gates}', e.summary.passed).replace('{time}', clockT(e.summary.time)));
    }
   }
  }
@@ -736,10 +914,13 @@
   handle(core.drain(game));
   if (!seenHazard && (game.obstacles.length || game.enemies.length)) { seenHazard = true; showTip('hazard', tx('tipHazard')); }
   if (!seenBonus && game.bonuses.some(b => b.state === 'ahead' && b.z < 7.5)) { seenBonus = true; showTip('bonus', tx('tipBonus')); }
+  if (!seenBox && game.boxes.some(b => b.state === 'ahead' && b.z < 7.5)) { seenBox = true; showTip('box', tx('tipBox')); }
+  if (!seenFeather && game.plumes.some(f => f.state === 'ahead' && f.z < 7.5)) { seenFeather = true; showTip('feather', tx('tipFeather')); }
+  if (game.runTime > 1.2 && mode === 'run') showTip('goal', tx('tipGoal'));
   if (game.runTime > 3 && mode === 'run') showTip('wind', tx('tipWind'));
-  // the afterburner: how much of it is on the card (the speed lines, the lean-in of the camera, the glow at the edges, the speed readout) and in the music
-  const sp = core.sprintInfo(game);
-  sprintView += (sp.amt - sprintView) * (1 - Math.exp(-dt * 6));
+  // the afterburner and the speed weapons: how much of the speed is on the card (the speed lines, the lean-in of the camera, the glow at the edges, the speed readout) and in the music
+  const sp = core.sprintInfo(game), rush = game.fx.turbo.t > 0 ? Math.min(1, game.fx.turbo.t / .35) : game.fx.mask.t > 0 ? .6 : 0;
+  sprintView += (Math.max(sp.amt, rush) - sprintView) * (1 - Math.exp(-dt * 6));
   if (sprintView < .004) sprintView = 0;
   const hot = sprintView > .12;
   if (hot !== sprintOn) { sprintOn = hot; host.classList.toggle('is-sprint', hot); }
@@ -754,13 +935,14 @@
   if (goBanner > 0) goBanner -= dt;
   if (banner && (banner.age += dt) >= banner.life) banner = null;
   if (tipTimer > 0 && (tipTimer -= dt) <= 0) nextTip();
-  for (const list of [popups, rings, sparks, beams, tracers]) {
+  for (const list of [popups, rings, sparks, beams, tracers, shots]) {
    for (const item of list) item.age += dt;
    for (let i = list.length - 1; i >= 0; i--) if (list[i].age >= list[i].life) list.splice(i, 1);
   }
   for (const s of sparks) { s.dx += s.vx * dt; s.dy += s.vy * dt; }
   syncOverlay();
   paintHud();
+  paintArsenal();
   paintWind();
   showCentreMark();
   host.classList.toggle('is-narrow', state.w < 440);     // a narrow card has no room for the readouts next to the score bar
@@ -779,7 +961,8 @@
   const gm = worldToPixels(gate.x, gate.y, gate.z), alpha = fade(gate.z);
   if (alpha <= .01) return;
   let col = gate.approach ? '#d6f08a' : '#9fae5c', width = 1.4, glow = 'rgba(160,175,90,.15)';
-  if (gate.state === 'missed') { col = '#e07b4f'; width = 1.8; glow = 'rgba(224,123,79,.5)'; }
+  if (gate.state === 'missed' && gate.quality === 'forgiven') { col = '#8d9a62'; }
+  else if (gate.state === 'missed') { col = '#e07b4f'; width = 1.8; glow = 'rgba(224,123,79,.5)'; }
   else if (gate.state === 'passed') { col = gate.quality === 'perfect' ? '#fff2b0' : '#c7d070'; width = 1.8; glow = 'rgba(240,225,120,.5)'; }
   else if (isNext) { col = gate.approach ? '#eaffb0' : '#f4e58a'; width = 2.2 + Math.max(0, 1 - gate.z / 3) * .9; glow = 'rgba(233,213,107,.65)'; }
   ctx.save();
@@ -861,6 +1044,69 @@
   ctx.moveTo(gm.x - r, gm.y); ctx.lineTo(gm.x + r, gm.y); ctx.moveTo(gm.x, gm.y - r * .83); ctx.lineTo(gm.x, gm.y + r * .83); ctx.stroke();
   ctx.restore();
  }
+ /** A weapon box: an amber crate with braces and a "?", turning a little. */
+ function drawBox(ctx, b) {
+  const gm = worldToPixels(b.x, b.y, b.z), alpha = fade(b.z);
+  if (alpha <= .01) return;
+  const r = b.r * gm.s * .72, turn = reduced ? 0 : Math.sin(game.time * 2.4 + b.id) * .18;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(gm.x, gm.y); ctx.rotate(turn);
+  ctx.shadowColor = 'rgba(255,196,90,.75)'; ctx.shadowBlur = 12; ctx.fillStyle = 'rgba(196,122,40,.42)'; ctx.strokeStyle = '#ffc45a'; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(-r, -r); ctx.lineTo(r, -r); ctx.lineTo(r, r); ctx.lineTo(-r, r); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.shadowBlur = 0; ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,214,140,.5)';
+  ctx.beginPath(); ctx.moveTo(-r, -r); ctx.lineTo(r, r); ctx.moveTo(r, -r); ctx.lineTo(-r, r); ctx.stroke();
+  ctx.font = `700 ${Math.max(9, r * 1.45)}px ${MONO}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff3cc';
+  ctx.fillText('?', 0, r * .06);
+  ctx.restore();
+ }
+ /** A feather: pale, with its quill, swaying. */
+ function drawFeather(ctx, f) {
+  const gm = worldToPixels(f.x, f.y, f.z), alpha = fade(f.z);
+  if (alpha <= .01) return;
+  const r = f.r * gm.s * .8, sway = (reduced ? 0 : Math.sin(game.time * 3 + f.id) * .25) + .6;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(gm.x, gm.y); ctx.rotate(sway);
+  ctx.shadowColor = 'rgba(210,244,255,.85)'; ctx.shadowBlur = 9; ctx.fillStyle = 'rgba(226,247,255,.85)';
+  ctx.beginPath(); ctx.moveTo(0, -r * 1.3); ctx.quadraticCurveTo(r * .9, -r * .35, r * .1, r * .75); ctx.quadraticCurveTo(-r * .78, -r * .15, 0, -r * 1.3); ctx.fill();
+  ctx.shadowBlur = 0; ctx.strokeStyle = '#7fb9cc'; ctx.lineWidth = Math.max(1, r * .1);
+  ctx.beginPath(); ctx.moveTo(-r * .02, -r * 1.1); ctx.lineTo(r * .12, r * 1.25); ctx.stroke();
+  ctx.restore();
+ }
+ /** A homing missile: a bright head with its trail, flying away from the aircraft. */
+ function drawMissile(ctx, m) {
+  if (m.delay > 0) return;
+  const head = worldToPixels(m.x, m.y, m.z), tail = worldToPixels(m.x, m.y, Math.max(0, m.z - 1.1));
+  ctx.save(); ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(255,160,80,.6)'; ctx.lineWidth = Math.max(1.5, head.s * .05); ctx.beginPath(); ctx.moveTo(tail.x, tail.y); ctx.lineTo(head.x, head.y); ctx.stroke();
+  ctx.fillStyle = '#fff2b0'; ctx.shadowColor = 'rgba(255,170,80,.95)'; ctx.shadowBlur = 10; ctx.beginPath(); ctx.arc(head.x, head.y, Math.max(2, head.s * .07), 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+ }
+ /** The invulnerability: a golden aura of turning arcs about the aircraft; it blinks before it runs out. */
+ function drawAura(ctx, F) {
+  const me = worldToPixels(game.plane.x, game.plane.y, 0), R = CFG.planeR * me.s * 1.9, t = game.time, blink = F.t < 1.2 ? .55 + .45 * Math.sin(t * 22) : 1;
+  ctx.save(); ctx.globalAlpha = .9 * blink;
+  ctx.fillStyle = 'rgba(255,214,96,.13)'; ctx.beginPath(); ctx.arc(me.x, me.y, R, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#ffe27a'; ctx.shadowColor = 'rgba(255,208,80,.95)'; ctx.shadowBlur = 16; ctx.lineWidth = 2.4;
+  for (let i = 0; i < 3; i++) { const a = (reduced ? 0 : t * 5) + i * Math.PI * 2 / 3; ctx.beginPath(); ctx.arc(me.x, me.y, R * (1 + (reduced ? 0 : .08 * Math.sin(t * 9 + i))), a, a + 1.35); ctx.stroke(); }
+  ctx.restore();
+ }
+ /** The repelling barrier: a turning hexagon of the radius at which it pushes things away. */
+ function drawBarrier(ctx, F) {
+  const me = worldToPixels(game.plane.x, game.plane.y, 0), R = F.r * me.s * .86, t = game.time, blink = F.t < 1.4 ? .5 + .5 * Math.sin(t * 20) : 1, turn = reduced ? 0 : t * .7;
+  ctx.save(); ctx.globalAlpha = .72 * blink;
+  ctx.beginPath();
+  for (let i = 0; i <= 6; i++) { const a = i * Math.PI / 3 + turn, x = me.x + Math.cos(a) * R, y = me.y + Math.sin(a) * R * .83; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
+  ctx.fillStyle = 'rgba(110,196,255,.07)'; ctx.fill();
+  ctx.strokeStyle = '#8fe3ff'; ctx.shadowColor = 'rgba(120,210,255,.9)'; ctx.shadowBlur = 14; ctx.lineWidth = 2; ctx.setLineDash([14, 7]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.restore();
+ }
+ /** The weapons that work now: a thin arc around the mark of the aircraft for each, as long as the time it has left. */
+ function drawTimers(ctx) {
+  const list = core.effectsOf(game);
+  if (!list.length) return;
+  const me = worldToPixels(game.plane.x, game.plane.y, 0);
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineWidth = 2.4;
+  list.forEach((f, i) => { ctx.strokeStyle = FX_COLOR[f.name]; ctx.beginPath(); ctx.arc(me.x, me.y, 19 + i * 4.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * f.frac); ctx.stroke(); });
+  ctx.restore();
+ }
  /** The wind as streaks that drift across the card the way it blows: more of them, longer and faster when it is stronger, and brighter in a gust. */
  function drawWind(ctx) {
   const W = core.windInfo(game);
@@ -897,9 +1143,14 @@
   for (const o of game.obstacles) if (o.z > .15) things.push([o.z, 'pylon', o]);
   for (const b of game.bonuses) if (b.z > .15 && b.state === 'ahead') things.push([b.z, 'bonus', b]);
   for (const e of game.enemies) if (e.z > .15 && e.state === 'ahead') things.push([e.z, 'enemy', e]);
+  for (const b of game.boxes) if (b.z > .15 && b.state === 'ahead') things.push([b.z, 'box', b]);
+  for (const f of game.plumes) if (f.z > .15 && f.state === 'ahead') things.push([f.z, 'feather', f]);
+  for (const m of game.missiles) if (m.z > .15) things.push([m.z, 'missile', m]);
   things.sort((a, b) => b[0] - a[0]);
   const next = core.nextGate(game), ready = game.ult >= 100;
-  for (const [, kind, obj] of things) { if (kind === 'gate') drawGate(ctx, obj, obj === next); else if (kind === 'pylon') drawPylon(ctx, obj); else if (kind === 'bonus') drawBonus(ctx, obj); else drawEnemy(ctx, obj, ready || underPointer(obj)); }
+  const paint = { gate: obj => drawGate(ctx, obj, obj === next), pylon: obj => drawPylon(ctx, obj), bonus: obj => drawBonus(ctx, obj), enemy: obj => drawEnemy(ctx, obj, ready || underPointer(obj)),
+   box: obj => drawBox(ctx, obj), feather: obj => drawFeather(ctx, obj), missile: obj => drawMissile(ctx, obj) };
+  for (const [, kind, obj] of things) paint[kind](obj);
  }
  function drawFront(ctx) {
   if (!game) return;
@@ -907,6 +1158,20 @@
   for (const b of game.bonuses) if (b.z <= .15 && b.state === 'ahead') drawBonus(ctx, b);
   for (const o of game.obstacles) if (o.z <= .15) drawPylon(ctx, o);
   for (const e of game.enemies) if (e.z <= .15 && e.state === 'ahead') drawEnemy(ctx, e, false);
+  for (const b of game.boxes) if (b.z <= .15 && b.state === 'ahead') drawBox(ctx, b);
+  for (const f of game.plumes) if (f.z <= .15 && f.state === 'ahead') drawFeather(ctx, f);
+  for (const m of game.missiles) if (m.z <= .15) drawMissile(ctx, m);
+  // the weapons that work: the aura, the barrier, the tracers of the machine gun (from both wings in turn) and the arcs of their time
+  if (mode !== 'over') {
+   if (game.fx.barrier.t > 0) drawBarrier(ctx, game.fx.barrier);
+   if (game.fx.mask.t > 0) drawAura(ctx, game.fx.mask);
+   for (const s of shots) {
+    const from = worldToPixels(game.plane.x + s.side * .3, game.plane.y, .3), to = worldToPixels(s.x, s.y, s.z), k = s.age / s.life;
+    ctx.save(); ctx.globalAlpha = 1 - k * .7; ctx.strokeStyle = '#ffe9a0'; ctx.lineWidth = 1.5; ctx.shadowColor = 'rgba(255,225,130,.9)'; ctx.shadowBlur = 8; ctx.setLineDash([9, 6]);
+    ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+   }
+   drawTimers(ctx);
+  }
   for (const r of rings) {
    const gm = worldToPixels(r.x, r.y, 0), k = r.age / r.life;
    ctx.save(); ctx.globalAlpha = (1 - k) * .8; ctx.strokeStyle = r.color; ctx.lineWidth = 2.2 * (1 - k) + .6;
@@ -969,7 +1234,7 @@
    ringPath(ctx, a, next.r, 40); ctx.stroke(); ctx.shadowBlur = 0;
    ctx.setLineDash([2, 3]); ctx.lineWidth = 1; ctx.strokeStyle = `rgba(255,242,176,${.4 * k})`; ringPath(ctx, a, next.r * CFG.perfect, 24); ctx.stroke();
    ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(a.x - 4, a.y); ctx.lineTo(a.x + 4, a.y); ctx.moveTo(a.x, a.y - 4); ctx.lineTo(a.x, a.y + 4); ctx.stroke();
-   if (!lined && (M === 'MANUAL' || M === 'GUIDED' || M === 'CRUISE')) { ctx.setLineDash([3, 6]); ctx.strokeStyle = 'rgba(244,229,138,.3)'; ctx.beginPath(); ctx.moveTo(me.x, me.y); ctx.lineTo(a.x, a.y); ctx.stroke(); }
+   if (!lined && (M === 'FBWA' || M === 'GUIDED' || M === 'CRUISE')) { ctx.setLineDash([3, 6]); ctx.strokeStyle = 'rgba(244,229,138,.3)'; ctx.beginPath(); ctx.moveTo(me.x, me.y); ctx.lineTo(a.x, a.y); ctx.stroke(); }
    ctx.restore();
   }
   if (M === 'GUIDED' || M === 'CRUISE') {
@@ -1020,9 +1285,23 @@
   }
   ctx.restore();
  }
+ /** Where a weapon box and the feathers will cross the plane of the aircraft: a dashed amber square for a box, a small pale diamond for a feather. */
+ function drawPickups(ctx) {
+  const speed = core.speedOf(game), reach = 3.6;
+  for (const list of [game.boxes, game.plumes]) for (const p of list) {
+   if (p.state !== 'ahead' || p.z <= 0 || p.z > reach) continue;
+   const push = game.wind.sx * CFG.ringWind, x = bound(p.x + push * p.z / speed, -game.fieldX, game.fieldX), gm = worldToPixels(x, p.y, 0), k = bound(1 - p.z / reach, 0, 1), box = p.kind === 'box';
+   const r = (box ? p.r + CFG.boxReach : (p.r + CFG.featherReach) * .45) * gm.s;
+   ctx.save(); ctx.globalAlpha = .25 + .6 * k; ctx.lineWidth = 1.2; ctx.strokeStyle = box ? '#ffc45a' : '#cfeffd'; ctx.setLineDash(box ? [5, 5] : [3, 3]);
+   ctx.beginPath();
+   if (box) { ctx.moveTo(gm.x - r, gm.y - r * .83); ctx.lineTo(gm.x + r, gm.y - r * .83); ctx.lineTo(gm.x + r, gm.y + r * .83); ctx.lineTo(gm.x - r, gm.y + r * .83); }
+   else { ctx.moveTo(gm.x, gm.y - r); ctx.lineTo(gm.x + r, gm.y); ctx.lineTo(gm.x, gm.y + r); ctx.lineTo(gm.x - r, gm.y); }
+   ctx.closePath(); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  }
+ }
  function drawOverlay(ctx) {
   if (!game || !engaged) return;
-  if (mode !== 'over') { drawFootprints(ctx); drawAim(ctx); drawSight(ctx); }
+  if (mode !== 'over') { drawFootprints(ctx); drawPickups(ctx); drawAim(ctx); drawSight(ctx); }
   drawPopups(ctx);
  }
  // the demo shows this text in the middle of the card instead of its own; while nothing special happens the mark is hidden
@@ -1032,6 +1311,8 @@
   if (mode === 'count') return tx('ready');
   if (banner) return banner.text;
   if (gustInfo) { const arrow = arrowOf(gustInfo.dirX, gustInfo.dirY); return `${tx('gust')} ${gustInfo.stage === 'warn' ? arrow : arrow + arrow}`; }
+  const working = game ? core.effectsOf(game) : [];
+  if (working.length) return working.map(f => `${weaponWord(f.name)} ${f.left.toFixed(1)}`).join(' · ');      // the weapons that burn, and the seconds they have left
   if (game && sprintView > .35 && game.sprint.phase === 'burn') return `${tx('sprint')} ×${game.sprint.mul.toFixed(1)}`;      // while the afterburner burns the middle of the card says so
   return null;
  }
@@ -1045,11 +1326,13 @@
   active: false, plane, rollSign: -1, steer, update, drawBack, drawFront, status, cameraBegin, cameraEnd, cameraOwnsHorizon: true,
   get engaged() { return engaged; }, get touchBlocksBoost() { return engaged; }, get horizonShift() { return state.h * (VP - .5); },
   get sprint() { return engaged ? sprintView : 0; },                      // 0..1: how much of the afterburner is on (the demo shows it in the speed readout, the trail and the propeller)
+  get airspeed() { return engaged && game && mode !== 'over' ? core.airspeed(game) : null; },    // km/h: the speed that covers the route (the demo shows it while the game runs)
+  get speedTop() { return engaged ? 520 : 0; },                            // the top of the demo's speed rail while the game runs
   get music() { return audio; }, toggleMusic,
   onView(visible) { if (!visible) pause('view'); },
   // for tests and for the curious: the running game and the way in and out
   get game() { return game; }, get mode() { return mode; }, get camera() { return cam; }, get dwell() { return dwellHeld; }, get hovering() { return hovering; },
-  start, exit, pause, resume, fireUlt, shoot: shootAtPointer, worldToPixels, pointerAt
+  start, exit, pause, resume, fireUlt, useWeapon, shoot: shootAtPointer, worldToPixels, pointerAt
  };
  paintStatic();
 })();

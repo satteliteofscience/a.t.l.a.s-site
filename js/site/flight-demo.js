@@ -206,7 +206,8 @@
     // A visually suggestive, not aerodynamically accurate flight model.
     const burn=(hooks.layer&&hooks.layer.sprint)||0;      // the game's afterburner sprint (0..1) raises the speed readout and the throttle like the boost
     const speedAim=Math.max(state.boosted?307:148,148+159*burn);
-    state.speed=mix(state.speed,speedAim,1-Math.exp(-dt*(state.boosted||burn>.3?1.05:.26)));
+    const flown=(hooks.layer&&hooks.layer.airspeed)||0;      // while the game runs the readout is the speed that covers its route
+    state.speed=mix(state.speed,flown||speedAim,1-Math.exp(-dt*(flown?3:state.boosted||burn>.3?1.05:.26)));
     state.throttle=mix(state.throttle,Math.max(state.boosted?100:40,40+60*burn),1-Math.exp(-dt*(state.boosted||burn>.3?3.5:2.2)));
     const rollSign=hooks.layer&&hooks.layer.engaged?hooks.layer.rollSign:1;     // in the game a right bank is a negative roll of the model
     const rate=9.81*Math.tan(bound(state.roll*rollSign,-68,68)*deg)/(state.speed/3.6)*180/Math.PI;
@@ -220,7 +221,7 @@
     ui.yaw.textContent=`${state.heading.toFixed(1).padStart(5,'0')}°`;
     ui.speed.textContent=Math.round(state.speed);
     ui.throttle.textContent=`${Math.round(state.throttle)}%`;
-    ui.speedbar.style.height=`${bound((state.speed-90)/(310-90)*100,10,100)}%`;
+    ui.speedbar.style.height=`${bound((state.speed-90)/(((lay&&lay.speedTop)||310)-90)*100,10,100)}%`;
     const gameText=lay&&lay.status?lay.status():null;
     ui.status.textContent=gameText||(window.AtlasI18n?.t(state.boosted?'BOOST ACTIVE':state.hovered?'FLIGHT CONTROL':'HOVER TO CONTROL') ?? (state.boosted?'BOOST ACTIVE':state.hovered?'FLIGHT CONTROL':'HOVER TO CONTROL'));
   }

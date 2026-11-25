@@ -1,8 +1,10 @@
 /* Mini-game on the attitude card of the home page: the rules (flight-game-core.js) - the aircraft that follows the pointer in stabilised FBWA flight (bank and pitch
-   limits, level by itself), the wind (steady, turning, gusts, carrying the rings), the afterburner sprints, bonus rings, formations of other aircraft, the plan that
-   changes the flight modes (FBWA, CRUISE, GUIDED, AUTO), pylons, the gun and the ULT, the five-minute mission and the AUTOLAND finale, the chiptune tune as data - the
-   card layer (flight-game.js) in a stub DOM (hold the pointer for seven seconds to start, perspective, the aim ring, camera, wind and afterburner on the card, the music
-   made with a fake Web Audio, tips), the hooks in the demo, the wiring on index.html and the texts in three languages. The card shows synthetic data only. */
+   limits, level by itself), the wind (steady, turning, gusts, carrying the rings), the afterburner sprints, bonus rings, formations of other aircraft, the 20 km route
+   along which the flight modes change (FBWA, CRUISE, GUIDED, AUTO), rings that never stop coming, the time as the goal (a normal run about five minutes, faster is a
+   higher rank), the weapon boxes (roulette, one slot: turbo, machine gun, homing missiles, invulnerability, repelling barrier), the feathers that make the weapons
+   stronger every ten, pylons, the gun and the ULT, the AUTOLAND finale, the chiptune tune as data - the card layer (flight-game.js) in a stub DOM (hold the pointer
+   for seven seconds to start, perspective, the aim ring, camera, wind and afterburner on the card, the weapon slot and its keys, the route bar and the end screen, the
+   music made with a fake Web Audio, tips), the hooks in the demo, the wiring on index.html and the texts in three languages. The card shows synthetic data only. */
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -25,8 +27,28 @@ assert.ok(M.FBWA.gust===1&&M.FBWA.k>M.GUIDED.k&&M.FBWA.lag<M.GUIDED.lag&&M.CRUIS
 }
 assert.ok(M.CRUISE.gust<.5&&M.GUIDED.gust<.5&&M.AUTO.gust<.5&&M.CRUISE.speed<1&&M.FBWA.boost&&M.GUIDED.boost&&!M.CRUISE.boost&&!M.AUTO.boost&&!M.AUTOLAND.boost,'the autopilots take part of the wind, CRUISE is slow, the boost belongs to FBWA and GUIDED');
 assert.ok(M.AUTO.score<M.FBWA.score&&M.GUIDED.score>M.FBWA.score&&M.AUTO.ult>M.FBWA.ult&&M.AUTOLAND.ult===0,'every mode has its price: AUTO pays less and charges the ULT faster, GUIDED pays more');
-assert.deepEqual([...C.ranks],[...C.ranks].sort((a,b)=>a-b),'ranks go up');assert.equal(core.rankOf(0),0);assert.equal(core.rankOf(C.ranks[3]),3);assert.equal(core.rankOf(C.ranks[1]-1),0);
-assert.equal(C.missionTime,300,'the final approach comes after five minutes');
+// the goal is a distance, the rank is the time: the sooner, the higher
+assert.equal(C.distance,20000,'the goal is 20 km');assert.ok(C.unit>0&&!('missionTime' in C),'no mission clock any more');
+assert.deepEqual([...C.grades],[...C.grades].sort((a,b)=>b-a),'a higher rank wants a shorter time');assert.equal(C.grades.length,3);
+assert.equal(core.gradeOf(C.grades[0]+1),0);assert.equal(core.gradeOf(C.grades[0]),1);assert.equal(core.gradeOf(C.grades[1]),2);assert.equal(core.gradeOf(C.grades[2]),3);assert.equal(core.gradeOf(60),3);
+assert.ok(core.timeBonus(240)>core.timeBonus(300)&&core.timeBonus(C.timeRef+10)===0&&core.timeBonus(200)-core.timeBonus(210)===10*C.timePts,'every second saved pays');
+assert.ok(core.FINALE_AT>0&&core.FINALE_AT<C.distance&&C.distance-core.FINALE_AT<1000,'the final approach is the last few hundred metres');
+assert.deepEqual([...core.WEAPONS],['turbo','gun','missiles','mask','barrier'],'five weapons');
+assert.ok(Object.isFrozen(core.WEAPONS)&&Object.isFrozen(C.weights)&&Math.abs(core.WEAPONS.reduce((s,w)=>s+C.weights[w],0)-1)<1e-9&&core.WEAPONS.every(w=>C.weights[w]>.1),'every weapon comes out of a box, the weights add up');
+assert.ok(C.feathersPerLevel===10&&C.maxLevel>=3,'an upgrade every ten feathers');
+// every level makes every weapon stronger
+for(let l=1;l<=C.maxLevel;l++){
+ const a=n=>core.weaponParams(n,l-1),b=n=>core.weaponParams(n,l);
+ assert.ok(b('turbo').dur>a('turbo').dur&&b('turbo').mul>a('turbo').mul,'turbo at level '+l);
+ assert.ok(b('gun').dur>a('gun').dur&&b('gun').every<a('gun').every&&b('gun').reach>a('gun').reach&&(b('gun').pylons||!a('gun').pylons),'machine gun at level '+l);
+ assert.ok(b('missiles').count>a('missiles').count&&b('missiles').splash>=a('missiles').splash,'missiles at level '+l);
+ assert.ok(b('mask').dur>a('mask').dur&&b('mask').mul>a('mask').mul,'invulnerability at level '+l);
+ assert.ok(b('barrier').dur>a('barrier').dur&&b('barrier').r>a('barrier').r&&(b('barrier').crush||!a('barrier').crush),'barrier at level '+l);
+}
+assert.ok(core.weaponParams('gun',C.gunPylonLevel).pylons&&!core.weaponParams('gun',0).pylons&&core.weaponParams('barrier',C.barrierCrushLevel).crush&&!core.weaponParams('barrier',0).crush,'the later levels add new tricks');
+assert.ok(core.weaponParams('missiles',3).splash>0&&core.weaponParams('missiles',0).splash===0&&core.weaponParams('nothing',1)===null);
+assert.equal(core.weaponParams('turbo',99).dur,core.weaponParams('turbo',C.maxLevel).dur,'never above the top level');
+assert.ok(core.weaponParams('turbo',0).mul>core.weaponParams('mask',0).mul&&C.weaponCap>=C.speedCap,'the turbo is the fastest, the speed has a ceiling');
 for(let l=1;l<80;l++){
  assert.ok(core.speedMul(l)>=core.speedMul(Math.max(1,l-1))&&core.speedMul(l)<=C.maxSpeedMul,'speed grows and is capped');
  assert.ok(core.radiusOf(l)<=C.radius0&&core.radiusOf(l)>=C.radiusMin,'the ring shrinks to a floor');
@@ -45,18 +67,18 @@ for(let l=1;l<80;l++){
 }
 assert.ok(C.sprintPeakMax<=C.speedCap&&C.sprintPeak0>=1.4,'a sprint is a real jump in speed, and the cap lets it through');
 
-// ---------------------------------------------------------------- the plan of the mission changes the modes by itself
+// ---------------------------------------------------------------- the plan of the route changes the modes by itself
 {
  assert.deepEqual(core.PLAN.map(p=>p.mode),['FBWA','CRUISE','GUIDED','AUTO','FBWA','CRUISE','GUIDED','AUTO'],'the four modes, twice, in this order');
- const total=core.PLAN.reduce((s,p)=>s+p.len,0);assert.ok(core.PLAN.every(p=>p.len>=20)&&total<=C.missionTime-C.clearBefore,'every mode lasts a while; the plan ends before the airspace is cleared ('+total+' s)');
+ const total=core.PLAN.reduce((s,p)=>s+p.len,0);assert.ok(core.PLAN.every(p=>p.len>=1500)&&total<core.FINALE_AT-C.clearBefore,'every leg is a while long; the plan ends before the airspace is cleared ('+total+' m)');
  let from=0;
  for(const [i,p] of core.PLAN.entries()){
-  for(const t of [from+.01,from+p.len/2,from+p.len-.01]){const m=core.modeAt(t);assert.ok(m.mode===p.mode&&m.index===i&&m.from===from&&m.to===from+p.len,'mode at '+t);}
+  for(const d of [from+.1,from+p.len/2,from+p.len-.1]){const m=core.modeAt(d);assert.ok(m.mode===p.mode&&m.index===i&&m.from===from&&m.to===from+p.len,'mode at '+d+' m');}
   from+=p.len;
  }
- const tail=core.modeAt(from+.1);assert.ok(tail.mode==='FBWA'&&tail.index===core.PLAN.length&&tail.to===C.missionTime,'FBWA goes on until the final approach');
- const g=core.create(3);g.runTime=50;let info=core.modeInfo(g);assert.ok(info.mode==='CRUISE'&&Math.abs(info.t-5)<1e-9&&info.len===30&&Math.abs(info.left-25)<1e-9&&info.next==='GUIDED','where the plan is');
- g.runTime=from+3;info=core.modeInfo(g);assert.ok(info.mode==='FBWA'&&info.next==='AUTOLAND','the last stretch is followed by the landing');
+ const tail=core.modeAt(from+1);assert.ok(tail.mode==='FBWA'&&tail.index===core.PLAN.length&&tail.to===core.FINALE_AT,'FBWA goes on until the final approach');
+ const g=core.create(3);g.dist=core.PLAN[0].len+500;let info=core.modeInfo(g);assert.ok(info.mode==='CRUISE'&&Math.abs(info.t-500)<1e-9&&info.len===core.PLAN[1].len&&Math.abs(info.left-(core.PLAN[1].len-500))<1e-9&&info.next==='GUIDED','where the plan is');
+ g.dist=from+30;info=core.modeInfo(g);assert.ok(info.mode==='FBWA'&&info.next==='AUTOLAND','the last stretch is followed by the landing');
  g.finale={};info=core.modeInfo(g);assert.ok(info.mode==='AUTOLAND'&&info.next===null);
 }
 
@@ -67,30 +89,34 @@ const W=760,H=400,BASE=Math.min(W*.155,H*.21),PK=.42,VP=.3,KY=(H*.51-H*VP)*PK/(.
 const cursorAt=(c,z)=>{const k=1+PK*z;return {x:c.x*k,y:c.y*k-KY*z,tol:24*k/BASE};};      // the pointer at (c.x, c.y) on the plane of the aircraft, seen at the depth z
 const aimAt=e=>{const s=1/(1+PK*e.z);return {x:e.x*s,y:(e.y+KY*e.z)*s};};                  // where the pointer has to be to be on an enemy
 const gauss=r=>{let u=0;while(!u)u=r();const v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
-// a pilot: flies the pointer to the next ring (round the pylons the way the autopilot does, round the enemies, through a bonus ring that is a small detour), shoots in AUTO,
-// fires the ULT. delay: reaction time, tau: the hand, noise: the shake, avoidZ: how far ahead the other aircraft are noticed, lean: how fast the hand leans against a steady push
-function human({delay=.15,tau=.09,noise=.2,corr=.4,shoot=true,ult=true,ultDelay=.3,look=1,shootGap=.25,avoidEnemy=true,avoidZ=6.5,lean=.9,bonus=.6,seed=1}={}){
- const rnd=core.mulberry32(seed*7919+13),buf=[];let cur={x:0,y:0},nx=0,ny=0,t=0,lastClick=-9,ultSince=-1,lx=0,ly=0;
+// a pilot: flies the pointer to the next ring (round the pylons the way the autopilot does, round the enemies, through a box, a bonus ring or a feather that is a small
+// detour), shoots in AUTO, fires the ULT, uses the weapon of the box. delay: reaction time, tau: the hand, noise: the shake, avoidZ: how far ahead the other aircraft are
+// noticed, lean: how fast the hand leans against a steady push, loot: how greedy for boxes and feathers, weapons: uses them at all, speed: uses the speed weapons too,
+// useDelay: how long it takes to press the button, boost: holds the boost button all the way
+function human({delay=.15,tau=.09,noise=.2,corr=.4,shoot=true,ult=true,ultDelay=.3,look=1,shootGap=.25,avoidEnemy=true,avoidZ=6.5,lean=.9,bonus=.6,loot=.6,weapons=true,speed=true,useDelay=.35,boost=false,seed=1}={}){
+ const rnd=core.mulberry32(seed*7919+13),buf=[];let cur={x:0,y:0},nx=0,ny=0,t=0,lastClick=-9,ultSince=-1,useSince=-1,lx=0,ly=0;
  return (g,dt)=>{
-  t+=dt;const out={tx:cur.x,ty:cur.y,boost:false,click:false,ult:false};let want;
+  t+=dt;const out={tx:cur.x,ty:cur.y,boost:false,click:false,ult:false,use:false};let want;
   if(g.mode==='AUTO'&&!g.finale){
    const e=g.enemies.filter(q=>q.state==='ahead'&&q.z>.5&&q.z<8.5).sort((a,b)=>a.z-b.z)[0];
    want=shoot&&e?aimAt(e):{x:0,y:0};
    if(shoot&&e){const c=cursorAt(cur,e.z);if(Math.hypot(c.x-e.x,c.y-e.y)<e.r*C.shotRadius+c.tol&&t-lastClick>shootGap){out.click=true;lastClick=t;}}
   }else if(g.finale){want={x:clamp(-g.plane.x*1.2,-.9,.9)*g.fieldX,y:0};}
   else{
-   const a=core.autopilot(g),gate=core.nextGate(g),speed=core.speedOf(g);let tx=a.x,ty=a.y;
+   const a=core.autopilot(g),gate=core.nextGate(g),v=core.speedOf(g);let tx=a.x,ty=a.y;
    if(gate&&look){
-    const ahead=g.gates.filter(q=>q.state==='ahead'&&q!==gate)[0],tA=gate.z/speed,L=look*(g.mode==='GUIDED'?1.5:1);
+    const ahead=g.gates.filter(q=>q.state==='ahead'&&q!==gate)[0],tA=gate.z/v,L=look*(g.mode==='GUIDED'?1.5:1);
     if(ahead&&tA<L){const w=clamp((L-tA)/L,0,1)*.6*gate.r,dx=ahead.x-gate.x,dy=ahead.y-gate.y,d=Math.hypot(dx,dy)||1;tx+=dx/d*Math.min(w,d);ty+=dy/d*Math.min(w*.8,d);}
    }
-   if(bonus&&gate&&g.mode!=='CRUISE'){
-    const b=g.bonuses.filter(q=>q.state==='ahead'&&q.z>.3&&q.z<gate.z&&Math.hypot(q.x-tx,q.y-ty)<1.3*bonus+1).sort((p,q)=>p.z-q.z)[0];
-    if(b&&b.z/speed>.55){tx=b.x;ty=b.y;}
+   if(gate&&g.mode!=='CRUISE'){      // a detour only when there is time to get there and back to the ring
+    const feasible=q=>q.z/v>.3+Math.hypot(q.x-g.plane.x,q.y-g.plane.y)/4&&(gate.z-q.z)/v>.25+Math.hypot(q.x-tx,q.y-ty)/3.2;
+    const near=(list,reach)=>list.filter(q=>q.state==='ahead'&&q.z>.3&&q.z<gate.z&&Math.hypot(q.x-tx,q.y-ty)<reach&&feasible(q)).sort((p,q)=>p.z-q.z)[0];
+    const pick=(loot&&!g.weapon&&!g.roll&&near(g.boxes,1.1*loot+.7))||(bonus&&near(g.bonuses,1.3*bonus+1))||(loot&&near(g.plumes,.9*loot+.4));
+    if(pick){tx=pick.x;ty=pick.y;}
    }
    if(avoidEnemy)for(const e of g.enemies){
     if(e.state!=='ahead'||e.z<0||e.z>avoidZ)continue;
-    const dr=core.enemyDrift(g),tt=e.z/(speed*(1+C.enemySpeed)),hx=e.x+(e.vx+dr.x)*tt,hy=e.y+(e.vy+dr.y)*tt,clear=e.r+C.planeR+.38,dx=tx-hx,dy=ty-hy,d=Math.hypot(dx,dy);
+    const dr=core.enemyDrift(g),tt=e.z/(v*(1+C.enemySpeed)),hx=e.x+(e.vx+dr.x)*tt,hy=e.y+(e.vy+dr.y)*tt,clear=e.r+C.planeR+.38,dx=tx-hx,dy=ty-hy,d=Math.hypot(dx,dy);
     if(d<clear){tx=hx+(d>1e-3?dx/d:1)*clear;ty=hy+(d>1e-3?dy/d:0)*clear;}
    }
    want={x:tx,y:ty};
@@ -102,26 +128,39 @@ function human({delay=.15,tau=.09,noise=.2,corr=.4,shoot=true,ult=true,ultDelay=
   const k=1-Math.exp(-dt/tau);cur.x+=(buf[0].x+nx-cur.x)*k;cur.y+=(buf[0].y+ny-cur.y)*k;
   const can=g.ult>=100&&g.enemies.some(q=>q.state==='ahead'&&q.z>.3);
   if(ult&&can){if(ultSince<0)ultSince=t;if(t-ultSince>=ultDelay)out.ult=true;}else ultSince=-1;
+  let wanted=false;      // the weapon of the box: the speed ones at once (the turbo when no pylon stands right ahead), the others when there is something for them
+  if(weapons&&g.weapon&&!g.finale){
+   const ahead=(list,z)=>list.some(q=>q.state==='ahead'&&q.z>.5&&q.z<z);
+   if(g.weapon==='turbo')wanted=speed&&!g.obstacles.some(o=>o.state==='ahead'&&o.z>0&&o.z<5&&Math.hypot(o.x-g.plane.x,o.y-g.plane.y)<1.6);
+   else if(g.weapon==='mask')wanted=speed;
+   else if(g.weapon==='gun')wanted=ahead(g.enemies,8);
+   else if(g.weapon==='missiles')wanted=ahead(g.enemies,9)||ahead(g.obstacles,9);
+   else wanted=ahead(g.enemies,5)||ahead(g.obstacles,5);
+  }
+  if(wanted){if(useSince<0)useSince=t;if(t-useSince>=useDelay)out.use=true;}else useSince=-1;
+  out.boost=boost&&g.mode!=='AUTO';
   out.tx=cur.x;out.ty=cur.y;return out;
  };
 }
-const SKILLED={delay:.15,tau:.09,noise:.2,shootGap:.25,ultDelay:.3,lean:.9},AVERAGE={delay:.25,tau:.13,noise:.3,shootGap:.4,ultDelay:.6,look:.6,avoidZ:5,lean:.45,bonus:0},SLOPPY={delay:.4,tau:.2,noise:.45,shootGap:.6,ultDelay:1.2,avoidEnemy:false,look:0,lean:0,bonus:0};const idle=()=>()=>({tx:0,ty:0,boost:false});
-function fly(seed,makeBot,{dt=1/60,maxT=420,skipTo=0}={}){
- const g=core.create(seed,FIELD);core.begin(g);if(skipTo)g.runTime=skipTo;const bot=makeBot(seed);let t=0;const log=[];
+const SKILLED={delay:.15,tau:.09,noise:.2,shootGap:.25,ultDelay:.3,lean:.9},AVERAGE={delay:.25,tau:.13,noise:.3,shootGap:.4,ultDelay:.6,look:.6,avoidZ:5,lean:.45,bonus:0,loot:.35,useDelay:.8},SLOPPY={delay:.4,tau:.2,noise:.45,shootGap:.6,ultDelay:1.2,avoidEnemy:false,look:0,lean:0,bonus:0,loot:.2,useDelay:1.5};const idle=()=>()=>({tx:0,ty:0,boost:false});
+function fly(seed,makeBot,{dt=1/60,maxT=600}={}){
+ const g=core.create(seed,FIELD);core.begin(g);const bot=makeBot(seed);let t=0,newest=0,since=0,gap=0;const log=[];
  while(g.phase!=='over'&&g.phase!=='won'&&t<maxT){
   const cmd=bot(g,dt);
   if(cmd.click)core.shoot(g,z=>cursorAt({x:cmd.tx,y:cmd.ty},z));
   if(cmd.ult)core.fireUlt(g);
+  if(cmd.use)core.useWeapon(g);
   core.step(g,dt,{tx:cmd.tx,ty:cmd.ty,boost:cmd.boost});
-  log.push(...core.drain(g));t+=dt;
+  for(const e of core.drain(g)){e.at=g.dist;log.push(e);}t+=dt;
+  if(g.phase==='run'&&!g.finale){const last=g.lastGate?g.lastGate.id:0;if(last!==newest){newest=last;since=g.runTime;}gap=Math.max(gap,g.runTime-since);}
  }
- return {g,log,t};
+ return {g,log,t,gap};
 }
 const profile=opts=>seed=>human({...opts,seed});
-// a running game in which one thing is placed to the point of arriving; the plan would switch the mode back, so a test puts the clock inside the window of the mode it wants
+// a running game in which one thing is placed to the point of arriving; the plan would switch the mode back, so a test puts the route inside the leg of the mode it wants
 const running=(seed=2,field=FIELD)=>{const g=core.create(seed,field);core.begin(g);g.phase='run';g.runTime=1;return g;};
 const windowOf=(mode,i=0)=>{let from=0,n=0;for(const p of core.PLAN){if(p.mode===mode){if(n===i)return from;n++;}from+=p.len;}return null;};
-const inMode=(g,mode,i=0)=>{g.runTime=windowOf(mode,i)+1;g.mode=mode;return g;};
+const inMode=(g,mode,i=0)=>{g.dist=windowOf(mode,i)+1;g.runTime=Math.max(g.runTime,windowOf(mode,i)/65);g.mode=mode;return g;};      // (the clock of a flight that got there)
 const run=(g,seconds,input={},dt=1/60)=>{for(let i=0;i<Math.round(seconds/dt);i++)core.step(g,dt,input);return core.drain(g);};
 
 // ---------------------------------------------------------------- phases and determinism
@@ -148,23 +187,58 @@ const run=(g,seconds,input={},dt=1/60)=>{for(let i=0;i<Math.round(seconds/dt);i+
   assert.equal(r.log.filter(e=>e.type==='over').length,1);assert.equal(r.log.filter(e=>e.type==='miss'||e.type==='hit').length,C.lives+r.log.filter(e=>e.type==='life').length,'one missed gate or one hit per life (and the life that a long run of gates at the middle gave back)');
   const frozen=JSON.stringify(r.g.plane);core.step(r.g,1,{tx:3,ty:1,boost:true});assert.equal(JSON.stringify(r.g.plane),frozen,'no movement after the end');
  }
- const N=40,wins={skilled:0,average:0,sloppy:0,quiet:0};let kills=0,level=0;
+ const N=40,wins={skilled:0,average:0,sloppy:0,quiet:0,plain:0,boost:0},times={skilled:[],plain:[],boost:[]};let kills=0,level=0,feathers=0,used=0,boxes=0,gap=0;
+ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s[s.length>>1];};
  for(let seed=1;seed<=N;seed++){
   const r=fly(seed,profile(SKILLED));
-  if(r.g.phase==='won'){wins.skilled++;assert.ok(r.g.runTime>=C.missionTime,'a landing only after the five minutes');assert.equal(r.log.filter(e=>e.type==='touchdown').length,1);assert.ok(r.log.some(e=>e.type==='finale'));}
-  kills+=r.g.kills;level+=r.g.level;
+  if(r.g.phase==='won'){wins.skilled++;times.skilled.push(r.g.finishTime);assert.ok(r.g.dist===C.distance&&r.g.finishTime===r.g.runTime,'a landing only at the end of the route');assert.equal(r.log.filter(e=>e.type==='touchdown').length,1);assert.ok(r.log.some(e=>e.type==='finale'));
+   const s=core.summary(r.g);assert.ok(s.won&&s.rank===core.gradeOf(s.time)&&s.timeBonus===core.timeBonus(r.g.finishTime)&&s.dist===C.distance&&s.avg>150,'the summary of a finished route: '+JSON.stringify(s));}
+  else assert.equal(core.summary(r.g).rank,0,'no rank without the finish');
+  kills+=r.g.kills;level+=r.g.level;feathers+=r.g.feathers;used+=r.g.used;boxes+=r.g.boxesTaken;gap=Math.max(gap,r.gap);
   assert.ok(r.log.filter(e=>e.type==='gate').reduce((s,e)=>s+e.points,0)<=r.g.score,'the score is at least the sum of the gate points');
   assert.ok(Math.abs(r.g.plane.x)<=r.g.fieldX&&Math.abs(r.g.plane.y)<=r.g.fieldY,'the aircraft stays in the field');
-  const modes=r.log.filter(e=>e.type==='mode').map(e=>e.to);if(r.g.runTime>=C.missionTime)assert.deepEqual(modes,['FBWA','CRUISE','GUIDED','AUTO','FBWA','CRUISE','GUIDED','AUTO','FBWA','AUTOLAND'],'a whole mission goes through the plan and ends in AUTOLAND');
+  const modes=r.log.filter(e=>e.type==='mode').map(e=>e.to);if(r.g.finale)assert.deepEqual(modes,['FBWA','CRUISE','GUIDED','AUTO','FBWA','CRUISE','GUIDED','AUTO','FBWA','AUTOLAND'],'a whole route goes through the plan and ends in AUTOLAND');
   if(fly(seed,profile(AVERAGE)).g.phase==='won')wins.average++;
   if(fly(seed,profile(SLOPPY)).g.phase==='won')wins.sloppy++;
-  if(fly(seed,profile({...SKILLED,shoot:false,ult:false})).g.phase==='won')wins.quiet++;
+  if(fly(seed,profile({...SKILLED,shoot:false,ult:false,weapons:false})).g.phase==='won')wins.quiet++;
+  const plain=fly(seed,profile({...SKILLED,speed:false}));if(plain.g.phase==='won'){wins.plain++;times.plain.push(plain.g.finishTime);}
+  const fast=fly(seed,profile({...SKILLED,boost:true}));if(fast.g.phase==='won'){wins.boost++;times.boost.push(fast.g.finishTime);}
  }
- assert.ok(wins.skilled>=N*.35&&wins.skilled<=N*.85,'a good pilot lands in about every other game (the game is hard, but it can be won): '+wins.skilled+'/'+N);
- assert.ok(wins.sloppy<=N*.1,'a careless one rarely does: '+wins.sloppy+'/'+N);
- assert.ok(wins.skilled>wins.average&&wins.average>=wins.sloppy,'skill counts: '+JSON.stringify(wins));
- assert.ok(wins.skilled>=wins.quiet+4,'the gun and the ULT matter: '+wins.skilled+'/'+N+' with them, '+wins.quiet+'/'+N+' without');
- assert.ok(kills/N>=8,'other aircraft are shot down ('+(kills/N).toFixed(1)+' a game)');assert.ok(level/N>=12,'a long mission goes through many levels ('+(level/N).toFixed(1)+')');
+ assert.ok(wins.skilled>=N*.5&&wins.skilled<=N*.9,'a good pilot usually gets there (the game is hard, but it can be won): '+wins.skilled+'/'+N);
+ assert.ok(wins.sloppy<=N*.15,'a careless one rarely does: '+wins.sloppy+'/'+N);
+ assert.ok(wins.skilled>=wins.average-N*.1&&wins.average>=wins.sloppy+N*.25,'skill counts: '+JSON.stringify(wins));
+ assert.ok(wins.skilled>=wins.quiet+3,'the weapons, the gun and the ULT matter: '+wins.skilled+'/'+N+' with them, '+wins.quiet+'/'+N+' without');
+ // the distance is the goal: a normal run, without the button boost and the speed weapons, takes about five minutes; faster flying is a shorter time and a higher rank
+ assert.ok(times.plain.length>=N*.4&&median(times.plain)>=285&&median(times.plain)<=315,'about five minutes without the boost and the speed weapons: '+median(times.plain).toFixed(1)+' s ('+times.plain.length+' flights)');
+ assert.ok(median(times.skilled)<median(times.plain)-4,'the speed weapons save time: '+median(times.skilled).toFixed(1)+' against '+median(times.plain).toFixed(1));
+ assert.ok(times.boost.length>=4&&median(times.boost)<=median(times.plain)-40,'holding the boost saves much more, at a higher risk: '+median(times.boost).toFixed(1)+' s, '+wins.boost+'/'+N+' finish');
+ assert.ok(core.gradeOf(median(times.boost))>core.gradeOf(median(times.plain))&&core.gradeOf(median(times.plain))===1,'a normal run is a PILOT, a fast one ranks higher');
+ assert.ok(kills/N>=8,'other aircraft are shot down ('+(kills/N).toFixed(1)+' a game)');assert.ok(level/N>=12,'a long route goes through many levels ('+(level/N).toFixed(1)+')');
+ assert.ok(boxes/N>=6&&used/N>=3,'boxes are taken and their weapons used: '+(boxes/N).toFixed(1)+' boxes, '+(used/N).toFixed(1)+' weapons a game');
+ assert.ok(feathers/N>=20&&feathers/N<=C.feathersPerLevel*(C.maxLevel+2),'feathers make a few upgrades in a game, not all of them at once: '+(feathers/N).toFixed(1));
+ assert.ok(gap<=4,'a new ring never keeps the pilot waiting long: '+gap.toFixed(1)+' s');
+}
+// ---------------------------------------------------------------- the rings never stop coming: a long gap between two of them (a sprint corridor late in the route) used to
+// leave the last ring frozen behind the aircraft, and then no new ring was ever laid out (at about three minutes into a flight)
+{
+ let long=0,stalls=[];
+ for(let seed=1;seed<=24;seed++){
+  const g=core.create(seed,FIELD);core.begin(g);let since=0,newest=0,maxGap=0;
+  while(g.phase!=='won'&&g.phase!=='over'&&g.runTime<600){
+   const next=core.nextGate(g);if(next){g.plane.x=next.x;g.plane.y=next.y;}g.lives=C.lives;g.obstacles.length=g.enemies.length=0;
+   core.step(g,1/60,{tx:g.plane.x,ty:g.plane.y});core.drain(g);
+   maxGap=Math.max(maxGap,g.gap);
+   if(g.phase==='run'&&!g.finale){const id=g.lastGate.id;if(id!==newest){newest=id;since=g.runTime;}else if(g.runTime-since>4){stalls.push({seed,at:+since.toFixed(1)});break;}}
+  }
+  if(maxGap>C.zFar-C.zGone)long++;
+  assert.ok(g.phase==='won'&&g.finale,'a perfect pilot flies the whole route (seed '+seed+', '+g.phase+' at '+g.dist.toFixed(0)+' m)');
+ }
+ assert.deepEqual(stalls,[],'a new ring keeps coming all the way: '+JSON.stringify(stalls));
+ assert.ok(long>=12,'(the long gaps that used to stop the rings do happen on the way: in '+long+' of 24 games)');
+ // the smallest case: the last ring has left the list and the next one is due far beyond the spawn window
+ const g=running(4,{...FIELD,calm:true});g.gates.forEach(x=>{x.state='passed';});g.gates.length=1;g.lastGate=g.gates[0];g.gap=C.zFar-C.zGone+1.5;g.lastGate.z=C.zFar-C.spacing;
+ let n=g.gateCount,seen=0;for(let i=0;i<60*12;i++){core.step(g,1/60,{});g.lives=C.lives;if(g.gateCount>n){n=g.gateCount;seen++;}}
+ assert.ok(seen>=3,'after a gap longer than the window the rings still come: '+seen);
 }
 
 // ---------------------------------------------------------------- scoring, one gate at a time
@@ -190,7 +264,8 @@ const run=(g,seconds,input={},dt=1/60)=>{for(let i=0;i<Math.round(seconds/dt);i+
  const g=running(3);g.passed=C.gatesPerLevel-1;const gate=g.gates[0];gate.z=.02;g.plane.x=gate.x;g.plane.y=gate.y;core.step(g,.02,{});
  assert.equal(g.level,2);assert.ok(core.drain(g).some(e=>e.type==='level'&&e.level===2),'a level up after '+C.gatesPerLevel+' gates');
  // the final approach has no levels
- const f=running(3);f.runTime=C.missionTime;core.step(f,.02,{});core.drain(f);f.passed=C.gatesPerLevel*2-1;const ap=f.gates.find(x=>x.approach);if(ap){ap.z=.01;f.plane.x=ap.x;f.plane.y=ap.y;core.step(f,.02,{});}
+ const f=running(3);f.dist=core.FINALE_AT;core.step(f,.02,{});for(let i=0;i<600&&!f.gates.some(x=>x.approach);i++){core.step(f,1/60,{});f.lives=C.lives;}core.drain(f);
+ f.passed=C.gatesPerLevel*2-1;const ap=f.gates.find(x=>x.approach);assert.ok(ap,'an approach gate on its way');ap.z=.01;f.plane.x=ap.x;f.plane.y=ap.y;core.step(f,.02,{});
  assert.ok(!core.drain(f).some(e=>e.type==='level')&&f.level===1,'no level up in the final approach');
 }
 
@@ -227,14 +302,14 @@ const run=(g,seconds,input={},dt=1/60)=>{for(let i=0;i<Math.round(seconds/dt);i+
  assert.ok(seen>=20,'pylons appear ('+seen+')');assert.equal(inRing,0,'never inside a ring');   // (the loop above follows 70 s of ten games with nobody at the pointer)
  // other aircraft: not before enemyFrom, a few at a time (more while the autopilot flies and the pilot shoots), each warned about
  const e=core.create(4,FIELD);core.begin(e);e.phase='run';e.gates.forEach(x=>{x.state='passed';});let first=null,warned=0;const most={auto:0,other:0},count={auto:0,other:0},time={auto:0,other:0};
- for(let i=0;i<60*140;i++){
+ for(let i=0;i<60*200;i++){
   core.step(e,1/60,{});const k=e.mode==='AUTO'?'auto':'other';if(e.runTime>C.enemyFrom+3)time[k]+=1/60;
   for(const x of core.drain(e))if(x.type==='enemy'){warned++;if(e.runTime>C.enemyFrom+3)count[k]++;if(first===null)first=e.runTime;}
   if(e.phase==='over'){e.phase='run';e.lives=C.lives;}
   e.gates.forEach(x=>{if(x.state==='ahead'&&x.z<1)x.state='passed';});
   const n=e.enemies.filter(x=>x.state==='ahead').length;most[k]=Math.max(most[k],n);
  }
- assert.ok(first>=C.enemyFrom-.1&&first<=C.enemyFrom+1,'the first other aircraft at about '+C.enemyFrom+' s: '+first);assert.ok(most.other<=C.enemyMax&&most.auto<=C.enemyMaxAuto&&warned>=8,'a few at a time, many in two minutes ('+warned+')');
+ assert.ok(first>=C.enemyFrom-.1&&first<=C.enemyFrom+1,'the first other aircraft at about '+C.enemyFrom+' s: '+first);assert.ok(most.other<=C.enemyMax&&most.auto<=C.enemyMaxAuto&&warned>=8,'a few at a time, many in three minutes ('+warned+')');
  assert.ok(time.auto>20&&count.auto/time.auto>=1.8*count.other/time.other,'they come at least twice as often while the autopilot flies and the pilot shoots: '+(count.auto/time.auto).toFixed(3)+' against '+(count.other/time.other).toFixed(3)+' a second');
  // in AUTO they come at the aircraft
  let aimed=0,total=0;
@@ -278,14 +353,14 @@ const run=(g,seconds,input={},dt=1/60)=>{for(let i=0;i<Math.round(seconds/dt);i+
 // ---------------------------------------------------------------- the modes: what the aircraft does in each
 {
  // the plan switches the mode in the middle of a run, with one event, and nothing else does
- const g=running(3);run(g,.2);g.runTime=core.PLAN[0].len-.05;let ev=run(g,.1);
+ const g=running(3);run(g,.2);g.dist=core.PLAN[0].len-3;let ev=run(g,.1);
  assert.equal(g.mode,'CRUISE');assert.deepEqual(ev.filter(e=>e.type==='mode').map(e=>[e.from,e.to,e.index]),[['FBWA','CRUISE',1]],'one mode event at the boundary of the plan');
  assert.equal(run(g,5).filter(e=>e.type==='mode').length,0,'no more of them in the middle of a mode');
- g.runTime=windowOf('AUTO')-.05;g.enemyClock=40;ev=run(g,.1);assert.equal(g.mode,'AUTO');assert.ok(g.enemyClock<=3,'the first intruder comes soon after the autopilot takes over');
- g.mode='FBWA';g.runTime=C.missionTime-.02;ev=run(g,.1);assert.equal(g.mode,'AUTOLAND');assert.deepEqual(ev.filter(e=>e.type==='mode').map(e=>e.to),['AUTOLAND']);assert.ok(ev.some(e=>e.type==='finale'));
+ g.dist=windowOf('AUTO')-3;g.enemyClock=40;ev=run(g,.1);assert.equal(g.mode,'AUTO');assert.ok(g.enemyClock<=3,'the first intruder comes soon after the autopilot takes over');
+ g.mode='FBWA';g.dist=core.FINALE_AT-1;ev=run(g,.1);assert.equal(g.mode,'AUTOLAND');assert.deepEqual(ev.filter(e=>e.type==='mode').map(e=>e.to),['AUTOLAND']);assert.ok(ev.some(e=>e.type==='finale'));
  run(g,1);assert.equal(g.mode,'AUTOLAND','the plan does not touch the final approach');
- // a pause does not move the plan
- const p=running(3);const rt=p.runTime;core.pause(p);core.step(p,1,{});assert.equal(p.runTime,rt);
+ // a pause does not move the clock or the route
+ const p=running(3);const rt=p.runTime,d=p.dist;core.pause(p);core.step(p,1,{});assert.ok(p.runTime===rt&&p.dist===d);
 }
 {
  // FBWA follows the pointer (stabilised: it takes a moment to bank, to slide and to level out), GUIDED later (aim ahead), CRUISE only sideways at the height of the next ring, AUTO ignores the pointer
@@ -349,16 +424,17 @@ const run=(g,seconds,input={},dt=1/60)=>{for(let i=0;i<Math.round(seconds/dt);i+
 
 // ---------------------------------------------------------------- the final approach
 {
- const g=running(12);g.runTime=C.missionTime-C.clearBefore-.5;g.gates.forEach(x=>{x.state='passed';});
- // the airspace is cleared before the finale: nothing new appears in the last seconds
- g.obstacles.length=g.enemies.length=0;let late=0;
- for(let i=0;i<60*10;i++){core.step(g,1/60,{});if(g.phase!=='run')break;if(g.runTime>C.missionTime-C.clearBefore+.2&&(g.obstacles.some(o=>o.age<.05)||g.enemies.some(e=>e.age<.05)))late++;}
- assert.equal(late,0,'no pylon and no other aircraft in the last '+C.clearBefore+' s');
+ const g=running(12);g.dist=core.FINALE_AT-C.clearBefore+5;g.runTime=60;g.gates.forEach(x=>{x.state='passed';});
+ // the airspace is cleared before the finale: nothing new appears in the last metres
+ g.obstacles.length=g.enemies.length=g.boxes.length=g.plumes.length=g.bonuses.length=0;g.boxWait=0;g.enemyClock=0;let late=0;
+ for(let i=0;i<60*10;i++){core.step(g,1/60,{});if(g.phase!=='run')break;if([g.obstacles,g.enemies,g.boxes,g.plumes,g.bonuses].some(list=>list.some(o=>o.age<.05)))late++;}
+ assert.equal(late,0,'no pylon, other aircraft, box, feather or bonus ring in the last '+C.clearBefore+' m');
 }
 {
- const g=running(12);g.runTime=C.missionTime-.2;g.lives=2;let events=[];
+ const g=running(12);g.dist=core.FINALE_AT-12;g.runTime=250;g.lives=2;g.boxes.length=0;let events=[];
  for(let i=0;i<60*60&&g.phase==='run';i++){core.step(g,1/60,{});events.push(...core.drain(g));}
  assert.equal(g.phase,'won','a pointer left alone lands: the autopilot flies the glide path (lives: '+g.lives+')');
+ assert.ok(g.dist===C.distance&&Math.abs(g.finishTime-g.runTime)<1e-9&&g.timeBonus===core.timeBonus(g.finishTime),'the touchdown is at the end of the route, the time is taken');
  const fin=events.filter(e=>e.type==='finale'),td=events.filter(e=>e.type==='touchdown'),won=events.filter(e=>e.type==='won');
  assert.equal(fin.length,1);assert.equal(td.length,1);assert.equal(won.length,1,'one finale, one touchdown, one end');
  assert.equal(g.mode,'AUTOLAND');assert.ok(g.finale&&g.finale.spawned===C.landing.gates,'seven approach gates');
@@ -368,16 +444,19 @@ const run=(g,seconds,input={},dt=1/60)=>{for(let i=0;i<Math.round(seconds/dt);i+
  const approach=events.filter(e=>e.type==='gate'&&e.gate.approach);assert.ok(approach.length>=C.landing.gates-2,'the approach gates are rings too ('+approach.length+')');
  const before=g.score;core.step(g,1,{});assert.equal(g.score,before,'nothing after the touchdown');
  // the pilot cannot fire the ULT or the gun in it
- const h=running(12);h.runTime=C.missionTime;core.step(h,.02,{});assert.equal(h.mode,'AUTOLAND');h.ult=100;h.enemies.push({id:1,kind:'enemy',x:0,y:0,z:5,r:.6,state:'ahead',age:0,vx:0,vy:0});h.ultCool=0;assert.equal(core.fireUlt(h),0);assert.equal(core.shoot(h,()=>({x:0,y:0,tol:5})),null);
- // the glide path goes down and the runway comes last
- const k=running(12);k.runTime=C.missionTime;const ys=[];let runwaySeen=false;
- for(let i=0;i<60*40&&k.phase==='run';i++){core.step(k,1/60,{});for(const e of core.drain(k))if(e.type==='gate'&&e.gate.approach)ys.push(e.gate.y);if(k.finale&&k.finale.runwayZ!=null)runwaySeen=true;}
- assert.ok(runwaySeen,'a runway ahead');assert.ok(ys.length>=5&&ys[0]>ys[ys.length-1],'the approach gates go down: '+ys.map(y=>y.toFixed(2)).join(' '));
+ const h=running(12);h.dist=core.FINALE_AT;core.step(h,.02,{});assert.equal(h.mode,'AUTOLAND');h.ult=100;h.enemies.push({id:1,kind:'enemy',x:0,y:0,z:5,r:.6,state:'ahead',age:0,vx:0,vy:0});h.ultCool=0;assert.equal(core.fireUlt(h),0);assert.equal(core.shoot(h,()=>({x:0,y:0,tol:5})),null);h.weapon='missiles';assert.equal(core.useWeapon(h),null,'no weapon in the final approach');
+ // the weapons are put away when the approach starts
+ const p=running(12);p.dist=core.FINALE_AT-1;p.weapon='gun';p.fx.mask.t=3;p.rush=1.5;p.missiles.push({id:1,x:0,y:0,z:2,delay:0,life:2,age:0,target:null,splash:0,done:false,side:0});run(p,.1);
+ assert.ok(p.finale&&p.weapon===null&&p.roll===null&&p.fx.mask.t===0&&p.rush===1&&p.missiles.length===0,'the final approach is flown without weapons');
+ // the glide path goes down and the runway comes last; its gates stand before the runway, the runway at the end of the route
+ const k=running(12);k.dist=core.FINALE_AT;const ys=[];let runwaySeen=false,onTheRoute=true;
+ for(let i=0;i<60*40&&k.phase==='run';i++){core.step(k,1/60,{});for(const e of core.drain(k))if(e.type==='gate'&&e.gate.approach)ys.push(e.gate.y);if(k.finale&&k.finale.runwayZ!=null){runwaySeen=true;if(Math.abs(k.finale.runwayZ*C.unit-core.remaining(k))>C.unit*.6&&k.phase==='run')onTheRoute=false;}}
+ assert.ok(runwaySeen&&onTheRoute,'a runway ahead, as far as the route still goes');assert.ok(ys.length>=5&&ys[0]>ys[ys.length-1],'the approach gates go down: '+ys.map(y=>y.toFixed(2)).join(' '));
  assert.ok(k.finale.groundY<ys[ys.length-1],'the runway is below the last gate');
  // the pointer nudges the autopilot a little: far to one side it costs the perfect landing, but not the landing
- const side=running(12);side.runTime=C.missionTime;for(let i=0;i<60*60&&side.phase==='run';i++)core.step(side,1/60,{tx:99,ty:0});core.drain(side);
+ const side=running(12);side.dist=core.FINALE_AT;for(let i=0;i<60*60&&side.phase==='run';i++)core.step(side,1/60,{tx:99,ty:0});core.drain(side);
  assert.equal(side.phase,'won','a pointer thrown to the edge still lands');assert.ok(side.landing.dx>.3&&side.landing.dx<=C.nudgeX+.2&&side.landing.grade!=='perfect','the nudge is small: '+side.landing.dx.toFixed(2)+' '+side.landing.grade);
- const wild=running(12);wild.runTime=C.missionTime;for(let i=0;i<60*60&&wild.phase==='run';i++)core.step(wild,1/60,{tx:(i%240<120?99:-99),ty:(i%180<90?9:-9),boost:true});core.drain(wild);
+ const wild=running(12);wild.dist=core.FINALE_AT;for(let i=0;i<60*60&&wild.phase==='run';i++)core.step(wild,1/60,{tx:(i%240<120?99:-99),ty:(i%180<90?9:-9),boost:true});core.drain(wild);
  assert.ok(wild.phase==='won'||wild.phase==='over','the finale ends');
 }
 
@@ -410,12 +489,12 @@ const run=(g,seconds,input={},dt=1/60)=>{for(let i=0;i<Math.round(seconds/dt);i+
  const CALM={...FIELD,calm:true};
  const g=running(23,CALM);inMode(g,'AUTO');g.gates=[{id:1,n:1,x:2,y:.3,z:30,r:1,state:'ahead',quality:null,age:0,approach:false}];g.lastGate=g.gates[0];g.enemyClock=99;run(g,2.5,{tx:-3,ty:-1});
  const before=g.plane.x;assert.ok(before>1.5,'the autopilot flew to the ring');
- g.runTime=windowOf('AUTO')+C.length*0+core.PLAN[3].len-.02;const ev=run(g,.1,{tx:-3,ty:-1});
+ g.dist=windowOf('AUTO')+core.PLAN[3].len-1;const ev=run(g,.1,{tx:-3,ty:-1});
  const mode=ev.find(e=>e.type==='mode');assert.ok(mode&&mode.to==='FBWA'&&mode.handover===true&&g.handover>0,'the plan hands the aircraft over to the pilot, with a warning');
  run(g,.5,{tx:-3,ty:-1});assert.ok(g.plane.x>before-.9,'half a second later the pointer on the far side has not yanked the aircraft away: '+before.toFixed(2)+' -> '+g.plane.x.toFixed(2));
  run(g,3.2,{tx:-3,ty:-1});assert.ok(g.plane.x<-1.5,'then the pointer is in charge: '+g.plane.x.toFixed(2));
  // a mode that does not follow the autopilot has no hand-over
- const h=running(23,CALM);inMode(h,'CRUISE');h.runTime=windowOf('CRUISE')+core.PLAN[1].len-.02;const hev=run(h,.1,{});assert.ok(hev.find(e=>e.type==='mode'&&e.to==='GUIDED').handover===false&&h.handover===0,'no hand-over from CRUISE');
+ const h=running(23,CALM);inMode(h,'CRUISE');h.dist=windowOf('CRUISE')+core.PLAN[1].len-1;const hev=run(h,.1,{});assert.ok(hev.find(e=>e.type==='mode'&&e.to==='GUIDED').handover===false&&h.handover===0,'no hand-over from CRUISE');
 }
 // ---------------------------------------------------------------- the wind: constant, turning, with gusts; it shows and it carries
 {
@@ -446,7 +525,7 @@ const run=(g,seconds,input={},dt=1/60)=>{for(let i=0;i<Math.round(seconds/dt);i+
  assert.ok(r.enemies[0].x>r.gates[0].x,'... the other aircraft more than the rings');
  const d=core.enemyDrift(r);assert.ok(Math.abs(d.x-r.wind.vx*C.enemyWind)<1e-12,'what the layer needs to predict the other aircraft');
  // the final approach is flown in a calmer wind
- const f=running(31);f.level=30;f.wind.speed=C.windMax;f.runTime=C.missionTime;run(f,6,{});assert.ok(f.finale&&core.windInfo(f).steady<C.windMax*C.finaleWind*1.2,'a calmer wind in the final approach: '+core.windInfo(f).steady.toFixed(2));
+ const f=running(31);f.level=30;f.wind.speed=C.windMax;f.dist=core.FINALE_AT;run(f,6,{});assert.ok(f.finale&&core.windInfo(f).steady<C.windMax*C.finaleWind*1.2,'a calmer wind in the final approach: '+core.windInfo(f).steady.toFixed(2));
 }
 // ---------------------------------------------------------------- the afterburner sprint
 {
@@ -501,8 +580,8 @@ const spawnLog=(seed,{level=8,seconds=90,corridor=null}={})=>{
  assert.ok(c1.end&&c1.end.clean===true&&c1.end.bonus>=C.sprintClean&&c1.g.score>=c1.s0+C.sprintClean&&c1.g.sprint.clean===1,'a sprint without a lost life pays a bonus');
  assert.ok(c2.end&&c2.end.clean===false&&c2.end.bonus===0&&c2.g.sprint.clean===0,'one with a lost life does not');
  // never in the final approach or in the last seconds before it
- const f=running(5);f.runTime=C.missionTime-C.clearBefore-C.sprintLast+1;f.sprint.wait=0;f.gates.forEach(x=>{x.state='passed';});const ev=run(f,3,{});assert.ok(!ev.some(e=>e.type==='sprint'),'no sprint starts in the last '+(C.clearBefore+C.sprintLast)+' s');
- const g=running(5);g.runTime=C.missionTime;g.sprint.mul=1.8;g.sprint.phase='burn';run(g,3,{});assert.ok(g.finale&&g.sprint.mul<1.05&&g.sprint.phase==='idle','a sprint that is on when the final approach starts is cut off: '+g.sprint.mul.toFixed(2));
+ const f=running(5);f.dist=core.FINALE_AT-C.clearBefore-C.sprintLast+1;f.runTime=60;f.sprint.wait=0;f.gates.forEach(x=>{x.state='passed';});const ev=run(f,3,{});assert.ok(!ev.some(e=>e.type==='sprint'),'no sprint starts in the last '+(C.clearBefore+C.sprintLast)+' m before the approach');
+ const g=running(5);g.dist=core.FINALE_AT;g.sprint.mul=1.8;g.sprint.phase='burn';run(g,3,{});assert.ok(g.finale&&g.sprint.mul<1.05&&g.sprint.phase==='idle','a sprint that is on when the final approach starts is cut off: '+g.sprint.mul.toFixed(2));
  // the boost on top of a sprint does not break the cap
  const h=running(5);h.level=30;h.sprint.mul=C.sprintPeakMax;h.boost=1;assert.ok(core.speedOf(h)<=C.baseSpeed*C.maxSpeedMul*C.speedCap+1e-9,'a sprint and the boost together stay under the cap');
 }
@@ -513,13 +592,13 @@ const spawnLog=(seed,{level=8,seconds=90,corridor=null}={})=>{
  const spawned={early:0,late:0,auto:0,gates:0},zs=new Set(),offs=[];
  for(let seed=1;seed<=14;seed++){
   for(const [label,level,mode] of [['early',1,'FBWA'],['late',16,'FBWA'],['auto',16,'AUTO']]){
-   const g=core.create(seed,FIELD);core.begin(g);g.phase='run';g.runTime=mode==='AUTO'?windowOf('AUTO')+1:20;g.level=level;g.mode=mode;
+   const g=core.create(seed,FIELD);core.begin(g);g.phase='run';g.dist=mode==='AUTO'?windowOf('AUTO')+1:1000;g.runTime=20;g.level=level;g.mode=mode;
    for(let i=0;i<260;i++){g.gates.forEach(x=>{x.z-=.08;});g.bonuses.forEach(x=>{x.z-=.08;});g.obstacles.forEach(x=>{x.z-=.08;});core.step(g,.001,{});}
    spawned[label]+=g.bonuses.length;if(label==='late'){spawned.gates+=g.gates.length;for(const b of g.bonuses){zs.add(Math.round(b.z*2));offs.push(b.off);assert.ok(Math.abs(b.x)<=g.fieldX&&Math.abs(b.y)<=g.fieldY&&b.r===C.bonusR);}}
   }
  }
  assert.ok(spawned.late>spawned.early&&spawned.late>=10,'more bonus rings as the flight goes on: '+spawned.early+' then '+spawned.late);assert.equal(spawned.auto,0,'none while the autopilot flies (the pilot has the gun then)');
- assert.ok(zs.size>=8,'at all kinds of depths ('+zs.size+' different ones)');assert.ok(Math.min(...offs)>=.9&&Math.max(...offs)>1.8,'off the line of the gates, some a long way: '+Math.min(...offs).toFixed(2)+' to '+Math.max(...offs).toFixed(2));
+ assert.ok(zs.size>=6,'at all kinds of depths ('+zs.size+' different ones)');assert.ok(Math.min(...offs)>=.9&&Math.max(...offs)>1.8,'off the line of the gates, some a long way: '+Math.min(...offs).toFixed(2)+' to '+Math.max(...offs).toFixed(2));
  // taking one pays and charges the ULT; missing one costs nothing
  const take=(dx,mode='FBWA')=>{const g=running(6,CALM);inMode(g,mode);const b={id:77,kind:'bonus',x:1,y:.2,z:.02,r:C.bonusR,off:1.5,state:'ahead',age:0};g.bonuses.push(b);g.plane.x=1+dx;g.plane.y=.2;core.step(g,.02,{});return {g,b,ev:core.drain(g)};};
  let r=take(0);assert.equal(r.b.state,'taken');assert.ok(r.ev.some(e=>e.type==='bonus'&&e.points===Math.round(C.bonusPts+C.bonusFar*1.5))&&r.g.score>=C.bonusPts&&r.g.ult===C.bonusUlt&&r.g.bonusTaken===1,'a bonus ring pays and charges the ULT');
@@ -537,7 +616,99 @@ const spawnLog=(seed,{level=8,seconds=90,corridor=null}={})=>{
  assert.ok(Math.max(...xs)>2&&Math.min(...xs)<-2&&Math.max(...ys)>.5&&Math.min(...ys)<-.5,'the rings use the whole field: x '+Math.min(...xs).toFixed(1)+'..'+Math.max(...xs).toFixed(1)+', y '+Math.min(...ys).toFixed(1)+'..'+Math.max(...ys).toFixed(1));
  assert.ok(kinds.size>=4,'the gates follow more than one pattern: '+[...kinds].join(' '));
  assert.ok(worst<=C.hopXMax+.01&&worstY<=C.hopY+C.hopYStep*40,'a hop sideways never passes '+C.hopXMax+' and one up or down is small: '+worst.toFixed(2)+', '+worstY.toFixed(2));
-}// ---------------------------------------------------------------- the tune and the music switch
+}
+// ---------------------------------------------------------------- the weapon boxes: a roulette, one slot, five weapons; they lie between the gates
+{
+ const CALM={...FIELD,calm:true};
+ // a quiet sky: the ring and the hazards are the test's own
+ const quiet=g=>{g.gates.forEach(x=>{x.state='passed';});g.obstacles.length=g.enemies.length=g.boxes.length=g.plumes.length=g.bonuses.length=0;g.enemyClock=1e9;g.boxWait=1e9;return g;};
+ const keep=(g,seconds,input={tx:0,ty:0})=>{for(let i=0;i<Math.round(seconds*60);i++){g.lives=C.lives;g.gates.forEach(x=>{if(x.state==='ahead'&&x.z<1&&x.id!==999)x.state='passed';});core.step(g,1/60,input);}return core.drain(g);};
+ let id=5000;
+ const boxAt=(g,dx=0,dy=0)=>{const b={id:id++,kind:'box',x:g.plane.x+dx,y:g.plane.y+dy,z:.02,r:C.boxR,state:'ahead',age:0};g.boxes.push(b);return b;};
+ let g=quiet(running(14,CALM)),b=boxAt(g),ev=run(g,.02);
+ assert.ok(b.state==='taken'&&g.roll&&!g.weapon&&g.boxesTaken===1&&g.score===C.boxPts,'a box starts a roulette and pays');
+ assert.ok(ev.some(e=>e.type==='box'&&e.full===false));assert.equal(core.useWeapon(g),null,'nothing to use while the roulette turns');
+ keep(g,C.roulette*.5);assert.ok(g.roll&&!g.weapon);
+ ev=keep(g,C.roulette*.6);assert.ok(!g.roll&&core.WEAPONS.includes(g.weapon)&&ev.some(e=>e.type==='weapon'&&e.weapon===g.weapon),'then the weapon is in the slot');
+ assert.ok(!g.boxes.length,'a taken box is gone');
+ const held=g.weapon;boxAt(g);ev=run(g,.02);assert.ok(g.weapon===held&&!g.roll&&ev.some(e=>e.type==='box'&&e.full===true),'a second box while the slot is busy only pays');
+ g=quiet(running(14,CALM));b=boxAt(g,C.boxR+C.boxReach+.05,0);run(g,.02);assert.ok(b.state==='missed'&&!g.roll&&g.score===0&&g.lives===C.lives,'a box that goes by gives nothing and costs nothing');
+ const count={};
+ for(let seed=1;seed<=400;seed++){const k=quiet(running(seed,CALM));boxAt(k);run(k,.02);count[k.roll.result]=(count[k.roll.result]||0)+1;}
+ assert.ok(core.WEAPONS.every(w=>count[w]>=400*C.weights[w]*.6),'every weapon comes out of the boxes: '+JSON.stringify(count));
+ // along the route: boxes and feathers between the gates, none while the autopilot flies, in CRUISE at the height of the next ring
+ for(let seed=1;seed<=6;seed++){
+  const k=core.create(seed,FIELD);core.begin(k);const known=new Set(),made={boxes:0,plumes:0};let inAuto=0,offHeight=0;
+  while(k.phase!=='won'&&k.phase!=='over'&&k.runTime<600){
+   const n=core.nextGate(k);if(n){k.plane.x=n.x;k.plane.y=n.y;}k.lives=C.lives;k.obstacles.length=k.enemies.length=0;
+   core.step(k,1/60,{tx:k.plane.x,ty:k.plane.y});core.drain(k);
+   for(const name of ['boxes','plumes'])for(const o of k[name])if(!known.has(o.id)){known.add(o.id);made[name]++;if(k.mode==='AUTO')inAuto++;if(k.mode==='CRUISE'&&Math.abs(o.y-k.lastGate.y)>1e-9)offHeight++;assert.ok(o.z>=C.spawnMinZ-.2&&Math.abs(o.x)<=k.fieldX,'nothing new appears right at the aircraft');}
+  }
+  assert.ok(made.boxes>=14&&made.boxes<=40&&made.plumes>=50&&made.plumes<=200,'boxes and feathers on the way (seed '+seed+'): '+JSON.stringify(made));
+  assert.equal(inAuto,0,'none while the autopilot flies');assert.equal(offHeight,0,'in CRUISE they hang at the height of the next ring');
+ }
+}
+// ---------------------------------------------------------------- the five weapons, and the levels of the feathers
+{
+ const CALM={...FIELD,calm:true};
+ const quiet=g=>{g.gates.forEach(x=>{x.state='passed';});g.obstacles.length=g.enemies.length=g.boxes.length=g.plumes.length=g.bonuses.length=0;g.enemyClock=1e9;g.boxWait=1e9;return g;};
+ const keep=(g,seconds,input={tx:0,ty:0})=>{for(let i=0;i<Math.round(seconds*60);i++){g.lives=C.lives;g.gates.forEach(x=>{if(x.state==='ahead'&&x.z<1&&x.id!==999)x.state='passed';});core.step(g,1/60,input);}return core.drain(g);};
+ const arm=(name,level=0,seed=15)=>{const g=quiet(running(seed,CALM));g.feathers=level*C.feathersPerLevel;g.weapon=name;return g;};
+ const enemy=(id,x,y,z)=>({id,kind:'enemy',x,y,z,r:C.enemyR,state:'ahead',age:0,vx:0,vy:0});
+ const pylon=(id,x,y,z)=>({id,kind:'pylon',x,y,z,r:C.pylonR,state:'ahead',age:0});
+ const aside=g=>{const gate={id:999,n:999,x:g.plane.x+3,y:g.plane.y,z:.02,r:1,state:'ahead',quality:null,age:0,approach:false};g.gates.push(gate);return gate;};
+ // the turbo: a burst of speed; a ring missed while it burns costs nothing
+ let g=arm('turbo');const normal=core.speedOf(g);assert.equal(core.useWeapon(g),'turbo');let ev=core.drain(g);
+ assert.ok(g.weapon===null&&g.used===1&&g.fx.turbo.t===core.weaponParams('turbo',0).dur&&ev.some(e=>e.type==='use'&&e.weapon==='turbo'&&e.level===0));
+ keep(g,.8);assert.ok(core.speedOf(g)>normal*1.4,'the turbo is a burst of speed: '+(core.speedOf(g)/normal).toFixed(2));assert.ok(core.airspeed(g)>core.speedOf(g)*C.unit*3.6-.01);
+ const d0=g.dist;keep(g,1);assert.ok(g.dist-d0>normal*C.unit*1.4,'... and the route goes by faster');
+ let gate=aside(g),streak=g.streak=4,hp=g.lives;ev=run(g,.02);assert.ok(gate.state==='missed'&&gate.quality==='forgiven'&&g.lives===hp&&g.streak===streak&&g.missed===0&&ev.some(e=>e.type==='forgiven'),'a missed ring is free while the turbo burns');
+ ev=keep(g,core.weaponParams('turbo',0).dur);assert.ok(g.fx.turbo.t===0&&ev.some(e=>e.type==='effectEnd'&&e.weapon==='turbo'),'it burns out');keep(g,1);assert.ok(Math.abs(core.speedOf(g)-normal)<normal*.2,'and the speed comes back');
+ gate=aside(g);hp=g.lives=C.lives;run(g,.02);assert.ok(gate.quality==='miss'&&g.lives===hp-1,'then a missed ring costs again');
+ // used again while it works: the longer time stays
+ g=arm('turbo');core.useWeapon(g);const t1=g.fx.turbo.t;keep(g,1);g.weapon='turbo';core.useWeapon(g);assert.ok(g.fx.turbo.t>=t1-1e-9&&g.used===2);
+ // the machine gun: it fires by itself at what is near the line of flight, pylons from level 2
+ g=arm('gun');core.useWeapon(g);core.drain(g);let near=enemy(31,0,0,4),side=enemy(32,3.2,.1,4),post=pylon(33,0,0,6);g.enemies.push(near,side);g.obstacles.push(post);
+ ev=run(g,.05,{tx:0,ty:0});assert.ok(near.state==='shot'&&side.state==='ahead'&&post.state==='ahead'&&g.kills===1,'the gun shoots the aircraft in line, not the one far to the side, no pylon at level 0');
+ assert.ok(ev.some(e=>e.type==='gunShot'&&e.hit)&&ev.some(e=>e.type==='destroy'&&e.how==='gun'&&e.kind==='enemy'));
+ ev=keep(g,1);assert.ok(ev.filter(e=>e.type==='gunShot').length>=3,'again and again');ev=keep(g,core.weaponParams('gun',0).dur);assert.ok(g.fx.gun.t===0&&!keep(g,.5).some(e=>e.type==='gunShot'),'until it runs out');
+ g=arm('gun',C.gunPylonLevel);core.useWeapon(g);post=pylon(34,0,0,6);g.obstacles.push(post);keep(g,.3);assert.ok(post.state==='shot'&&g.wrecked===1,'at level '+C.gunPylonLevel+' it breaks pylons too');
+ // the missiles: they find their targets by themselves; one more at every level; with nothing to chase they stay in the slot
+ g=arm('missiles');assert.equal(core.useWeapon(g),null);assert.ok(g.weapon==='missiles'&&core.drain(g).some(e=>e.type==='weaponDenied'),'nothing to chase: the missiles stay');
+ core.useWeapon(g);assert.ok(!core.drain(g).some(e=>e.type==='weaponDenied'),'... said once, not on every press');
+ let far=enemy(41,2.2,.6,6);g.enemies.push(far);assert.equal(core.useWeapon(g),'missiles');assert.equal(g.missiles.length,1);ev=keep(g,1.5);
+ assert.ok(far.state==='shot'&&g.kills===1&&ev.some(e=>e.type==='destroy'&&e.how==='missile')&&!g.missiles.length,'it homes on the aircraft far off the line');
+ g=arm('missiles',2);const a=enemy(42,2,.5,6),b=enemy(43,-2,-.3,7),c=pylon(44,1.2,-.7,8);g.enemies.push(a,b);g.obstacles.push(c);core.useWeapon(g);
+ assert.equal(g.missiles.length,3);assert.equal(new Set(g.missiles.map(m=>m.target)).size,3,'three missiles, three targets, aircraft first');assert.equal(g.missiles[0].target,42);keep(g,2.5);assert.ok(g.kills===2&&g.wrecked===1,'all three found');
+ g=arm('missiles',C.maxLevel);const first=enemy(45,0,0,6),beside=enemy(46,.7,.1,6.4);g.enemies.push(first,beside);core.useWeapon(g);assert.equal(g.missiles.length,C.maxLevel+1);keep(g,.75);assert.ok(first.state==='shot'&&beside.state==='shot','the blast takes the neighbours');
+ g=arm('missiles');g.enemies.push(enemy(47,0,0,1.2));core.useWeapon(g);g.enemies.length=0;keep(g,C.missileLife+.5);assert.equal(g.missiles.length,0,'a missile with no target flies on and goes out');
+ // invulnerable and faster: it smashes what it flies into, a missed ring is free
+ g=arm('mask');core.useWeapon(g);keep(g,.5);assert.ok(core.speedOf(g)>normal*1.2,'faster');
+ const foe=enemy(51,g.plane.x,g.plane.y,.02),rock=pylon(52,g.plane.x,g.plane.y,.02);g.enemies.push(foe);g.obstacles.push(rock);ev=run(g,.02);
+ assert.ok(g.lives===C.lives&&g.hits===0&&foe.state==='shot'&&rock.state==='shot'&&g.kills===1&&g.wrecked===1&&ev.filter(e=>e.type==='destroy'&&e.how==='mask').length===2,'invulnerable: it smashes what it flies into');
+ gate=aside(g);hp=g.lives;run(g,.02);assert.ok(gate.quality==='forgiven'&&g.lives===hp);
+ ev=keep(g,core.weaponParams('mask',0).dur);assert.ok(g.fx.mask.t===0);
+ const after=enemy(53,g.plane.x,g.plane.y,.02);g.enemies.push(after);g.invuln=0;run(g,.02);assert.equal(g.hits,1,'then it can be hit again');
+ // the barrier pushes pylons and aircraft out of the way before they arrive; from level 3 it breaks them
+ g=arm('barrier');core.useWeapon(g);const post1=pylon(61,.15,.05,3.5),plane2=enemy(62,-.1,0,4);g.obstacles.push(post1);g.enemies.push(plane2);ev=keep(g,1.5);
+ assert.ok(g.hits===0&&ev.some(e=>e.type==='repel'&&e.kind==='pylon')&&Math.hypot(post1.x-g.plane.x,post1.y-g.plane.y)>post1.r+C.planeR-.05,'pushed aside: '+post1.x.toFixed(2)+' '+post1.y.toFixed(2));
+ g=arm('barrier');core.useWeapon(g);const close=pylon(63,g.plane.x,g.plane.y,.01);g.obstacles.push(close);run(g,.02);assert.equal(g.hits,0,'and nothing hurts while it stands');
+ g=arm('barrier',C.barrierCrushLevel);core.useWeapon(g);const post2=pylon(64,.2,0,3);g.obstacles.push(post2);keep(g,.6);assert.ok(post2.state==='shot'&&g.wrecked===1,'at level '+C.barrierCrushLevel+' it breaks them');
+ g=arm('barrier');core.useWeapon(g);const away=pylon(65,2.6,.8,3);g.obstacles.push(away);keep(g,.3);assert.ok(Math.abs(away.x-2.6)<1e-9&&Math.abs(away.y-.8)<1e-9,'what is far from it is left alone');
+ // two weapons at once; no weapon while paused, before the start, or with an empty slot
+ g=arm('barrier');core.useWeapon(g);g.weapon='turbo';core.useWeapon(g);assert.deepEqual(core.effectsOf(g).map(f=>f.name),['turbo','barrier']);assert.ok(core.effectsOf(g).every(f=>f.frac>0&&f.frac<=1&&f.left>0));
+ g=arm('turbo');g.phase='paused';assert.equal(core.useWeapon(g),null);g.phase='run';g.weapon=null;assert.equal(core.useWeapon(g),null);assert.equal(core.useWeapon(core.create(1)),null);
+ // the feathers: every ten make every weapon a level stronger, up to the top
+ g=quiet(running(16,CALM));const ups=[];
+ for(let i=1;i<=C.feathersPerLevel*(C.maxLevel+2);i++){g.plumes.push({id:7000+i,kind:'feather',x:g.plane.x,y:g.plane.y,z:.02,r:C.featherR,state:'ahead',age:0});g.lives=C.lives;for(const e of run(g,.02))if(e.type==='upgrade')ups.push([i,e.level,e.max]);}
+ assert.equal(g.feathers,C.feathersPerLevel*(C.maxLevel+2));assert.equal(core.weaponLevel(g),C.maxLevel);assert.ok(!g.plumes.length&&g.score>=g.feathers*C.featherPts);
+ assert.deepEqual(ups.map(u=>u[0]),Array.from({length:C.maxLevel},(_,i)=>(i+1)*C.feathersPerLevel),'an upgrade every ten feathers');assert.deepEqual(ups.map(u=>u[1]),Array.from({length:C.maxLevel},(_,i)=>i+1));assert.ok(ups[ups.length-1][2]===true&&ups.slice(0,-1).every(u=>u[2]===false),'the last one says it is the top');
+ g.weapon='mask';core.useWeapon(g);assert.equal(g.fx.mask.dur,core.weaponParams('mask',C.maxLevel).dur,'the upgraded weapon is stronger');assert.equal(g.fx.mask.mul,core.weaponParams('mask',C.maxLevel).mul);
+ g=quiet(running(16,CALM));g.plumes.push({id:1,kind:'feather',x:g.plane.x+C.featherR+C.featherReach+.05,y:g.plane.y,z:.02,r:C.featherR,state:'ahead',age:0});run(g,.02);assert.equal(g.feathers,0,'a feather that goes by is not picked up');
+ // the box and its feathers move with the card and the wind
+ g=quiet(running(16,CALM));g.boxes.push({id:2,kind:'box',x:3,y:2,z:5,r:C.boxR,state:'ahead',age:0});g.plumes.push({id:3,kind:'feather',x:-3,y:-2,z:5,r:C.featherR,state:'ahead',age:0});core.setField(g,1.5,.8,.5);assert.ok(Math.abs(g.boxes[0].x-1.5)<1e-9&&Math.abs(g.plumes[0].x+1.5)<1e-9&&Math.abs(g.plumes[0].y+.5)<1e-9);
+}
+// ---------------------------------------------------------------- the tune and the music switch
 {
  const MU=core.MUSIC;assert.ok(Object.isFrozen(MU)&&MU.steps===128&&MU.bpm>=110&&MU.bpm<=160,'an eight-bar loop of sixteenth notes');
  const lead=[],bass=[],arp=[];let kicks=0,snares=0,hats=0;
@@ -575,6 +746,7 @@ class El{
  after(n){const p=this.parent;n.parent=p;p.kids.splice(p.kids.indexOf(this)+1,0,n);}
  replaceWith(n){const p=this.parent;n.parent=p;p.kids[p.kids.indexOf(this)]=n;}
  focus(){this.focused++;}
+ contains(n){for(;n;n=n.parent)if(n===this)return true;return false;}
  find(pred){if(pred(this))return this;for(const k of this.kids)if(k instanceof El){const r=k.find(pred);if(r)return r;}return null;}
  findAll(pred,out=[]){if(pred(this))out.push(this);for(const k of this.kids)if(k instanceof El)k.findAll(pred,out);return out;}
 }
@@ -633,7 +805,7 @@ function runLayer({lang='ru',storageBlocked=false,coarse=false,springs=true,widt
   setLang(l){window.AtlasI18n.lang=l;for(const f of winHandlers['atlas:languagechange']||[])f();}};
 }
 // time passes and nobody loses a life: the rings that come are taken, and the wind waits unless a test wants it
-const settle=(tt,s,gust=true)=>{const g=tt.layer.game;for(let i=0;i<Math.round(s*60);i++){g.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});g.lives=C.lives;if(gust)g.gust.wait=99;tt.frame();}};
+const settle=(tt,s,gust=true)=>{const g=tt.layer.game;for(let i=0;i<Math.round(s*60);i++){g.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});g.lives=C.lives;if(gust)g.gust.wait=99;g.boxes.length=g.plumes.length=0;g.weapon=null;g.roll=null;tt.frame();}};      // (no boxes and feathers either: they have their own tests)
 {
  const t=runLayer();
  assert.ok(t.layer&&t.demo.layer===t.layer,'the layer registers itself in the demo');
@@ -731,23 +903,23 @@ const settle=(tt,s,gust=true)=>{const g=tt.layer.game;for(let i=0;i<Math.round(s
  const g=t.layer.game,chip=n=>t.chips[n],part=(n,cls)=>chip(n).children.find(x=>x.classes.has(cls)),fillOf=n=>part(n,'game-mode-fill'),leftOf=n=>part(n,'game-mode-left').textContent;
  t.move(t.state.w*.5,t.state.h*.51);settle(t,.1);
  assert.equal(g.mode,'FBWA');assert.ok(chip('FBWA').classes.has('is-active')&&!chip('CRUISE').classes.has('is-active')&&chip('CRUISE').classes.has('is-next'),'FBWA is flying, CRUISE comes next');
- assert.equal(leftOf('FBWA'),'00:45','the time the mode has left');assert.equal(chip('FBWA').attrs['aria-current'],'true');assert.equal(chip('CRUISE').attrs['aria-current'],undefined);
+ assert.equal(leftOf('FBWA'),'3.0 км','the distance the leg has left');assert.equal(chip('FBWA').attrs['aria-current'],'true');assert.equal(chip('CRUISE').attrs['aria-current'],undefined);
  assert.ok(!t.tip.hidden&&t.tip.textContent.startsWith('FBWA:')&&/ветер/.test(t.tip.textContent),'the tip of the first mode: '+t.tip.textContent);
  assert.equal(t.layer.status(),null,'nothing to say in the middle of a plain run');assert.equal(t.centre.style.visibility,'hidden','the demo\'s text in the middle of the card is hidden then');
  // the keys 1-4 and the chips do nothing: the plan decides
  for(const k of ['1','2','3','4'])t.host.fire('keydown',{key:k});for(const c of Object.values(t.chips))c.fire('click');assert.equal(g.mode,'FBWA','the mode cannot be picked');
  // half way through FBWA
  settle(t,6);assert.ok(t.tip.hidden||!t.tip.textContent.startsWith('FBWA:'),'a tip goes away by itself (the hints that were waiting come after it)');
- g.runTime=22.5;settle(t,.1);assert.ok(/^(4|5)\d%$/.test(fillOf('FBWA').style.width),'the bar of the mode fills as its time runs out: '+fillOf('FBWA').style.width);
+ g.dist=1500;settle(t,.1);assert.ok(/^(4|5)\d%$/.test(fillOf('FBWA').style.width),'the bar of the mode fills as its leg goes by: '+fillOf('FBWA').style.width);
  // the boundaries of the plan, one after the other: the mode, the announcement in the middle, the chips, the tip (once per mode)
  const from=[];{let f=0;for(const p of core.PLAN){from.push(f);f+=p.len;}}
  const shown=[];
  for(let i=1;i<core.PLAN.length;i++){
-  g.runTime=from[i]-.03;settle(t,.3);const now=t.tip.hidden?'':t.tip.textContent;shown.push([g.mode,now.startsWith(g.mode+':')]);
+  g.dist=from[i]-1;settle(t,.3);const now=t.tip.hidden?'':t.tip.textContent;shown.push([g.mode,now.startsWith(g.mode+':')]);
   if(i===1){
    assert.equal(g.mode,'CRUISE');assert.equal(t.layer.status(),'РЕЖИМ CRUISE','the new mode is announced in the middle of the card');t.frame();assert.equal(t.centre.style.visibility,'');
    assert.ok(chip('CRUISE').classes.has('is-active')&&!chip('FBWA').classes.has('is-active')&&chip('GUIDED').classes.has('is-next')&&!chip('CRUISE').classes.has('is-next'),'exactly one mode is active, the next is marked');
-   assert.ok(/^00:[23]\d$/.test(leftOf('CRUISE'))&&leftOf('FBWA')==='','the active mode counts the seconds');assert.ok(/автопилот/.test(now),'a tip for the new mode: '+now);
+   assert.ok(/^(2\.0|1\.9) км$/.test(leftOf('CRUISE'))&&leftOf('FBWA')==='','the active mode counts down its distance: '+leftOf('CRUISE'));assert.ok(/автопилот/.test(now),'a tip for the new mode: '+now);
    settle(t,2);assert.equal(t.layer.status(),null,'the announcement goes away');
   }
   settle(t,5.4);
@@ -759,7 +931,7 @@ const settle=(tt,s,gust=true)=>{const g=tt.layer.game;for(let i=0;i<Math.round(s
  assert.ok(q.tip.textContent.startsWith('FBWA:'),'the mode tip stays while a gust is announced: '+q.tip.textContent);assert.equal(q.layer.status().startsWith('ПОРЫВ ВЕТРА'),true,'the gust itself is announced in the middle');
  settle(q,5.4,false);assert.ok(!q.tip.hidden&&/Порыв ветра/.test(q.tip.textContent),'then the tip about the gust: '+q.tip.textContent);
  // the finale
- g.runTime=C.missionTime-.05;settle(t,.3);assert.equal(g.mode,'AUTOLAND');assert.equal(t.layer.status(),'ЗАХОД НА ПОСАДКУ');
+ g.dist=core.FINALE_AT-1;settle(t,.3);assert.equal(g.mode,'AUTOLAND');assert.equal(t.layer.status(),'ЗАХОД НА ПОСАДКУ');
  assert.ok(t.bar.children.find(n=>n.classes.has('game-landing')).hidden===false&&t.root.find(n=>n.classes.has('game-modes')).hidden===true,'the modes give way to AUTOLAND');assert.ok(/AUTOLAND/.test(t.tip.textContent),'and the tip of the landing');
  assert.ok(Object.values(t.chips).every(c=>!c.classes.has('is-active')));
 }
@@ -782,11 +954,11 @@ const settle=(tt,s,gust=true)=>{const g=tt.layer.game;for(let i=0;i<Math.round(s
  g.gates.forEach(x=>{x.state='passed';});g.lives=C.lives;
  const en=(x,y,z)=>({id:900+Math.round(z*10),kind:'enemy',x,y,z,r:C.enemyR,state:'ahead',age:0,vx:.4,vy:0});
  for(const mode of ['FBWA','CRUISE','GUIDED','AUTO']){
-  g.runTime=windowOf(mode)+2;g.obstacles.push({id:800+mode.length,kind:'pylon',x:.5,y:.2,z:2.4,r:C.pylonR,state:'ahead',age:0});g.enemies.push(en(-1.2,.3,3.2),en(1.4,0,5.5));g.ult=100;
+  g.dist=windowOf(mode)+5;g.obstacles.push({id:800+mode.length,kind:'pylon',x:.5,y:.2,z:2.4,r:C.pylonR,state:'ahead',age:0});g.enemies.push(en(-1.2,.3,3.2),en(1.4,0,5.5));g.ult=100;
   const s0=t.calls.save,r0=t.calls.restore;t.seconds(.6);assert.equal(t.calls.save-s0,t.calls.restore-r0,'the canvas is put back every frame in '+mode);
   g.obstacles.length=0;g.enemies.length=0;g.gates.forEach(x=>{x.state='passed';});g.lives=C.lives;
  }
- g.runTime=C.missionTime-.05;t.seconds(5);assert.ok(g.finale);const s0=t.calls.save,r0=t.calls.restore;t.seconds(8);assert.equal(t.calls.save-s0,t.calls.restore-r0,'and in the final approach with the runway');
+ g.dist=core.FINALE_AT-1;t.seconds(5);assert.ok(g.finale);const s0=t.calls.save,r0=t.calls.restore;t.seconds(8);assert.equal(t.calls.save-s0,t.calls.restore-r0,'and in the final approach with the runway');
  // the camera banks with the aircraft about the aircraft (it stays under the pointer), limited, level at rest
  const c=runLayer({springs:false});c.layer.start();c.seconds(C.countdown+.3);c.layer.game.gates.forEach(x=>{x.state='passed';});c.move(c.state.w*.7,c.state.h*.45);settle(c,1.5);
  c.state.roll=-60;settle(c,.8);assert.ok(c.layer.camera.roll<-.1&&c.layer.camera.roll>=-.3,'the camera follows the bank, limited (and shaken a little by a hit): '+c.layer.camera.roll);assert.ok(c.layer.camera.active);
@@ -806,10 +978,11 @@ const settle=(tt,s,gust=true)=>{const g=tt.layer.game;for(let i=0;i<Math.round(s
  // not in FBWA
  g.enemies.push(enemy(41,1,.3,4));stand();const p=P(1,.3,4);t.move(p.x,p.y);t.host.fire('pointerdown',{pointerType:'mouse',button:0});t.host.fire('pointerup',{pointerType:'mouse'});assert.equal(g.kills,0,'the left button is the boost in FBWA, not a gun');
  // in AUTO a click on an enemy shoots it
- g.enemies.length=0;g.runTime=windowOf('AUTO')+1;g.mode='AUTO';stand();t.seconds(.2);g.enemies.push(enemy(42,1,.3,4),enemy(43,-1.5,0,6));
+ g.enemies.length=0;g.dist=windowOf('AUTO')+1;g.mode='AUTO';stand();t.seconds(.2);g.enemies.push(enemy(42,1,.3,4),enemy(43,-1.5,0,6));
  let q=P(1,.3,4);t.move(q.x,q.y);t.seconds(.02);t.host.fire('pointerdown',{pointerType:'mouse',button:0});assert.equal(g.kills,1,'a click on an enemy in AUTO shoots it down');t.host.fire('pointerup',{pointerType:'mouse'});
  assert.ok(g.enemies.find(e=>e.id===42).state==='shot','that one is the target');t.seconds(.05);assert.ok(!g.enemies.some(e=>e.id===42),'and it is gone');assert.ok(t.layer.game.score>=C.shotKill);
  q=P(-1.5,0,6);t.move(q.x,q.y);t.seconds(.3);t.host.fire('pointerdown',{pointerType:'mouse',button:0});assert.equal(g.kills,2,'the pointer follows the perspective: an enemy far away is shot where it is drawn');t.host.fire('pointerup',{pointerType:'mouse'});
+ t.seconds(.3);g.weapon=null;g.roll=null;g.ult=0;g.enemies.push(enemy(47,1,.3,4));q=P(1,.3,4);t.move(q.x,q.y);t.seconds(.3);t.host.fire('keydown',{key:' ',code:'Space'});t.host.fire('keyup',{key:' ',code:'Space'});assert.equal(g.kills,3,'in AUTO Space is the gun when there is nothing to use');g.kills=2;
  t.seconds(.3);g.enemies.push(enemy(44,1,.3,4));q=P(-2.5,-1,0);t.move(q.x,q.y);t.seconds(.3);t.host.fire('pointerdown',{pointerType:'mouse',button:0});assert.equal(g.kills,2,'a click beside misses');t.host.fire('pointerup',{pointerType:'mouse'});
  assert.ok(t.layer.mode==='run');
  // holding the button keeps firing at the pointer
@@ -823,9 +996,9 @@ const settle=(tt,s,gust=true)=>{const g=tt.layer.game;for(let i=0;i<Math.round(s
  // the boost: the button is held, the mode changes to one without it and back
  const b=runLayer({springs:false});b.layer.start();b.seconds(C.countdown+.3);const bg=b.layer.game;bg.gust.wait=99;bg.gates.forEach(x=>{x.state='passed';});
  b.host.fire('pointerdown',{pointerType:'mouse',button:0});b.state.boosted=true;b.seconds(.1);assert.equal(b.state.boosted,true,'the boost stays in FBWA');
- bg.runTime=windowOf('CRUISE')+1;bg.gates.forEach(x=>{x.state='passed';});b.seconds(.1);assert.equal(bg.mode,'CRUISE');assert.equal(b.state.boosted,false,'no boost in CRUISE');
- bg.runTime=windowOf('GUIDED')+1;bg.gates.forEach(x=>{x.state='passed';});b.seconds(.2);assert.equal(bg.mode,'GUIDED');assert.equal(b.state.boosted,true,'the button is still held: the boost comes back in GUIDED');
- b.host.fire('pointerup',{pointerType:'mouse'});b.state.boosted=false;bg.runTime=windowOf('CRUISE',1)+1;b.seconds(.1);bg.runTime=windowOf('FBWA',1)+1;bg.gates.forEach(x=>{x.state='passed';});b.seconds(.2);assert.equal(b.state.boosted,false,'a released button does not come back');
+ bg.dist=windowOf('CRUISE')+1;bg.gates.forEach(x=>{x.state='passed';});b.seconds(.1);assert.equal(bg.mode,'CRUISE');assert.equal(b.state.boosted,false,'no boost in CRUISE');
+ bg.dist=windowOf('GUIDED')+1;bg.gates.forEach(x=>{x.state='passed';});b.seconds(.2);assert.equal(bg.mode,'GUIDED');assert.equal(b.state.boosted,true,'the button is still held: the boost comes back in GUIDED');
+ b.host.fire('pointerup',{pointerType:'mouse'});b.state.boosted=false;bg.dist=windowOf('CRUISE',1)+1;b.seconds(.1);bg.dist=windowOf('FBWA',1)+1;bg.gates.forEach(x=>{x.state='passed';});b.seconds(.2);assert.equal(b.state.boosted,false,'a released button does not come back');
  // the overlay, the bar and the button must not reach the demo's boost
  assert.ok(t.overlay.fire('pointerdown',{}).stopped,'a press on the overlay does not boost');assert.ok(t.toggle.fire('pointerdown',{}).stopped);assert.ok(t.bar.fire('pointerdown',{}).stopped,'nor a press on the bar');
  // touch never boosts in the game, the mouse and Space still do
@@ -893,8 +1066,8 @@ const settle=(tt,s,gust=true)=>{const g=tt.layer.game;for(let i=0;i<Math.round(s
  const sh=runLayer({springs:false});sh.layer.start();sh.move(sh.state.w*.5,sh.state.h*.5);sh.seconds(C.countdown+.3);sh.layer.game.wind.shiftWait=0;settle(sh,.2,false);assert.equal(sh.layer.status(),'ВЕТЕР ПОМЕНЯЛСЯ','a shift of the wind is announced');
  sh.setLang('en');assert.ok(/WIND|AFTERBURNER/.test('WIND'),'(the english texts are checked below)');
  // after the autopilot the pilot is told that the controls are theirs
- const h=runLayer({springs:false});h.layer.start();h.move(h.state.w*.5,h.state.h*.5);h.seconds(C.countdown+.3);const hg=h.layer.game;hg.runTime=windowOf('AUTO')+1;h.move(h.state.w*.5,h.state.h*.5);settle(h,13,false);
- hg.runTime=windowOf('AUTO')+core.PLAN[3].len-.05;settle(h,.4,false);assert.equal(hg.mode,'FBWA');assert.ok(/Управление переходит/.test(h.tip.textContent),'the hand-over tip: '+h.tip.textContent);
+ const h=runLayer({springs:false});h.layer.start();h.move(h.state.w*.5,h.state.h*.5);h.seconds(C.countdown+.3);const hg=h.layer.game;hg.dist=windowOf('AUTO')+1;h.move(h.state.w*.5,h.state.h*.5);settle(h,13,false);
+ hg.dist=windowOf('AUTO')+core.PLAN[3].len-1;settle(h,.4,false);assert.equal(hg.mode,'FBWA');assert.ok(/Управление переходит/.test(h.tip.textContent),'the hand-over tip: '+h.tip.textContent);
  // a bonus ring: the first one that comes is explained
  const q=runLayer({springs:false});q.layer.start();q.move(q.state.w*.5,q.state.h*.5);q.seconds(C.countdown+.3);const qg=q.layer.game;qg.bonuses.push({id:801,kind:'bonus',x:.5,y:0,z:5,r:C.bonusR,off:1,state:'ahead',age:0});settle(q,.2,false);
  assert.ok([...q.layer.game.bonuses].length>0&&(/Голубые кольца/.test(q.tip.textContent)||q.tip.hidden===false),'the first bonus ring comes with a tip: '+q.tip.textContent);
@@ -909,6 +1082,125 @@ const settle=(tt,s,gust=true)=>{const g=tt.layer.game;for(let i=0;i<Math.round(s
  f.host.fire('pointerup',{pointerType:'touch',pointerId:1});settle(f,.8,false);assert.ok(Math.abs(f.layer.game.plane.roll)<.08,'a finger lifted: the wings come level');
  // the aircraft shows its real attitude: the limit of the stick on the readout
  const m=runLayer({springs:false});m.layer.start();m.move(m.state.w*.5,m.state.h*.5);m.seconds(C.countdown+.3);m.layer.game.calm=true;m.move(m.state.w*.95,m.state.h*.5);settle(m,.5,false);assert.ok(m.state.aimRoll<-30&&m.state.aimRoll>=-58,'the bank on the card follows the stick and stops at the limit: '+m.state.aimRoll.toFixed(0));
+}
+// ---- the weapon slot and the feathers on the card, the route along the top, the finish and the best time
+{
+ const t=runLayer({springs:false});t.layer.start();t.move(t.state.w*.5,t.state.h*.5);t.seconds(C.countdown+.3);const g=t.layer.game;g.calm=true;
+ const kid=(node,cls)=>node.find(n=>n.classes.has(cls));
+ const btn=t.find('game-weapon'),icon=kid(btn,'game-weapon-icon'),label=kid(btn,'game-weapon-name'),quill=t.find('game-feathers'),count=quill.children.find(n=>n.tagName==='B'),levels=kid(quill,'game-weapon-level'),toNext=kid(quill,'game-feather-bar'),route=t.find('game-route'),dist=t.find('game-dist'),time=t.find('game-time');
+ const NAMES={turbo:'ТУРБО',gun:'ПУЛЕМЁТ',missiles:'РАКЕТЫ',mask:'НЕУЯЗВИМОСТЬ',barrier:'БАРЬЕР'};
+ const quiet=()=>{g.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});g.lives=C.lives;g.obstacles.length=g.enemies.length=g.bonuses.length=0;g.enemyClock=1e9;g.boxWait=1e9;g.gust.wait=99;};
+ const go=seconds=>{for(let i=0;i<Math.round(seconds*60);i++){quiet();t.frame();}};
+ const press=(key,code)=>t.host.fire('keydown',code?{key,code}:{key});
+ const at=(kind,id,z=.02)=>({id,kind,x:g.plane.x,y:g.plane.y,z,r:kind==='box'?C.boxR:C.featherR,state:'ahead',age:0});
+ assert.ok(btn&&btn.tagName==='BUTTON'&&btn.type==='button'&&t.bar.find(n=>n===btn),'the weapon button sits in the bar, next to the ULT');
+ g.boxes.length=g.plumes.length=0;go(.1);
+ assert.ok(btn.classes.has('is-empty')&&label.textContent==='ПУСТО'&&icon.dataset.weapon===''&&/слот пуст/.test(btn.attrs['aria-label']),'an empty slot');
+ assert.ok(count.textContent==='0'&&levels.children.length===C.maxLevel&&levels.children.every(p=>!p.classes.has('is-on'))&&/ПЕРЬЯ 0/.test(quill.attrs.title),'no feathers yet, a pip for every level');
+ assert.ok(route&&!route.hidden&&route.attrs['aria-hidden']==='true'&&route.children.filter(n=>n.tagName==='B').length===core.PLAN.length,'the route along the top of the card, with a tick for every leg');
+ g.dist=9990;go(.1);const filled=parseFloat(route.children[0].style.width);assert.ok(filled>49.9&&filled<51,'half of the route: '+filled);
+ assert.equal(dist.textContent,'10.0/20 км','the distance in the score bar');assert.ok(/^00:0\d$/.test(time.textContent),'and the time flown: '+time.textContent);
+ assert.ok(t.layer.airspeed>170&&Math.abs(t.layer.airspeed-core.airspeed(g))<1e-9&&t.layer.speedTop>400,'the demo shows the speed that covers the route');
+ // a box: a roulette in the slot, then the weapon, with its icon, name and a word about it
+ g.boxes.push(at('box',9001));quiet();t.frame();assert.ok(g.roll&&btn.classes.has('is-rolling')&&!btn.classes.has('is-empty'),'a roulette in the slot');
+ const seen=new Set();for(let i=0;i<30;i++){quiet();t.frame();seen.add(label.textContent);}assert.ok(seen.size>=3&&[...seen].every(n=>Object.values(NAMES).includes(n)),'the names go round: '+[...seen]);
+ go(C.roulette);assert.ok(g.weapon&&btn.classes.has('is-ready')&&!btn.classes.has('is-rolling')&&icon.dataset.weapon===g.weapon&&label.textContent===NAMES[g.weapon]&&btn.attrs['aria-label'].startsWith(NAMES[g.weapon]),'the weapon is in the slot: '+g.weapon);
+ g.weapon='gun';go(5.4);assert.ok(/Оружие в слоте/.test(t.tip.textContent)||/ПУЛЕМЁТ|ТУРБО|РАКЕТЫ|НЕУЯЗВИМОСТЬ|БАРЬЕР/.test(t.tip.textContent),'a word about the weapon: '+t.tip.textContent);
+ // F, also with a Russian or a Ukrainian layout; the middle of the card counts the time down; the speed shows on the card
+ g.weapon='turbo';g.roll=null;t.frame();press('а','KeyF');assert.ok(g.fx.turbo.t>0&&g.weapon===null&&g.used===1,'F uses the weapon of the slot');
+ t.frame();assert.equal(t.layer.status(),'ТУРБО!','the weapon is announced');go(1.4);assert.ok(/^ТУРБО \d\.\d$/.test(t.layer.status()),'then the middle of the card counts it down: '+t.layer.status());
+ assert.ok(t.layer.sprint>.5&&t.host.classes.has('is-sprint'),'the speed of the turbo shows on the card');assert.ok(btn.classes.has('is-empty'));
+ go(4);assert.ok(t.layer.sprint<.1&&t.layer.status()===null,'and goes off the card when it ends');
+ // the right button uses the weapon, the ULT stays charged; during a roulette it waits; with an empty slot it fires the ULT
+ const foe=()=>({id:9200,kind:'enemy',x:0,y:0,z:6,r:C.enemyR,state:'ahead',age:0,vx:0,vy:0});
+ g.weapon='barrier';g.ult=100;g.ultCool=0;g.enemies.push(foe());t.host.fire('pointerdown',{pointerType:'mouse',button:2});assert.ok(g.fx.barrier.t>0&&g.weapon===null&&g.ult===100,'the right button uses the weapon');
+ g.roll={t:0,dur:C.roulette,result:'gun'};t.host.fire('pointerdown',{pointerType:'mouse',button:2});assert.ok(g.ult===100&&g.roll,'not while a roulette turns');
+ g.roll=null;t.host.fire('pointerdown',{pointerType:'mouse',button:2});assert.equal(g.ult,0,'an empty slot: the ULT');
+ g.weapon='mask';t.frame();btn.fire('click');assert.ok(g.fx.mask.t>0&&g.weapon===null,'a press on the button uses it');
+ g.weapon='missiles';g.enemies.length=g.obstacles.length=0;press('f');assert.ok(g.weapon==='missiles'&&btn.classes.has('is-denied'),'nothing to chase: the button shakes and the missiles stay');
+ const music=t.layer.music.on;press('ь','KeyM');assert.equal(t.layer.music.on,!music,'the music key by its place on the keyboard too');press('ь','KeyM');
+ // everything new can be drawn and the canvas is put back
+ for(const name of ['turbo','gun','mask','barrier']){g.weapon=name;core.useWeapon(g);}core.drain(g);
+ const aside=o=>({...o,x:o.x+2.4});g.boxes.push(aside(at('box',9301,3)),aside(at('box',9302,.1)));g.plumes.push(aside(at('feather',9303,2)),aside(at('feather',9304,.1)));      // (beside the aircraft: drawn, not picked up)g.missiles.push({id:9305,x:.3,y:0,z:.1,side:.3,delay:0,life:2,age:0,target:null,splash:0,done:false},{id:9306,x:-.3,y:0,z:2,side:-.3,delay:0,life:2,age:0,target:null,splash:0,done:false});
+ g.enemies.push({...foe(),z:4});g.obstacles.push({id:9307,kind:'pylon',x:1,y:.2,z:3,r:C.pylonR,state:'ahead',age:0});
+ const s0=t.calls.save,r0=t.calls.restore;for(let i=0;i<84;i++){g.lives=C.lives;t.frame();}assert.equal(t.calls.save-s0,t.calls.restore-r0,'the canvas is put back with boxes, feathers, missiles, tracers, the aura, the barrier and the arcs');
+ assert.ok(/^\u0422\u0423\u0420\u0411\u041e \d\.\d \u00b7 \u041f\u0423\u041b\u0415\u041c\u0401\u0422 \d\.\d \u00b7 \u041d\u0415\u0423\u042f\u0417\u0412\u0418\u041c\u041e\u0421\u0422\u042c \d\.\d \u00b7 \u0411\u0410\u0420\u042c\u0415\u0420 \d\.\d$/.test(t.layer.status()),'several weapons at once are all counted down: '+t.layer.status());
+ go(15);
+ // the feathers: the count, the pips of the level and the bar to the next one
+ g.feathers=0;for(let i=0;i<C.feathersPerLevel;i++){g.plumes.push(at('feather',9400+i));quiet();t.frame();}
+ assert.ok(count.textContent===String(C.feathersPerLevel)&&levels.children[0].classes.has('is-on')&&!levels.children[1].classes.has('is-on')&&toNext.children[0].style.width==='0%','ten feathers: the first level of the weapons');
+ assert.equal(t.layer.status(),'ОРУЖИЕ: УР. 1');g.plumes.push(at('feather',9450));quiet();t.frame();assert.equal(toNext.children[0].style.width,'10%');
+ t.setLang('uk');t.frame();assert.ok(label.textContent==='ПОРОЖНЬО'&&/ПІР’Я/.test(quill.attrs.title)&&/^\d\d\.\d\/20 км$/.test(dist.textContent),dist.textContent);t.setLang('en');t.frame();assert.ok(label.textContent==='EMPTY'&&/20 km$/.test(dist.textContent));t.setLang('ru');
+ // the finish: the weapons are put away for the approach, the time is taken, the best time kept, the screen says it
+ g.weapon='turbo';g.dist=core.FINALE_AT-1;g.runTime=250;go(.3);assert.ok(g.finale&&btn.classes.has('is-off')&&t.ultBtn.classes.has('is-off')&&label.textContent==='ПУСТО','in the final approach the weapons are off');
+ for(let i=0;i<60*30&&t.layer.mode==='run';i++){g.lives=C.lives;t.frame();}
+ assert.equal(t.layer.mode,'over');const s=core.summary(g),text=()=>t.overlay.textContent;
+ const shown=`${Math.floor(s.time/60)}:${(Math.round(s.time*10)/10-60*Math.floor(s.time/60)).toFixed(1).padStart(4,'0')}`;
+ assert.ok(s.won&&s.time>250&&text().includes('ФИНИШ · 20 КМ')&&text().includes('ЛУЧШЕЕ ВРЕМЯ!')&&text().includes('км/ч')&&text().includes('ЗА ВРЕМЯ')&&text().includes('ПЕРЬЯ')&&text().includes(shown),'the end screen of a finished route: '+text());
+ assert.equal(Number(t.mem[core.TIME_KEY]),s.time,'the best time is written: '+t.mem[core.TIME_KEY]);assert.equal(t.layer.airspeed,null,'the demo takes its own speed back');
+ t.setLang('en');assert.ok(text().includes('FINISH · 20 KM')&&text().includes('BEST TIME')&&text().includes('km/h'));t.setLang('ru');
+ // a slower flight does not replace the best time
+ t.host.fire('keydown',{key:'Enter'});t.seconds(C.countdown+.3);const g2=t.layer.game;g2.calm=true;g2.dist=core.FINALE_AT-1;g2.runTime=400;
+ for(let i=0;i<60*40&&t.layer.mode==='run';i++){g2.lives=C.lives;t.frame();}
+ assert.ok(t.layer.mode==='over'&&Number(t.mem[core.TIME_KEY])===s.time&&!text().includes('ЛУЧШЕЕ ВРЕМЯ!')&&text().includes('ЛУЧШЕЕ ВРЕМЯ'),'the best time stays: '+text());
+ t.layer.exit();assert.ok(route.hidden&&t.layer.speedTop===0);
+ // a finger: the buttons, and a second finger on them does not end the touch that steers
+ const f=runLayer({coarse:true,springs:false});f.layer.start();f.seconds(C.countdown+.3);
+ for(const type of ['pointerup','pointercancel','lostpointercapture'])assert.ok(f.bar.fire(type,{pointerType:'touch'}).stopped&&!f.bar.fire(type,{pointerType:'mouse'}).stopped,'a touch on the buttons stays there: '+type);
+ const fb=f.find('game-weapon');f.layer.game.weapon='turbo';f.frame();assert.ok(fb.textContent.includes('▶')&&!/клавиша|кнопка мыши/.test(fb.attrs['aria-label']),'the button of a touch screen names no key: '+fb.attrs['aria-label']);fb.fire('pointerdown',{pointerType:'touch'});assert.ok(f.layer.game.fx.turbo.t>0&&f.layer.game.used===1,'a touch uses it at once (a second finger makes no click)');
+ f.layer.game.weapon='barrier';fb.fire('click');assert.ok(f.layer.game.weapon==='barrier'&&f.layer.game.used===1,'the click that follows a touch does nothing more');f.clock.t+=800;fb.fire('click');assert.ok(f.layer.game.used===2,'a later click works');
+ const fu=f.ultBtn;f.clock.t+=800;f.layer.game.ult=100;f.layer.game.ultCool=0;f.layer.game.enemies.push({id:9600,kind:'enemy',x:0,y:0,z:6,r:C.enemyR,state:'ahead',age:0,vx:0,vy:0});fu.fire('pointerdown',{pointerType:'touch'});assert.equal(f.layer.game.ult,0,'the ULT button acts on the touch too');
+}
+// ---- Space is the one key for what the pilot has (the weapon of the box, else the ULT), the boost stays when there is nothing; the keys reach a running game from anywhere
+{
+ const t=runLayer({springs:false});t.layer.start();t.move(t.state.w*.5,t.state.h*.5);t.seconds(C.countdown+.3);const g=t.layer.game;g.calm=true;
+ const quiet=()=>{g.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});g.lives=C.lives;g.obstacles.length=g.enemies.length=g.boxes.length=g.plumes.length=0;g.enemyClock=1e9;g.boxWait=1e9;g.gust.wait=99;};
+ const space=(extra={})=>{t.state.boosted=true;t.host.fire('keydown',{key:' ',code:'Space',...extra});};      // (the demo sets the boost on Space before the game sees the key)
+ const up=()=>t.host.fire('keyup',{key:' ',code:'Space'});
+ const foe=()=>({id:9500,kind:'enemy',x:0,y:0,z:6,r:C.enemyR,state:'ahead',age:0,vx:0,vy:0});
+ quiet();g.weapon='turbo';t.frame();space();assert.ok(g.fx.turbo.t>0&&g.weapon===null&&t.state.boosted===false&&g.used===1,'Space uses the weapon of the box, and does not boost');
+ space({repeat:true});assert.equal(t.state.boosted,false,'... nor while it is held');up();
+ space();assert.equal(t.state.boosted,true,'with nothing to use Space is the boost as before');up();
+ // a release that was lost (the window was left with Space down) does not take the boost from the next press
+ g.weapon='turbo';space();space();assert.equal(t.state.boosted,true,'a new press after a lost release boosts');up();g.fx.turbo.t=0;
+ // the ULT: charged and with an aircraft ahead; with none ahead the charge is kept and Space boosts; during a roulette Space waits
+ quiet();g.ult=100;g.ultCool=0;space();assert.ok(g.ult===100&&t.state.boosted===true,'no aircraft ahead: the ULT is kept, Space boosts');up();
+ g.enemies.push(foe());space();assert.ok(g.ult===0&&g.kills===1&&t.state.boosted===false,'Space fires the ULT');up();
+ g.enemies.push(foe());g.ult=100;g.ultCool=0;g.roll={t:0,dur:C.roulette,result:'gun'};space();assert.ok(g.ult===100,'not while a roulette turns: that weapon is on its way');up();g.roll=null;
+ g.weapon='barrier';space();assert.ok(g.fx.barrier.t>0&&g.ult===100,'the weapon comes first');up();
+ // the banner of a weapon and of the ULT name the key
+ g.weapon=null;g.boxes.push({id:9501,kind:'box',x:g.plane.x,y:g.plane.y,z:.02,r:C.boxR,state:'ahead',age:0});for(let i=0;i<Math.round((C.roulette+.1)*60);i++){g.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});g.lives=C.lives;g.enemies.length=g.obstacles.length=0;t.frame();}
+ assert.ok(new RegExp(' · ПРОБЕЛ$').test(t.layer.status()),'the new weapon is announced with its key: '+t.layer.status());
+ // Space on the focused ULT button presses that button (once), it does not also use the weapon; after a click the keys are back on the card
+ quiet();g.weapon='turbo';const used0=g.used;t.host.fire('keydown',{key:' ',code:'Space',target:t.ultBtn});up();assert.ok(g.used===used0&&g.weapon==='turbo','Space on the ULT button is the button\'s');
+ const f0=t.host.focused;g.ult=0;t.ultBtn.fire('click');assert.ok(t.host.focused>f0,'the keys go back to the card after a button');g.weapon=null;
+ // a click on the card brings the keys back to it (the demo keeps the click from moving the focus)
+ const f=t.host.focused;t.host.fire('pointerdown',{pointerType:'mouse',button:0});t.host.fire('pointerup',{pointerType:'mouse'});assert.ok(t.host.focused>f,'a click on the card gives it the focus');
+ // a key from elsewhere on the page reaches the running game, unless it is for a button or a field; the shortcuts of the browser are left alone
+ const outside=(key,code,target={closest:()=>null})=>{const ev={key,code,target,prevented:false,preventDefault(){this.prevented=true;}};for(const h of t.docHandlers.keydown||[])h(ev);return ev;};
+ quiet();g.weapon='mask';outside('f','KeyF');assert.ok(g.fx.mask.t>0&&g.weapon===null,'F from the page works');
+ g.weapon='turbo';const e=outside(' ','Space');assert.ok(g.fx.turbo.t>0&&e.prevented,'Space from the page uses the weapon and does not scroll');
+ g.weapon='gun';outside('f','KeyF',{closest:sel=>/button/.test(sel)?{}:null});assert.equal(g.weapon,'gun','not a key meant for a button');outside('f','KeyF',{isContentEditable:true,closest:()=>null});assert.equal(g.weapon,'gun','nor one meant for a field');
+ outside('f','KeyF',t.host);assert.equal(g.weapon,'gun','a key of the card is not handled twice');t.host.fire('keydown',{key:'f',code:'KeyF',ctrlKey:true});assert.equal(g.weapon,'gun','Ctrl+F is the browser\'s');
+ t.layer.pause('manual');outside('f','KeyF');outside(' ','Space');assert.ok(g.weapon==='gun'&&t.layer.mode==='paused','a paused game ignores the keys of the page');t.layer.resume();
+ t.layer.exit();outside('f','KeyF');assert.equal(t.layer.mode,'demo');
+ // a touch screen: the banner names no key
+ const c=runLayer({coarse:true,springs:false});c.layer.start();c.seconds(C.countdown+.3);const cg=c.layer.game;cg.calm=true;cg.boxes.push({id:9502,kind:'box',x:cg.plane.x,y:cg.plane.y,z:.02,r:C.boxR,state:'ahead',age:0});for(let i=0;i<Math.round((C.roulette+.1)*60);i++){cg.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});cg.lives=C.lives;cg.enemies.length=cg.obstacles.length=0;c.frame();}
+ assert.ok(c.layer.status()&&!/ПРОБЕЛ|SPACE/.test(c.layer.status()),'no key on a touch screen: '+c.layer.status());
+}
+// ---- the dotted way from the aircraft to the middle of the next ring: in the modes the pilot flies, while it is not lined up; not under the autopilot
+{
+ const t=runLayer({springs:false});t.layer.start();t.move(t.state.w*.5,t.state.h*.5);t.seconds(C.countdown+.3);const g=t.layer.game,gate=core.nextGate(g);assert.ok(gate,'a ring ahead');
+ // the overlay is drawn on a context that keeps every stroked path with its dashes and colour; the way is the one with the dashes 3,6
+ const ways=()=>{const found=[];let dash='',style='',path=[];
+  const own={setLineDash:v=>{dash=[...v].join();},beginPath:()=>{path=[];},moveTo:(x,y)=>path.push([x,y]),lineTo:(x,y)=>path.push([x,y]),stroke:()=>{if(dash==='3,6')found.push({style,path:[...path]});}};
+  t.layer.cameraEnd(new Proxy({},{get:(_,k)=>own[k]||(()=>({addColorStop(){}})),set:(_,k,v)=>{if(k==='strokeStyle')style=v;return true;}}));return found;};
+ const put=(mode,dx)=>{g.mode=mode;gate.x=g.plane.x+dx;gate.y=g.plane.y;return ways();};
+ for(const name of ['FBWA','CRUISE','GUIDED']){
+  const w=put(name,gate.r+.8);assert.ok(w.length===1&&w[0].path.length===2&&w[0].path[1][0]>w[0].path[0][0],name+': one dotted line from the aircraft to the ring on its right ('+w.length+')');
+  assert.equal(put(name,gate.r*.5).length,0,name+': none when the aircraft is lined up');
+ }
+ assert.equal(put('AUTO',gate.r+.8).length,0,'AUTO: the autopilot flies, no line');
 }
 // ---- the music: Web Audio made by the game (a fake one here), blocked until a click, switched by a button and by the M key, remembered
 {
@@ -956,11 +1248,11 @@ const settle=(tt,s,gust=true)=>{const g=tt.layer.game;for(let i=0;i<Math.round(s
  // the language of the button
  t.setLang('en');assert.ok(/ON|OFF/.test(t.musicBtn.textContent)&&/Music/.test(t.musicBtn.attrs['aria-label']));t.setLang('uk');assert.ok(/УВІМК|ВИМК/.test(t.musicBtn.textContent));t.setLang('ru');
  // a touch screen: the same button, the tip speaks of a touch
- const au5=makeFakeAudio(),tc=runLayer({audio:au5,coarse:true,lang:'en'});tc.layer.start();tc.host.fire('pointerdown',{pointerType:'touch',button:0,pointerId:1});tc.host.fire('pointerup',{pointerType:'touch',pointerId:1});settle(tc,C.countdown+2.5,false);assert.ok(tc.layer.music.waiting(),'a touch screen: the music waits for the first touch');settle(tc,5.5,false);assert.ok(tc.tip.hidden===false&&/touch|finger|wind|FBWA/i.test(tc.tip.textContent),'(the hint about touch waits its turn behind the tips of the mode)');
+ const au5=makeFakeAudio(),tc=runLayer({audio:au5,coarse:true,lang:'en'});tc.layer.start();tc.host.fire('pointerdown',{pointerType:'touch',button:0,pointerId:1});tc.host.fire('pointerup',{pointerType:'touch',pointerId:1});settle(tc,C.countdown+2.5,false);assert.ok(tc.layer.music.waiting(),'a touch screen: the music waits for the first touch');settle(tc,5.5,false);assert.ok(tc.tip.hidden===false&&/Goal 20 km/.test(tc.tip.textContent),'after the tip of the mode the goal: '+tc.tip.textContent);settle(tc,5.4,false);assert.ok(tc.tip.hidden===false&&/touch/i.test(tc.tip.textContent),'the hint about the music waits its turn behind the tips of the mode and the goal: '+tc.tip.textContent);
 }
 // ---------------------------------------------------------------- the demo hooks and the page
 const demo=read('js/site/flight-demo.js'),page=read('index.html'),css=read('css/flight-game.css'),layerSrc=read('js/site/flight-game.js'),coreSrc=read('js/site/flight-game-core.js');
-for(const needle of ['window.AtlasFlightDemo','layer: null','hooks.layer.steer(dt)','hooks.layer.update(dt)','hooks.layer.drawBack(ctx)','hooks.layer.drawFront(ctx)','hooks.layer.cameraBegin(ctx)','hooks.layer.cameraEnd(ctx)','cameraOwnsHorizon','lay.horizonShift','pl.alpha','lay.status()','hooks.layer.onView(false)','touchBlocksBoost','hooks.layer.active?12:30','const placed=p=>','const burn=(hooks.layer&&hooks.layer.sprint)||0','const speedAim=Math.max(state.boosted?307:148,148+159*burn)','Math.max(state.boosted?1:0.25,(hooks.layer&&hooks.layer.sprint)||0)'])
+for(const needle of ['window.AtlasFlightDemo','layer: null','hooks.layer.steer(dt)','hooks.layer.update(dt)','hooks.layer.drawBack(ctx)','hooks.layer.drawFront(ctx)','hooks.layer.cameraBegin(ctx)','hooks.layer.cameraEnd(ctx)','cameraOwnsHorizon','lay.horizonShift','pl.alpha','lay.status()','hooks.layer.onView(false)','touchBlocksBoost','hooks.layer.active?12:30','const placed=p=>','const burn=(hooks.layer&&hooks.layer.sprint)||0','const speedAim=Math.max(state.boosted?307:148,148+159*burn)','Math.max(state.boosted?1:0.25,(hooks.layer&&hooks.layer.sprint)||0)','const flown=(hooks.layer&&hooks.layer.airspeed)||0','mix(state.speed,flown||speedAim','((lay&&lay.speedTop)||310)-90'])
  assert.ok(demo.replace(/\s+/g,' ').includes(needle),'the demo has the hook: '+needle);
 assert.ok(!/project\(rotate\(/.test(demo),'every vertex of the aircraft goes through placed()');
 const scripts=[...page.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1]),at=n=>scripts.findIndex(s=>s.startsWith(n));
@@ -971,8 +1263,10 @@ assert.equal([...page.matchAll(/<script(?![^>]*\bsrc=)[^>]*>/g)].length,0,'no in
 for(const id of ['flightPlayground','flightCanvas','simRoll','simPitch','simYaw','simSpeed','simThrottle','simMotionState'])assert.ok(page.includes(`id="${id}"`),'the card keeps #'+id);
 assert.ok(page.includes('class="scope-dots"')&&page.includes('flight-instructions')&&page.includes('class="hero-display"')&&page.includes('scope-grid'),'the layer finds the header, the dots, the grid and the hint line');
 for(const sel of ['.game-toggle','.game-dwell','.game-hud','.game-score','.game-meta','.game-lives','.game-time','.game-overlay','.game-panel','.game-count','.game-count-box','.game-hint','.game-title','.game-row','.game-btn','.game-flash','.game-live','.game-caption','.scope-actions',
-  '.game-music','.game-music-icon','.game-wind','.game-wind-arrow','.game-wind-pips','.game-glow','.is-sprint','.is-off','.is-gust','.game-bar','.game-modes','.game-mode','.game-mode-fill','.game-mode-left','.game-ult','.game-ult-meter','.game-landing','.game-tip','.is-active','.is-next','.is-on','.is-ready','.is-denied','.is-game','.is-hit','.is-narrow','prefers-reduced-motion','[hidden]','[data-kind="count"]'])assert.ok(css.includes(sel),'style '+sel);
+  '.game-music','.game-music-icon','.game-wind','.game-wind-arrow','.game-wind-pips','.game-glow','.is-sprint','.is-off','.is-gust','.game-bar','.game-modes','.game-mode','.game-mode-fill','.game-mode-left','.game-ult','.game-ult-meter','.game-landing','.game-tip','.is-active','.is-next','.is-on','.is-ready','.is-denied','.is-game','.is-hit','.is-narrow','prefers-reduced-motion','[hidden]','[data-kind="count"]',
+  '.game-route','.game-dist','.game-arsenal','.game-weapon','.game-weapon-icon','.game-weapon-name','.game-weapon-key','.game-weapon-level','.game-feathers','.game-feather-icon','.game-feather-bar','.game-stats','.is-empty','.is-rolling',...core.WEAPONS.map(w=>`.game-weapon-icon[data-weapon="${w}"]`)])assert.ok(css.includes(sel),'style '+sel);
 assert.ok(!css.includes('.game-pip'),'the pulsing "play" pip is gone with the button');
+assert.ok(!/is-narrow \.game-(weapon|ult)-key[^{}]*\{display:none\}/.test(css)&&!/\.game-(weapon|ult)-key\{display:none\}/.test(css),'the keys stay on the buttons of a narrow card too');
 assert.ok(!/@import|url\(http/.test(css),'the stylesheet loads nothing from outside');
 // everything the layer builds is plain DOM: no inline handlers, no HTML strings, no eval
 assert.ok(!/innerHTML|insertAdjacentHTML|eval\(|new Function|document\.write|onclick=/.test(layerSrc+coreSrc),'no HTML injection in the game');
@@ -990,12 +1284,17 @@ const TEXT=vm.runInNewContext('('+textBlock.slice(textBlock.indexOf('{'),textBlo
 assert.deepEqual(Object.keys(TEXT).sort(),['en','ru','uk']);
 const keys=Object.keys(TEXT.ru).sort();
 for(const lang of ['uk','en']){assert.deepEqual(Object.keys(TEXT[lang]).sort(),keys,'the same texts in '+lang);}
-const tipKeys=['tipFBWA','tipCRUISE','tipGUIDED','tipAUTO','tipFinale','tipGust','tipHazard','tipEnemy','tipUlt','tipWind','tipSprint','tipBonus','tipHandover','tipMusic','tipFBWATouch','tipGUIDEDTouch','tipAUTOTouch','tipFinaleTouch','tipGustTouch','tipEnemyTouch','tipUltTouch','tipWindTouch','tipHandoverTouch','tipMusicTouch'];
+const tipKeys=['tipFBWA','tipCRUISE','tipGUIDED','tipAUTO','tipFinale','tipGust','tipHazard','tipEnemy','tipUlt','tipWind','tipSprint','tipBonus','tipHandover','tipMusic','tipFBWATouch','tipGUIDEDTouch','tipAUTOTouch','tipFinaleTouch','tipGustTouch','tipEnemyTouch','tipUltTouch','tipWindTouch','tipHandoverTouch','tipMusicTouch','tipGoal','tipBox','tipUse','tipUseTouch','tipFeather','tipTurbo','tipGun','tipMissiles','tipMask','tipBarrier'];
 for(const lang of ['ru','uk','en']){
  const t=TEXT[lang];
  for(const k of keys)assert.ok(k==='ranks'?Array.isArray(t.ranks)&&t.ranks.length===4&&t.ranks.every(x=>x.length>2):typeof t[k]==='string'&&t[k].length>0,k+' in '+lang);
  for(const k of ['caption','caption2','captionTouch','caption2Touch'])assert.equal((t[k].match(/\*/g)||[]).length%2,0,'balanced emphasis in '+k+' ('+lang+')');
  for(const k of ['liveOver','liveWon'])assert.ok(t[k].includes('{score}')&&t[k].includes('{gates}'),'placeholders of the end announcement '+k+' ('+lang+')');
+ assert.ok(t.liveWon.includes('{time}')&&t.weaponUp.includes('{n}'),'the time of the finish and the level of an upgrade ('+lang+')');
+ for(const w of core.WEAPONS){const k='w'+w[0].toUpperCase()+w.slice(1),n='tip'+w[0].toUpperCase()+w.slice(1);assert.ok(t[k]&&t[k].length<=13&&t[n].startsWith(t[k]+':'),'a short name for the weapon '+w+' and a tip that starts with it ('+lang+'): '+t[k]+' / '+t[n]);}
+ assert.ok(/20 (км|km)/.test(t.hint)&&/20 (км|km)/.test(t.tipGoal)&&/20 \*?(км|km)|\*20 (км|km)\*/.test(t.caption),'the goal of 20 km is said ('+lang+')');
+ assert.ok([t.caption2,t.tipUse,t.tipUlt,t.ultLabel,t.weaponLabel].every(x=>/пробел|пробіл|Space/i.test(x))&&/^(ПРОБЕЛ|ПРОБІЛ|SPACE)$/.test(t.spaceKey),'Space is named where the keys are ('+lang+')');
+ assert.ok(/\bF\b/.test(t.caption2)&&/\bF\b/.test(t.tipUse)&&/ПКМ|RMB/.test(t.tipUse)&&!/\bF\b|ПКМ|RMB/.test(t.caption2Touch+t.tipUseTouch+t.captionTouch+t.weaponLabelTouch),'the keys of the weapon are named where there are keys ('+lang+')');
  for(const k of ['dwell','dwellTouch'])assert.ok(t[k].includes('{n}')&&t[k].length<=40,'the count of the hold has its number and fits the middle of the card: '+k+' ('+lang+') '+t[k].length);
  assert.ok(t.exit.length<=7,'button words stay short ('+lang+')');assert.ok(!('play' in t)&&!('buttonStart' in t)&&!('modeLabel' in t),'no words for a start button or for mode buttons ('+lang+')');
  for(const k of tipKeys)assert.ok(t[k]&&t[k].length<=64,'a tip fits one line of the card: '+k+' ('+lang+') '+(t[k]||'').length);
@@ -1008,4 +1307,4 @@ for(const lang of ['ru','uk','en']){
 assert.ok(/[а-яё]/i.test(TEXT.ru.over)&&/[іїєґ]/i.test(TEXT.uk.accuracy+TEXT.uk.over+TEXT.uk.streak),'Russian and Ukrainian are not mixed up');
 assert.ok(!/[ыэёъ]/i.test(Object.values(TEXT.uk).flat().join(' ')),'no Russian-only letters in the Ukrainian texts');
 assert.ok(Object.values(TEXT.en).flat().every(x=>!/[а-яіїєґ]/i.test(x)),'English texts are English');
-console.log('PASS: mini-game — hold the pointer seven seconds to start, FBWA flight with bank and pitch limits, the wind (steady, gusts, shifts) and its streaks, afterburner sprints, bonus rings, formations, the plan of modes (FBWA, CRUISE, GUIDED, AUTO), perspective rings with an aim ring, pylons, the gun, the ULT, the five-minute mission and the AUTOLAND finale, the chiptune music (Web Audio, switch, M key, saved choice, blocked until a click), camera, best score, the card layer in a stub DOM, demo hooks, page wiring and ru/uk/en texts.');
+console.log('PASS: mini-game — hold the pointer seven seconds to start, FBWA flight with bank and pitch limits, the wind (steady, gusts, shifts) and its streaks, afterburner sprints, bonus rings, formations, the 20 km route with its legs of modes (FBWA, CRUISE, GUIDED, AUTO), rings that never stop, a normal run about five minutes and a higher rank for a faster one, weapon boxes (roulette, one slot), turbo, machine gun, homing missiles, invulnerability, barrier, feathers and upgrades every ten, perspective rings with an aim ring, pylons, the gun, the ULT, the AUTOLAND finale, the chiptune music (Web Audio, switch, M key, saved choice, blocked until a click), camera, best score and time, the card layer in a stub DOM (weapon slot, route bar, end screen), demo hooks, page wiring and ru/uk/en texts.');
