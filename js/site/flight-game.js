@@ -662,6 +662,7 @@
  }
  const releaseBoost = () => { state.boosted = false; host.classList.remove('is-boosting'); };
  function onKey(ev) {
+  if (demo.layer !== layer) return;                       // the rhythm flight has the card
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;      // the shortcuts of the browser
   const k = keyName(ev);
   if (k === ' ' && (ev.target === ultBtn || ev.target === weaponBtn)) return;      // Space on one of those buttons presses that button (once)
@@ -1332,7 +1333,9 @@
   onView(visible) { if (!visible) pause('view'); },
   // for tests and for the curious: the running game and the way in and out
   get game() { return game; }, get mode() { return mode; }, get camera() { return cam; }, get dwell() { return dwellHeld; }, get hovering() { return hovering; },
-  start, exit, pause, resume, fireUlt, useWeapon, shoot: shootAtPointer, worldToPixels, pointerAt
+  start, exit, pause, resume, fireUlt, useWeapon, shoot: shootAtPointer, worldToPixels, pointerAt,
+  // what the rhythm flight (flight-rhythm.js) shares: the view of the card, the field, and a fresh start of the hold when the card comes back
+  kit: Object.freeze({ worldToPixels, demoOffset, pointerPlane, fieldSize, release() { dwellHeld = 0; dwellText = ''; dwellLock = hovering; setDwellBar(false); showCentreMark(); } })
  };
  paintStatic();
 })();

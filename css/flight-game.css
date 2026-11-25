@@ -202,6 +202,83 @@
  .game-panel .game-row{font-size:9px}
  .game-btn{height:28px}
 }
+/* the flight to the player's own music (js/site/flight-rhythm.js): its button in the header, the choice of the files, the score, the button of the beat, the cup */
+.game-own{display:inline-flex;align-items:center;height:28px;padding:0 11px;border:1px solid #7a8a4a;border-radius:4px;background:#1a2413;color:#f0e08a;font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,box-shadow .15s}
+.game-own:hover{background:#2a361b;border-color:#e6d05f;box-shadow:0 0 16px #e6d05f33;color:#fff2b0}
+.game-own:focus-visible{outline:2px solid #e7d56d;outline-offset:2px}
+.hero-display.is-game .game-own{display:none}
+.hero-display.is-rhythm .flight-instructions{visibility:hidden}
+.flight-playground.is-rhythm .game-dwell,.flight-playground.is-rhythm .flight-focus-reticle,.flight-playground.is-rhythm .boost-label,.flight-playground.is-rhythm .hud-bottom-read,.flight-playground.is-rhythm .flight-demo-disclaimer{display:none}
+.flight-playground.is-flying .radar-glow{opacity:.5}
+.flight-playground.is-flying .flight-readout.bottom-left,.flight-playground.is-flying .flight-readout.bottom-right{bottom:58px}
+.flight-playground.is-rhythm.is-narrow .flight-readout{display:none}
+.rhythm-panel,.rhythm-overlay{position:absolute;z-index:8;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:7px;padding:10px 12px;overflow:auto;touch-action:pan-y;background:radial-gradient(ellipse at center,#0d1409f2 0%,#0d1409d8 70%,#0d140999 100%);font-family:'IBM Plex Mono',monospace;text-align:center;color:#cfc99d;cursor:default}
+.rhythm-panel[hidden],.rhythm-overlay[hidden],.rhythm-hud[hidden],.rhythm-progress[hidden],.rhythm-act-bar[hidden]{display:none}
+.rhythm-title{font:700 12px/1.3 'IBM Plex Mono',monospace;letter-spacing:.16em;color:#e6d05f}
+.rhythm-note{max-width:360px;font:600 9.5px/1.45 'IBM Plex Mono',monospace;letter-spacing:.04em;color:#abb48c}
+.rhythm-note.is-keys{color:#c9d49a}
+.rhythm-slot{display:grid;grid-template-columns:1fr auto;align-items:center;gap:3px 8px;width:min(100%,360px);padding:5px 8px;border:1px solid #556635aa;background:#101b10d0;text-align:left}
+.rhythm-slot-name{font:700 9px/1.3 'IBM Plex Mono',monospace;letter-spacing:.1em;color:#c9b95c}
+.rhythm-pick{position:relative;display:inline-flex;align-items:center;height:24px;padding:0 12px;border:1px solid #7a8a4a;border-radius:4px;background:#1a2413;color:#f0e08a;font:700 9px 'IBM Plex Mono',monospace;letter-spacing:.14em;cursor:pointer;overflow:hidden}
+.rhythm-pick:hover{border-color:#e6d05f;color:#fff2b0}
+.rhythm-pick:focus-within{outline:2px solid #e7d56d;outline-offset:2px}
+.rhythm-pick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}
+.rhythm-slot-info{grid-column:1/-1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 9px/1.35 'IBM Plex Mono',monospace;color:#8a956e}
+.rhythm-slot-info.is-ready{color:#f7edb3}
+.rhythm-slot-info.is-error{color:#f0a070;white-space:normal}
+.rhythm-files{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%}
+.rhythm-files[hidden],.rhythm-slot[hidden]{display:none}
+.rhythm-slot.is-main{grid-template-columns:1fr;text-align:center;padding:8px 10px;gap:4px}
+.rhythm-main-title{font:700 11px/1.35 'IBM Plex Mono',monospace;letter-spacing:.04em;color:#f7edb3}
+.rhythm-slot.is-main .rhythm-slot-info.is-error{text-align:center}
+.rhythm-delay{display:flex;flex-direction:column;align-items:center;gap:1px;font:700 9px/1.3 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#abb48c}
+.rhythm-delay input{width:min(240px,80vw);height:18px;accent-color:#e6d05f;cursor:pointer}
+.rhythm-buttons{display:flex;gap:10px;justify-content:center;flex:none}
+.rhythm-buttons .game-btn:disabled{opacity:.45;cursor:default;box-shadow:none}
+.rhythm-hud{position:absolute;z-index:6;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:18px;padding:5px 16px 6px;border:1px solid #556635aa;background:#101b10d0;pointer-events:none;font-family:'IBM Plex Mono',monospace}
+.rhythm-cell{display:flex;flex-direction:column;align-items:center;min-width:48px}
+.rhythm-cell small{font:700 8px/1.3 'IBM Plex Mono',monospace;letter-spacing:.1em;color:#abb48c}
+.rhythm-cell strong{font:700 15px/1.2 'IBM Plex Mono',monospace;color:#f7edb3;font-variant-numeric:tabular-nums}
+.rhythm-progress{position:absolute;z-index:6;left:0;right:0;top:0;height:3px;background:#e6d05f22;pointer-events:none}
+.rhythm-progress i{display:block;width:0;height:100%;background:linear-gradient(90deg,#879c44,#f0d65e);box-shadow:0 0 10px #e6d05f88}
+.rhythm-act-bar{position:absolute;z-index:6;left:50%;bottom:12px;transform:translateX(-50%)}
+.rhythm-act{min-width:170px;height:34px;padding:0 16px;border:1px solid #e6d05f;border-radius:6px;background:#1a2413e6;color:#fff2b0;font:700 11px 'IBM Plex Mono',monospace;letter-spacing:.16em;white-space:nowrap;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.rhythm-act.is-armed{background:#e6d05f;color:#0d1409;box-shadow:0 0 18px #e6d05f88}
+.rhythm-act:focus-visible{outline:2px solid #fff2b0;outline-offset:2px}
+.rhythm-overlay{z-index:9}
+.rhythm-card{display:flex;flex-direction:column;align-items:center;gap:5px;max-width:96%;max-height:100%;overflow:auto;touch-action:pan-y;padding:10px 18px;border:1px solid #556635aa;background:#101b10ee;box-shadow:0 0 44px #0009}
+.rhythm-trophy{width:56px;height:56px;flex:none;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
+.rhythm-trophy.is-gold,.rhythm-grade.is-gold{color:#ffd65a}
+.rhythm-trophy.is-silver,.rhythm-grade.is-silver{color:#dbe5ea}
+.rhythm-trophy.is-bronze,.rhythm-grade.is-bronze{color:#df9a62}
+.rhythm-trophy{filter:drop-shadow(0 0 9px currentColor)}
+.rhythm-grade{font:700 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.3em}
+.rhythm-stats{display:grid;grid-template-columns:1fr 1fr;column-gap:16px;row-gap:1px;width:100%;min-width:250px;padding-top:4px;border-top:1px solid #55663555;text-align:left}
+.rhythm-row{display:flex;justify-content:space-between;gap:8px;font:700 9px/1.45 'IBM Plex Mono',monospace;letter-spacing:.04em;color:#abb48c}
+.rhythm-row strong{color:#f7edb3;white-space:nowrap}
+.flight-playground.is-narrow .rhythm-panel{gap:4px;padding:6px 8px}
+.flight-playground.is-narrow .rhythm-title{font-size:10px}
+.flight-playground.is-narrow .rhythm-note{font-size:8px;line-height:1.35}
+.flight-playground.is-narrow .rhythm-slot{padding:3px 6px;gap:1px 6px}
+.flight-playground.is-narrow .rhythm-files{gap:4px}
+.flight-playground.is-narrow .rhythm-main-title{font-size:9px}
+.flight-playground.is-narrow .rhythm-panel .game-btn{padding:0 10px;letter-spacing:.1em}
+.flight-playground.is-narrow .rhythm-pick{height:22px}
+.flight-playground.is-narrow .rhythm-delay{font-size:8px}
+.flight-playground.is-narrow .rhythm-delay input{height:16px}
+.flight-playground.is-narrow .rhythm-hud{top:8px;gap:12px;padding:3px 10px 4px}
+.flight-playground.is-narrow .rhythm-cell strong{font-size:12px}
+.flight-playground.is-narrow .rhythm-act{min-width:150px;height:32px;font-size:10px}
+.flight-playground.is-narrow .rhythm-overlay{padding:5px}
+.flight-playground.is-narrow .rhythm-card{gap:2px;padding:6px 10px}
+.flight-playground.is-narrow .rhythm-card .rhythm-title{font-size:9px;letter-spacing:.08em}
+.flight-playground.is-narrow .rhythm-trophy{width:36px;height:36px}
+.flight-playground.is-narrow .rhythm-grade{font-size:9px}
+.flight-playground.is-narrow .rhythm-stats{column-gap:10px;min-width:230px}
+.flight-playground.is-narrow .rhythm-row{font-size:8px;line-height:1.35}
+@media(max-width:560px){
+ .game-own{height:30px;padding:0 10px}
+}
 @media(prefers-reduced-motion:reduce){
  .game-count,.game-ult.is-ready,.game-tip,.game-ult.is-denied,.game-weapon.is-ready,.game-weapon.is-denied{animation:none}
  .game-dwell{transition:none}

@@ -117,7 +117,7 @@
     // Dynamic background horizon: follows simulated attitude, separate from the aircraft model.
     // While the game runs the horizon stays level on the vanishing point of its rings (the game's camera rolls everything).
     const lay=hooks.layer,own=!!(lay&&lay.engaged&&lay.cameraOwnsHorizon);
-    ctx.save();ctx.translate(w/2,h/2+(own?lay.horizonShift||0:0));ctx.rotate(own?0:state.roll*deg*.28);ctx.translate(0,own?0:state.pitch*.7);
+    ctx.save();ctx.translate(w/2,h/2+(own?lay.horizonShift||0:0));ctx.rotate(own?(lay.horizonRoll||0)*deg:state.roll*deg*.28);ctx.translate(0,own?0:state.pitch*.7);     // (an inverted flight turns it over)
     ctx.fillStyle='rgba(98,118,39,.055)';ctx.fillRect(-w*1.7,0,w*3.4,h*2.5);
     ctx.beginPath();ctx.moveTo(-w*1.7,0);ctx.lineTo(w*1.7,0);
     ctx.strokeStyle='rgba(211,204,98,.19)';ctx.lineWidth=1.2;ctx.stroke();
@@ -210,13 +210,14 @@
     state.speed=mix(state.speed,flown||speedAim,1-Math.exp(-dt*(flown?3:state.boosted||burn>.3?1.05:.26)));
     state.throttle=mix(state.throttle,Math.max(state.boosted?100:40,40+60*burn),1-Math.exp(-dt*(state.boosted||burn>.3?3.5:2.2)));
     const rollSign=hooks.layer&&hooks.layer.engaged?hooks.layer.rollSign:1;     // in the game a right bank is a negative roll of the model
-    const rate=9.81*Math.tan(bound(state.roll*rollSign,-68,68)*deg)/(state.speed/3.6)*180/Math.PI;
+    const turn=hooks.layer&&hooks.layer.turnBank!=null?hooks.layer.turnBank:state.roll*rollSign;     // (inverted flight and rolls do not turn it)
+    const rate=9.81*Math.tan(bound(turn,-68,68)*deg)/(state.speed/3.6)*180/Math.PI;
     state.heading=(state.heading+rate*dt+360)%360;
     if(hooks.layer&&hooks.layer.update)hooks.layer.update(dt);
   }
   function setUi(){
     const lay=hooks.layer,rollSign=lay&&lay.engaged?lay.rollSign:1;
-    ui.roll.textContent=digits(state.roll*rollSign);
+    ui.roll.textContent=digits(((state.roll*rollSign%360)+540)%360-180);      // within -180..180 (the inverted flight and the rolls of the game)
     ui.pitch.textContent=digits(state.pitch);
     ui.yaw.textContent=`${state.heading.toFixed(1).padStart(5,'0')}°`;
     ui.speed.textContent=Math.round(state.speed);
