@@ -23,11 +23,11 @@
  const KEY_X = 3.4, KEY_Y = 2.4;               // how fast the arrow keys move the aim (world units per second)
  const MODE_ORDER = ['FBWA', 'CRUISE', 'GUIDED', 'AUTO'];
  const ROLL_TICK = .08;                        // the roulette of a weapon box shows another weapon this often (s)
- const FX_COLOR = { turbo: '#ff9d52', gun: '#ffd36b', mask: '#ffe27a', barrier: '#8fe3ff' };
+ const FX_COLOR = { turbo: '#ff9d52', gun: '#ffd36b', mask: '#ffe27a', barrier: '#8fe3ff', pad: '#ffb35a' };
 
  // ---- texts (the card is translated by the layer itself; i18n.js only knows the static page)
  const TEXT = {
-  ru: { exit: 'ВЫХОД', score: 'СЧЁТ', best: 'РЕКОРД', gates: 'ВОРОТА', level: 'УРОВЕНЬ', ready: 'ПРИГОТОВЬСЯ', go: 'СТАРТ',
+  ru: { exit: 'ВЫХОД', score: 'СЧЁТ', best: 'РЕКОРД', gates: 'ВОРОТА', level: 'УРОВЕНЬ', ready: 'ПРИГОТОВЬСЯ', clickMusic: 'КЛИКНИ — ВКЛЮЧИТСЯ МУЗЫКА', touchMusic: 'КОСНИСЬ — ВКЛЮЧИТСЯ МУЗЫКА', go: 'СТАРТ',
    perfect: 'ТОЧНО', good: 'ПРОЛЁТ', miss: 'МИМО', life: '+1 ЖИЗНЬ', gust: 'ПОРЫВ ВЕТРА', paused: 'ПАУЗА', pausedHint: 'Верни курсор в карточку или нажми пробел',
    over: 'ПОЛЁТ ЗАВЕРШЁН', again: 'ЕЩЁ РАЗ', accuracy: 'ТОЧНОСТЬ', streak: 'СЕРИЯ', rank: 'ЗВАНИЕ', newBest: 'НОВЫЙ РЕКОРД',
    hint: 'Цель — 20 км: веди курсором сквозь кольца', hintTouch: 'Цель — 20 км: веди пальцем сквозь кольца',
@@ -65,6 +65,9 @@
    tipMissiles: 'РАКЕТЫ: сами находят чужие борта и опоры',
    tipMask: 'НЕУЯЗВИМОСТЬ: быстрее и сносишь всё на пути',
    tipBarrier: 'БАРЬЕР: отталкивает опоры и чужие борта',
+   qteRoll: 'БОЧКА ×2 В БИТ', qteKill: 'ОГОНЬ В БИТ', beatBtn: 'В БИТ', rollDone: 'БОЧКА!', killDone: 'СБИТ В БИТ', missBeat: 'МИМО БИТА', onBeat: 'В РИТМ',
+   invOn: 'ПЕРЕВЁРНУТЫЙ ПОЛЁТ', invOff: 'СНОВА РОВНО', staticWord: 'ПОМЕХИ', wPad: 'УСКОРЕНИЕ', tnt: 'TNT!', place: '{n} МЕСТО', placeShort: 'МЕСТО', rivalHit: 'СОПЕРНИК СБИТ С КУРСА', rivalDone: 'СОПЕРНИК НА ФИНИШЕ', cupTitle: 'ОФИЦИАЛЬНЫЙ ПИЛОТ A.T.L.A.S.', metres: 'м',
+   tipBeat: 'Кольца прилетают в такт, действия в бит дают бонус', tipQte: 'Манёвр в такт: пробел или клик, бочка — дважды', tipQteTouch: 'Манёвр в такт: кнопка «В БИТ», бочка — дважды', tipPad: 'Кольца со стрелками дают ускорение', tipTnt: 'Ящики TNT взрываются: облетай или сбивай', tipRace: 'Это гонка: обгони трёх соперников',
    ultLabel: 'ULT: залп по чужим самолётам (пробел или E)',
    caption: 'Цель — *20 км*, чем быстрее, тем выше звание · самолёт за *курсором* · *ЛКМ* — ускорение · *M* — музыка · *Esc* — выход',
    caption2: 'Ящики «?» — оружие · *пробел* — применить его или ULT (также *F*, *E*, *ПКМ*) · 10 перьев — усиление · режимы *FBWA → CRUISE → GUIDED → AUTO* меняются сами',
@@ -74,7 +77,7 @@
    buttonExit: 'Выйти из мини-игры',
    liveStart: 'Игра началась. Пролети 20 км сквозь кольца: самолёт летит за курсором, пробел — оружие из ящика или ULT, M — музыка.', liveOver: 'Игра окончена. Счёт {score}, ворота {gates}.',
    liveWon: 'Финиш: 20 км за {time}. Счёт {score}, ворота {gates}.' },
-  uk: { exit: 'ВИХІД', score: 'РАХУНОК', best: 'РЕКОРД', gates: 'ВОРОТА', level: 'РІВЕНЬ', ready: 'ПРИГОТУЙСЯ', go: 'СТАРТ',
+  uk: { exit: 'ВИХІД', score: 'РАХУНОК', best: 'РЕКОРД', gates: 'ВОРОТА', level: 'РІВЕНЬ', ready: 'ПРИГОТУЙСЯ', clickMusic: 'КЛІКНИ — УВІМКНЕТЬСЯ МУЗИКА', touchMusic: 'ТОРКНИСЬ — УВІМКНЕТЬСЯ МУЗИКА', go: 'СТАРТ',
    perfect: 'ТОЧНО', good: 'ПРОЛІТ', miss: 'МИМО', life: '+1 ЖИТТЯ', gust: 'ПОРИВ ВІТРУ', paused: 'ПАУЗА', pausedHint: 'Поверни курсор у картку або натисни пробіл',
    over: 'ПОЛІТ ЗАВЕРШЕНО', again: 'ЩЕ РАЗ', accuracy: 'ТОЧНІСТЬ', streak: 'СЕРІЯ', rank: 'ЗВАННЯ', newBest: 'НОВИЙ РЕКОРД',
    hint: 'Ціль — 20 км: веди курсором крізь кільця', hintTouch: 'Ціль — 20 км: веди пальцем крізь кільця',
@@ -112,6 +115,9 @@
    tipMissiles: 'РАКЕТИ: самі знаходять чужі борти й опори',
    tipMask: 'НЕВРАЗЛИВІСТЬ: швидше і зносиш усе на шляху',
    tipBarrier: 'БАР’ЄР: відштовхує опори та чужі борти',
+   qteRoll: 'БОЧКА ×2 У БІТ', qteKill: 'ВОГОНЬ У БІТ', beatBtn: 'У БІТ', rollDone: 'БОЧКА!', killDone: 'ЗБИТО В БІТ', missBeat: 'ПОВЗ БІТ', onBeat: 'У РИТМ',
+   invOn: 'ПЕРЕВЕРНУТИЙ ПОЛІТ', invOff: 'ЗНОВУ РІВНО', staticWord: 'ПЕРЕШКОДИ', wPad: 'ПРИСКОРЕННЯ', tnt: 'TNT!', place: '{n} МІСЦЕ', placeShort: 'МІСЦЕ', rivalHit: 'СУПЕРНИКА ЗБИТО З КУРСУ', rivalDone: 'СУПЕРНИК НА ФІНІШІ', cupTitle: 'ОФІЦІЙНИЙ ПІЛОТ A.T.L.A.S.', metres: 'м',
+   tipBeat: 'Кільця прилітають у такт, дії в біт дають бонус', tipQte: 'Маневр у такт: пробіл або клік, бочка — двічі', tipQteTouch: 'Маневр у такт: кнопка «У БІТ», бочка — двічі', tipPad: 'Кільця зі стрілками дають прискорення', tipTnt: 'Ящики TNT вибухають: облітай або збивай', tipRace: 'Це перегони: обжени трьох суперників',
    ultLabel: 'ULT: залп по чужих літаках (пробіл або E)',
    caption: 'Ціль — *20 км*, чим швидше, тим вище звання · літак за *курсором* · *ЛКМ* — прискорення · *M* — музика · *Esc* — вихід',
    caption2: 'Ящики «?» — зброя · *пробіл* — застосувати її або ULT (також *F*, *E*, *ПКМ*) · 10 пір’їн — підсилення · режими *FBWA → CRUISE → GUIDED → AUTO* змінюються самі',
@@ -121,7 +127,7 @@
    buttonExit: 'Вийти з міні-гри',
    liveStart: 'Гру розпочато. Пролети 20 км крізь кільця: літак летить за курсором, пробіл — зброя з ящика або ULT, M — музика.', liveOver: 'Гру закінчено. Рахунок {score}, ворота {gates}.',
    liveWon: 'Фініш: 20 км за {time}. Рахунок {score}, ворота {gates}.' },
-  en: { exit: 'EXIT', score: 'SCORE', best: 'BEST', gates: 'GATE', level: 'LEVEL', ready: 'GET READY', go: 'GO',
+  en: { exit: 'EXIT', score: 'SCORE', best: 'BEST', gates: 'GATE', level: 'LEVEL', ready: 'GET READY', clickMusic: 'CLICK FOR THE MUSIC', touchMusic: 'TOUCH FOR THE MUSIC', go: 'GO',
    perfect: 'PERFECT', good: 'GATE', miss: 'MISSED', life: '+1 LIFE', gust: 'GUST', paused: 'PAUSED', pausedHint: 'Move the cursor back onto the card or press Space',
    over: 'FLIGHT OVER', again: 'AGAIN', accuracy: 'ACCURACY', streak: 'STREAK', rank: 'RANK', newBest: 'NEW BEST',
    hint: 'Goal 20 km: fly the cursor through the rings', hintTouch: 'Goal 20 km: fly your finger through the rings',
@@ -159,6 +165,9 @@
    tipMissiles: 'MISSILES: they find aircraft and pylons',
    tipMask: 'INVINCIBLE: faster, you smash all in the way',
    tipBarrier: 'BARRIER: pushes pylons and aircraft away',
+   qteRoll: 'ROLL ×2 ON BEAT', qteKill: 'FIRE ON BEAT', beatBtn: 'ON BEAT', rollDone: 'ROLL!', killDone: 'DOWN ON BEAT', missBeat: 'OFF BEAT', onBeat: 'IN RHYTHM',
+   invOn: 'INVERTED FLIGHT', invOff: 'UPRIGHT AGAIN', staticWord: 'STATIC', wPad: 'BOOST', tnt: 'TNT!', place: 'PLACE {n}', placeShort: 'PLACE', rivalHit: 'RIVAL KNOCKED OFF', rivalDone: 'A RIVAL FINISHED', cupTitle: 'OFFICIAL A.T.L.A.S. PILOT', metres: 'm',
+   tipBeat: 'The rings come on the beat, acting on it pays', tipQte: 'Manoeuvre on the beat: Space or click, roll twice', tipQteTouch: 'Manoeuvre on the beat: ON BEAT button, roll twice', tipPad: 'Arrow rings give a boost', tipTnt: 'TNT crates explode: dodge or shoot them', tipRace: 'It is a race: overtake three rivals',
    ultLabel: 'ULT: salvo at the other aircraft (Space or E)',
    caption: 'Goal *20 km*, the faster the higher the rank · the aircraft follows the *cursor* · *LMB* — boost · *M* — music · *Esc* — exit',
    caption2: '"?" boxes — weapons · *Space* — use the weapon or the ULT (also *F*, *E*, *RMB*) · 10 feathers — upgrade · modes *FBWA → CRUISE → GUIDED → AUTO* change by themselves',
@@ -186,24 +195,46 @@
  const store = (() => { try { return window.localStorage; } catch { return null; } })();
  let best = store ? core.readBest(store) : 0, newBest = false, bestTime = store ? core.readTime(store) : 0, newTime = false;
 
- // ---- music: an eight-bar chiptune loop (the notes are data in flight-game-core.js) synthesised with Web Audio: a square lead, a triangle bass, noise drums, and an arpeggio
- //      while the afterburner burns (the tempo goes up too). No audio files and no libraries. Browsers let sound start only after a click, a key or a touch; the pointer hold
- //      that starts the game is none of these, so the music waits for the first of them (the player's own button in the header turns it off and on, and so does the M key).
- //      The choice is kept in localStorage (every access may throw).
+ // ---- music: the main track of the site (core.TRACK) or the pieces the player chose, played with Web Audio in step with the flight: the clock of the audio context
+ //      tells the game the time of the music as it is heard, and the parts of the music (core.segmentAt) follow one another without a gap. When the main track cannot
+ //      be read (no network), an old eight-bar chiptune loop is synthesised instead (the notes are data in flight-game-core.js; faster while the afterburner burns).
+ //      Browsers let sound start only after a click, a key or a touch; the pointer hold that starts the game is none of these, so the music waits for the first of them
+ //      (the player's own button in the header turns it off and on, and so does the M key). The choice is kept in localStorage (every access may throw).
  const audio = (() => {
-  const AC = window.AudioContext || window.webkitAudioContext, LOOK = .14, VOLUME = .17, steps = core.MUSIC.steps, stepBase = 60 / core.MUSIC.bpm / 4;
-  let ctx = null, master = null, noiseBuf = null, pulse = null, timer = 0, next = 0, pos = 0, wanted = false, held = false, mood = 'normal', tempo = 1, notes = 0;
+  const AC = window.AudioContext || window.webkitAudioContext, LOOK = .14, VOLUME = .17, TRACK_VOLUME = .75, CALM_VOLUME = .5, steps = core.MUSIC.steps, stepBase = 60 / core.MUSIC.bpm / 4;
+  let ctx = null, master = null, trackOut = null, noiseBuf = null, pulse = null, timer = 0, next = 0, pos = 0, wanted = false, held = false, mood = 'normal', tempo = 1, notes = 0;
+  // the pieces: the player's own (decoded), or the main track (its bytes fetched, then decoded: 'none' 'loading' 'fetched' 'decoding' 'ready' 'failed')
+  let music = core.MAIN_MUSIC, own = null, mainState = 'none', mainData = null, mainBuffer = null, parts = [], anchor = null;
   let on = store ? core.readMusic(store) : true;
   const freq = m => 440 * Math.pow(2, (m - 69) / 12);
   const live = () => !!ctx && ctx.state === 'running';
+  const buffers = () => own || (mainBuffer ? [mainBuffer] : null);
+  const useTrack = () => !!own || mainState !== 'failed';
+  const delay = () => { try { return bound(Number(store.getItem('atlas-rhythm-latency')) || 0, -150, 350) / 1000; } catch { return 0; } };      // the sound delay set in the panel of own tracks
+  const latency = () => (ctx.outputLatency || ctx.baseLatency || 0) + delay();
   // before the first click, key or touch of the page a context would only be suspended (and the console would complain): wait for it where the browser says so
   const activated = () => { try { return typeof navigator === 'undefined' || !navigator.userActivation || navigator.userActivation.hasBeenActive; } catch { return true; } };
+  /** The bytes of the main track: read once, ahead of the first game. */
+  function preload() {
+   if (mainState !== 'none') return;
+   if (typeof fetch !== 'function') { mainState = 'failed'; return; }
+   mainState = 'loading';
+   fetch(core.TRACK.src).then(r => { if (!r.ok) throw new Error('missing'); return r.arrayBuffer(); }).then(data => { mainData = data; mainState = 'fetched'; decodeMain(); }).catch(lost);
+  }
+  function decodeMain() {
+   if (mainState !== 'fetched' || !ctx) return;
+   const data = mainData; mainData = null; mainState = 'decoding';
+   const ready = b => { mainBuffer = b; mainState = 'ready'; };
+   try { const p = ctx.decodeAudioData(data, ready, lost); if (p && p.then) p.then(ready, lost); } catch { lost(); }
+  }
+  // the track cannot be read: the chiptune takes over, and its volume with it (the game may already be running)
+  function lost() { mainState = 'failed'; level(); }
   function build() {
    if (ctx) return true;
    if (!AC || !activated()) return false;
    try { ctx = new AC(); } catch { ctx = null; return false; }
    try {
-    master = ctx.createGain(); master.gain.value = 0;
+    master = ctx.createGain(); master.gain.value = 0; trackOut = ctx.createGain(); trackOut.gain.value = 0; trackOut.connect(ctx.destination);
     if (typeof ctx.createDynamicsCompressor === 'function') { const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination); } else master.connect(ctx.destination);
    } catch { ctx = null; return false; }
    try {
@@ -235,6 +266,15 @@
    s.buffer = noiseBuf; f.type = 'highpass'; f.frequency.value = hp; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + len);
    s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + len + .02); notes++;
   }
+  /** A burst of noise through a falling filter: an explosion. */
+  function boom(strength) {
+   if (!live() || !noiseBuf || !on) return;
+   try {
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), t = ctx.currentTime;
+    s.buffer = noiseBuf; f.type = 'lowpass'; f.frequency.setValueAtTime(2200, t); f.frequency.exponentialRampToValueAtTime(90, t + .6); g.gain.setValueAtTime(strength, t); g.gain.exponentialRampToValueAtTime(.001, t + .6);
+    s.connect(f); f.connect(g); g.connect(ctx.destination); s.start(t); s.stop(t + .65);
+   } catch { /* a browser without some node: no sound for the explosion */ }
+  }
   function playStep(i, t) {
    const s = core.MUSIC.tuneStep(i), len = stepBase / tempo;
    if (s.lead) tone('square', s.lead.m, t, s.lead.len * len * .94, .085);
@@ -243,40 +283,68 @@
    if (mood !== 'calm') { if (s.kick) kick(t); if (s.snare) hiss(t, .11, .16, 1500); if (s.hat) hiss(t, .035, .05, 7000); }
   }
   function tick() {
-   if (!live()) return;                              // blocked or suspended: the clock of the context does not move, nothing is scheduled
+   if (!live() || useTrack()) return;                // blocked or suspended (nothing is scheduled), or the track plays: it is kept by sync() every frame
    const now = ctx.currentTime;
    tempo += ((mood === 'sprint' ? 1.2 : 1) - tempo) * .12;
    if (next < now - .25) next = now + .05;           // woke up late: go on from now, do not play the backlog
    try { while (next < now + LOOK) { playStep(pos, next); next += stepBase / tempo; pos = (pos + 1) % steps; } } catch { /* a browser without some node: the game goes on without sound */ }
   }
+  // ---- the track in step with the flight: one source per part of the music, the next one scheduled a second before it is needed
+  function silence() { for (const p of parts) { try { p.src.stop(); } catch { /* never started */ } } parts = []; anchor = null; }
+  function schedule(seg, when, from, len) {
+   const list = buffers(), s = ctx.createBufferSource();
+   s.buffer = list[seg.i % list.length]; s.connect(trackOut); s.start(when, Math.max(0, from), Math.max(.01, len)); parts.push({ src: s, end: when + len });
+  }
+  const clock = () => (anchor && live() ? anchor.clock + (ctx.currentTime - anchor.ctx) - latency() : null);
+  /** Called every frame with the time of the music in the game: keeps the track playing in step with it (a jump or a start is taken at once). */
+  function sync(at) {
+   if (!(on && wanted && !held && live() && useTrack() && buffers())) return;
+   try {
+    const now = ctx.currentTime;
+    if (!anchor || Math.abs(clock() - at) > .25) {
+     silence();
+     const when = now + .03, c = at + .03 + latency(), seg = core.segmentAt(music, c), into = c - seg.start;
+     anchor = { ctx: when, clock: c };
+     schedule(seg, when, seg.from + into, seg.len - into);
+    }
+    const last = parts[parts.length - 1];
+    if (last && last.end - now < 1) { const c = anchor.clock + (last.end - anchor.ctx), seg = core.segmentAt(music, c + .001); schedule(seg, last.end, seg.from, seg.len); }
+    parts = parts.filter(p => p.end > now - .5);
+   } catch { silence(); }
+  }
   function level() {
    if (!master) return;
-   const v = on && wanted && !held ? VOLUME : 0;
-   try { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setTargetAtTime(v, ctx.currentTime, .06); } catch { try { master.gain.value = v; } catch { /* ignore */ } }
+   const heard = on && wanted && !held;
+   for (const [node, v] of [[trackOut, heard && useTrack() ? (mood === 'calm' ? CALM_VOLUME : TRACK_VOLUME) : 0], [master, heard && !useTrack() ? VOLUME : 0]]) {
+    try { node.gain.cancelScheduledValues(ctx.currentTime); node.gain.setTargetAtTime(v, ctx.currentTime, .06); } catch { try { node.gain.value = v; } catch { /* ignore */ } }
+   }
   }
   function run() {
    if (!on || !wanted || held || !AC || !build()) return;
    try { const p = ctx.resume(); if (p && p.catch) p.catch(() => {}); } catch { /* ignore */ }
+   decodeMain();
    if (!timer) timer = setInterval(tick, 30);
    level();
   }
   function halt() {
    if (timer) { clearInterval(timer); timer = 0; }
    level();
-   setTimeout(() => { if (ctx && !(on && wanted && !held)) { try { const p = ctx.suspend(); if (p && p.catch) p.catch(() => {}); } catch { /* ignore */ } } }, 280);   // let the fade finish, then let go of the audio device
+   setTimeout(() => { if (ctx && !(on && wanted && !held)) { silence(); try { const p = ctx.suspend(); if (p && p.catch) p.catch(() => {}); } catch { /* ignore */ } } }, 280);   // let the fade finish, then let go of the audio device
   }
   return {
    get supported() { return !!AC; }, get on() { return on; }, get running() { return live(); }, get notes() { return notes; }, get mood() { return mood; },
-   /** the game starts: play from the top of the tune (if the browser allows sound yet) */
-   play() { wanted = true; held = false; pos = 0; next = 0; tempo = 1; run(); },
+   get kind() { return useTrack() ? 'track' : 'synth'; }, get ready() { return !!buffers(); }, get clock() { return useTrack() ? clock() : null; },
+   preload, sync, boom,
+   /** the game starts, with the player's own pieces or (null) the main track, from the top (if the browser allows sound yet) */
+   play(choice) { silence(); own = choice ? choice.buffers : null; music = choice ? choice.music : core.MAIN_MUSIC; if (!own) preload(); wanted = true; held = false; pos = 0; next = 0; tempo = 1; run(); },
    /** the game ends or is left */
    stop() { wanted = false; halt(); },
    /** the game is paused (true) or goes on (false) */
-   hold(v) { held = !!v; if (held) halt(); else run(); },
-   /** calm: no drums (the landing), normal, sprint: arpeggio and a faster tempo */
-   setMood(m) { mood = m; },
+   hold(v) { held = !!v; if (held) { silence(); halt(); } else run(); },
+   /** calm: quieter (the landing; the chiptune drops its drums), normal, sprint: the chiptune gets an arpeggio and a faster tempo */
+   setMood(m) { if (m !== mood) { mood = m; level(); } },
    /** the player's switch; returns whether the music is on now */
-   toggle() { on = !on; if (store) core.writeMusic(store, on); if (on) run(); else halt(); return on; },
+   toggle() { on = !on; if (store) core.writeMusic(store, on); if (on) run(); else { silence(); halt(); } return on; },
    /** a click, a key or a touch happened: this is the moment a blocked browser lets the sound start */
    unlock() { if (wanted && on && !held && !live()) run(); },
    /** the music is wanted but the browser does not let it start yet */
@@ -305,11 +373,13 @@
  hudScore.append(hudScoreLabel, hudScoreValue);
  const hudMeta = el('div', 'game-meta'), hudGate = el('span', 'game-gate'), hudMult = el('span'), hudLives = el('span', 'game-lives'), hudTime = el('span', 'game-time'), hudDist = el('span', 'game-dist');
  for (let i = 0; i < CFG.lives; i++) hudLives.append(el('i'));
- hudMeta.append(hudGate, hudMult, hudLives, hudTime, hudDist);
+ const hudPlace = el('span', 'game-place');
+ hudMeta.append(hudGate, hudMult, hudLives, hudTime, hudPlace, hudDist);
  // the route along the top edge of the card: how much of the 20 km is behind, with a tick where one mode gives way to the next
  const route = el('div', 'game-route'), routeFill = el('i');
  route.hidden = true; route.setAttribute('aria-hidden', 'true'); route.append(routeFill);
  { let at = 0; for (const leg of core.PLAN) { at += leg.len; const tick = el('b'); tick.style.left = (100 * at / CFG.distance).toFixed(2) + '%'; route.append(tick); } }
+ const rivalDots = CFG.rivals.map(() => { const d = el('s'); route.append(d); return d; });      // the rivals on the route
  // the wind sits in the score line: an arrow that points where it blows, its speed and five pips of strength
  const hudWind = el('div', 'game-wind'), windArrow = el('i', 'game-wind-arrow'), windValue = el('b'), windPips = el('span', 'game-wind-pips');
  for (let i = 0; i < 5; i++) windPips.append(el('i'));
@@ -342,15 +412,17 @@
  const flash = el('div', 'game-flash'); flash.setAttribute('aria-hidden', 'true');
  const live = el('div', 'game-live'); live.setAttribute('role', 'status'); live.setAttribute('aria-live', 'polite');
  const glow = el('div', 'game-glow'); glow.setAttribute('aria-hidden', 'true');      // the glow at the edges of the card while the afterburner burns
- host.append(dwellBar, glow, route, hud, tip, bar, flash, overlay, live);
+ // the button of a manoeuvre on a touch screen (a second finger presses it while the first one steers)
+ const beatBtn = el('button', 'game-beat'); beatBtn.type = 'button'; beatBtn.hidden = true;
+ host.append(dwellBar, glow, route, hud, tip, bar, beatBtn, flash, overlay, live);
  const caption = el('div', 'scope-caption game-caption'), captionText = el('span'), captionText2 = el('span', 'game-caption2'); caption.hidden = true;
  const captionBody = el('span', 'game-caption-body'); captionBody.append(captionText, el('br'), captionText2);
  caption.append(el('span', 'mini-cross', '+'), captionBody);
  if (instructions) instructions.after(caption); else root.append(caption);
  // the overlay, the bars and the button must not start the demo's boost and pointer capture
- for (const node of [overlay, toggle, bar, musicBtn]) node.addEventListener('pointerdown', ev => ev.stopPropagation());
+ for (const node of [overlay, toggle, bar, musicBtn, beatBtn]) node.addEventListener('pointerdown', ev => ev.stopPropagation());
  // a second finger on the weapon or the ULT button must not end the touch that steers (the demo lets go of the pointer on these events)
- for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) bar.addEventListener(type, ev => { if (ev.pointerType === 'touch') ev.stopPropagation(); });
+ for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) for (const node of [bar, beatBtn]) node.addEventListener(type, ev => { if (ev.pointerType === 'touch') ev.stopPropagation(); });
  const gridEl = root.querySelector('.scope-grid');
 
  // ---- state of the layer
@@ -358,6 +430,7 @@
  let goBanner = 0, banner = null, gustInfo = null, lastHud = '', overlayKey = '', markHidden = false, tipTimer = 0, seenHazard = false, away = 0, keyPlay = false;
  let hovering = false, dwellHeld = 0, dwellLock = false, dwellLast = 0, dwellText = '', dwellOn = false, lmbDown = false, tipPrio = 0;
  let sprintView = 0, lastWind = '', audioWait = 0, seenBonus = false, sprintOn = false, lastArsenal = '', seenBox = false, seenFeather = false, shotSide = 1, tipNow = null;
+ let chosen = null, rollAnim = null, punch = 0, horizon = 0, turnBank = 0, seenPad = false, seenTnt = false, blocked = false;      // chosen: the player's own music ({music, buffers}); null: the main track
  const aimOut = { x: 0, y: 0, neutral: false };
  const WIND_UNIT = 6;                          // world units per second -> the metres per second shown on the card
  // the streaks that show the wind (they drift with it) and the afterburner (they fly away from the vanishing point)
@@ -428,7 +501,10 @@
    const s = core.summary(game);
    const row = (label, value, cls) => { const r = el('div', 'game-row' + (cls ? ' ' + cls : '')); r.append(el('span', '', label), el('strong', '', value)); return r; };
    // the time (a flight that was finished) or the distance (one that was not), the score and the records; the rank is the time
-   panel.append(el('div', 'game-title' + (s.won ? ' is-won' : ''), s.won ? tx('won') : tx('over')), el('div', 'game-rank', tx('ranks')[s.rank]),
+   // a flight that was finished lands with the cup of an official A.T.L.A.S. pilot: gold for the first place, silver for the second, bronze after
+   const title = el('div', 'game-title' + (s.won ? ' is-won is-cup is-' + (s.place === 1 ? 'gold' : s.place === 2 ? 'silver' : 'bronze') : ''), s.won ? undefined : tx('over'));
+   if (s.won) title.append(trophy(), el('span', '', tx('cupTitle')));
+   panel.append(title, el('div', 'game-rank', s.won ? `${tx('place').replace('{n}', String(s.place))} · ${tx('ranks')[s.rank]} · ${CFG.distance / 1000} ${tx('km').toUpperCase()}` : tx('ranks')[s.rank]),
     s.won ? row(tx('time'), clockT(s.time), 'is-main') : row(tx('distance'), `${kmText(s.dist)} ${tx('km')}`, 'is-main'), row(tx('score'), pad(s.score, 5), 'is-main'),
     row(tx('best'), pad(Math.max(best, s.score), 5)));
    if (bestTime) panel.append(row(tx('bestTime'), clockT(bestTime)));
@@ -443,6 +519,14 @@
    setTimeout(() => { if (mode === 'over') { try { again.focus({ preventScroll: true }); } catch { /* old browsers */ } } }, 80);
   }
   overlay.append(panel);
+ }
+ /** The cup of the end screen: a small drawing (a plain box where SVG cannot be made). */
+ function trophy() {
+  if (!document.createElementNS) return el('i', 'game-trophy');
+  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 64 64'); svg.setAttribute('class', 'game-trophy'); svg.setAttribute('aria-hidden', 'true');
+  for (const d of ['M18 8h28v14c0 9-6 16-14 16S18 31 18 22Z', 'M18 12H9c0 10 4 15 11 16M46 12h9c0 10-4 15-11 16', 'M32 38v9M22 56h20M26 47h12l2 9H24Z']) { const p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); svg.append(p); }
+  return svg;
  }
  function syncOverlay() {
   const key = wantedOverlay();
@@ -504,9 +588,12 @@
   const info = core.modeInfo(game), pct = info.len ? Math.round(100 * info.t / info.len) : 0, left = kmText(info.left);
   const mult = core.multiplier(game) * MODES[game.mode].score, boosted = game.boost > .6, next = core.nextGate(game), ultFull = game.ult >= 100;
   const km = kmText(game.dist), secs = Math.floor(game.runTime);
-  const key = [game.score, game.lives, game.streak, boosted, next ? next.n : game.gateCount, lang(), game.mode, Math.round(game.ult), game.finale ? 1 : 0, km, secs, pct, left, info.next, coarse].join('|');
+  const key = [game.score, game.lives, game.streak, boosted, next ? next.n : game.gateCount, lang(), game.mode, Math.round(game.ult), game.finale ? 1 : 0, km, secs, pct, left, info.next, coarse, game.place, ...game.rivals.map(r => Math.round(r.dist / 100))].join('|');
   if (key === lastHud) return;
   lastHud = key;
+  hudPlace.textContent = `${game.place}/${game.rivals.length + 1}`;
+  hudPlace.setAttribute('title', tx('placeShort')); hudPlace.classList.toggle('is-first', game.place === 1);
+  game.rivals.forEach((r, i) => { rivalDots[i].style.left = (100 * r.dist / CFG.distance).toFixed(2) + '%'; });
   hudScoreValue.textContent = pad(game.score, 5);
   hudGate.textContent = next && next.approach ? `${tx('final')} ${next.index}/${CFG.landing.gates}` : `${tx('gates')} ${pad(next ? next.n : game.gateCount, 2)}`;
   hudMult.textContent = `×${mult.toFixed(1)}`;
@@ -561,31 +648,34 @@
    gateY: bound(Math.min(up, down) / (base * .83), .45, 1.4)
   };
  }
- function start() {
-  if (mode === 'count' || mode === 'run' || mode === 'paused') return;
-  game = core.create((Math.random() * 0xffffffff) >>> 0, fieldSize());
+ /** A new flight; choice: the player's own music (from the panel of own tracks), null: the main track; nothing: the same as before. */
+ function start(choice) {
+  if (mode === 'count' || mode === 'run' || mode === 'paused') return false;
+  if (choice !== undefined) chosen = choice;
+  game = core.create((Math.random() * 0xffffffff) >>> 0, Object.assign(fieldSize(), chosen ? { music: chosen.music } : null));
   core.begin(game);
   mode = 'count'; engaged = true; layer.active = true; pauseReason = ''; newBest = false; goBanner = 0; banner = null; gustInfo = null; seenHazard = false;
-  firing = false; away = 0; aimSource = 'pointer'; keyPlay = false; lastAim.x = lastAim.y = 0;
+  firing = false; away = 0; aimSource = 'pointer'; keyPlay = false; lastAim.x = lastAim.y = 0; rollAnim = null; punch = 0; horizon = 0; turnBank = 0; seenPad = false; seenTnt = false; beatBtn.hidden = true;
   dwellHeld = 0; dwellText = ''; setDwellBar(false);
   tipsShown.clear(); tipQueue.length = 0; tipPrio = 0; tipNow = null; tip.hidden = true; tipTimer = 0;
   popups.length = rings.length = sparks.length = beams.length = tracers.length = shots.length = 0;
-  sprintView = 0; sprintOn = false; lastWind = ''; lastArsenal = ''; audioWait = 0; seenBonus = false; seenBox = false; seenFeather = false; newTime = false; host.classList.remove('is-sprint');
+  sprintView = 0; sprintOn = false; lastWind = ''; lastArsenal = ''; audioWait = 0; seenBonus = false; seenBox = false; seenFeather = false; newTime = false; host.classList.remove('is-sprint', 'is-asking');
   root.classList.add('is-game'); host.classList.add('is-game');
   hud.hidden = false; route.hidden = false; caption.hidden = false; bar.hidden = false; toggle.hidden = false; musicBtn.hidden = !audio.supported;
   paintStatic();
   try { host.focus({ preventScroll: true }); } catch { /* old browsers */ }
   announce(tx('liveStart'));
-  audio.setMood('normal'); audio.play();
+  audio.setMood('normal'); audio.play(chosen);
   demo.wake();
+  return true;
  }
  function restart() { mode = 'demo'; game = null; start(); }
  function exit() {
   if (mode === 'demo') return;
-  mode = 'demo'; engaged = false; game = null; keys.clear(); firing = false; lmbDown = false; tipQueue.length = 0; tipPrio = 0; tipNow = null; tipTimer = 0;
+  mode = 'demo'; engaged = false; game = null; chosen = null; keys.clear(); firing = false; lmbDown = false; tipQueue.length = 0; tipPrio = 0; tipNow = null; tipTimer = 0;
   dwellHeld = 0; dwellText = ''; dwellLock = hovering; setDwellBar(false);       // the pointer is still on the card: the next game needs a new visit
-  popups.length = rings.length = sparks.length = beams.length = tracers.length = shots.length = 0;
-  root.classList.remove('is-game'); host.classList.remove('is-game', 'is-hit', 'is-narrow', 'is-sprint');
+  popups.length = rings.length = sparks.length = beams.length = tracers.length = shots.length = 0; rollAnim = null; punch = 0; horizon = 0; beatBtn.hidden = true;
+  root.classList.remove('is-game'); host.classList.remove('is-game', 'is-hit', 'is-narrow', 'is-sprint', 'is-asking');
   hud.hidden = true; route.hidden = true; caption.hidden = true; bar.hidden = true; tip.hidden = true; toggle.hidden = true; musicBtn.hidden = true; sprintView = 0; sprintOn = false;
   audio.stop();
   showCentreMark();
@@ -611,9 +701,11 @@
   musicBtn.setAttribute('aria-label', on ? tx('musicLabelOn') : tx('musicLabelOff'));
   musicBtn.setAttribute('title', tx('music') + ': ' + (on ? tx('musicOn') : tx('musicOff')));
  }
+ // an action that did something pays extra when it falls on a beat
  function fireUlt() {
   if (!game || mode !== 'run') return 0;
   const n = core.fireUlt(game);
+  if (n) core.onBeat(game);
   handle(core.drain(game));
   return n;
  }
@@ -621,22 +713,39 @@
  function useWeapon() {
   if (!game || mode !== 'run') return null;
   const name = core.useWeapon(game);
+  if (name) core.onBeat(game);
   handle(core.drain(game));
   paintArsenal();
   return name;
  }
- /** The right mouse button: the weapon of the box, or the ULT when the slot is empty (not while a roulette turns: that weapon is on its way). */
+ /** A press for the manoeuvre that is asked for (it takes the presses from a little before its beat). True: the press was its. */
+ function qtePress() {
+  if (!game || mode !== 'run' || !core.qtePending(game)) return false;
+  core.pressQte(game);
+  handle(core.drain(game));
+  return true;
+ }
+ /** The right mouse button: the manoeuvre, else the weapon of the box, or the ULT when the slot is empty (not while a roulette turns: that weapon is on its way). */
  function useOrUlt() {
-  if (!game || mode !== 'run') return;
+  if (!game || mode !== 'run' || qtePress()) return;
   if (game.weapon) useWeapon(); else if (!game.roll) fireUlt();
  }
  /** The gun of the AUTO mode: a shot at the pointer. */
- function shootAtPointer() {
+ function autoFire() {
   if (!game || mode !== 'run' || game.mode !== 'AUTO') return null;
   const target = core.shoot(game, pointerAt);
   handle(core.drain(game));
   return target;
  }
+ /** A click or a touch: the manoeuvre, else a shot (in AUTO). */
+ function shootAtPointer() {
+  if (qtePress()) return null;
+  const target = autoFire();
+  if (target) { core.onBeat(game); handle(core.drain(game)); }
+  return target;
+ }
+ beatBtn.addEventListener('pointerdown', ev => { if (ev.pointerType === 'touch') { touchedAt = performance.now(); qtePress(); } });
+ beatBtn.addEventListener('click', ev => { ev.stopPropagation(); if (performance.now() - touchedAt > 700) qtePress(); try { host.focus({ preventScroll: true }); } catch { /* old browsers */ } });
  toggle.addEventListener('click', () => { if (mode !== 'demo') exit(); });
  musicBtn.addEventListener('click', ev => { ev.stopPropagation(); toggleMusic(); try { host.focus({ preventScroll: true }); } catch { /* old browsers */ } });      // the arrow keys and M go on working
  // the ULT and the weapon buttons act on the touch itself: a second finger works while the first one steers (a browser makes no click from a second finger);
@@ -655,6 +764,7 @@
  // boost (in AUTO the gun). A press that has used something does not boost while it is held.
  let spaceUsed = false;
  function activate() {
+  if (qtePress()) return true;
   if (!game || mode !== 'run' || game.roll) return false;
   if (game.weapon) { useWeapon(); return true; }
   if (game.ult >= 100 && game.ultCool <= 0 && !game.finale && game.enemies.some(e => e.state === 'ahead' && e.z > .15)) { fireUlt(); return true; }
@@ -662,10 +772,10 @@
  }
  const releaseBoost = () => { state.boosted = false; host.classList.remove('is-boosting'); };
  function onKey(ev) {
-  if (demo.layer !== layer) return;                       // the rhythm flight has the card
+  if (blocked) return;                                    // the panel of own tracks has the card
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;      // the shortcuts of the browser
   const k = keyName(ev);
-  if (k === ' ' && (ev.target === ultBtn || ev.target === weaponBtn)) return;      // Space on one of those buttons presses that button (once)
+  if (k === ' ' && (ev.target === ultBtn || ev.target === weaponBtn || ev.target === beatBtn)) return;      // Space on one of those buttons presses that button (once)
   if (k === 'escape' && mode !== 'demo') { ev.preventDefault(); exit(); return; }
   if (mode === 'demo') { if (k === 'enter' && !ev.repeat) { ev.preventDefault(); start(); keyPlay = true; } return; }
   if (AXES[k]) { keys.add(k); keyPlay = true; ev.preventDefault(); if (mode === 'paused' && pauseReason !== 'manual') resume(); return; }
@@ -729,8 +839,9 @@
  function updateDwell() {
   const now = performance.now(), gap = now - dwellLast; dwellLast = now;
   if (gap > 300) { dwellHeld = 0; return; }     // the loop was asleep (the card was out of view or the tab hidden): start over
-  if (!hovering || dwellLock) { dwellHeld = 0; dwellText = ''; setDwellBar(false); return; }
+  if (!hovering || dwellLock || blocked) { dwellHeld = 0; dwellText = ''; setDwellBar(false); return; }
   dwellHeld += gap / 1000;
+  if (dwellHeld >= 2) audio.preload();      // the music is on its way while the count goes on
   dwellFill.style.transform = `scaleX(${bound(dwellHeld / DWELL, 0, 1).toFixed(3)})`;
   setDwellBar(dwellHeld > 1);
   dwellText = dwellHeld >= 2 ? tx('dwell').replace('{n}', String(Math.max(1, Math.ceil(DWELL - dwellHeld)))) : '';
@@ -753,7 +864,7 @@
   let r = 0, z = 1;
   if (engaged && game && !reduced) {
    r = bound(CAM.roll * state.roll * DEG, -CAM.rollMax, CAM.rollMax);
-   z = 1 + CAM.boostZoom * game.boost + CAM.driftZoom * Math.min(1, Math.abs(game.plane.vx) / CFG.maxSpeed) + CAM.sprintZoom * sprintView;
+   z = 1 + CAM.boostZoom * game.boost + CAM.driftZoom * Math.min(1, Math.abs(game.plane.vx) / CFG.maxSpeed) + CAM.sprintZoom * sprintView + .12 * punch;      // punch: the lean-in at a shot on the beat
   }
   if (engaged && game) { const S = planeScreen(); cam.px = S.x; cam.py = S.y; }
   const a = 1 - Math.exp(-dt * 7);
@@ -764,14 +875,22 @@
  }
 
  // ---- steering: the aircraft follows the aim; the demo's attitude only shows the bank and the climb of that motion (a right turn = right bank)
- function steer() {
+ function steer(dt) {
   if (!engaged) return;
-  if (!game || mode === 'over' || mode === 'paused') { state.aimRoll = state.aimPitch = state.aimYaw = 0; return; }
+  if (!game || mode === 'over' || mode === 'paused') { state.aimRoll = state.aimPitch = state.aimYaw = 0; turnBank = 0; return; }
   const P = game.plane, allowed = MODES[game.mode].boost;
   if (!allowed && state.boosted) { state.boosted = false; host.classList.remove('is-boosting'); }                                      // CRUISE and AUTO: no boost (in AUTO the button is the gun)
   else if (allowed && lmbDown && !state.boosted && mode === 'run') { state.boosted = true; host.classList.add('is-boosting'); }   // the button is still held when the mode changes back
   // FBWA: what the aircraft shows is its real bank and pitch (the limits are in the core: 45 and 25 degrees, a gust shakes the wings); a right bank is a negative roll of the model
-  state.aimRoll = -bound(P.bank / DEG, -58, 58); state.aimPitch = bound(P.tilt / DEG, -32, 32); state.aimYaw = -state.aimRoll * .3;
+  const bank = bound(P.bank / DEG, -58, 58), inv = game.inverted ? 180 : 0;
+  turnBank = bank;      // the heading follows the bank of the turn, not the inverted flight or a barrel roll
+  state.aimRoll = inv - bank; state.aimPitch = bound(P.tilt / DEG, -32, 32); state.aimYaw = bank * .3;
+  if (rollAnim) {       // a barrel roll on the beat: all the way round
+   rollAnim.t += dt || 0;
+   const k = Math.min(1, rollAnim.t / rollAnim.dur), ease = k * k * (3 - 2 * k);
+   state.roll = inv - bank - rollAnim.dir * 360 * ease; state.rollVel = 0; state.aimRoll = state.roll;
+   if (k >= 1) { state.roll += rollAnim.dir * 360; state.aimRoll = inv - bank; rollAnim = null; }
+  }
  }
  /** Where the aircraft is told to go: the arrow keys move an aim of their own, otherwise the pointer; when the pointer has left the card the last aim stays. */
  function currentAim(dt) {
@@ -814,11 +933,34 @@
     rings.push({ x: e.x, y: e.y, r: e.gate.r, age: 0, life: .5, color: '#e07b4f' });
     hit();
    } else if (e.type === 'hit') {
-    popups.push({ text: e.kind === 'enemy' ? tx('hitEnemy') : tx('hitPylon'), x: e.x, y: e.y, z: 0, age: 0, life: 1.3, color: '#e07b4f' });
-    rings.push({ x: e.x, y: e.y, r: e.thing.r * 1.6, age: 0, life: .55, color: '#e07b4f' });
-    burst(e.x, e.y, 16, 120);
+    popups.push({ text: e.thing.tnt ? tx('tnt') : e.kind === 'enemy' ? tx('hitEnemy') : tx('hitPylon'), x: e.x, y: e.y, z: 0, age: 0, life: 1.3, color: '#e07b4f' });
+    rings.push({ x: e.x, y: e.y, r: e.thing.r * (e.thing.tnt ? 2.6 : 1.6), age: 0, life: .55, color: '#e07b4f' });
+    burst(e.x, e.y, e.thing.tnt ? 30 : 16, e.thing.tnt ? 190 : 120);
+    if (e.thing.tnt) audio.boom(.4);
     hit();
-   } else if (e.type === 'life') popups.push({ text: tx('life'), x: 0, y: .9, z: 0, age: 0, life: 1.4, color: '#e6d05f' });
+   } else if (e.type === 'qteAsk') { setBanner(tx(e.move === 'roll' ? 'qteRoll' : 'qteKill'), 2); showTip('qte', tx('tipQte')); }
+   else if (e.type === 'qteTap') {
+    if (e.move === 'roll' && e.tap === 0 && !reduced) rollAnim = { t: 0, dur: .55, dir: e.dir || 1 };
+    popups.push({ text: e.quality === 'perfect' ? tx('perfect') : tx('onBeat'), x: game.plane.x, y: game.plane.y + .55, z: 0, age: 0, life: .55, color: '#bfefff' });
+   } else if (e.type === 'qte') {
+    if (!e.ok) popups.push({ text: tx('missBeat'), x: e.x, y: e.y, z: e.z, age: 0, life: .9, color: '#e07b4f' });
+    else if (e.move === 'kill') {      // the aircraft shot down on the beat: the beam, the explosion and a lean-in of the camera
+     beams.push({ x: e.x, y: e.y, z: e.z, age: 0, life: .4, thin: false });
+     rings.push({ x: e.x, y: e.y, r: CFG.enemyR * 2.4, age: 0, life: .6, color: '#ffd9a8' });
+     burst(e.x, e.y, 28, 180, e.z); audio.boom(.45); if (!reduced) punch = 1;
+     popups.push({ text: `${tx('killDone')} +${e.points}`, x: e.x, y: e.y + .5, z: e.z, age: 0, life: 1.5, color: '#fff2b0' });
+    } else popups.push({ text: `${tx('rollDone')} +${e.points} · ${tx('wPad')}`, x: e.x, y: e.y + .6, z: 0, age: 0, life: 1.4, color: '#bfefff' });
+   } else if (e.type === 'onbeat') popups.push({ text: `${tx('onBeat')} ×${e.streak} +${e.points}`, x: game.plane.x, y: game.plane.y - .65, z: 0, age: 0, life: 1, color: '#bfefff' });
+   else if (e.type === 'loop') setBanner(tx(e.inverted ? 'invOn' : 'invOff'), 2.6);
+   else if (e.type === 'upright') setBanner(tx('invOff'), 2);
+   else if (e.type === 'pad') {
+    popups.push({ text: `${tx('wPad')} +${e.points}`, x: e.x, y: e.y, z: 0, age: 0, life: 1, color: '#ffb35a' });
+    rings.push({ x: e.x, y: e.y, r: e.r, age: 0, life: .45, color: '#ffb35a' }); burst(e.x, e.y, 10, 120);
+   } else if (e.type === 'rivalHit') popups.push({ text: tx('rivalHit'), x: 0, y: .75, z: 0, age: 0, life: 1.4, color: '#fff2b0' });
+   else if (e.type === 'rivalFinish') setBanner(tx('rivalDone'), 1.6);
+   else if (e.type === 'place') { if (game.runTime > 8) popups.push({ text: tx('place').replace('{n}', String(e.place)), x: 0, y: .95, z: 0, age: 0, life: 1.4, color: e.up ? '#fff2b0' : '#e07b4f' }); }
+   else if (e.type === 'effectEnd') { /* the timers show it */ }
+   else if (e.type === 'life') popups.push({ text: tx('life'), x: 0, y: .9, z: 0, age: 0, life: 1.4, color: '#e6d05f' });
    else if (e.type === 'level') setBanner(`${tx('level')} ${e.level}`, 1.8);
    else if (e.type === 'gust') { gustInfo = e.stage === 'end' ? null : { dirX: e.dirX, dirY: e.dirY, stage: e.stage }; if (e.stage === 'warn') showTip('gust', tx('tipGust')); }
    else if (e.type === 'enemy') showTip('enemy', tx('tipEnemy'));
@@ -863,9 +1005,10 @@
     burst(game.plane.x, game.plane.y, 22, 130);
    } else if (e.type === 'feather') burst(e.x, e.y, 5, 60);
    else if (e.type === 'destroy') {
-    popups.push({ text: `${e.kind === 'enemy' ? tx('shot') : tx('smashed')} +${e.points}`, x: e.x, y: e.y, z: e.z, age: 0, life: 1.2, color: '#fff2b0' });
-    rings.push({ x: e.x, y: e.y, r: e.r * 1.5, age: 0, life: .5, color: '#fff2b0' });
-    burst(e.x, e.y, 14, 130, e.z);
+    popups.push({ text: `${e.tnt ? tx('tnt') : e.kind === 'enemy' ? tx('shot') : tx('smashed')} +${e.points}`, x: e.x, y: e.y, z: e.z, age: 0, life: 1.2, color: '#fff2b0' });
+    rings.push({ x: e.x, y: e.y, r: e.r * (e.tnt ? 2.4 : 1.5), age: 0, life: .5, color: e.tnt ? '#ff9d52' : '#fff2b0' });
+    burst(e.x, e.y, e.tnt ? 26 : 14, 130, e.z);
+    if (e.tnt) audio.boom(.3);
    } else if (e.type === 'repel') {
     popups.push({ text: tx('repelled'), x: e.x, y: e.y, z: e.z, age: 0, life: .9, color: '#a9e8ff' });
     rings.push({ x: e.x, y: e.y, r: .7, age: 0, life: .45, color: '#8fe3ff' });
@@ -910,15 +1053,26 @@
   const f = fieldSize();
   if (Math.abs(f.x - game.fieldX) > .03 || Math.abs(f.y - game.fieldY) > .03 || Math.abs(f.gateY - game.gateY) > .03) core.setField(game, f.x, f.y, f.gateY);
   const aim = currentAim(dt);
-  if (firing && mode === 'run' && game.mode === 'AUTO') shootAtPointer();
-  core.step(game, dt, { tx: aim.x, ty: aim.y, boost: state.boosted && lastPointer !== 'touch', neutral: aim.neutral });
+  if (firing && mode === 'run' && game.mode === 'AUTO') autoFire();
+  core.step(game, dt, { tx: aim.x, ty: aim.y, boost: state.boosted && lastPointer !== 'touch', neutral: aim.neutral, clock: audio.clock });
   handle(core.drain(game));
+  if (mode === 'run' || mode === 'count') audio.sync(game.beatClock);
+  punch *= Math.exp(-dt * 5);
+  horizon += ((game.inverted ? 180 : 0) - horizon) * (1 - Math.exp(-dt * 5));
+  const pending = mode === 'run' && core.qtePending(game);
+  if (beatBtn.hidden === (pending && coarse)) { beatBtn.hidden = !(pending && coarse); host.classList.toggle('is-asking', !beatBtn.hidden); }   // the button stands where the tips do: they wait under it
+  if (pending) beatBtn.textContent = tx(game.qte.type === 'roll' ? 'qteRoll' : 'qteKill');
   if (!seenHazard && (game.obstacles.length || game.enemies.length)) { seenHazard = true; showTip('hazard', tx('tipHazard')); }
   if (!seenBonus && game.bonuses.some(b => b.state === 'ahead' && b.z < 7.5)) { seenBonus = true; showTip('bonus', tx('tipBonus')); }
   if (!seenBox && game.boxes.some(b => b.state === 'ahead' && b.z < 7.5)) { seenBox = true; showTip('box', tx('tipBox')); }
   if (!seenFeather && game.plumes.some(f => f.state === 'ahead' && f.z < 7.5)) { seenFeather = true; showTip('feather', tx('tipFeather')); }
   if (game.runTime > 1.2 && mode === 'run') showTip('goal', tx('tipGoal'));
   if (game.runTime > 3 && mode === 'run') showTip('wind', tx('tipWind'));
+  // the race, the beat, the boost rings and the TNT crates: after the first hints
+  if (game.runTime > 12 && mode === 'run') showTip('race', tx('tipRace'));
+  if (game.runTime > 17 && mode === 'run') showTip('beat', tx('tipBeat'));
+  if (!seenPad && game.runTime > 21 && game.pads.some(p => p.state === 'ahead' && p.z < 7.5)) { seenPad = true; showTip('pad', tx('tipPad')); }
+  if (!seenTnt && game.runTime > 15 && game.obstacles.some(o => o.tnt && o.state === 'ahead' && o.z < 7.5)) { seenTnt = true; showTip('tnt', tx('tipTnt')); }
   // the afterburner and the speed weapons: how much of the speed is on the card (the speed lines, the lean-in of the camera, the glow at the edges, the speed readout) and in the music
   const sp = core.sprintInfo(game), rush = game.fx.turbo.t > 0 ? Math.min(1, game.fx.turbo.t / .35) : game.fx.mask.t > 0 ? .6 : 0;
   sprintView += (Math.max(sp.amt, rush) - sprintView) * (1 - Math.exp(-dt * 6));
@@ -988,6 +1142,14 @@
   const gm = worldToPixels(o.x, o.y, o.z), alpha = fade(o.z);
   if (alpha <= .01) return;
   ctx.save(); ctx.globalAlpha = alpha;
+  if (o.tnt) {      // a TNT crate: red boards, the word on it
+   const r = o.r * gm.s, h = r * .83;
+   ctx.fillStyle = 'rgba(190,52,32,.42)'; ctx.strokeStyle = o.state === 'hit' ? '#fff2b0' : '#ff6a45'; ctx.shadowColor = 'rgba(255,90,60,.7)'; ctx.shadowBlur = 10; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+   ctx.beginPath(); ctx.moveTo(gm.x - r, gm.y - h); ctx.lineTo(gm.x + r, gm.y - h); ctx.lineTo(gm.x + r, gm.y + h); ctx.lineTo(gm.x - r, gm.y + h); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+   ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(gm.x - r, gm.y - h * .45); ctx.lineTo(gm.x + r, gm.y - h * .45); ctx.moveTo(gm.x - r, gm.y + h * .45); ctx.lineTo(gm.x + r, gm.y + h * .45); ctx.stroke();
+   ctx.fillStyle = '#ffe9c0'; ctx.font = `700 ${Math.max(7, Math.min(16, r * .62))}px ${MONO}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('TNT', gm.x, gm.y + 1);
+   ctx.restore(); return;
+  }
   ringPath(ctx, gm, o.r, 10);
   ctx.fillStyle = 'rgba(224,123,79,.12)'; ctx.fill();
   ctx.shadowColor = 'rgba(224,123,79,.55)'; ctx.shadowBlur = 9; ctx.strokeStyle = o.state === 'hit' ? '#fff2b0' : '#e07b4f'; ctx.lineWidth = 1.9; ctx.lineJoin = 'round'; ctx.stroke(); ctx.shadowBlur = 0;
@@ -1137,9 +1299,12 @@
  function drawBack(ctx) {
   if (!game) return;
   const F = game.finale;
-  drawWind(ctx); drawSpeedLines(ctx);
+  drawCeiling(ctx); drawBeatPulse(ctx); drawWind(ctx); drawSpeedLines(ctx);
   if (F) drawRunway(ctx, F);
   const things = [];
+  for (const p of game.pads) if (p.z > .15 && p.state === 'ahead') things.push([p.z, 'pad', p]);
+  if (game.marked && game.marked.z > .15) things.push([game.marked.z, 'marked', game.marked]);
+  if (mode === 'run' || mode === 'paused') game.rivals.map(rivalAhead).filter(Boolean).sort((a, b) => a.lead - b.lead).forEach((o, i) => { o.named = i === 0; things.push([o.z, 'rival', o]); });
   for (const g of game.gates) if (g.z > .15) things.push([g.z, 'gate', g]);
   for (const o of game.obstacles) if (o.z > .15) things.push([o.z, 'pylon', o]);
   for (const b of game.bonuses) if (b.z > .15 && b.state === 'ahead') things.push([b.z, 'bonus', b]);
@@ -1150,8 +1315,86 @@
   things.sort((a, b) => b[0] - a[0]);
   const next = core.nextGate(game), ready = game.ult >= 100;
   const paint = { gate: obj => drawGate(ctx, obj, obj === next), pylon: obj => drawPylon(ctx, obj), bonus: obj => drawBonus(ctx, obj), enemy: obj => drawEnemy(ctx, obj, ready || underPointer(obj)),
-   box: obj => drawBox(ctx, obj), feather: obj => drawFeather(ctx, obj), missile: obj => drawMissile(ctx, obj) };
+   box: obj => drawBox(ctx, obj), feather: obj => drawFeather(ctx, obj), missile: obj => drawMissile(ctx, obj), pad: obj => drawPad(ctx, obj), marked: obj => drawEnemy(ctx, obj, true), rival: obj => drawRival(ctx, obj) };
   for (const [, kind, obj] of things) paint[kind](obj);
+ }
+ /** A rival that is a little ahead (within 90 m) is seen ahead of the player, weaving; null: not seen. */
+ function rivalAhead(r) {
+  const lead = r.dist - game.dist;
+  if (r.finished !== null || lead <= 3 || lead > 90) return null;
+  const t = game.runTime;
+  return { x: Math.sin(t * .5 + r.phase) * game.fieldX * .45, y: .25 + Math.cos(t * .37 + r.phase * 1.7) * .45, z: lead / CFG.unit, lead, id: r.id };
+ }
+ /** A rival: an aircraft in pale blue seen from behind; the one that is chased (the nearest ahead) shows the metres to it. */
+ function drawRival(ctx, o) {
+  const gm = worldToPixels(o.x, o.y, o.z), alpha = fade(o.z), r = .5 * gm.s;
+  if (alpha <= .01) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(gm.x, gm.y);
+  ctx.strokeStyle = '#9fd8ff'; ctx.fillStyle = 'rgba(120,200,255,.16)'; ctx.lineWidth = 1.6; ctx.lineJoin = 'round'; ctx.shadowColor = 'rgba(120,200,255,.7)'; ctx.shadowBlur = 8;
+  ctx.beginPath(); ctx.moveTo(-1.5 * r, .1 * r); ctx.lineTo(-.2 * r, -.12 * r); ctx.lineTo(.2 * r, -.12 * r); ctx.lineTo(1.5 * r, .1 * r); ctx.lineTo(.25 * r, .2 * r); ctx.lineTo(-.25 * r, .2 * r); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -.1 * r); ctx.lineTo(-.55 * r, -.7 * r); ctx.moveTo(0, -.1 * r); ctx.lineTo(.55 * r, -.7 * r); ctx.stroke();
+  if (o.named) { ctx.shadowBlur = 0; ctx.fillStyle = '#d6efff'; ctx.font = `700 ${Math.max(8, Math.min(11, gm.s * .16))}px ${MONO}`; ctx.textAlign = 'center'; ctx.fillText(`+${Math.round(o.lead)} ${tx('metres')}`, 0, -.95 * r - 4); }
+  ctx.restore();
+ }
+ /** A boost ring: an orange ring with arrows that point ahead. */
+ function drawPad(ctx, p) {
+  const gm = worldToPixels(p.x, p.y, p.z), alpha = fade(p.z), r = p.r * gm.s;
+  if (alpha <= .01) return;
+  ctx.save(); ctx.globalAlpha = alpha; ringPath(ctx, gm, p.r, 20);
+  ctx.strokeStyle = '#ffb35a'; ctx.shadowColor = 'rgba(255,160,70,.8)'; ctx.shadowBlur = 10; ctx.lineWidth = 2; ctx.setLineDash([8, 5]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); for (const k of [-.22, .28]) { ctx.moveTo(gm.x - r * .42, gm.y + r * k * .83); ctx.lineTo(gm.x, gm.y + r * (k - .38) * .83); ctx.lineTo(gm.x + r * .42, gm.y + r * k * .83); } ctx.stroke();
+  ctx.restore();
+ }
+ /** Inverted: the ground is above the horizon. */
+ function drawCeiling(ctx) {
+  const k = horizon / 180;
+  if (k < .05) return;
+  const h = worldToPixels(0, 0, 200).y;
+  ctx.save(); ctx.globalAlpha = k * .8; ctx.fillStyle = 'rgba(120,150,50,.07)'; ctx.fillRect(-state.w, -state.h, state.w * 3, state.h + h);
+  ctx.strokeStyle = 'rgba(199,208,112,.16)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let i = -6; i <= 6; i++) { ctx.moveTo(state.w / 2 + i * 6, h); ctx.lineTo(state.w / 2 + i * state.w * .16, -20); }
+  const phase = (game.time * 1.2) % 1;
+  for (let j = 0; j < 5; j++) { const y = h - ((j + phase) / 5) ** 2 * (h + 20); ctx.moveTo(0, y); ctx.lineTo(state.w, y); }
+  ctx.stroke(); ctx.restore();
+ }
+ /** The pulse of the beat: the horizon lights up for a moment on every beat of the music, stronger on the first of a bar. */
+ function drawBeatPulse(ctx) {
+  if (reduced || mode !== 'run') return;
+  const q = core.gridAt(game.music, game.beatClock), n = Math.floor((game.beatClock - q.anchor) / q.beat), since = game.beatClock - q.anchor - n * q.beat;
+  if (since > .18 || since < 0) return;
+  const strong = ((n % 4) + 4) % 4 === 0, y = worldToPixels(0, 0, 200).y;
+  ctx.save(); ctx.globalAlpha = (1 - since / .18) * (strong ? .5 : .26); ctx.strokeStyle = '#f4e58a'; ctx.lineWidth = strong ? 3 : 2; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(state.w, y); ctx.stroke(); ctx.restore();
+ }
+ /** The manoeuvre on the beat: a circle for every tap closes onto the target (a shot) or onto the aircraft (a barrel roll) and meets it on its beat. */
+ function drawQte(ctx) {
+  const Q = game.qte;
+  if (!Q || mode !== 'run') return;
+  const kill = Q.type === 'kill', T = game.marked, at = kill && T ? worldToPixels(T.x, T.y, T.z) : worldToPixels(game.plane.x, game.plane.y, 0), size = kill ? .8 : .66, now = game.beatClock;
+  ctx.save();
+  Q.taps.forEach((tap, k) => {
+   if (tap - now < -.2) return;
+   const far = bound((tap - now) / (Q.beat * CFG.qteShow), 0, 1), r = size * (1 + far * 3.2) + k * .14;
+   ctx.globalAlpha = Q.hits[k] ? .35 : .3 + .7 * (1 - far);
+   ctx.strokeStyle = Q.hits[k] ? '#fff2b0' : Math.abs(tap - now) < CFG.qteGood ? '#fff2b0' : kill ? '#ffb27a' : '#8fe3ff';
+   ctx.lineWidth = tap - now < Q.beat ? 2.4 : 1.4; ctx.setLineDash(k ? [5, 5] : []); ringPath(ctx, at, r, 44); ctx.stroke();
+  });
+  ctx.setLineDash([]); ctx.globalAlpha = .9; ctx.lineWidth = 1.6; ctx.strokeStyle = kill ? '#ff9d6a' : '#bfefff'; ringPath(ctx, at, size, 40); ctx.stroke();
+  ctx.font = `700 ${kill ? 16 : 13}px ${MONO}`; ctx.textAlign = 'center'; ctx.fillStyle = ctx.strokeStyle; ctx.fillText(kill ? '⌖' : '↻ ×2', at.x, at.y - size * at.s * .83 - 8);
+  ctx.restore();
+ }
+ /** The end of a loop of the music: the picture slips in strips and fills with static (a still shade where the motion is reduced). */
+ function drawStatic(ctx) {
+  const k = bound(1 - game.glitch / CFG.glitch, 0, 1), amount = Math.sin(Math.PI * k), cv = ctx.canvas;
+  ctx.save();
+  if (!reduced && cv && cv.width && ctx.drawImage) {
+   const dpr = cv.width / Math.max(1, state.w), tick = Math.floor(game.time * 12), rnd = core.mulberry32(tick * 977 + 3);
+   for (let i = 0; i < 9; i++) { const y = rnd() * state.h, h = 4 + rnd() * 20, dx = (rnd() - .5) * 60 * amount; try { ctx.drawImage(cv, 0, y * dpr, cv.width, h * dpr, dx, y, state.w, h); } catch { break; } }
+   ctx.globalAlpha = .35 * amount; ctx.fillStyle = '#cfd6a0';
+   for (let i = 0; i < 260; i++) ctx.fillRect(rnd() * state.w, rnd() * state.h, 1 + rnd() * 3, 1);
+   ctx.globalAlpha = .18 * amount; ctx.fillStyle = '#000';
+   for (let y = tick % 3; y < state.h; y += 3) ctx.fillRect(0, y, state.w, 1);
+  } else { ctx.globalAlpha = .4 * amount; ctx.fillStyle = '#0d1409'; ctx.fillRect(0, 0, state.w, state.h); }
+  ctx.restore();
  }
  function drawFront(ctx) {
   if (!game) return;
@@ -1162,6 +1405,8 @@
   for (const b of game.boxes) if (b.z <= .15 && b.state === 'ahead') drawBox(ctx, b);
   for (const f of game.plumes) if (f.z <= .15 && f.state === 'ahead') drawFeather(ctx, f);
   for (const m of game.missiles) if (m.z <= .15) drawMissile(ctx, m);
+  for (const p of game.pads) if (p.z <= .15 && p.state === 'ahead') drawPad(ctx, p);
+  if (game.marked && game.marked.z <= .15) drawEnemy(ctx, game.marked, true);
   // the weapons that work: the aura, the barrier, the tracers of the machine gun (from both wings in turn) and the arcs of their time
   if (mode !== 'over') {
    if (game.fx.barrier.t > 0) drawBarrier(ctx, game.fx.barrier);
@@ -1278,11 +1523,18 @@
  function drawPopups(ctx) {
   if (!popups.length) return;
   ctx.save(); ctx.textAlign = 'center'; ctx.font = `700 12px ${MONO}`;
+  const taken = [];
   for (const p of popups) {
-   const gm = worldToPixels(p.x, p.y, p.z || 0), k = p.age / p.life, at = camToScreen(gm.x, gm.y - gm.s * .9 - k * 34);
+   const gm = worldToPixels(p.x, p.y, p.z || 0), k = p.age / p.life, at = camToScreen(gm.x, gm.y - gm.s * .9 - p.age * 26), w = p.text.length * 7.4;
+   const top = Math.max(at[1], 98);   // never under the score bar and the line in the middle
+   if (p.drop === undefined) {        // on a beat several words come at once: a new one takes the first free line under the others
+    p.drop = 0;
+    for (let n = 0, other; n < taken.length && (other = taken.find(t => Math.abs(t.x - at[0]) < (t.w + w) / 2 + 4 && Math.abs(t.y - top - p.drop) < 15)); n++) p.drop = other.y + 15 - top;
+   }
+   taken.push({ x: at[0], y: top + p.drop, w });
    ctx.globalAlpha = k < .15 ? k / .15 : 1 - Math.max(0, (k - .55) / .45);
    ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 8;
-   ctx.fillText(p.text, at[0], Math.max(at[1], 98));   // never under the score bar and the line in the middle
+   ctx.fillText(p.text, at[0], top + p.drop);
   }
   ctx.restore();
  }
@@ -1302,14 +1554,19 @@
  }
  function drawOverlay(ctx) {
   if (!game || !engaged) return;
-  if (mode !== 'over') { drawFootprints(ctx); drawPickups(ctx); drawAim(ctx); drawSight(ctx); }
+  if (mode !== 'over') { drawFootprints(ctx); drawPickups(ctx); drawAim(ctx); drawSight(ctx); drawQte(ctx); }
   drawPopups(ctx);
+  if (punch > .55 && !reduced) { ctx.save(); ctx.globalAlpha = (punch - .55) * .35; ctx.fillStyle = '#fff6cc'; ctx.fillRect(0, 0, state.w, state.h); ctx.restore(); }
+  if (mode === 'run' && game.glitch > 0) drawStatic(ctx);
  }
  // the demo shows this text in the middle of the card instead of its own; while nothing special happens the mark is hidden
  function status() {
   if (!engaged) return dwellText || null;
   if (mode === 'paused') return tx('paused');
-  if (mode === 'count') return tx('ready');
+  if (mode === 'count') return tx(audio.supported && audio.waiting() ? (coarse ? 'touchMusic' : 'clickMusic') : 'ready');      // the hold alone does not let the sound start: say so before the race
+  if (game && game.glitch > 0) return tx('staticWord');
+  if (banner && banner.age < .9) return banner.text;      // a fresh word (a new mode, a weapon) has the middle first
+  if (game && mode === 'run' && core.qtePending(game)) return tx(game.qte.type === 'roll' ? 'qteRoll' : 'qteKill') + (coarse ? '' : ' · ' + tx('spaceKey'));
   if (banner) return banner.text;
   if (gustInfo) { const arrow = arrowOf(gustInfo.dirX, gustInfo.dirY); return `${tx('gust')} ${gustInfo.stage === 'warn' ? arrow : arrow + arrow}`; }
   const working = game ? core.effectsOf(game) : [];
@@ -1329,13 +1586,15 @@
   get sprint() { return engaged ? sprintView : 0; },                      // 0..1: how much of the afterburner is on (the demo shows it in the speed readout, the trail and the propeller)
   get airspeed() { return engaged && game && mode !== 'over' ? core.airspeed(game) : null; },    // km/h: the speed that covers the route (the demo shows it while the game runs)
   get speedTop() { return engaged ? 520 : 0; },                            // the top of the demo's speed rail while the game runs
+  get horizonRoll() { return engaged ? horizon : 0; },                     // the inverted flight turns the horizon over
+  get turnBank() { return engaged && game && mode !== 'over' ? turnBank : null; },      // the bank the heading follows (not the inverted flight or a roll)
   get music() { return audio; }, toggleMusic,
+  /** The panel of own tracks has the card: no start by holding the pointer and no keys until it gives the card back. */
+  block(on) { blocked = !!on; dwellHeld = 0; dwellText = ''; dwellLock = hovering; setDwellBar(false); showCentreMark(); },
   onView(visible) { if (!visible) pause('view'); },
   // for tests and for the curious: the running game and the way in and out
   get game() { return game; }, get mode() { return mode; }, get camera() { return cam; }, get dwell() { return dwellHeld; }, get hovering() { return hovering; },
-  start, exit, pause, resume, fireUlt, useWeapon, shoot: shootAtPointer, worldToPixels, pointerAt,
-  // what the rhythm flight (flight-rhythm.js) shares: the view of the card, the field, and a fresh start of the hold when the card comes back
-  kit: Object.freeze({ worldToPixels, demoOffset, pointerPlane, fieldSize, release() { dwellHeld = 0; dwellText = ''; dwellLock = hovering; setDwellBar(false); showCentreMark(); } })
+  start, exit, pause, resume, fireUlt, useWeapon, shoot: shootAtPointer, worldToPixels, pointerAt, qtePress
  };
  paintStatic();
 })();

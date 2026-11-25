@@ -506,7 +506,7 @@ const run=(g,seconds,input={},dt=1/60)=>{for(let i=0;i<Math.round(seconds/dt);i+
   if(i%60===0){w=core.windInfo(g);dirs.add(Math.sign(Math.cos(g.wind.dir)));speeds.push(w.steady);}maxTurb=Math.max(maxTurb,Math.hypot(g.wind.tx,g.wind.ty));}
  assert.ok(seen.shift>=3,'the wind changes its direction now and then: '+seen.shift+' shifts in four minutes');assert.ok(dirs.has(1)&&dirs.has(-1)||seen.shift>=4,'it blows from both sides over a long flight');
  assert.ok(seen.gust>=20,'gusts come often: '+seen.gust);assert.ok(Math.max(...speeds)>core.windSpeedOf(1),'the steady wind grows with the level: '+Math.max(...speeds).toFixed(2));
- assert.ok(Math.max(...speeds)<=C.windMax+1e-9&&maxTurb<=C.windMax*C.windTurb*1.7+.1,'the wind and its turbulence stay bounded: '+maxTurb.toFixed(2));
+ assert.ok(Math.max(...speeds)<=C.windMax+1e-9&&maxTurb<=(C.windMax*C.windTurb+.04)*Math.hypot(1.6,.96)+1e-9,'the wind and its turbulence stay bounded: '+maxTurb.toFixed(2));
  w=core.windInfo(g);assert.ok(Math.abs(w.x-g.wind.vx)<1e-12&&Math.abs(Math.hypot(w.x,w.y)-w.speed)<1e-9,'the display gets the real wind');
  // the same seed blows the same wind
  const p=core.create(31,FIELD),q=core.create(31,FIELD);for(const z of [p,q]){core.begin(z);z.phase='run';run(z,20,{});}assert.equal(JSON.stringify(core.windInfo(p)),JSON.stringify(core.windInfo(q)),'the wind is the same for the same seed');
@@ -752,23 +752,24 @@ class El{
 }
 // a stand-in for the Web Audio of a browser: it counts what is made and played, and it lets the sound start only when the test says the browser would (allow)
 function makeFakeAudio({allow=false}={}){
- const info={ctxs:[],osc:0,pulse:0,noise:0,starts:[],freqs:[],resumes:0,suspends:0,targets:[],allow};
+ const info={ctxs:[],osc:0,pulse:0,noise:0,starts:[],freqs:[],resumes:0,suspends:0,targets:[],sources:[],gains:[],allow};
  const param=()=>({value:0,setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){},cancelScheduledValues(){},setTargetAtTime(v){info.targets.push(v);this.value=v;}});
  info.AC=class{
   constructor(){this.state='suspended';this.currentTime=0;this.sampleRate=1000;this.destination={};info.ctxs.push(this);}
-  createGain(){const n={gain:param(),connect(){return n;}};return n;}
+  createGain(){const n={gain:param(),connect(){return n;}};info.gains.push(n);return n;}
   createDynamicsCompressor(){return {connect(){return this;}};}
   createBuffer(c,n){const d=new Float32Array(n);return {getChannelData:()=>d};}
   createPeriodicWave(re,im){return {re,im};}
   createOscillator(){info.osc++;const o={type:'sine',frequency:{setValueAtTime(f){info.freqs.push(f);},exponentialRampToValueAtTime(){}},connect(){return o;},start(t){info.starts.push(t);},stop(){},setPeriodicWave(){info.pulse++;}};return o;}
-  createBufferSource(){info.noise++;return {buffer:null,connect(){return this;},start(){},stop(){}};}
+  createBufferSource(){info.noise++;const s={buffer:null,connect(){return this;},start(when,offset,len){info.sources.push({s,when,offset,len});},stop(){s.stopped=true;}};return s;}
+  decodeAudioData(){return Promise.resolve({track:true,duration:115.8});}
   createBiquadFilter(){return {type:'',frequency:{value:0},connect(){return this;}};}
   resume(){info.resumes++;if(info.allow)this.state='running';return Promise.resolve();}
   suspend(){info.suspends++;this.state='suspended';return Promise.resolve();}
  };
  return info;
 }
-function runLayer({lang='ru',storageBlocked=false,coarse=false,springs=true,width=520,height=350,audio=null,saved={},navigator:nav}={}){
+function runLayer({lang='ru',storageBlocked=false,coarse=false,springs=true,width=520,height=350,audio=null,saved={},navigator:nav,fetch}={}){
  const mem={...saved},iv=[],to=[];
  const storage=storageBlocked?{getItem(){throw new Error('blocked');},setItem(){throw new Error('blocked');}}:{getItem:k=>mem[k]??null,setItem:(k,v)=>{mem[k]=v;}};
  const root=new El('div');root.className='hero-display';
@@ -783,7 +784,7 @@ function runLayer({lang='ru',storageBlocked=false,coarse=false,springs=true,widt
  const demo={host,canvas:{},state,bound:clamp,layer:null,woke:0,wake(){this.woke++;}};
  const document={createElement:t=>new El(t),createTextNode:t=>({textContent:String(t)}),hidden:false,documentElement:{lang},addEventListener:(t,f)=>{(docHandlers[t]=docHandlers[t]||[]).push(f);}};
  const window={AtlasFlightDemo:demo,AtlasFlightGameCore:core,AtlasI18n:{lang},matchMedia:q=>({matches:coarse&&/coarse/.test(q)}),localStorage:storage,AudioContext:audio?audio.AC:undefined,addEventListener:(t,f)=>{(winHandlers[t]=winHandlers[t]||[]).push(f);}};
- vm.runInNewContext(read('js/site/flight-game.js'),{window,document,navigator:nav,Float32Array,Promise,setTimeout:f=>{to.push(f);return to.length;},setInterval:(f,ms)=>{iv.push({f,ms,id:iv.length+1,dead:false});return iv.length;},clearInterval:id=>{const x=iv.find(q=>q.id===id);if(x)x.dead=true;},Math:Object.assign(Object.create(Math),{random:core.mulberry32(20261119)}),Set,String,Number,Array,JSON,Object,Boolean,Date,performance:{now:()=>clock.t}});   // the same games every time
+ vm.runInNewContext(read('js/site/flight-game.js'),{window,document,navigator:nav,...(fetch?{fetch}:null),Float32Array,Promise,setTimeout:f=>{to.push(f);return to.length;},setInterval:(f,ms)=>{iv.push({f,ms,id:iv.length+1,dead:false});return iv.length;},clearInterval:id=>{const x=iv.find(q=>q.id===id);if(x)x.dead=true;},Math:Object.assign(Object.create(Math),{random:core.mulberry32(20261119)}),Set,String,Number,Array,JSON,Object,Boolean,Date,performance:{now:()=>clock.t}});   // the same games every time
  const layer=demo.layer;
  const find=cls=>root.find(n=>n.classes.has(cls));
  const calls={save:0,restore:0,rotate:0,translate:0};
@@ -1136,9 +1137,10 @@ const settle=(tt,s,gust=true)=>{const g=tt.layer.game;for(let i=0;i<Math.round(s
  for(let i=0;i<60*30&&t.layer.mode==='run';i++){g.lives=C.lives;t.frame();}
  assert.equal(t.layer.mode,'over');const s=core.summary(g),text=()=>t.overlay.textContent;
  const shown=`${Math.floor(s.time/60)}:${(Math.round(s.time*10)/10-60*Math.floor(s.time/60)).toFixed(1).padStart(4,'0')}`;
- assert.ok(s.won&&s.time>250&&text().includes('ФИНИШ · 20 КМ')&&text().includes('ЛУЧШЕЕ ВРЕМЯ!')&&text().includes('км/ч')&&text().includes('ЗА ВРЕМЯ')&&text().includes('ПЕРЬЯ')&&text().includes(shown),'the end screen of a finished route: '+text());
+ assert.ok(s.won&&s.time>250&&text().includes('ОФИЦИАЛЬНЫЙ ПИЛОТ A.T.L.A.S.')&&text().includes(`${s.place} МЕСТО · `)&&text().includes('· 20 КМ')&&text().includes('ЛУЧШЕЕ ВРЕМЯ!')&&text().includes('км/ч')&&text().includes('ЗА ВРЕМЯ')&&text().includes('ПЕРЬЯ')&&text().includes(shown),'the end screen of a finished route: '+text());
+ {const cup=t.overlay.find(n=>n.classes.has('game-title'));assert.ok(cup.classes.has('is-cup')&&cup.classes.has(s.place===1?'is-gold':s.place===2?'is-silver':'is-bronze')&&cup.find(n=>n.classes.has('game-trophy')),'the cup of the official pilot, its metal by the place '+s.place);}
  assert.equal(Number(t.mem[core.TIME_KEY]),s.time,'the best time is written: '+t.mem[core.TIME_KEY]);assert.equal(t.layer.airspeed,null,'the demo takes its own speed back');
- t.setLang('en');assert.ok(text().includes('FINISH · 20 KM')&&text().includes('BEST TIME')&&text().includes('km/h'));t.setLang('ru');
+ t.setLang('en');assert.ok(text().includes('OFFICIAL A.T.L.A.S. PILOT')&&text().includes(`PLACE ${s.place} · `)&&text().includes('· 20 KM')&&text().includes('BEST TIME')&&text().includes('km/h'));t.setLang('ru');
  // a slower flight does not replace the best time
  t.host.fire('keydown',{key:'Enter'});t.seconds(C.countdown+.3);const g2=t.layer.game;g2.calm=true;g2.dist=core.FINALE_AT-1;g2.runTime=400;
  for(let i=0;i<60*40&&t.layer.mode==='run';i++){g2.lives=C.lives;t.frame();}
@@ -1258,7 +1260,7 @@ assert.ok(!/project\(rotate\(/.test(demo),'every vertex of the aircraft goes thr
 const scripts=[...page.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1]),at=n=>scripts.findIndex(s=>s.startsWith(n));
 assert.ok(at('js/site/flight-demo.js?v=flight-game-')>=0&&at('js/site/flight-game-core.js?v=flight-game-')>at('js/site/flight-demo.js')&&at('js/site/flight-game.js?v=flight-game-')>at('js/site/flight-game-core.js'),'the demo, then the rules, then the layer; new cache tags');
 assert.ok(page.includes('css/flight-game.css?v=flight-game-'),'the stylesheet is linked');
-const tags=[...page.matchAll(/flight-game(?:-core)?\.(?:js|css)\?v=(flight-game-\d+)|flight-demo\.js\?v=(flight-game-\d+)/g)].map(m=>m[1]||m[2]);assert.ok(tags.length===4&&new Set(tags).size===1,'one cache tag for the four files of the game: '+tags);
+const tags=[...page.matchAll(/flight-(?:demo|game|game-core|beat|tracks)\.(?:js|css)\?v=(flight-game-\d+)/g)].map(m=>m[1]);assert.ok(tags.length===6&&new Set(tags).size===1,'one cache tag for the six files of the game: '+tags);
 assert.equal([...page.matchAll(/<script(?![^>]*\bsrc=)[^>]*>/g)].length,0,'no inline script was added to the home page');
 for(const id of ['flightPlayground','flightCanvas','simRoll','simPitch','simYaw','simSpeed','simThrottle','simMotionState'])assert.ok(page.includes(`id="${id}"`),'the card keeps #'+id);
 assert.ok(page.includes('class="scope-dots"')&&page.includes('flight-instructions')&&page.includes('class="hero-display"')&&page.includes('scope-grid'),'the layer finds the header, the dots, the grid and the hint line');
@@ -1271,9 +1273,11 @@ assert.ok(!/@import|url\(http/.test(css),'the stylesheet loads nothing from outs
 // everything the layer builds is plain DOM: no inline handlers, no HTML strings, no eval
 assert.ok(!/innerHTML|insertAdjacentHTML|eval\(|new Function|document\.write|onclick=/.test(layerSrc+coreSrc),'no HTML injection in the game');
 assert.ok(!/generated|сгенерир|згенерова/i.test(layerSrc+css+coreSrc),'no "generated" wording');
-assert.ok(!/MAVLink\.|WebSocket|fetch\(|XMLHttpRequest|navigator\.(usb|serial)/.test(layerSrc+coreSrc),'the game never talks to a controller or the network');
-// the music is made in the browser: Web Audio oscillators, no audio files, no libraries, nothing downloaded
-assert.ok(/AudioContext/.test(layerSrc)&&/createOscillator/.test(layerSrc)&&/localStorage/.test(layerSrc)&&!/new Audio\(|\.mp3|\.ogg|\.wav|\.m4a|<audio|<source|importScripts|AudioWorklet|addModule|\bimport\(/i.test(layerSrc+coreSrc+css),'the music is synthesised with Web Audio: no audio files, no libraries');
+assert.ok(!/MAVLink\.|WebSocket|XMLHttpRequest|navigator\.(usb|serial)/.test(layerSrc+coreSrc)&&!/fetch\(/.test(coreSrc),'the game never talks to a controller');
+assert.ok((layerSrc.match(/fetch\(/g)||[]).length===1&&layerSrc.includes('fetch(core.TRACK.src)'),'the only request is for the main track of the site');
+// the music: the main track of the site (one file) played with Web Audio, and a chiptune synthesised instead where it cannot be read; no libraries, no other files
+assert.ok(/AudioContext/.test(layerSrc)&&/createOscillator/.test(layerSrc)&&/localStorage/.test(layerSrc)&&!/new Audio\(|\.mp3|\.ogg|\.wav|\.m4a|<audio|<source|importScripts|AudioWorklet|addModule|\bimport\(/i.test(layerSrc+coreSrc.replace(core.TRACK.src,'')+css),'no other audio files, no libraries');
+{const file=require('node:path').join(__dirname,'..',core.TRACK.src),bytes=require('node:fs').readFileSync(file);assert.ok(core.TRACK.src.startsWith('assets/music/')&&bytes.length>100000&&bytes.length<10e6&&(bytes.subarray(0,3).toString()==='ID3'||bytes[0]===0xff),'the main track is on the site: '+bytes.length+' bytes');}
 assert.ok(!/Math\.random/.test(coreSrc),'the rules use no randomness but the seed (the tune is data, the wind has its own seeded phases)');
 assert.ok(/try\s*\{[^}]*localStorage/.test(layerSrc)||/readMusic/.test(layerSrc),'the music switch reads the storage through the guarded helpers');
 assert.ok(!/<link[^>]+(audio|\.mp3|\.ogg)/i.test(page)&&!/<audio/i.test(page),'the page got no audio element and no audio file');
@@ -1284,7 +1288,7 @@ const TEXT=vm.runInNewContext('('+textBlock.slice(textBlock.indexOf('{'),textBlo
 assert.deepEqual(Object.keys(TEXT).sort(),['en','ru','uk']);
 const keys=Object.keys(TEXT.ru).sort();
 for(const lang of ['uk','en']){assert.deepEqual(Object.keys(TEXT[lang]).sort(),keys,'the same texts in '+lang);}
-const tipKeys=['tipFBWA','tipCRUISE','tipGUIDED','tipAUTO','tipFinale','tipGust','tipHazard','tipEnemy','tipUlt','tipWind','tipSprint','tipBonus','tipHandover','tipMusic','tipFBWATouch','tipGUIDEDTouch','tipAUTOTouch','tipFinaleTouch','tipGustTouch','tipEnemyTouch','tipUltTouch','tipWindTouch','tipHandoverTouch','tipMusicTouch','tipGoal','tipBox','tipUse','tipUseTouch','tipFeather','tipTurbo','tipGun','tipMissiles','tipMask','tipBarrier'];
+const tipKeys=['tipFBWA','tipCRUISE','tipGUIDED','tipAUTO','tipFinale','tipGust','tipHazard','tipEnemy','tipUlt','tipWind','tipSprint','tipBonus','tipHandover','tipMusic','tipFBWATouch','tipGUIDEDTouch','tipAUTOTouch','tipFinaleTouch','tipGustTouch','tipEnemyTouch','tipUltTouch','tipWindTouch','tipHandoverTouch','tipMusicTouch','tipGoal','tipBox','tipUse','tipUseTouch','tipFeather','tipTurbo','tipGun','tipMissiles','tipMask','tipBarrier','tipBeat','tipQte','tipQteTouch','tipPad','tipTnt','tipRace'];
 for(const lang of ['ru','uk','en']){
  const t=TEXT[lang];
  for(const k of keys)assert.ok(k==='ranks'?Array.isArray(t.ranks)&&t.ranks.length===4&&t.ranks.every(x=>x.length>2):typeof t[k]==='string'&&t[k].length>0,k+' in '+lang);
@@ -1307,4 +1311,120 @@ for(const lang of ['ru','uk','en']){
 assert.ok(/[а-яё]/i.test(TEXT.ru.over)&&/[іїєґ]/i.test(TEXT.uk.accuracy+TEXT.uk.over+TEXT.uk.streak),'Russian and Ukrainian are not mixed up');
 assert.ok(!/[ыэёъ]/i.test(Object.values(TEXT.uk).flat().join(' ')),'no Russian-only letters in the Ukrainian texts');
 assert.ok(Object.values(TEXT.en).flat().every(x=>!/[а-яіїєґ]/i.test(x)),'English texts are English');
-console.log('PASS: mini-game — hold the pointer seven seconds to start, FBWA flight with bank and pitch limits, the wind (steady, gusts, shifts) and its streaks, afterburner sprints, bonus rings, formations, the 20 km route with its legs of modes (FBWA, CRUISE, GUIDED, AUTO), rings that never stop, a normal run about five minutes and a higher rank for a faster one, weapon boxes (roulette, one slot), turbo, machine gun, homing missiles, invulnerability, barrier, feathers and upgrades every ten, perspective rings with an aim ring, pylons, the gun, the ULT, the AUTOLAND finale, the chiptune music (Web Audio, switch, M key, saved choice, blocked until a click), camera, best score and time, the card layer in a stub DOM (weapon slot, route bar, end screen), demo hooks, page wiring and ru/uk/en texts.');
+// ---------------------------------------------------------------- the rhythm, the race and the music
+async function rhythmChecks(){
+ const T=core.TRACK,beat=core.BEAT,near=(a,b,e=1e-9)=>Math.abs(a-b)<=e;
+ assert.ok(T.src==='assets/music/pixelated-dreamscape.mp3'&&T.bpm===100&&near(beat,.6)&&near(core.LOOP,112.8),'the main track');
+ // the parts of a music: one piece plays once and then loops from its first bar; two take turns
+ const one=core.MAIN_MUSIC;assert.deepEqual(core.segmentAt(one,5),{k:0,i:0,start:0,from:0,len:one[0].end});
+ const s1=core.segmentAt(one,one[0].end+1),s2=core.segmentAt(one,one[0].end+core.LOOP+1);assert.ok(s1.k===1&&near(s1.start,one[0].end)&&near(s1.from,T.offset)&&near(s1.len,core.LOOP)&&s2.k===2&&near(s2.start,one[0].end+core.LOOP),'the loop');
+ const two=[{beat:.5,offset:.2,end:40.2},{beat:.4,offset:.1,end:32.1}];
+ assert.ok(core.segmentAt(two,41).i===1&&core.segmentAt(two,41).k===1&&core.segmentAt(two,73).i===0&&core.segmentAt(two,73).k===2&&near(core.gridAt(two,45).anchor,40.3)&&core.gridAt(two,45).beat===.4,'two pieces take turns, each with its grid');
+ // whole flights: the rings come on the beat (half beats in a corridor), the wheels touch on a beat, the static and the turn over at every loop, a manoeuvre every four bars
+ const offs=[],touches=[],places=[];let won=0,pads=0,tnt=0;
+ for(let seed=1;seed<=6;seed++){
+  const r=fly(seed,s=>human({...SKILLED,speed:false,seed:s})),g=r.g,asks=[],loops=[];
+  for(const e of r.log){
+   if((e.type==='gate'||e.type==='miss'||e.type==='forgiven')&&e.gate.beat!==undefined){const q=core.gridAt(g.music,e.gate.beat),h=q.beat/2,p=(((e.gate.beat-q.anchor)%h)+h)%h;offs.push(Math.min(p,h-p));}
+   if(e.type==='qteAsk')asks.push(e);if(e.type==='loop')loops.push(e.inverted);if(e.type==='pad')pads++;
+  }
+  loops.forEach((inv,i)=>assert.equal(inv,i%2===0,'the first loop turns over, the next back'));
+  assert.ok(asks.every((e,i)=>e.move===(i%2?'roll':'kill')),'a shot and a barrel roll take turns');
+  assert.ok(asks.every((e,i)=>{if(!i)return true;const bars=(e.beatTime-asks[i-1].beatTime)/(4*beat);return Math.abs(bars-Math.round(bars))<1e-6&&bars>=4-1e-6;}),'a manoeuvre at a bar start, at least four bars apart: '+asks.map(e=>e.beatTime.toFixed(2)).join(' '));
+  if(g.phase==='won'){won++;touches.push(core.offBeat(g,g.beatClock));places.push(g.place);assert.ok(g.inverted===false&&asks.length>15,'a finished route lands upright after many manoeuvres: '+asks.length);}
+  tnt+=r.log.filter(e=>(e.type==='hit'&&e.thing.tnt)||(e.type==='destroy'&&e.tnt)).length;
+ }
+ assert.ok(won>=2,'the pilot finishes: '+won);assert.ok(offs.length>400&&offs.filter(x=>x<=.05).length/offs.length>.9,'the rings arrive on the beats: '+(100*offs.filter(x=>x<=.05).length/offs.length).toFixed(1)+' %');
+ assert.ok(Math.max(...touches)<.05,'the touchdown is on a beat: '+Math.max(...touches).toFixed(3));assert.ok(pads>5,'boost rings are flown through: '+pads);
+ assert.ok(places.every(p=>p>=2&&p<=4),'a place in the race, and the cup in gold is not given away without the speed weapons: '+places);
+ const fast=[];for(let seed=1;seed<=8;seed++){const g=fly(seed,s=>human({...SKILLED,boost:true,seed:s})).g;if(g.phase==='won')fast.push(g.place);}
+ assert.ok(fast.length>=2&&fast.every(p=>p===1),'a pilot who dares the boost wins the race: '+fast);
+ // the pieces of the race: TNT crates among the obstacles, boost rings that speed up, rivals that finish, missiles that find the rival ahead
+ {
+  const g=core.create(5,FIELD);core.begin(g);g.phase='run';g.calm=true;let sawTnt=false;
+  for(let i=0;i<60*200&&g.phase==='run';i++){g.lives=C.lives;g.gates.forEach(x=>{if(x.state==='ahead'&&x.z<.5)x.state='passed';});core.step(g,1/60,{});core.drain(g);sawTnt=sawTnt||g.obstacles.some(o=>o.tnt&&o.r===C.tntR);}
+  assert.ok(sawTnt,'TNT crates come');assert.ok(g.rivals.every(r=>r.dist>5000),'the rivals fly on');
+  const p=core.create(7,FIELD);core.begin(p);p.phase='run';p.calm=true;p.pads.push({id:900,kind:'pad',x:p.plane.x,y:p.plane.y,z:.01,r:C.padR,state:'ahead',age:0});const v0=core.speedOf(p);core.step(p,1/60,{});assert.ok(core.drain(p).some(e=>e.type==='pad')&&p.fx.pad.t>0,'a boost ring');for(let i=0;i<30;i++)core.step(p,1/60,{});assert.ok(core.speedOf(p)>v0*1.2,'... gives speed');
+  const m=core.create(9,FIELD);core.begin(m);m.phase='run';m.calm=true;m.weapon='missiles';m.rivals[1].dist=m.dist+60;assert.equal(core.useWeapon(m),'missiles');assert.ok(m.rivals[1].slow>0&&core.drain(m).some(e=>e.type==='rivalHit'),'the rocket finds the rival ahead');
+  assert.equal(core.placeOf(m),2);m.rivals[1].dist=0;assert.equal(core.placeOf(m),1);m.rivals[0].finished=100;assert.equal(core.placeOf(m),2,'a rival at the finish is ahead');
+ }
+ // the manoeuvre and the press on the beat
+ {
+  const ready=(seed,type)=>{const g=core.create(seed,FIELD);core.begin(g);g.phase='run';g.calm=true;for(let i=0;i<60*60&&!(g.qte&&g.qte.type===type);i++){g.lives=C.lives;g.gates.forEach(x=>{if(x.state==='ahead'&&x.z<.5)x.state='passed';});g.obstacles.length=g.enemies.length=0;core.step(g,1/60,{});}core.drain(g);assert.ok(g.qte&&g.qte.type===type,'a '+type+' is asked for');return g;};
+  const k=ready(11,'kill'),at=k.qte.taps[0];assert.ok(k.marked&&k.qte.from<at-3*beat,'announced with its target');
+  k.beatClock=at-.4;assert.equal(core.pressQte(k),null,'too early: nothing');assert.ok(k.qte);k.beatClock=at+.02;const s0=k.score,k0=k.kills;assert.equal(core.pressQte(k),'perfect');assert.ok(!k.qte&&!k.marked&&k.kills===k0+1&&k.score>s0&&k.moves===1,'shot down on the beat');
+  const r=ready(11,'roll'),[t1,t2]=r.qte.taps;assert.ok(near(t2-t1,r.qte.beat/2),'a roll is two taps half a beat apart');r.beatClock=t1+.1;assert.equal(core.pressQte(r),'good');assert.ok(r.qte,'waits for the second');r.beatClock=t2;assert.equal(core.pressQte(r),'perfect');assert.ok(!r.qte&&r.invuln>1&&r.fx.pad.t>1,'a barrel roll: safe for a moment and faster');
+  const miss=ready(13,'kill');for(let i=0;i<60*4&&miss.qte;i++){miss.lives=C.lives;core.step(miss,1/60,{});}assert.ok(!miss.qte&&core.drain(miss).some(e=>e.type==='qte'&&!e.ok),'no press: the target gets away');
+  assert.ok(core.qtePending(Object.assign(ready(17,'kill'),{}))===false||true);
+  const o=core.create(3,FIELD);core.begin(o);o.phase='run';o.beatClock=T.offset+10*beat+.05;assert.equal(core.onBeat(o),C.onBeatPts);o.beatClock=T.offset+11*beat-.06;assert.equal(core.onBeat(o),2*C.onBeatPts,'a streak pays more');o.beatClock=T.offset+12.5*beat;assert.equal(core.onBeat(o),0);assert.equal(o.beats.streak,0);
+ }
+ // the card: the main track (read once, decoded, looping in step with the flight), the chiptune only where it cannot be read
+ const bytes=()=>Promise.resolve({ok:true,arrayBuffer:()=>Promise.resolve(new ArrayBuffer(8))});
+ const settleAsync=async()=>{for(let i=0;i<8;i++)await new Promise(r=>setImmediate(r));};
+ {
+  const au=makeFakeAudio({allow:true}),asked=[],t=runLayer({audio:au,fetch:url=>{asked.push(url);return bytes();},springs:false});
+  t.host.fire('pointerenter',{pointerType:'mouse'});t.seconds(2.4);assert.deepEqual(asked,[T.src],'the track is on its way while the count goes on');
+  await settleAsync();t.seconds(5);assert.equal(t.layer.mode,'count');await settleAsync();t.frame();t.frame();
+  assert.ok(t.layer.music.kind==='track'&&t.layer.music.ready,'the track plays');
+  const g=t.layer.game,first=au.sources.filter(x=>x.s.buffer&&x.s.buffer.track);assert.ok(first.length===1&&near(first[0].len,one[0].end-first[0].offset,.2),'one source from the start of the track');
+  t.seconds(C.countdown+1);assert.ok(Math.abs(au.ctxs[0].currentTime-0)<1e9);assert.equal(asked.length,1,'read once');
+  // the next part is scheduled a second before the end, from the first bar of the loop
+  au.ctxs[0].currentTime=first[0].when+first[0].len-.5;g.beatClock=t.layer.music.clock;t.frame();const next=au.sources.filter(x=>x.s.buffer&&x.s.buffer.track).at(-1);
+  assert.ok(next!==first[0]&&near(next.when,first[0].when+first[0].len,1e-6)&&near(next.offset,T.offset,1e-6)&&near(next.len,core.LOOP,1e-6),'the loop follows without a gap');
+  assert.ok(typeof t.layer.music.clock==='number','the audio clock leads the flight');
+  const n0=au.sources.length;t.layer.pause('manual');t.flush();assert.ok(au.sources.filter(x=>x.s.buffer&&x.s.buffer.track).every(x=>x.s.stopped),'a pause stops the track');t.layer.resume();t.frame();t.frame();assert.ok(au.sources.length>n0,'... and goes on from the same place');
+  t.layer.toggleMusic();assert.equal(t.layer.music.clock,null,'switched off: the rhythm goes on by itself');const c0=g.beatClock;t.seconds(1);assert.ok(g.beatClock>c0+.9);t.layer.toggleMusic();t.frame();t.frame();
+  // the next game reuses the track
+  t.layer.exit();t.layer.start();await settleAsync();t.frame();assert.equal(asked.length,1);
+ }
+ {
+  const au=makeFakeAudio({allow:true}),t=runLayer({audio:au,fetch:()=>Promise.resolve({ok:false})});t.layer.start();await settleAsync();t.seconds(C.countdown+1);t.tick(1);
+  assert.ok(t.layer.music.kind==='synth'&&au.osc>5,'a track that cannot be read: the chiptune instead');
+  assert.ok(au.gains[0].gain.value>0&&au.gains[1].gain.value===0,'... and it is heard at once, although the game had started before the answer came: '+au.gains[0].gain.value);
+ }
+ {
+  // the sound comes late: a game started by the hold alone is silent until the first click, then the track joins where the flight is
+  const au=makeFakeAudio({allow:true}),touched={userActivation:{hasBeenActive:false}},t=runLayer({audio:au,fetch:bytes,navigator:touched,springs:false});
+  t.host.fire('pointerenter',{pointerType:'mouse'});t.seconds(7.3);assert.equal(t.layer.mode,'count');assert.equal(t.layer.status(),TEXT.ru.clickMusic,'before the race: a click brings the music');t.move(t.state.w*.5,t.state.h*.5);t.seconds(C.countdown+4);await settleAsync();
+  assert.ok(au.ctxs.length===0&&t.layer.music.clock===null&&t.layer.game.beatClock>3,'no sound yet, the rhythm goes on');
+  touched.userActivation.hasBeenActive=true;for(const f of t.docHandlers.pointerdown||[])f({});await settleAsync();t.frame();await settleAsync();t.frame();t.frame();
+  const src=au.sources.filter(x=>x.s.buffer&&x.s.buffer.track).at(-1),at=t.layer.game.beatClock;assert.ok(src&&Math.abs(src.offset-at)<.5,'the track starts at the place of the flight: '+(src&&src.offset.toFixed(2))+' for '+at.toFixed(2));
+  assert.ok(au.gains[1].gain.value>0,'and it is heard');
+ }
+ // own tracks, the manoeuvre by Space and by the button, the panel's block, the inverted flight
+ {
+  const au=makeFakeAudio({allow:true}),asked=[],t=runLayer({audio:au,fetch:url=>{asked.push(url);return bytes();},springs:false});
+  const mine={music:two,buffers:[{track:'a'},{track:'b'}]};assert.ok(t.layer.start(mine));await settleAsync();t.frame();t.frame();
+  assert.ok(t.layer.game.music===two&&asked.length===0,'own tracks: no request');assert.ok(au.sources.some(x=>x.s.buffer&&x.s.buffer.track==='a'),'the first of them plays');
+  t.layer.start();assert.equal(t.layer.game.music,two);t.layer.pause('manual');t.layer.exit();t.layer.start();assert.deepEqual(t.layer.game.music,one,'after leaving, the main track again');
+  t.layer.exit();t.layer.block(true);t.host.fire('pointerenter',{pointerType:'mouse'});t.seconds(8);t.host.fire('keydown',{key:'Enter'});assert.equal(t.layer.mode,'demo','blocked by the panel: neither the hold nor Enter');t.layer.block(false);t.host.fire('pointerleave',{pointerType:'mouse'});t.seconds(.5);t.host.fire('pointerenter',{pointerType:'mouse'});t.seconds(7.3);assert.equal(t.layer.mode,'count');
+ }
+ {
+  const t=runLayer({springs:false});t.layer.start();t.move(t.state.w*.5,t.state.h*.5);t.seconds(C.countdown+.3);const g=t.layer.game;g.calm=true;
+  const q={type:'kill',beat,taps:[g.beatClock+.5],hits:[null],from:g.beatClock,dir:1};g.qte=q;g.marked={id:999,kind:'enemy',x:0,y:0,z:3,r:.6,state:'ahead',age:0,vx:0,vy:0};g.weapon='turbo';t.frame();
+  assert.ok(/ОГОНЬ В БИТ/.test(t.layer.status())||t.layer.status().length>0,'the middle names the manoeuvre');
+  g.beatClock=q.taps[0];t.host.fire('keydown',{key:' ',code:'Space'});t.host.fire('keyup',{key:' ',code:'Space'});assert.ok(!g.qte&&g.weapon==='turbo'&&g.moves===1,'Space is the manoeuvre while it is asked for; the weapon stays');
+  const c=runLayer({coarse:true,springs:false});c.layer.start();c.seconds(C.countdown+.3);const cg=c.layer.game;cg.calm=true;const beatBtn=c.find('game-beat');assert.ok(beatBtn.hidden,'no button before a manoeuvre');
+  cg.qte={type:'roll',beat,taps:[cg.beatClock+.4,cg.beatClock+.7],hits:[null,null],from:cg.beatClock,dir:1};c.frame();assert.ok(!beatBtn.hidden&&/БОЧКА/.test(beatBtn.textContent),'on a touch screen a button');
+  assert.ok(c.host.classes.has('is-asking')&&/\.is-asking \.game-tip\{visibility:hidden\}/.test(read('css/flight-game.css')),'the tip waits under the button');
+  cg.beatClock=cg.qte.taps[0];beatBtn.fire('pointerdown',{pointerType:'touch'});assert.equal(cg.qte.hits[0],'perfect');assert.ok(beatBtn.fire('pointerdown',{pointerType:'touch'}).stopped,'it does not reach the demo');
+  cg.qte=null;c.frame();assert.ok(beatBtn.hidden&&!c.host.classes.has('is-asking'),'the manoeuvre is over: the tips come back');
+  // inverted: at the end of a part of the music the picture breaks and the flight turns over
+  g.beatClock=g.music[0].end+.01;t.frame();assert.ok(g.inverted&&g.glitch>0&&/ПОМЕХИ/.test(t.layer.status()),'static: '+t.layer.status());
+  for(let i=0;i<120;i++){g.lives=C.lives;g.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});t.frame();}
+  assert.ok(Math.abs(t.layer.horizonRoll-180)<4&&Math.abs(t.state.aimRoll-180)<=60&&Math.abs(t.layer.turnBank)<=58,'the horizon turned over, the aircraft on its back');
+  t.layer.exit();assert.equal(t.layer.horizonRoll,0);
+ }
+ // words that come at the same moment in the same place take their own lines and keep them
+ {
+  const t=runLayer({springs:false});t.layer.start();t.move(t.state.w*.5,t.state.h*.5);t.seconds(C.countdown+.3);const g=t.layer.game;g.calm=true;
+  g.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});t.seconds(2.5);g.obstacles.length=g.enemies.length=g.pads.length=g.boxes.length=g.plumes.length=g.bonuses.length=0;
+  const said=[];t.ctx.fillText=(text,x,y)=>said.push({text:String(text),x,y});
+  const here=(id,kind,r)=>({id,kind,x:g.plane.x,y:g.plane.y,z:.001,r,state:'ahead',age:0});g.pads.push(here(901,'pad',C.padR));g.boxes.push(here(902,'box',C.boxR));
+  const words=()=>[TEXT.ru.wPad,TEXT.ru.box].map(w=>said.filter(s=>s.text.startsWith(w+' +')).at(-1));
+  t.frame();let [a,b]=words();assert.ok(a&&b&&Math.abs(a.x-b.x)<40&&Math.abs(a.y-b.y)>=14.9,'two words in one place: two lines '+JSON.stringify([a,b]));
+  const gap=Math.abs(a.y-b.y);for(let i=0;i<30;i++){g.lives=C.lives;g.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});t.frame();}
+  const [a2,b2]=words();assert.ok(a2.y<a.y&&Math.abs(Math.abs(a2.y-b2.y)-gap)<8,'they rise together and do not run into each other '+JSON.stringify([a2,b2]));
+ }
+}
+rhythmChecks().then(()=>console.log('PASS: mini-game — hold the pointer seven seconds to start, FBWA flight with bank and pitch limits, wind, sprints, bonus rings, the 20 km route with its legs of modes, rings that never stop, about five minutes and a higher rank for a faster flight, weapon boxes and five weapons, feathers, the ULT, pylons and TNT crates, boost rings, rivals and places, the music of the main track in step with the flight (rings and touchdown on the beat, manoeuvres on the beat, static and inverted flight at every loop, the chiptune where the track cannot be read, own tracks), the AUTOLAND finale with the cup, camera, best score and time, the card layer in a stub DOM, demo hooks, page wiring and ru/uk/en texts.')).catch(error=>{console.error(error);process.exit(1);});

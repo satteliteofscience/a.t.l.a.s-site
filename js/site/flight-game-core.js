@@ -3,7 +3,10 @@
    and other aircraft come at it, afterburner sprints make everything fly much faster for a few seconds, every gate charges an ULT. The goal is a distance, not a
    time: the faster the aircraft flies, the sooner it is there and the higher the rank. Weapon boxes ("?", a roulette, one weapon at a time) give a turbo, a machine gun,
    homing missiles, invulnerability with more speed or a repelling barrier, and every ten feathers picked up on the way make the weapons stronger. The route ends with
-   an AUTOLAND approach. The tune of the game is data here too (a chiptune loop); the card layer plays it.
+   an AUTOLAND approach.
+   The flight moves to its music (TRACK): the rings, the runway and with them the whole world speed up or slow down a little so that each ring arrives on a beat; a
+   manoeuvre on the beat (a barrel roll or a shot) is asked for every few bars; a press that does something pays extra when it falls on a beat; at the end of every
+   loop of the music the picture breaks up and the flight turns inverted, or back. A fallback chiptune is data here too; the card layer plays the music.
    Pure game logic: no DOM, no timers, no randomness except the seed. The card layer (flight-game.js) feeds it the pointer position every frame.
    Units: world units of the card's own camera (the demo aircraft is about 6 of them wide), seconds; the route is in metres. Nothing here is real flight data. */
 ((root,factory)=>{const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.AtlasFlightGameCore=api;})(globalThis,()=>{
@@ -24,6 +27,25 @@
   .map(([mode,len])=>Object.freeze({mode,len})));
  // the five weapons of the boxes
  const WEAPONS=Object.freeze(['turbo','gun','missiles','mask','barrier']);
+ // the music of the game: the main track, 100 beats a minute from offset; it loops whole bars (loopBars of four beats) from there
+ const TRACK=Object.freeze({src:'assets/music/pixelated-dreamscape.mp3',title:'Pixelated Dreamscape Journey',by:'StockTune',bpm:100,offset:.135,loopBars:47});
+ const BEAT=60/TRACK.bpm,BAR=4*BEAT,LOOP=TRACK.loopBars*BAR;
+ // A music is a list of pieces: {beat (s), offset (the first bar start), end (the end of its whole bars)}. One piece plays once and then loops from its first bar;
+ // two play one after the other, then again. The main music of the game is the main track alone.
+ const MAIN_MUSIC=Object.freeze([Object.freeze({beat:BEAT,offset:TRACK.offset,end:TRACK.offset+LOOP})]);
+ /** The part of the music that plays at its time t: {k (how many parts came before), i (the piece), start (when the part starts), from (where in the piece), len}. */
+ function segmentAt(music,t){
+  const m=music.length,time=Math.max(0,t);
+  if(m===1){
+   const a=music[0];if(time<a.end)return {k:0,i:0,start:0,from:0,len:a.end};
+   const L=a.end-a.offset,n=Math.floor((time-a.end)/L);return {k:n+1,i:0,start:a.end+n*L,from:a.offset,len:L};
+  }
+  const total=music.reduce((s,a)=>s+a.end,0),c=Math.floor(time/total);let start=c*total,i=0;
+  while(i<m-1&&time>=start+music[i].end){start+=music[i].end;i++;}
+  return {k:c*m+i,i,start,from:0,len:music[i].end};
+ }
+ /** The beat grid that holds at t: the time of one of its bar starts and the length of a beat. */
+ function gridAt(music,t){const s=segmentAt(music,t),a=music[s.i];return {anchor:s.start+a.offset-s.from,beat:a.beat};}
  const CFG=Object.freeze({
   fieldX:4,fieldY:1.85,                 // the box the aircraft can reach (the layer shrinks it to the size of the card)
   zFar:9.4,zGone:-1.8,firstGate:6.2,    // things appear at zFar, fly at the aircraft (z = 0) and are dropped at zGone
@@ -57,7 +79,11 @@
   bonusBase:.3,bonusStep:.03,bonusMax:.7,bonusR:.5,bonusPts:90,bonusFar:55,bonusUlt:7,
   // the weapon boxes: the first after boxFirst seconds, then about one every boxEvery; flying through one starts a roulette (roulette seconds) that ends with one of the
   // five weapons in the single slot (weights: how often each comes). A box taken while the slot is busy only pays points.
-  boxFirst:7,boxEvery:10,boxR:.55,boxReach:.22,boxPts:60,roulette:1,weights:Object.freeze({turbo:.22,gun:.2,missiles:.2,mask:.16,barrier:.22}),
+  boxFirst:7,boxEvery:8,boxR:.55,boxReach:.22,boxPts:60,roulette:1,weights:Object.freeze({turbo:.22,gun:.2,missiles:.2,mask:.16,barrier:.22}),
+  // like a kart race: some of the obstacles are TNT crates (smaller), boost rings between the gates give speed for a moment
+  tntFrom:14,tntShare:.35,tntR:.54,padChance:.16,padR:.62,padPts:40,padBoost:Object.freeze({dur:1.4,mul:1.35}),
+  // the rivals: three other aircraft that race the same route; pace: their share of an ordinary pilot's speed; rubber: how much they ease off ahead or push behind (beyond rubberGap metres)
+  rivals:Object.freeze([1.08,1.03,.98]),rivalSpeed:50.8,rivalRamp:.42,rivalRampTime:220,rivalSway:.07,rubber:.07,rubberGap:500,rivalSlow:3,rivalSlowBy:.7,rivalReach:150,
   // the feathers: trails between the gates; every feathersPerLevel of them make the weapons one level stronger, up to maxLevel
   featherChance:.16,featherLong:.3,featherR:.36,featherReach:.3,featherPts:15,feathersPerLevel:10,maxLevel:5,
   // the weapons: the numbers of each are in weaponParams below
@@ -65,6 +91,12 @@
   ultPerfect:24,ultGood:13,ultKill:220,ultCooldown:.5,
   fireCooldown:.16,shotKill:160,shotRadius:1.7,   // the gun of the AUTO mode: one shot at the pointer, it hits what is within 1.7 radii of it
   nudgeX:.6,nudgeY:.3,                  // how far the pointer can shift the autopilot in the final approach
+  // the rhythm: the world runs at rhythmMin..rhythmMax of its speed to bring the next ring on a beat (a ring of a sprint corridor may come on a half beat)
+  rhythmMin:.72,rhythmMax:1.35,
+  onBeat:.12,onBeatPts:50,onBeatMax:5,  // a press that does something within onBeat of a beat pays onBeatPts times the streak of such presses (up to onBeatMax)
+  // the manoeuvres: every qteEvery bars from bar qteFirst, announced qteShow beats before; a press within qteGood of its beat counts (qtePerfect: right on it)
+  qteFirst:4,qteEvery:4,qteShow:4,qteGood:.15,qtePerfect:.07,rollPts:300,killPts:500,rollSafe:1.4,rollBoost:Object.freeze({dur:1.6,mul:1.25}),killUlt:12,
+  glitch:1.8,                           // the static at the end of a loop of the music (seconds)
   // the final approach: it starts run world units before the end of the route; its gates and the runway are laid out so that the touchdown is at the very end
   landing:Object.freeze({run:48,gates:7,spacing:5,radiusFrom:1.05,radiusTo:.7,touchPerfect:.3,touchGood:.75,bonus:Object.freeze({perfect:1500,good:800,hard:300}),lifeBonus:300})
  });
@@ -101,7 +133,7 @@
  }
  /** The upgrade level of the weapons: one for every ten feathers. */
  const weaponLevel=g=>Math.min(CFG.maxLevel,Math.floor(g.feathers/CFG.feathersPerLevel));
- const freshFx=()=>({turbo:{t:0,dur:1,mul:1},gun:{t:0,dur:1,every:.2,reach:1,pylons:false,next:0},mask:{t:0,dur:1,mul:1},barrier:{t:0,dur:1,r:1.6,crush:false}});
+ const freshFx=()=>({turbo:{t:0,dur:1,mul:1},gun:{t:0,dur:1,every:.2,reach:1,pylons:false,next:0},mask:{t:0,dur:1,mul:1},barrier:{t:0,dur:1,r:1.6,crush:false},pad:{t:0,dur:1,mul:1}});      // pad: the speed of a boost ring or of a barrel roll
  /** Which mode flies at this distance of the route: {mode, index (place in the plan), from, to}. After the plan FBWA goes on until the final approach. */
  function modeAt(d){
   let from=0;
@@ -118,12 +150,15 @@
    plane:{x:0,y:0,vx:0,vy:0,ux:0,uy:0,cx:0,cy:0,roll:0,pitch:0,bank:0,tilt:0},aim:{x:0,y:0},boost:0,rush:1,mode:'FBWA',handover:0,
    ult:0,ultCool:0,fireCool:0,invuln:0,
    weapon:null,roll:null,fx:freshFx(),denyCool:0,feathers:0,boxWait:CFG.boxFirst,boxes:[],plumes:[],missiles:[],
-   gates:[],lastGate:null,gateCount:0,gap:0,pat:{kind:'walk',left:0,dir:1,angle:0},nextId:1,obstacles:[],enemies:[],bonuses:[],enemyClock:0,
+   gates:[],lastGate:null,gateCount:0,gap:0,pat:{kind:'walk',left:0,dir:1,angle:0},nextId:1,obstacles:[],enemies:[],bonuses:[],pads:[],enemyClock:0,
+   rivals:CFG.rivals.map((pace,i)=>({id:i,pace,dist:0,slow:0,phase:i*2.1+rng()*1.5,finished:null})),place:1,
    score:0,lives:CFG.lives,streak:0,maxStreak:0,passed:0,missed:0,perfects:0,kills:0,wrecked:0,hits:0,bonusTaken:0,bonusMissed:0,boxesTaken:0,used:0,level:1,
    gust:{phase:'idle',t:0,wait:CFG.gustFirst,dirX:0,dirY:0,power:0,vx:0,vy:0},
    wind:{dir,dirTo:dir,speed:0,shiftWait:lerp(CFG.windShift[0],CFG.windShift[1],rng()),sx:0,sy:0,tx:0,ty:0,vx:0,vy:0,ph:[rng()*6.28,rng()*6.28,rng()*6.28,rng()*6.28]},
    sprint:{phase:'idle',t:0,wait:CFG.sprintFirst+rng()*6,mul:1,peak:1,len:0,count:0,clean:0,mark:0},
-   calm:!!field.calm,finale:null,landing:null,finishTime:null,timeBonus:0,events:[]};      // calm: a game without wind and gusts (for tests and demos)
+   calm:!!field.calm,finale:null,landing:null,finishTime:null,timeBonus:0,events:[],      // calm: a game without wind and gusts (for tests and demos)
+   // the rhythm: the music, its time (as heard), the beat the next ring is brought to, the manoeuvre that is asked for, the part of the music and the inverted flight
+   music:field.music&&field.music.length?field.music:MAIN_MUSIC,beatClock:0,target:null,qte:null,qteAt:null,qteCount:0,marked:null,moves:0,beats:{streak:0,count:0},loop:0,inverted:false,glitch:0};
  }
  const gateBox=g=>({x:Math.max(1,g.fieldX-.5),y:g.gateY!=null?Math.max(.4,Math.min(g.gateY,g.fieldY)):Math.max(.6,g.fieldY-.45)});
  /** The card changed size: the aircraft and everything that flies at it stay inside the new box. */
@@ -134,7 +169,7 @@
   for(const gate of g.gates){gate.x=clamp(gate.x,-box.x,box.x);if(!gate.approach)gate.y=clamp(gate.y,-box.y,box.y);}
   for(const o of g.obstacles){o.x=clamp(o.x,-x,x);o.y=clamp(o.y,-box.y,box.y);}
   for(const e of g.enemies){e.x=clamp(e.x,-x,x);e.y=clamp(e.y,-box.y,box.y);}
-  for(const list of [g.bonuses,g.boxes,g.plumes])for(const b of list){b.x=clamp(b.x,-x,x);b.y=clamp(b.y,-box.y,box.y);}
+  for(const list of [g.bonuses,g.boxes,g.plumes,g.pads])for(const b of list){b.x=clamp(b.x,-x,x);b.y=clamp(b.y,-box.y,box.y);}
  }
  const emit=(g,e)=>{g.events.push(e);return e;};
  /** The events since the last call (the layer plays them: popups, flashes, the end screen). */
@@ -144,7 +179,7 @@
  /** How fast the things come at the aircraft without the boost and without the sprint. */
  const baseSpeedOf=g=>CFG.baseSpeed*(g.finale?1:speedMul(g.level))*MODES[g.mode].speed;   // the final approach is flown at a calm, fixed speed
  /** The speed factor of the weapons that are on now (the turbo and the invulnerability; the greater of the two). */
- const effectMul=g=>Math.max(g.fx.turbo.t>0?g.fx.turbo.mul:1,g.fx.mask.t>0?g.fx.mask.mul:1);
+ const effectMul=g=>Math.max(g.fx.turbo.t>0?g.fx.turbo.mul:1,g.fx.mask.t>0?g.fx.mask.mul:1,g.fx.pad.t>0?g.fx.pad.mul:1);
  /** How fast the things come at the aircraft right now (world units per second): the level, the mode, the sprint, the boost and the speed weapons. */
  const speedOf=g=>{const k=Math.min(CFG.speedCap,g.sprint.mul*(1+CFG.boostSpeed*g.boost));return baseSpeedOf(g)*(g.rush>1?Math.min(CFG.weaponCap,k*g.rush):k);};
  /** The speed of the flight as the card shows it, km/h: it is the speed that covers the route. */
@@ -208,7 +243,7 @@
  }
  /** A pylon between two gates: half of them stand on the straight line between the gates (the autopilot has to fly around those), the rest anywhere. */
  function spawnObstacle(g,a,b){
-  const box=gateBox(g),t=.35+g.rng()*.3,z=a.z+(b.z-a.z)*t;
+  const box=gateBox(g),t=.5,z=a.z+(b.z-a.z)*t;      // half way between two rings that arrive on beats: on the half beat grid itself
   if(z<CFG.spawnMinZ)return false;
   for(let i=0;i<4;i++){
    const onPath=g.rng()<.55;
@@ -216,7 +251,8 @@
    const y=clamp(onPath?lerp(a.y,b.y,t)+(g.rng()*2-1)*.3:(g.rng()*2-1)*box.y,-box.y,box.y);
    if(Math.hypot(x-a.x,y-a.y)<a.r*.9+CFG.pylonR||Math.hypot(x-b.x,y-b.y)<b.r*.9+CFG.pylonR)continue;   // never inside a ring
    if(g.obstacles.some(o=>Math.abs(o.z-z)<1.4&&Math.hypot(o.x-x,o.y-y)<1.5))continue;                   // two pylons leave room between them
-   g.obstacles.push({id:g.nextId++,kind:'pylon',x,y,z,r:CFG.pylonR,state:'ahead',age:0});
+   const tnt=g.runTime>=CFG.tntFrom&&g.rng()<CFG.tntShare;
+   g.obstacles.push({id:g.nextId++,kind:'pylon',tnt,x,y,z,r:tnt?CFG.tntR:CFG.pylonR,state:'ahead',age:0});
    return true;
   }
   return false;
@@ -230,7 +266,7 @@
  const crowded=(list,p,depth,extra)=>list.some(o=>Math.abs(o.z-p.z)<depth&&Math.hypot(o.x-p.x,o.y-p.y)<o.r+extra);
  /** A bonus ring between two gates, at its own depth and off the line of the gates: a small detour for a few points. Nothing is lost by missing it. */
  function spawnBonus(g,a,b){
-  const box=gateBox(g),t=.25+g.rng()*.5,z=a.z+(b.z-a.z)*t,cx=lerp(a.x,b.x,t),cy=lerp(a.y,b.y,t);
+  const box=gateBox(g),t=.5,z=a.z+(b.z-a.z)*t,cx=lerp(a.x,b.x,t),cy=lerp(a.y,b.y,t);
   if(z<CFG.spawnMinZ)return false;
   for(let i=0;i<4;i++){
    const far=g.rng()<.28,off=far?2+g.rng()*1.1:1+g.rng()*.9;
@@ -245,12 +281,23 @@
  }
  /** A weapon box between two gates, a little off the line of the gates. */
  function spawnBox(g,a,b){
-  const t=.3+g.rng()*.4;
+  const t=.5;
   if(a.z+(b.z-a.z)*t<CFG.spawnMinZ)return false;
   for(let i=0;i<4;i++){
    const off=.35+g.rng()*.9,phi=g.mode==='CRUISE'?(g.rng()<.5?0:Math.PI):g.rng()*6.28,p=besidePath(g,a,b,t,off,phi);
    if(crowded(g.obstacles,p,1.2,CFG.boxR+.3)||crowded(g.gates,p,.6,CFG.boxR))continue;
    g.boxes.push({id:g.nextId++,kind:'box',x:p.x,y:p.y,z:p.z,r:CFG.boxR,state:'ahead',age:0});
+   return true;
+  }
+  return false;
+ }
+ /** A boost ring between two gates, a little off their line: flown through, it gives speed for a moment. */
+ function spawnPad(g,a,b){
+  if(a.z+(b.z-a.z)*.5<CFG.spawnMinZ)return false;
+  for(let i=0;i<4;i++){
+   const off=.3+g.rng()*.8,phi=g.mode==='CRUISE'?(g.rng()<.5?0:Math.PI):g.rng()*6.28,p=besidePath(g,a,b,.5,off,phi);
+   if(crowded(g.obstacles,p,1.2,CFG.padR+.3)||crowded(g.gates,p,.6,CFG.padR)||crowded(g.boxes,p,.9,CFG.padR)||crowded(g.bonuses,p,.9,CFG.padR))continue;
+   g.pads.push({id:g.nextId++,kind:'pad',x:p.x,y:p.y,z:p.z,r:CFG.padR,state:'ahead',age:0});
    return true;
   }
   return false;
@@ -314,6 +361,7 @@
     if(g.mode!=='AUTO'){                      // while the autopilot flies there is nothing to steer to
      if(g.boxWait<=0&&spawnBox(g,prev,gate))g.boxWait=CFG.boxEvery*(.8+g.rng()*.4);
      if(g.rng()<bonusChance(g.level))spawnBonus(g,prev,gate);
+     if(g.rng()<CFG.padChance)spawnPad(g,prev,gate);
      if(g.rng()<CFG.featherChance)spawnFeathers(g,prev,gate);
     }
    }
@@ -333,7 +381,8 @@
   const won=g.phase==='won';
   return {score:g.score,passed:g.passed,missed:g.missed,perfects:g.perfects,maxStreak:g.maxStreak,level:g.level,kills:g.kills,wrecked:g.wrecked,hits:g.hits,bonus:g.bonusTaken,sprints:g.sprint.clean,
    accuracy:g.passed?Math.round(100*g.perfects/g.passed):0,rank:won?gradeOf(g.finishTime):0,won,landing:g.landing,time:Math.round(g.runTime*10)/10,dist:Math.round(g.dist),
-   avg:g.runTime>0?Math.round(g.dist/g.runTime*3.6):0,feathers:g.feathers,weaponLevel:weaponLevel(g),boxes:g.boxesTaken,used:g.used,timeBonus:g.timeBonus};
+   avg:g.runTime>0?Math.round(g.dist/g.runTime*3.6):0,feathers:g.feathers,weaponLevel:weaponLevel(g),boxes:g.boxesTaken,used:g.used,timeBonus:g.timeBonus,moves:g.moves,onBeats:g.beats.count,
+   place:g.place,racers:g.rivals.length+1};
  }
  function lose(g){
   if(g.lives>0)return false;
@@ -398,6 +447,14 @@
   const level=weaponLevel(g);
   if(level>before)emit(g,{type:'upgrade',level,max:level>=CFG.maxLevel});
  }
+ /** A boost ring reaches the aircraft: flown through, it gives speed; nothing is lost by missing it. */
+ function judgePad(g,p){
+  if(Math.hypot(g.plane.x-p.x,g.plane.y-p.y)>p.r+CFG.planeR*.5){p.state='missed';return;}
+  p.state='taken';const B=CFG.padBoost,F=g.fx.pad;
+  g.fx.pad={t:Math.max(F.t,B.dur),dur:Math.max(F.t,B.dur),mul:Math.max(F.t>0?F.mul:1,B.mul)};
+  const points=Math.round(CFG.padPts*MODES[g.mode].score);g.score+=points;
+  emit(g,{type:'pad',x:p.x,y:p.y,r:p.r,points});
+ }
  /** A pylon or another aircraft is destroyed by a weapon; it pays points. */
  function destroy(g,thing,how){
   if(thing.state!=='ahead')return 0;
@@ -405,7 +462,7 @@
   const enemy=thing.kind==='enemy',points=Math.round((enemy?CFG.shotKill:CFG.pylonPts)*MODES[g.mode].score);
   if(enemy)g.kills++;else g.wrecked++;
   g.score+=points;
-  emit(g,{type:'destroy',how,kind:thing.kind,x:thing.x,y:thing.y,z:thing.z,r:thing.r,points});
+  emit(g,{type:'destroy',how,kind:thing.kind,tnt:!!thing.tnt,x:thing.x,y:thing.y,z:thing.z,r:thing.r,points});
   return points;
  }
  /** An obstacle or an enemy reaches the aircraft. A hit costs a life; for 1.3 s afterwards the aircraft cannot be hit again. The invulnerability smashes it, the barrier
@@ -438,9 +495,10 @@
   if(g.phase!=='run'||g.finale||!g.weapon)return null;
   const name=g.weapon,level=weaponLevel(g),P=weaponParams(name,level);
   if(name==='missiles'){
-   const list=targetsAhead(g,.8,CFG.zFar+1.5);
-   if(!list.length){if(g.denyCool<=0){g.denyCool=CFG.denyCool;emit(g,{type:'weaponDenied',weapon:name});}return null;}
-   launch(g,P,list);
+   const list=targetsAhead(g,.8,CFG.zFar+1.5),rival=g.rivals.filter(r=>r.finished===null&&r.dist>g.dist&&r.dist-g.dist<=CFG.rivalReach).sort((a,b)=>a.dist-b.dist)[0];
+   if(!list.length&&!rival){if(g.denyCool<=0){g.denyCool=CFG.denyCool;emit(g,{type:'weaponDenied',weapon:name});}return null;}
+   if(list.length)launch(g,P,list);
+   if(rival){rival.slow=CFG.rivalSlow;emit(g,{type:'rivalHit',id:rival.id});}      // like in a kart race: the rocket also finds the rival just ahead
   }else{
    const t=Math.max(g.fx[name].t,P.dur);      // used again while it still works: the longer time stays
    g.fx[name]={...P,t,dur:t,next:0};
@@ -663,11 +721,101 @@
   return {mode:m.mode,index:m.index,t:g.dist-m.from,len:m.to-m.from,left:Math.max(0,m.to-g.dist),next:m.to>=FINALE_AT?'AUTOLAND':modeAt(m.to).mode};
  }
 
+ // ---------------------------------------------------------------- the rhythm
+ /** How far a time of the music is from the nearest beat (s). */
+ const offBeat=(g,t)=>{const q=gridAt(g.music,t),p=(((t-q.anchor)%q.beat)+q.beat)%q.beat;return Math.min(p,q.beat-p);};
+ /** The time on the grid (every so many beats) nearest to t, not before min. */
+ function beatNear(g,t,min,beats){const q=gridAt(g.music,Math.max(t,min)),step=beats*q.beat;let at=q.anchor+Math.round((t-q.anchor)/step)*step;while(at<min-1e-9)at+=step;return at;}
+ /** The speed of the world, near speed, that brings the next ring (in the final approach also the runway) to the aircraft on a beat. */
+ function rhythmSpeed(g,speed){
+  const next=nextGate(g),F=g.finale,now=g.beatClock,lo=speed*CFG.rhythmMin,hi=speed*CFG.rhythmMax;
+  const thing=next&&next.z>0?{id:next.id,z:next.z,half:next.sprint}:F&&F.runwayZ>0?{id:'runway',z:F.runwayZ,half:false}:null;
+  if(!thing){g.target=null;return speed;}
+  const T=g.target,need=T&&T.id===thing.id?thing.z/Math.max(1e-3,T.at-now):0,beats=thing.half?.5:1,eta=now+thing.z/speed;
+  // a new target when the thing is new, or when the speed changed enough for another beat to be nearer (a boost brings the ring on an earlier one); never in the last moment
+  const keep=T&&T.id===thing.id&&(thing.z<speed*.2||(T.at>now&&need>=lo&&need<=hi&&Math.abs(eta-T.at)<=beats*gridAt(g.music,now).beat*.35));
+  if(!keep)g.target={id:thing.id,at:beatNear(g,eta,now+thing.z/hi,beats)};
+  return clamp(thing.z/Math.max(1e-3,g.target.at-now),lo,hi);
+ }
+ /** A press that did something (a weapon, the ULT, a shot): on a beat it pays extra, more for a streak of them. */
+ function onBeat(g){
+  if(g.phase!=='run')return 0;
+  if(offBeat(g,g.beatClock)>CFG.onBeat){g.beats.streak=0;return 0;}
+  g.beats.streak=Math.min(CFG.onBeatMax,g.beats.streak+1);g.beats.count++;
+  const points=CFG.onBeatPts*g.beats.streak;g.score+=points;
+  emit(g,{type:'onbeat',points,streak:g.beats.streak});return points;
+ }
+ /** The presses go to the manoeuvre from a little more than a beat before its first tap. */
+ const qtePending=g=>!!g.qte&&g.phase==='run'&&g.beatClock>=g.qte.taps[0]-g.qte.beat*1.2;
+ /** The press of the manoeuvre: 'perfect' or 'good' when it falls on one of its taps, else null (nothing is spent by a press that misses). */
+ function pressQte(g){
+  const Q=g.qte;if(!Q||g.phase!=='run')return null;
+  let best=-1,d=CFG.qteGood+1e-9;
+  Q.taps.forEach((t,i)=>{const x=Math.abs(g.beatClock-t);if(!Q.hits[i]&&x<=d){d=x;best=i;}});
+  if(best<0)return null;
+  const quality=d<=CFG.qtePerfect?'perfect':'good';Q.hits[best]=quality;
+  emit(g,{type:'qteTap',move:Q.type,tap:best,quality,dir:Q.dir});
+  if(Q.hits.every(Boolean))finishQte(g);
+  return quality;
+ }
+ /** The manoeuvre is over: all taps on the beat (a barrel roll that keeps the aircraft safe for a moment, or the other aircraft shot down), or nothing. */
+ function finishQte(g){
+  const Q=g.qte,T=g.marked;g.qte=null;g.marked=null;
+  const at=Q.type==='kill'&&T?{x:T.x,y:T.y,z:Math.max(.2,T.z)}:{x:g.plane.x,y:g.plane.y,z:0};
+  if(!Q.hits.every(Boolean)){emit(g,Object.assign({type:'qte',move:Q.type,ok:false},at));return;}
+  const perfect=Q.hits.every(h=>h==='perfect'),points=Math.round((Q.type==='roll'?CFG.rollPts:CFG.killPts)*(perfect?1:.6)*MODES[g.mode].score);
+  g.score+=points;g.moves++;
+  if(Q.type==='roll'){g.invuln=Math.max(g.invuln,CFG.rollSafe);g.fx.pad.t=CFG.rollBoost.dur;g.fx.pad.dur=CFG.rollBoost.dur;g.fx.pad.mul=CFG.rollBoost.mul;}      // like a drift boost: a roll on the beat gives speed
+  else{g.kills++;const before=g.ult;g.ult=Math.min(100,g.ult+CFG.killUlt);if(before<100&&g.ult>=100)emit(g,{type:'ultReady'});}
+  emit(g,Object.assign({type:'qte',move:Q.type,ok:true,perfect,points,dir:Q.dir},at));
+ }
+ /** The loop of the music and the manoeuvres: the static and the turn over at the end of a loop, a manoeuvre on every few bars while the route goes on. */
+ function updateRhythm(g,speed){
+  const now=g.beatClock,n=segmentAt(g.music,now).k;
+  if(n!==g.loop){g.loop=n;if(!g.finale){g.glitch=CFG.glitch;g.inverted=n%2===1;emit(g,{type:'loop',n,inverted:g.inverted});}}
+  if(g.qteAt===null){const q=gridAt(g.music,0);g.qteAt=q.anchor+CFG.qteFirst*4*q.beat;}
+  if(g.qte){
+   const Q=g.qte,T=g.marked;
+   if(T)T.z=Math.max(.8,1.8+(Q.taps[0]-now)*speed*.8);      // the target comes closer and waits in front for its beat
+   if(now>Q.taps[Q.taps.length-1]+CFG.qteGood)finishQte(g);
+   return;
+  }
+  const beat=gridAt(g.music,g.qteAt).beat;
+  if(now<g.qteAt-CFG.qteShow*beat)return;
+  const at=g.qteAt;g.qteAt=beatNear(g,at+CFG.qteEvery*4*beat,at+beat*4,4);
+  if(!isLive(g)||at-now<CFG.qteShow*beat*.5)return;      // none in the last part of the route, and none that would come at once
+  const type=g.qteCount++%2?'roll':'kill';
+  g.qte={type,beat,taps:type==='roll'?[at,at+beat/2]:[at],hits:type==='roll'?[null,null]:[null],from:now,dir:g.rng()<.5?-1:1};
+  if(type==='kill'){const box=gateBox(g);g.marked={id:g.nextId++,kind:'enemy',x:(g.rng()*2-1)*box.x*.55,y:(g.rng()*2-1)*box.y*.6,z:CFG.zFar,r:CFG.enemyR,state:'ahead',age:0,vx:0,vy:0};}
+  emit(g,{type:'qteAsk',move:type,beatTime:at});
+ }
+
+ // ---------------------------------------------------------------- the rivals
+ /** The speed of a rival now, metres a second: an ordinary pilot's, a little sway of its own, easing off far ahead of the player and pushing far behind. */
+ function rivalSpeed(g,r){
+  const base=CFG.rivalSpeed*(1+CFG.rivalRamp*Math.min(1,g.runTime/CFG.rivalRampTime))*r.pace,lead=r.dist-g.dist;
+  const rubber=lead>CFG.rubberGap?1-CFG.rubber:lead<-CFG.rubberGap?1+CFG.rubber:1;
+  return base*(1+CFG.rivalSway*Math.sin(g.runTime*.23+r.phase))*rubber*(r.slow>0?CFG.rivalSlowBy:1);
+ }
+ /** The rivals fly on; a change of the player's place is told. */
+ function updateRivals(g,dt){
+  for(const r of g.rivals){
+   if(r.finished!==null)continue;
+   r.slow=Math.max(0,r.slow-dt);r.dist+=rivalSpeed(g,r)*dt;
+   if(r.dist>=CFG.distance){r.dist=CFG.distance;r.finished=g.runTime;emit(g,{type:'rivalFinish',id:r.id});}
+  }
+  const place=placeOf(g);
+  if(place!==g.place){const up=place<g.place;g.place=place;emit(g,{type:'place',place,up});}
+ }
+ /** 1: first. A rival that is at the finish, or further along the route, is ahead. */
+ const placeOf=g=>1+g.rivals.filter(r=>r.finished!==null||r.dist>g.dist).length;
+
  // ---------------------------------------------------------------- the final approach
  function startFinale(g){
   const box=gateBox(g),L=CFG.landing;
   g.finale={spawned:0,runwayZ:Math.max(remaining(g)/CFG.unit,L.spacing*(L.gates+1)),groundY:Math.max(-g.fieldY+.1,-(box.y*.7+.3))};
   g.fx=freshFx();g.rush=1;g.weapon=null;g.roll=null;g.missiles=[];      // the weapons are put away for the landing
+  g.qte=null;g.marked=null;g.target=null;g.glitch=0;if(g.inverted){g.inverted=false;emit(g,{type:'upright'});}      // ... and the aircraft lands the right way up
   const from=g.mode;g.mode='AUTOLAND';
   emit(g,{type:'mode',from,to:'AUTOLAND',index:-1});
   emit(g,{type:'finale'});
@@ -677,6 +825,7 @@
   const dx=Math.abs(P.x),dy=Math.abs(P.y-(F.groundY+.3));
   const grade=dx<=L.touchPerfect&&dy<=L.touchPerfect?'perfect':dx<=L.touchGood&&dy<=L.touchGood*1.2?'good':'hard';
   const bonus=L.bonus[grade]+g.lives*L.lifeBonus;
+  g.place=1+g.rivals.filter(r=>r.finished!==null).length;      // those still on the way come after
   g.finishTime=g.runTime;g.timeBonus=timeBonus(g.finishTime);g.dist=CFG.distance;
   g.score+=bonus+g.timeBonus;g.landing={grade,bonus,dx,dy};
   g.phase='won';
@@ -684,12 +833,17 @@
   emit(g,{type:'won',summary:summary(g)});
  }
 
- /** One step. input = {tx, ty, boost, neutral}: the pointer on the plane of the aircraft (world units), whether the boost button is held, and whether the pointer
-    is away (the stick is let go and the aircraft levels out). */
+ /** One step. input = {tx, ty, boost, neutral, clock}: the pointer on the plane of the aircraft (world units), whether the boost button is held, whether the pointer
+    is away (the stick is let go and the aircraft levels out), and the time of the music as heard (null: no music plays, the rhythm goes on by itself). */
  function step(g,dt,input){
   if(g.phase==='ready'||g.phase==='over'||g.phase==='won'||g.phase==='paused')return g;
   dt=clamp(dt,0,.05);
   g.time+=dt;
+  // the rhythm follows the music gently (never backwards); the world moves by the time of the music, so the rings arrive on its beats
+  const was=g.beatClock,heard=input&&Number.isFinite(input.clock)?input.clock:null;
+  g.beatClock=heard===null?was+dt:Math.max(was,was+dt+(heard-was-dt)*.2);
+  const beatDt=clamp(g.beatClock-was,0,.1);
+  g.glitch=Math.max(0,g.glitch-dt);
   const P=g.plane,inp={tx:input&&Number.isFinite(input.tx)?input.tx:P.x,ty:input&&Number.isFinite(input.ty)?input.ty:P.y,boost:!!(input&&input.boost),neutral:!!(input&&input.neutral)};
   g.ultCool=Math.max(0,g.ultCool-dt);g.fireCool=Math.max(0,g.fireCool-dt);g.invuln=Math.max(0,g.invuln-dt);g.denyCool=Math.max(0,g.denyCool-dt);
   if(g.phase==='count'){
@@ -710,26 +864,26 @@
   control(g,dt,inp);
   const M=MODES[g.mode];
   g.boost+=(((inp.boost&&M.boost)?1:0)-g.boost)*(1-Math.exp(-dt*4.5));
-  const speed=speedOf(g),drift=enemyDrift(g),bx=gateBox(g).x,push=g.finale?0:g.wind.sx*CFG.ringWind*dt;      // the steady wind also carries the rings, pylons, boxes and feathers sideways
+  const speed=rhythmSpeed(g,speedOf(g)),move=speed*beatDt,drift=enemyDrift(g),bx=gateBox(g).x,push=g.finale?0:g.wind.sx*CFG.ringWind*dt;      // the steady wind also carries the rings, pylons, boxes and feathers sideways
   // the next gate is laid out from the last one, also after that one has gone by and left the list: it keeps flying away behind the aircraft
-  if(g.lastGate&&!g.gates.includes(g.lastGate))g.lastGate.z-=speed*dt;
+  if(g.lastGate&&!g.gates.includes(g.lastGate))g.lastGate.z-=move;
   updateBarrier(g,dt,speed);
   for(const gate of g.gates){
    const before=gate.z;
-   gate.z-=speed*dt;gate.age+=dt;if(!gate.approach)gate.x=clamp(gate.x+push,-bx,bx);
-   if(gate.state==='ahead'&&before>0&&gate.z<=0){judge(g,gate);if(g.phase==='over')return g;}
+   gate.z-=move;gate.age+=dt;if(!gate.approach)gate.x=clamp(gate.x+push,-bx,bx);
+   if(gate.state==='ahead'&&before>0&&gate.z<=1e-6){gate.z=Math.min(gate.z,0);gate.beat=g.beatClock;judge(g,gate);if(g.phase==='over')return g;}
   }
-  for(const [list,judgeIt] of [[g.bonuses,judgeBonus],[g.boxes,judgeBox],[g.plumes,judgeFeather]])for(const b of list){
-   const before=b.z;b.z-=speed*dt;b.age+=dt;b.x=clamp(b.x+push,-bx,bx);
+  for(const [list,judgeIt] of [[g.bonuses,judgeBonus],[g.boxes,judgeBox],[g.plumes,judgeFeather],[g.pads,judgePad]])for(const b of list){
+   const before=b.z;b.z-=move;b.age+=dt;b.x=clamp(b.x+push,-bx,bx);
    if(b.state==='ahead'&&before>0&&b.z<=0)judgeIt(g,b);
   }
   for(const o of g.obstacles){
-   const before=o.z;o.z-=speed*dt;o.age+=dt;o.x=clamp(o.x+push,-bx,bx);
+   const before=o.z;o.z-=move;o.age+=dt;o.x=clamp(o.x+push,-bx,bx);
    if(o.state==='ahead'&&before>0&&o.z<=0){collide(g,o);if(g.phase==='over')return g;}
   }
   for(const e of g.enemies){
    const before=e.z,box=gateBox(g);
-   e.z-=speed*dt*(1+CFG.enemySpeed);e.x=clamp(e.x+(e.vx+drift.x)*dt,-g.fieldX,g.fieldX);e.y=clamp(e.y+(e.vy+drift.y)*dt,-box.y,box.y);e.age+=dt;
+   e.z-=move*(1+CFG.enemySpeed);e.x=clamp(e.x+(e.vx+drift.x)*dt,-g.fieldX,g.fieldX);e.y=clamp(e.y+(e.vy+drift.y)*dt,-box.y,box.y);e.age+=dt;
    if(e.state==='ahead'&&before>0&&e.z<=0){collide(g,e);if(g.phase==='over')return g;}
   }
   updateGun(g,dt);updateMissiles(g,dt,speed);
@@ -737,11 +891,14 @@
   g.bonuses=g.bonuses.filter(b=>b.z>CFG.zGone);
   g.boxes=g.boxes.filter(b=>b.z>CFG.zGone&&b.state!=='taken');
   g.plumes=g.plumes.filter(f=>f.z>CFG.zGone&&f.state!=='taken');
+  g.pads=g.pads.filter(p=>p.z>CFG.zGone&&p.state!=='taken');
   g.obstacles=g.obstacles.filter(o=>o.z>CFG.zGone&&o.state!=='shot');
   g.enemies=g.enemies.filter(e=>e.z>CFG.zGone&&e.state!=='shot'&&e.state!=='crashed');
-  g.dist=Math.min(CFG.distance,g.dist+speed*dt*CFG.unit);      // the route that has been flown
+  g.dist=Math.min(CFG.distance,g.dist+move*CFG.unit);      // the route that has been flown
   if(!g.finale&&g.dist>=FINALE_AT)startFinale(g);
   ensureGates(g);
+  updateRhythm(g,speed);
+  updateRivals(g,dt);
   if(g.runTime>=CFG.enemyFrom&&isLive(g)){
    const auto=g.mode==='AUTO';
    g.enemyClock-=dt;
@@ -752,8 +909,8 @@
    }
   }
   if(landing&&g.finale&&g.finale.runwayZ!=null){
-   g.finale.runwayZ-=speed*dt;
-   if(g.finale.runwayZ<=0)touchdown(g);
+   g.finale.runwayZ-=move;
+   if(g.finale.runwayZ<=1e-6){g.finale.runwayZ=Math.min(0,g.finale.runwayZ);touchdown(g);}
   }
   return g;
  }
@@ -800,7 +957,7 @@
  }
  const MUSIC=Object.freeze({steps:MUSIC_STEPS,bpm:134,tuneStep,midi});
 
- return Object.freeze({CFG,MODES,PLAN,WEAPONS,FINALE_AT,BEST_KEY,TIME_KEY,MUSIC_KEY,MUSIC,create,begin,step,drain,pause,resume,setField,shoot,fireUlt,useWeapon,summary,gradeOf,timeBonus,levelOf,speedMul,radiusOf,spacingOf,gustWait,gustPowerOf,
+ return Object.freeze({CFG,MODES,PLAN,WEAPONS,FINALE_AT,TRACK,BEAT,LOOP,MAIN_MUSIC,segmentAt,gridAt,offBeat,onBeat,pressQte,qtePending,placeOf,BEST_KEY,TIME_KEY,MUSIC_KEY,MUSIC,create,begin,step,drain,pause,resume,setField,shoot,fireUlt,useWeapon,summary,gradeOf,timeBonus,levelOf,speedMul,radiusOf,spacingOf,gustWait,gustPowerOf,
   windSpeedOf,obstacleChance,enemyGap,bonusChance,sprintPeakOf,sprintLenOf,sprintGapOf,weaponParams,weaponLevel,effectsOf,multiplier,nextGate,autopilot,modeAt,modeInfo,speedOf,airspeed,remaining,sprintInfo,windInfo,enemyDrift,
   readBest,writeBest,readTime,writeTime,readMusic,writeMusic,mulberry32});
 });

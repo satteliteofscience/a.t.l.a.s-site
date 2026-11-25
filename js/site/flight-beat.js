@@ -1,5 +1,5 @@
 /* A.T.L.A.S. mini-game, the "own track" flight: finds the beat of a piece of music the player opened from their own device (tempo, the first beat, the bars, how loud
-   every beat is, where the sound ends). Pure arithmetic on the samples: no DOM, no network, nothing is stored or sent anywhere. Used by flight-rhythm.js. */
+   every beat is, where the sound ends). Pure arithmetic on the samples: no DOM, no network, nothing is stored or sent anywhere. Used by flight-tracks.js. */
 ((root, factory) => { const api = factory(); if (typeof module === 'object' && module.exports) module.exports = api; else root.AtlasBeat = api; })(globalThis, () => {
  'use strict';
  const N = 1024, HOP = 256, TARGET = 22050;
