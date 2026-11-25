@@ -1,0 +1,20 @@
+/* AI-assisted. sitl-demo-31-wind.html: the picker of the NOAID_WIND values and its two tables; the rest comes from control21.css, control30.css and control31.css */
+.c31w-pick{margin:14px 0 4px;padding:12px 14px;border:1px solid #55785c;background:linear-gradient(140deg,#11231b,#0c1713)}
+.c31w-pick h2{margin:0 0 4px;font-size:17px}
+.c31w-pick p{margin:0 0 10px;font:12px/1.55 'IBM Plex Mono',monospace;color:#b5c4a8}
+.c31w-presets,.c31w-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.c31w-presets button,.c31w-chips button{cursor:pointer;border:1px solid #55785c;background:#0f1d16;color:#dfe8d2;font:12px 'IBM Plex Mono',monospace;padding:6px 10px;text-align:left}
+.c31w-presets button:hover,.c31w-chips button:hover{border-color:#9ee5cc}
+.c31w-presets button:focus-visible,.c31w-chips button:focus-visible{outline:2px solid #ece5ae;outline-offset:1px}
+.c31w-chips button{display:flex;flex-direction:column;gap:2px;min-width:132px}
+.c31w-chips button b{font-size:15px}
+.c31w-chips button small{color:#a7bda6;font-size:10.5px;white-space:nowrap}
+.c31w-chips button[aria-pressed="true"]{background:#18301f;border-width:2px;padding:5px 9px}
+.c31w-table th,.c31w-table td{font-size:12px;padding:6px 8px}
+.c31w-table th{white-space:nowrap;line-height:1.4}
+.c31w-table tr.c31w-on td:first-child{font-weight:700}
+.c31w-table tbody tr{cursor:pointer}
+.c31w-bits td:last-child,.c31w-bits th:last-child{text-align:left;white-space:normal;min-width:260px}
+.c31w-sw{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px}
+/* the names of the values are long: on a phone a legend entry may wrap */
+.c21-legend .c30-run{white-space:normal}

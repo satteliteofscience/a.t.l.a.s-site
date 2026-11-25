@@ -5,3 +5,7 @@
 .ch-experimental{margin:0 0 16px;padding:12px 14px;border:1px solid #6f5a25;border-left:5px solid #e3b85c;border-radius:6px;background:rgba(227,184,92,.10)}
 .ch-experimental b{display:block;margin:0 0 6px;font:700 12px "IBM Plex Mono",monospace;letter-spacing:.08em;color:#f0cf86}
 .ch-experimental p{margin:0;font:500 14px/1.6 "IBM Plex Sans",sans-serif;color:#f1e7c8}
+/* the links to the recorded demonstrations at the top of a section: one per line (3.1 has two) */
+.ch-sitl-cta{display:block;width:fit-content;max-width:100%}.ch-sitl-cta+.ch-sitl-cta{margin-top:8px}
+/* the long 3.1 items: one line per bit and per condition */
+.ch-comparison p{white-space:pre-line}

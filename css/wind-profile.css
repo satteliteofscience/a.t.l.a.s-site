@@ -1,7 +1,7 @@
 /* AI-assisted. Wind profile card of the main screen (under the radio-failsafe and log card): NOAID_WIND presets and the operator's wind command */
 .wind-card[data-state="active"]>strong#windStatus{color:#8fe7bf}.wind-card[data-state="custom"]>strong#windStatus{color:#d5b770}.wind-card[data-state="unsupported"]>strong#windStatus,.wind-card[data-state="noparams"]>strong#windStatus{color:#a6ad85}
 .wind-card .wind-exp{margin:10px 0 4px;padding:9px 11px;border-left:4px solid #e3b85c;background:rgba(227,184,92,.12);font:11px/1.55 "IBM Plex Mono",monospace;color:#f3e2b4}.wind-card .wind-exp a{color:#8fe7bf;text-decoration:underline;white-space:nowrap}
-.wind-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin:12px 0 4px}
+.wind-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 4px}.wind-buttons .cc-button[data-preset="off"]{grid-column:1/-1}
 .wind-buttons .cc-button{height:auto;min-height:40px;padding:9px 4px;font-size:11px;letter-spacing:0;white-space:normal;line-height:1.3;text-align:center}
 .wind-buttons .cc-button[aria-pressed="true"]:disabled{opacity:1;cursor:default}
 .wind-card #windHelp{margin:8px 0 0;font:11px/1.55 "IBM Plex Mono",monospace;color:#9aa27b}
@@ -19,5 +19,6 @@
 .wind-card .wind-warn:empty{display:none}
 .wind-card .wind-slew{margin:8px 0;padding:8px 10px;border-left:3px solid #8fe7bf;background:rgba(143,231,191,.08);font:11px/1.55 "IBM Plex Mono",monospace;color:#cfeee0}.wind-card .wind-slew[hidden]{display:none}.wind-card .wind-slew p{margin:0}
 .wind-card .wind-slew .cc-button{margin-top:8px;height:auto;min-height:36px;padding:8px 12px;font-size:11px;letter-spacing:0;white-space:normal;line-height:1.3}
+.wind-card .wind-carry{margin:8px 0;padding:8px 10px;border-left:3px solid #e3b85c;background:rgba(227,184,92,.08);font:11px/1.55 "IBM Plex Mono",monospace;color:#f3e2b4}.wind-card .wind-carry[hidden]{display:none}
 .wind-card .wind-how li{margin:6px 0;font:11px/1.55 "IBM Plex Mono",monospace;color:#c9d2a8}
 .wind-card .wind-how ul{max-height:none;overflow:visible}

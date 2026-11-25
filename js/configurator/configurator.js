@@ -840,7 +840,7 @@ window.AtlasCC = Object.freeze({
     }catch(e){throw Error(`Recorded ${done}/${changes.length}: ${e.message}`);}
     finally{state.servoConfigBusy=false;renderParams();renderBasic();}
   },
-  // Wind profile of the main screen (wind off / operator command only / learning): the one whitelisted parameter NOAID_WIND with a value 0..7, DISARMED, one verified write.
+  // Wind profile of the main screen (wind off / operator command / learning, with or without the GPS wind carried over): one whitelisted parameter (NOAID_WIND 0..31 or NOAID_SLEW), DISARMED, one verified write.
   writeWindProfile:async (updates,onProgress=()=>{})=>{
     const core=window.AtlasWindProfile;
     if(!core)throw Error('Wind profile module missing');

@@ -6,9 +6,9 @@ const read=p=>fs.readFileSync(p,'utf8');
 const window={};vm.runInNewContext(read('data/changelog/3.1.js'),{window});
 const r=window.AtlasRelease31;
 assert.equal(r.version,'3.1');assert.equal(r.id,'release-3-1');assert.equal(r.channel,'UPDATE');
-assert.equal(r.changes.length,8,'the wind in the navigation, the modes, the recommendations, the harm and nuances, the OSD, the configurator warning, the base 4.7.3, the validation');
+assert.equal(r.changes.length,11,'the wind in the navigation, the modes, the NOAID_WIND bits, the GPS wind carry-over, no learning, the recommendations, the harm and nuances, the OSD, the configurator warning, the base 4.7.3, the validation');
 const texts=[];
-const titles={ru:[/Ветер в наведении без GPS/,/режимы затронуты/,/Рекомендации/,/вредно/,/OSD/,/предупреждение/,/ArduPlane 4\.7\.3/,/Проверки 3\.1/],uk:[/Вітер у наведенні без GPS/,/режими зачеплено/,/Рекомендації/,/шкідливо/,/OSD/,/попередження/,/ArduPlane 4\.7\.3/,/Перевірки 3\.1/],en:[/Wind in the navigation without GPS/,/modes are affected/,/Recommendations/,/hurts/,/OSD/,/warning/,/ArduPlane 4\.7\.3/,/3\.1 validation/]};
+const titles={ru:[/Ветер в наведении без GPS/,/режимы затронуты/,/Параметр NOAID_WIND/,/Перенос ветра из GPS/,/Без обучения/,/Рекомендации/,/вредно/,/OSD/,/предупреждение/,/ArduPlane 4\.7\.3/,/Проверки 3\.1/],uk:[/Вітер у наведенні без GPS/,/режими зачеплено/,/Параметр NOAID_WIND/,/Перенесення вітру з GPS/,/Без навчання/,/Рекомендації/,/шкідливо/,/OSD/,/попередження/,/ArduPlane 4\.7\.3/,/Перевірки 3\.1/],en:[/Wind in the navigation without GPS/,/modes are affected/,/NOAID_WIND parameter/,/Carrying the GPS wind over/,/Without learning/,/Recommendations/,/hurts/,/OSD/,/warning/,/ArduPlane 4\.7\.3/,/3\.1 validation/]};
 for(const lang of ['ru','uk','en']){
  for(const label of ['hint','baseLabel','modLabel','sourceLabel'])assert.ok(r[label][lang].length>10,label+' '+lang);
  r.changes.forEach((c,i)=>{assert.equal(c[lang].length,3);assert.ok(c[lang].every(t=>t.trim().length>20));assert.match(c[lang][0],titles[lang][i],lang+': title of item '+(i+1));texts.push(...c[lang]);});
@@ -23,17 +23,27 @@ for(const lang of ['ru','uk','en']){
  const item=i=>r.changes[i][lang].join(' ');
  for(const name of ['NOAID_WIND','NOAID_WAGE','FBWA','GSPD','NWD','AUTO','RTL','GUIDED','LOITER','TAKEOFF','CRUISE'])assert.ok(all.includes(name),lang+': '+name);
  assert.ok(({ru:/экспериментальн/i,uk:/експериментальн/i,en:/experimental/i})[lang].test(item(0)),lang+': the first item says that the function is experimental');
- assert.ok(({ru:/не заменяет GPS/,uk:/не замінює GPS/,en:/does not replace GPS/})[lang].test(item(3)),lang+': the harm item says that it does not replace GPS');
- assert.ok(({ru:/ошибки наклона/,uk:/похибки нахилу/,en:/tilt/})[lang].test(item(3)),lang+': tilt errors can be taken for wind');
- assert.ok(({ru:/компромисс/,uk:/компроміс/,en:/compromise/})[lang].test(item(3)),lang+': a compromise in the absence of GPS');
+ assert.ok(({ru:/не заменяет GPS/,uk:/не замінює GPS/,en:/does not replace GPS/})[lang].test(item(6)),lang+': the harm item says that it does not replace GPS');
+ assert.ok(({ru:/ошибки наклона/,uk:/похибки нахилу/,en:/tilt/})[lang].test(item(6)),lang+': tilt errors can be taken for wind');
+ assert.ok(({ru:/компромисс/,uk:/компроміс/,en:/compromise/})[lang].test(item(6)),lang+': a compromise in the absence of GPS');
+ assert.ok(({ru:/перенесётся и ложный ветер/,uk:/перенесеться й хибний вітер/,en:/a false wind is carried over/})[lang].test(item(6)),lang+': a false source is carried over');
  assert.ok(({ru:/FBWA ведёт себя как в 3\.0/,uk:/FBWA поводиться як у 3\.0/,en:/FBWA behaves as in 3\.0/})[lang].test(item(1)),lang+': FBWA is unchanged');
- assert.ok(({ru:/Указатель ветра на OSD[^.]*не показывают/,uk:/Покажчик вітру на OSD[^.]*не показують/,en:/wind pointer on the OSD[^.]*do not show/})[lang].test(item(4)),lang+': the OSD does not show the learned wind');
- assert.ok(({ru:/«Ветер 0»/,uk:/«Вітер 0»/,en:/wind 0/})[lang].test(item(2)),lang+': the wind 0 command in the recommendations');
- assert.ok(({ru:/Если сомневаетесь, поставьте 0/,uk:/Якщо сумніваєтеся, поставте 0/,en:/If in doubt set 0/})[lang].test(item(2)),lang+': the fallback to 0');
+ assert.ok(({ru:/Указатель ветра на OSD теперь без GPS показывает ветер счисления/,uk:/Покажчик вітру на OSD тепер без GPS показує вітер лічби/,en:/wind pointer on the OSD now shows the wind of the dead reckoning/})[lang].test(item(7)),lang+': the OSD shows the wind of the dead reckoning');
+ assert.ok(/WIND/.test(item(7))&&/OSD1_WIND_EN/.test(item(7)),lang+': the station message and the OSD element');
+ assert.ok(({ru:/«Ветер 0»/,uk:/«Вітер 0»/,en:/wind 0/})[lang].test(item(5)),lang+': the wind 0 command in the recommendations');
+ assert.ok(({ru:/Если сомневаетесь, поставьте 0/,uk:/Якщо сумніваєтеся, поставте 0/,en:/If in doubt set 0/})[lang].test(item(5)),lang+': the fallback to 0');
+ // every bit with its value, the ready values, the carry-over and its messages, no learning with NOAID_WAGE, the card with the carry-over presets
+ for(const [bit,value] of [[0,1],[1,2],[2,4],[3,8],[4,16]])assert.ok(({ru:new RegExp('Бит '+bit+', значение '+value+','),uk:new RegExp('Біт '+bit+', значення '+value+','),en:new RegExp('Bit '+bit+', value '+value+',')})[lang].test(item(2)),lang+': bit '+bit+' = '+value);
+ for(const v of ['15','31','9'])assert.ok(new RegExp(v+' — ').test(item(2)),lang+': the ready value '+v);
+ for(const msg of ['NOAID wind from GPS','NOAID wind kept, GPS','NOAID no steady GPS wind to take'])assert.ok(item(3).includes(msg),lang+': '+msg);
+ assert.ok(({ru:/после подтверждения пуска/,uk:/після підтвердження пуску/,en:/after the launch is confirmed/})[lang].test(item(3))&&({ru:/вручную ещё на земле/,uk:/вручну ще на землі/,en:/by hand on the ground/})[lang].test(item(3)),lang+': a take-off with the GPS present');
+ assert.ok(item(4).includes('NOAID_WAGE')&&({ru:/заменяется ветром GPS/,uk:/замінюється вітром GPS/,en:/replaced by the GPS wind/})[lang].test(item(4)),lang+': a commanded wind is replaced without learning');
+ assert.ok(({ru:/«Обучение \+ ветер GPS» \(15\)/,uk:/«Навчання \+ вітер GPS» \(15\)/,en:/“Learning \+ GPS wind” \(15\)/})[lang].test(item(8))&&({ru:/значения 8 и 31 записывайте в списке параметров/i,uk:/значення 8 і 31 записуйте в списку параметрів/i,en:/write the values 8 and 31 in the parameter list/i})[lang].test(item(8)),lang+': the card sets the carry-over presets, 8 and 31 go through the parameter list');
+ assert.ok(({ru:/не содержат/,uk:/не містять/,en:/does not contain them/})[lang].test(r.hint[lang]),lang+': the hint says that earlier 3.1 files lack the addition');
 }
 assert.equal(new Set(r.sources).size,r.sources.length);
 for(const p of r.sources){assert.match(p,/^(ArduPlane|libraries)\/[\w/]+\.(cpp|h)$/);}
-for(const p of ['libraries/AP_AHRS/AP_AHRS.cpp','libraries/AP_NavEKF3/AP_NavEKF3_PosVelFusion.cpp'])assert.ok(r.sources.includes(p),p);
+for(const p of ['libraries/AP_AHRS/AP_AHRS.cpp','libraries/AP_NavEKF3/AP_NavEKF3_PosVelFusion.cpp','libraries/AP_NavEKF3/AP_NavEKF3_Control.cpp','libraries/AP_NavEKF3/AP_NavEKF3_NoAIDParams.cpp','libraries/AP_OSD/AP_OSD_Screen.cpp'])assert.ok(r.sources.includes(p),p);
 // public wording: how and why in words, never thresholds, time windows, counts or formulas, and nothing marked as generated
 for(const t of texts){
  assert.ok(!/generated|сгенерир|згенерова/i.test(t),'no "generated" wording: '+t.slice(0,60));
@@ -76,11 +86,16 @@ const ui=faqWin.AtlasFaqUi,items=faqWin.AtlasFaq20;
 assert.ok(ui.order.includes('wind'));
 for(const lang of ['ru','uk','en'])assert.ok(ui[lang].cats.wind&&/(экспериментально|експериментально|experimental)/.test(ui[lang].cats.wind),'the category says experimental ('+lang+')');
 const wind=items.filter(i=>i.cat==='wind'),ids=wind.map(i=>i.id);
-for(const id of ['wind-what','wind-nav-31','wind-modes','wind-fbwa','wind-osd','wind-use','wind-harm','wind-checks'])assert.ok(ids.includes(id),'FAQ item '+id);
+for(const id of ['wind-what','wind-nav-31','wind-modes','wind-fbwa','wind-osd','wind-use','wind-carry','wind-harm','wind-checks'])assert.ok(ids.includes(id),'FAQ item '+id);
 const by=Object.fromEntries(wind.map(i=>[i.id,i]));
 for(const lang of ['ru','uk','en']){
  assert.ok(({ru:/FBWA/,uk:/FBWA/,en:/FBWA/})[lang].test(by['wind-fbwa'][lang][0])&&({ru:/на FBWA не влияет/,uk:/на FBWA не впливає/,en:/does not affect FBWA/})[lang].test(by['wind-fbwa'][lang][1]),'the FBWA answer ('+lang+')');
  assert.ok(/OSD/.test(by['wind-osd'][lang][0])&&/NWD/.test(by['wind-osd'][lang][1])&&/GSPD/.test(by['wind-osd'][lang][1]),'the OSD answer ('+lang+')');
  assert.ok(({ru:/экспериментальная/,uk:/експериментальна/,en:/experimental/})[lang].test(by['wind-what'][lang][1]),'the experimental notice in the first answer ('+lang+')');
+ // the carry-over: bits 8 and 16 in the first answer, the OSD answer says that the pointer shows the wind of the dead reckoning, the choice names 9 and 15, the carry-over answer states the messages
+ assert.ok(/8/.test(by['wind-what'][lang][1])&&/16/.test(by['wind-what'][lang][1]),'the new bits in the first answer ('+lang+')');
+ assert.ok(({ru:/показывает ветер счисления/,uk:/показує вітер лічби/,en:/shows the wind of the dead reckoning/})[lang].test(by['wind-osd'][lang][1]),'the OSD shows the dead-reckoning wind ('+lang+')');
+ assert.ok(/9/.test(by['wind-use'][lang][0])&&/15/.test(by['wind-use'][lang][0]),'the choice names 9 and 15 ('+lang+')');
+ for(const msg of ['NOAID wind from GPS','NOAID wind kept, GPS','NOAID no steady GPS wind to take'])assert.ok(by['wind-carry'][lang][1].includes(msg),'wind-carry '+lang+': '+msg);
 }
 console.log('PASS: 3.1 changelog in RU/UK/EN (how and why, recommendations, harm, nuances, experimental notice), the banner, current-release labels, the wind FAQ ('+wind.length+' items) and the card warning wiring.');
