@@ -121,9 +121,15 @@
     ctx.fillStyle='rgba(98,118,39,.055)';ctx.fillRect(-w*1.7,0,w*3.4,h*2.5);
     ctx.beginPath();ctx.moveTo(-w*1.7,0);ctx.lineTo(w*1.7,0);
     ctx.strokeStyle='rgba(211,204,98,.19)';ctx.lineWidth=1.2;ctx.stroke();
-    ctx.setLineDash([6,10]);ctx.strokeStyle='rgba(177,181,80,.22)';
-    for(const off of [-.32,.32]){const y=off*h;ctx.beginPath();ctx.moveTo(-w,y);ctx.lineTo(w,y);ctx.stroke();}
-    ctx.setLineDash([]);ctx.restore();
+    // while the game runs only the horizon stays: the ladder and the speed streaks of the demo give way to what the player has to see
+    const quiet=!!(lay&&lay.engaged);
+    if(!quiet){
+      ctx.setLineDash([6,10]);ctx.strokeStyle='rgba(177,181,80,.22)';
+      for(const off of [-.32,.32]){const y=off*h;ctx.beginPath();ctx.moveTo(-w,y);ctx.lineTo(w,y);ctx.stroke();}
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+    if(quiet)return;
     // Speed lines convey airspeed without pretending to be actual GPS/IMU data.
     const velocity=state.speed/310;
     for(let i=0;i<20;i++){

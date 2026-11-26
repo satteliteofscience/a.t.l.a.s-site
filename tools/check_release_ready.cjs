@@ -35,7 +35,7 @@ const releases=JSON.parse(read('data/releases.json'));
 assert.equal(releases.project.release_channel,'release','project channel must be release');
 const matek=releases.boards.find(b=>b.id==='matek-h743-wing-v3');
 assert.ok(matek&&matek.status==='available','Matek H743-WING V3 release must remain available');
-assert.match(matek.description,/ArduPlane 4\.7\.2/,'Matek catalog description must name the ArduPlane base version');
+assert.match(matek.version_descriptions['1.0'].ru,/ArduPlane 4\.7\.2/,'the Matek 1.0 description must name its ArduPlane base version (the board text without a version names none)');
 assert.match(matek.description,/Matek H743-WING V3/,'Matek catalog description must name the target board');
 assert.match(matek.downloads[0].sha256,/^[a-f0-9]{64}$/i,'firmware SHA-256 must remain intact');
 assert.equal(matek.downloads[0].channel,'release','firmware download channel must remain release');

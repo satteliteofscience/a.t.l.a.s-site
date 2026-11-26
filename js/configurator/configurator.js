@@ -1139,6 +1139,6 @@ function wire(){
  window.addEventListener('pageshow',ev=>{if(ev.persisted){state.pageLeaving=false;state.hudLoopActive=true;state.lastHeartbeat=0;updateConnectionUI();scheduleHorizon();}});
 }
 const oneClickToken=consumeOneClickTcpToken();
-wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','esccal','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Release 2.0 A.T.L.A.S-G.L.O.B.A.L');state.hudLoopActive=true;scheduleHorizon();
+wire();setLang(lang);loadCatalog();const firstTab=location.hash.replace('#','');navigate(['dashboard','quicksetup','basic','params','firmware','accelerometer','servos','esccal','battery','compass','temperature','osd','tuning','mavftp','modes','radio','joystick','gimbal','parachute'].includes(firstTab)?firstTab:'dashboard');toast('A.T.L.A.S. Control Center · Release 3.1 A.T.L.A.S-G.L.O.B.A.L');state.hudLoopActive=true;scheduleHorizon();
 if(oneClickToken)startOneClickTcp(oneClickToken);
 })();

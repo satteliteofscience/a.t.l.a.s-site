@@ -80,6 +80,15 @@ assert.ok(/faq\.js\?v=release-3\.1/.test(read('faq.html'))&&/i18n\.js\?v=release
 const catalog=JSON.parse(read('data/releases.json'));
 assert.equal(catalog.project.latest_release,'3.1','the newest release is announced; a card stays "coming soon" until its HEX is published');
 assert.equal(catalog.project.release_names['3.1'],'A.T.L.A.S-G.L.O.B.A.L');assert.equal(catalog.project.release_names['3.0'],'A.T.L.A.S-G.L.O.B.A.L');
+// the cards of the boards (home page and configurator) describe the version that is chosen: every named release has its own text, and the text of a board names none
+const latest=catalog.project.latest_release;
+for(const board of catalog.boards){
+ for(const v of Object.keys(catalog.project.release_names))for(const lang of ['ru','uk','en'])assert.ok(board.version_descriptions?.[v]?.[lang]?.includes('Release '+v),`${board.id}: a ${lang} text of release ${v}`);
+ for(const key of ['description','description_uk','description_en'])assert.ok(board[key]&&!/Release \d/.test(board[key]),`${board.id} ${key} names no release: it stands in for versions without a text`);
+}
+// the configurator without a board speaks of the newest release too
+assert.ok(code.includes(`toast('A.T.L.A.S. Control Center · Release ${latest} A.T.L.A.S-G.L.O.B.A.L')`),'the start message of the configurator');
+assert.ok(read('js/configurator/dfu-ui.js').includes(`const ANNOUNCED_RELEASE='${latest}';`),'the release announced as coming soon in the DFU list');
 // the wind FAQ: a category in three languages and the questions that users ask (FBWA, OSD, which modes, what to pick, when it hurts)
 const faqWin={};vm.runInNewContext(read('data/faq-20.js'),{window:faqWin});
 const ui=faqWin.AtlasFaqUi,items=faqWin.AtlasFaq20;

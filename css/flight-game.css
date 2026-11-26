@@ -137,6 +137,16 @@
 @keyframes gameDeny{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 .game-landing{height:24px;padding:0 18px;border:1px solid #e6d05f;background:#3a3318d2;color:#fff2b0;font:700 10px/22px 'IBM Plex Mono',monospace;letter-spacing:.22em;text-shadow:0 0 10px #e6d05f}
 .game-tip{position:absolute;z-index:6;left:50%;bottom:74px;transform:translateX(-50%);width:max-content;max-width:92%;padding:4px 11px;border:1px solid #556635aa;background:#101b10dc;font:600 9px/1.45 'IBM Plex Mono',monospace;letter-spacing:.05em;color:#cfc99d;text-align:center;pointer-events:none;animation:gameTip .4s ease-out}
+/* a quiet field for the game: the big circles and the cross of the card go, the grid and the numbers of the demo fade back */
+.flight-playground.is-game .scope-circle,.flight-playground.is-game .hud-cross{display:none}
+.flight-playground.is-game .scope-grid{opacity:.4}
+.flight-playground.is-game .flight-readout{opacity:.36}
+.flight-playground.is-game .speed-rail{opacity:.45}
+/* the points just won stand for a moment where the word "score" is */
+.game-score span{min-width:48px;text-align:right}
+.game-score.is-gain span{color:#d9de8c;font-size:11px;animation:gameGain .22s ease-out}
+.game-score.is-bright span{color:#fff2b0;text-shadow:0 0 10px #e6d05f}
+@keyframes gameGain{from{opacity:.2;transform:translateY(5px)}to{opacity:1;transform:none}}
 /* the readouts of the demo stay above the bar */
 .flight-playground.is-game .flight-readout.bottom-left,.flight-playground.is-game .flight-readout.bottom-right{bottom:78px}
 @keyframes gameTip{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}
@@ -254,7 +264,7 @@
  .game-own{height:30px;padding:0 10px}
 }
 @media(prefers-reduced-motion:reduce){
- .game-count,.game-ult.is-ready,.game-tip,.game-ult.is-denied,.game-weapon.is-ready,.game-weapon.is-denied{animation:none}
+ .game-count,.game-ult.is-ready,.game-tip,.game-ult.is-denied,.game-weapon.is-ready,.game-weapon.is-denied,.game-score.is-gain span{animation:none}
  .game-dwell{transition:none}
  .game-flash.is-miss,.game-flash.is-ult,.flight-playground.is-hit .flight-canvas{animation:none}
  .flight-playground.is-sprint .game-glow{animation:none}

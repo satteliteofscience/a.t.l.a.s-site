@@ -19,7 +19,7 @@
       "id": "cube-orange-plus",
       "name": "Cube Orange Plus",
       "family": "CubePilot / Cube Orange Plus",
-      "description": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Сборка для этой аппаратной платформы с проверенными данными HEX и SHA-256. Перед полной DFU-записью сохрани параметры и подготовь способ восстановления загрузчика.",
+      "description": "A.T.L.A.S. для Cube Orange Plus (STM32H757). Сборка для этой аппаратной платформы с проверенными данными HEX и SHA-256. Перед полной DFU-записью сохрани параметры и подготовь способ восстановления загрузчика.",
       "status": "available",
       "target": "CubeOrangePlus — STM32H757",
       "version": "1.0",
@@ -38,8 +38,8 @@
           "channel": "release"
         }
       ],
-      "description_uk": "A.T.L.A.S. Release 1.0 для Cube Orange Plus (STM32H757). Збірка для цієї апаратної платформи з перевіреними даними HEX і SHA-256. Перед повним DFU-записом збережи параметри та підготуй спосіб відновлення завантажувача.",
-      "description_en": "A.T.L.A.S. Release 1.0 for Cube Orange Plus (STM32H757). A target-specific build with verified HEX data and SHA-256. Before full DFU programming, back up parameters and prepare a bootloader recovery path.",
+      "description_uk": "A.T.L.A.S. для Cube Orange Plus (STM32H757). Збірка для цієї апаратної платформи з перевіреними даними HEX і SHA-256. Перед повним DFU-записом збережи параметри та підготуй спосіб відновлення завантажувача.",
+      "description_en": "A.T.L.A.S. for Cube Orange Plus (STM32H757). A target-specific build with verified HEX data and SHA-256. Before full DFU programming, back up parameters and prepare a bootloader recovery path.",
       "target_uk": "CubeOrangePlus — STM32H757",
       "target_en": "CubeOrangePlus — STM32H757",
       "version_descriptions": {
@@ -57,6 +57,26 @@
           "ru": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). EKF3 NoAID G.L.O.B.A.L.: позиция по счислению, автоматический переход на GPS и обратно, метка GPS на карте без влияния на навигацию. Профиль активации есть в конфигураторе. Сборка только для Cube Orange Plus; перед записью сохрани параметры.",
           "uk": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). EKF3 NoAID G.L.O.B.A.L.: позиція за лічбою, автоматичний перехід на GPS і назад, мітка GPS на мапі без впливу на навігацію. Профіль активації є в конфігураторі. Збірка лише для Cube Orange Plus; перед записом збережи параметри.",
           "en": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L for Cube Orange Plus (STM32H757). EKF3 NoAID G.L.O.B.A.L.: dead-reckoned position, automatic switch to the GPS and back, a GPS marker on the map that does not affect navigation. The activation profile is in the configurator. Built only for Cube Orange Plus; back up parameters before flashing."
+        },
+        "2.1": {
+          "ru": "A.T.L.A.S Release 2.1 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). Потеря GPS без лишнего перехода AHRS на DCM, завершение полётного цикла после посадки и DISARM, повторный запуск и звуковые уведомления. База ArduPlane 4.7.2. Сборка только для Cube Orange Plus; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 2.1 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). Втрата GPS без зайвого переходу AHRS на DCM, завершення польотного циклу після посадки та DISARM, повторний запуск і звукові сповіщення. База ArduPlane 4.7.2. Збірка лише для Cube Orange Plus; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 2.1 · A.T.L.A.S-G.L.O.B.A.L for Cube Orange Plus (STM32H757). Losing the GPS without a needless AHRS fallback to DCM, the end of the flight cycle after landing and DISARM, relaunch and sound notifications. ArduPlane 4.7.2 base. Built only for Cube Orange Plus; back up parameters before flashing."
+        },
+        "2.2": {
+          "ru": "A.T.L.A.S Release 2.2 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). Корректировка EKF3 со станции вместе с настоящим GPS, перетаскивание самолёта на карте в схеме NoAID, привязка высоты к HOME на земле и своя мелодия запуска. База ArduPlane 4.7.3. Сборка только для Cube Orange Plus; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 2.2 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). Корекція EKF3 зі станції разом зі справжнім GPS, перетягування літака на мапі в схемі NoAID, прив’язка висоти до HOME на землі та власна мелодія запуску. База ArduPlane 4.7.3. Збірка лише для Cube Orange Plus; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 2.2 · A.T.L.A.S-G.L.O.B.A.L for Cube Orange Plus (STM32H757). EKF3 correction from the station together with a real GPS, dragging the aircraft on the map in the NoAID scheme, height tied to HOME on the ground and a custom startup melody. ArduPlane 4.7.3 base. Built only for Cube Orange Plus; back up parameters before flashing."
+        },
+        "3.0": {
+          "ru": "A.T.L.A.S Release 3.0 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). Счисление без GPS учитывает ветер и ошибки Pitot и курса, плавно применяет метки оператора, удерживает позицию на площадке и предупреждает об отказе Pitot. Новые параметры NOAID_ по умолчанию выключены. База ArduPlane 4.7.3. Сборка только для Cube Orange Plus; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 3.0 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). Лічба без GPS враховує вітер і похибки Піто та курсу, плавно застосовує мітки оператора, утримує позицію на майданчику й попереджає про відмову Піто. Нові параметри NOAID_ за замовчуванням вимкнені. База ArduPlane 4.7.3. Збірка лише для Cube Orange Plus; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 3.0 · A.T.L.A.S-G.L.O.B.A.L for Cube Orange Plus (STM32H757). Dead reckoning without GPS accounts for the wind and for Pitot and heading errors, applies operator fixes gradually, holds the position on the pad and warns of a Pitot failure. The new NOAID_ parameters are off by default. ArduPlane 4.7.3 base. Built only for Cube Orange Plus; back up parameters before flashing."
+        },
+        "3.1": {
+          "ru": "A.T.L.A.S Release 3.1 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). Экспериментально: в полёте без GPS при включённом NOAID_WIND ветер счисления учитывает и наведение (AUTO, RTL, GUIDED, LOITER). Добавлены перенос ветра из участка с GPS (по умолчанию выключен) и ветер счисления на OSD. База ArduPlane 4.7.3. Сборка только для Cube Orange Plus; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 3.1 · A.T.L.A.S-G.L.O.B.A.L для Cube Orange Plus (STM32H757). Експериментально: у польоті без GPS за ввімкненого NOAID_WIND вітер лічби враховує й наведення (AUTO, RTL, GUIDED, LOITER). Додано перенесення вітру з ділянки з GPS (за замовчуванням вимкнене) та вітер лічби на OSD. База ArduPlane 4.7.3. Збірка лише для Cube Orange Plus; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 3.1 · A.T.L.A.S-G.L.O.B.A.L for Cube Orange Plus (STM32H757). Experimental: in flight without GPS with NOAID_WIND on, the guidance also uses the dead-reckoning wind (AUTO, RTL, GUIDED, LOITER). Added: carrying the wind over from a GPS leg (off by default) and the dead-reckoning wind on the OSD. ArduPlane 4.7.3 base. Built only for Cube Orange Plus; back up parameters before flashing."
         }
       }
     },
@@ -64,7 +84,7 @@
       "id": "uni-ic743-mini",
       "name": "Uni-IC743 Mini",
       "family": "Custom / Uni-IC743 Mini",
-      "description": "A.T.L.A.S. Release 1.0 для Uni-IC743 Mini (STM32H743). Сборка для платы Uni_IC743Mini с проверенными данными HEX и SHA-256. Перед полной DFU-записью сохрани параметры и предусмотрите восстановление загрузчика.",
+      "description": "A.T.L.A.S. для Uni-IC743 Mini (STM32H743). Сборка для платы Uni_IC743Mini с проверенными данными HEX и SHA-256. Перед полной DFU-записью сохрани параметры и предусмотрите восстановление загрузчика.",
       "status": "available",
       "target": "Uni_IC743Mini — STM32H743",
       "version": "1.0",
@@ -83,8 +103,8 @@
           "channel": "release"
         }
       ],
-      "description_uk": "A.T.L.A.S. Release 1.0 для Uni-IC743 Mini (STM32H743). Збірка для плати Uni_IC743Mini з перевіреними даними HEX і SHA-256. Перед повним DFU-записом збережи параметри та підготуй відновлення завантажувача.",
-      "description_en": "A.T.L.A.S. Release 1.0 for Uni-IC743 Mini (STM32H743). A build for the Uni_IC743Mini target with verified HEX data and SHA-256. Back up parameters and prepare a bootloader recovery path before full DFU flashing.",
+      "description_uk": "A.T.L.A.S. для Uni-IC743 Mini (STM32H743). Збірка для плати Uni_IC743Mini з перевіреними даними HEX і SHA-256. Перед повним DFU-записом збережи параметри та підготуй відновлення завантажувача.",
+      "description_en": "A.T.L.A.S. for Uni-IC743 Mini (STM32H743). A build for the Uni_IC743Mini target with verified HEX data and SHA-256. Back up parameters and prepare a bootloader recovery path before full DFU flashing.",
       "target_uk": "Uni_IC743Mini — STM32H743",
       "target_en": "Uni_IC743Mini — STM32H743",
       "version_descriptions": {
@@ -102,6 +122,26 @@
           "ru": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). EKF3 NoAID G.L.O.B.A.L.: позиция по счислению, автоматический переход на GPS и обратно, метка GPS на карте без влияния на навигацию. Профиль активации есть в конфигураторе. Сборка только для Uni-IC743 Mini; перед записью сохрани параметры.",
           "uk": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). EKF3 NoAID G.L.O.B.A.L.: позиція за лічбою, автоматичний перехід на GPS і назад, мітка GPS на мапі без впливу на навігацію. Профіль активації є в конфігураторі. Збірка лише для Uni-IC743 Mini; перед записом збережи параметри.",
           "en": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L for Uni-IC743 Mini (STM32H743). EKF3 NoAID G.L.O.B.A.L.: dead-reckoned position, automatic switch to the GPS and back, a GPS marker on the map that does not affect navigation. The activation profile is in the configurator. Built only for Uni-IC743 Mini; back up parameters before flashing."
+        },
+        "2.1": {
+          "ru": "A.T.L.A.S Release 2.1 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). Потеря GPS без лишнего перехода AHRS на DCM, завершение полётного цикла после посадки и DISARM, повторный запуск и звуковые уведомления. База ArduPlane 4.7.2. Сборка только для Uni-IC743 Mini; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 2.1 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). Втрата GPS без зайвого переходу AHRS на DCM, завершення польотного циклу після посадки та DISARM, повторний запуск і звукові сповіщення. База ArduPlane 4.7.2. Збірка лише для Uni-IC743 Mini; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 2.1 · A.T.L.A.S-G.L.O.B.A.L for Uni-IC743 Mini (STM32H743). Losing the GPS without a needless AHRS fallback to DCM, the end of the flight cycle after landing and DISARM, relaunch and sound notifications. ArduPlane 4.7.2 base. Built only for Uni-IC743 Mini; back up parameters before flashing."
+        },
+        "2.2": {
+          "ru": "A.T.L.A.S Release 2.2 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). Корректировка EKF3 со станции вместе с настоящим GPS, перетаскивание самолёта на карте в схеме NoAID, привязка высоты к HOME на земле и своя мелодия запуска. База ArduPlane 4.7.3. Сборка только для Uni-IC743 Mini; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 2.2 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). Корекція EKF3 зі станції разом зі справжнім GPS, перетягування літака на мапі в схемі NoAID, прив’язка висоти до HOME на землі та власна мелодія запуску. База ArduPlane 4.7.3. Збірка лише для Uni-IC743 Mini; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 2.2 · A.T.L.A.S-G.L.O.B.A.L for Uni-IC743 Mini (STM32H743). EKF3 correction from the station together with a real GPS, dragging the aircraft on the map in the NoAID scheme, height tied to HOME on the ground and a custom startup melody. ArduPlane 4.7.3 base. Built only for Uni-IC743 Mini; back up parameters before flashing."
+        },
+        "3.0": {
+          "ru": "A.T.L.A.S Release 3.0 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). Счисление без GPS учитывает ветер и ошибки Pitot и курса, плавно применяет метки оператора, удерживает позицию на площадке и предупреждает об отказе Pitot. Новые параметры NOAID_ по умолчанию выключены. База ArduPlane 4.7.3. Сборка только для Uni-IC743 Mini; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 3.0 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). Лічба без GPS враховує вітер і похибки Піто та курсу, плавно застосовує мітки оператора, утримує позицію на майданчику й попереджає про відмову Піто. Нові параметри NOAID_ за замовчуванням вимкнені. База ArduPlane 4.7.3. Збірка лише для Uni-IC743 Mini; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 3.0 · A.T.L.A.S-G.L.O.B.A.L for Uni-IC743 Mini (STM32H743). Dead reckoning without GPS accounts for the wind and for Pitot and heading errors, applies operator fixes gradually, holds the position on the pad and warns of a Pitot failure. The new NOAID_ parameters are off by default. ArduPlane 4.7.3 base. Built only for Uni-IC743 Mini; back up parameters before flashing."
+        },
+        "3.1": {
+          "ru": "A.T.L.A.S Release 3.1 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). Экспериментально: в полёте без GPS при включённом NOAID_WIND ветер счисления учитывает и наведение (AUTO, RTL, GUIDED, LOITER). Добавлены перенос ветра из участка с GPS (по умолчанию выключен) и ветер счисления на OSD. База ArduPlane 4.7.3. Сборка только для Uni-IC743 Mini; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 3.1 · A.T.L.A.S-G.L.O.B.A.L для Uni-IC743 Mini (STM32H743). Експериментально: у польоті без GPS за ввімкненого NOAID_WIND вітер лічби враховує й наведення (AUTO, RTL, GUIDED, LOITER). Додано перенесення вітру з ділянки з GPS (за замовчуванням вимкнене) та вітер лічби на OSD. База ArduPlane 4.7.3. Збірка лише для Uni-IC743 Mini; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 3.1 · A.T.L.A.S-G.L.O.B.A.L for Uni-IC743 Mini (STM32H743). Experimental: in flight without GPS with NOAID_WIND on, the guidance also uses the dead-reckoning wind (AUTO, RTL, GUIDED, LOITER). Added: carrying the wind over from a GPS leg (off by default) and the dead-reckoning wind on the OSD. ArduPlane 4.7.3 base. Built only for Uni-IC743 Mini; back up parameters before flashing."
         }
       }
     },
@@ -109,7 +149,7 @@
       "id": "matek-h743-wing-v3",
       "name": "Matek H743-WING V3",
       "family": "Matek Systems / H743",
-      "description": "A.T.L.A.S. Release 1.0 для Matek H743-WING V3. Проверенная сборка HEX на базе ArduPlane 4.7.2. Перед записью проверь ревизию платы и сохрани параметры.",
+      "description": "A.T.L.A.S. для Matek H743-WING V3. Проверенная сборка HEX. Перед записью проверь ревизию платы и сохрани параметры.",
       "status": "available",
       "target": "Matek H743-WING V3 — STM32H743",
       "version": "1.0",
@@ -127,8 +167,8 @@
           "channel": "release"
         }
       ],
-      "description_uk": "A.T.L.A.S. Release 1.0 для Matek H743-WING V3. Перевірена HEX-збірка на базі ArduPlane 4.7.2. Перед записом перевір ревізію плати та збережи параметри.",
-      "description_en": "A.T.L.A.S. Release 1.0 for Matek H743-WING V3. Verified HEX build based on ArduPlane 4.7.2. Check the board revision and back up parameters before flashing.",
+      "description_uk": "A.T.L.A.S. для Matek H743-WING V3. Перевірена HEX-збірка. Перед записом перевір ревізію плати та збережи параметри.",
+      "description_en": "A.T.L.A.S. for Matek H743-WING V3. Verified HEX build. Check the board revision and back up parameters before flashing.",
       "target_uk": "Matek H743-WING V3 — STM32H743",
       "target_en": "Matek H743-WING V3 — STM32H743",
       "version_descriptions": {
@@ -146,6 +186,26 @@
           "ru": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). EKF3 NoAID G.L.O.B.A.L.: позиция по счислению, автоматический переход на GPS и обратно, метка GPS на карте без влияния на навигацию. Профиль активации есть в конфигураторе. Сборка только для Matek H743-WING V3; перед записью сохрани параметры.",
           "uk": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). EKF3 NoAID G.L.O.B.A.L.: позиція за лічбою, автоматичний перехід на GPS і назад, мітка GPS на мапі без впливу на навігацію. Профіль активації є в конфігураторі. Збірка лише для Matek H743-WING V3; перед записом збережи параметри.",
           "en": "A.T.L.A.S Release 2.0 · A.T.L.A.S-G.L.O.B.A.L for Matek H743-WING V3 (STM32H743). EKF3 NoAID G.L.O.B.A.L.: dead-reckoned position, automatic switch to the GPS and back, a GPS marker on the map that does not affect navigation. The activation profile is in the configurator. Built only for Matek H743-WING V3; back up parameters before flashing."
+        },
+        "2.1": {
+          "ru": "A.T.L.A.S Release 2.1 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). Потеря GPS без лишнего перехода AHRS на DCM, завершение полётного цикла после посадки и DISARM, повторный запуск и звуковые уведомления. База ArduPlane 4.7.2. Сборка только для Matek H743-WING V3; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 2.1 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). Втрата GPS без зайвого переходу AHRS на DCM, завершення польотного циклу після посадки та DISARM, повторний запуск і звукові сповіщення. База ArduPlane 4.7.2. Збірка лише для Matek H743-WING V3; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 2.1 · A.T.L.A.S-G.L.O.B.A.L for Matek H743-WING V3 (STM32H743). Losing the GPS without a needless AHRS fallback to DCM, the end of the flight cycle after landing and DISARM, relaunch and sound notifications. ArduPlane 4.7.2 base. Built only for Matek H743-WING V3; back up parameters before flashing."
+        },
+        "2.2": {
+          "ru": "A.T.L.A.S Release 2.2 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). Корректировка EKF3 со станции вместе с настоящим GPS, перетаскивание самолёта на карте в схеме NoAID, привязка высоты к HOME на земле и своя мелодия запуска. База ArduPlane 4.7.3. Сборка только для Matek H743-WING V3; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 2.2 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). Корекція EKF3 зі станції разом зі справжнім GPS, перетягування літака на мапі в схемі NoAID, прив’язка висоти до HOME на землі та власна мелодія запуску. База ArduPlane 4.7.3. Збірка лише для Matek H743-WING V3; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 2.2 · A.T.L.A.S-G.L.O.B.A.L for Matek H743-WING V3 (STM32H743). EKF3 correction from the station together with a real GPS, dragging the aircraft on the map in the NoAID scheme, height tied to HOME on the ground and a custom startup melody. ArduPlane 4.7.3 base. Built only for Matek H743-WING V3; back up parameters before flashing."
+        },
+        "3.0": {
+          "ru": "A.T.L.A.S Release 3.0 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). Счисление без GPS учитывает ветер и ошибки Pitot и курса, плавно применяет метки оператора, удерживает позицию на площадке и предупреждает об отказе Pitot. Новые параметры NOAID_ по умолчанию выключены. База ArduPlane 4.7.3. Сборка только для Matek H743-WING V3; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 3.0 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). Лічба без GPS враховує вітер і похибки Піто та курсу, плавно застосовує мітки оператора, утримує позицію на майданчику й попереджає про відмову Піто. Нові параметри NOAID_ за замовчуванням вимкнені. База ArduPlane 4.7.3. Збірка лише для Matek H743-WING V3; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 3.0 · A.T.L.A.S-G.L.O.B.A.L for Matek H743-WING V3 (STM32H743). Dead reckoning without GPS accounts for the wind and for Pitot and heading errors, applies operator fixes gradually, holds the position on the pad and warns of a Pitot failure. The new NOAID_ parameters are off by default. ArduPlane 4.7.3 base. Built only for Matek H743-WING V3; back up parameters before flashing."
+        },
+        "3.1": {
+          "ru": "A.T.L.A.S Release 3.1 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). Экспериментально: в полёте без GPS при включённом NOAID_WIND ветер счисления учитывает и наведение (AUTO, RTL, GUIDED, LOITER). Добавлены перенос ветра из участка с GPS (по умолчанию выключен) и ветер счисления на OSD. База ArduPlane 4.7.3. Сборка только для Matek H743-WING V3; перед записью сохрани параметры.",
+          "uk": "A.T.L.A.S Release 3.1 · A.T.L.A.S-G.L.O.B.A.L для Matek H743-WING V3 (STM32H743). Експериментально: у польоті без GPS за ввімкненого NOAID_WIND вітер лічби враховує й наведення (AUTO, RTL, GUIDED, LOITER). Додано перенесення вітру з ділянки з GPS (за замовчуванням вимкнене) та вітер лічби на OSD. База ArduPlane 4.7.3. Збірка лише для Matek H743-WING V3; перед записом збережи параметри.",
+          "en": "A.T.L.A.S Release 3.1 · A.T.L.A.S-G.L.O.B.A.L for Matek H743-WING V3 (STM32H743). Experimental: in flight without GPS with NOAID_WIND on, the guidance also uses the dead-reckoning wind (AUTO, RTL, GUIDED, LOITER). Added: carrying the wind over from a GPS leg (off by default) and the dead-reckoning wind on the OSD. ArduPlane 4.7.3 base. Built only for Matek H743-WING V3; back up parameters before flashing."
         }
       }
     }

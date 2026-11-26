@@ -1420,11 +1420,29 @@ async function rhythmChecks(){
   const t=runLayer({springs:false});t.layer.start();t.move(t.state.w*.5,t.state.h*.5);t.seconds(C.countdown+.3);const g=t.layer.game;g.calm=true;
   g.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});t.seconds(2.5);g.obstacles.length=g.enemies.length=g.pads.length=g.boxes.length=g.plumes.length=g.bonuses.length=0;
   const said=[];t.ctx.fillText=(text,x,y)=>said.push({text:String(text),x,y});
-  const here=(id,kind,r)=>({id,kind,x:g.plane.x,y:g.plane.y,z:.001,r,state:'ahead',age:0});g.pads.push(here(901,'pad',C.padR));g.boxes.push(here(902,'box',C.boxR));
-  const words=()=>[TEXT.ru.wPad,TEXT.ru.box].map(w=>said.filter(s=>s.text.startsWith(w+' +')).at(-1));
+  g.events.push({type:'miss',x:0,y:-.3,gate:{r:1}},{type:'forgiven',x:0,y:-.3});
+  const words=()=>[TEXT.ru.miss,TEXT.ru.forgiven].map(w=>said.filter(s=>s.text===w).at(-1));
   t.frame();let [a,b]=words();assert.ok(a&&b&&Math.abs(a.x-b.x)<40&&Math.abs(a.y-b.y)>=14.9,'two words in one place: two lines '+JSON.stringify([a,b]));
   const gap=Math.abs(a.y-b.y);for(let i=0;i<30;i++){g.lives=C.lives;g.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});t.frame();}
   const [a2,b2]=words();assert.ok(a2.y<a.y&&Math.abs(Math.abs(a2.y-b2.y)-gap)<8,'they rise together and do not run into each other '+JSON.stringify([a2,b2]));
+ }
+ // a quiet field: points show where the word "score" stands (and add up), only the words that matter fly over the field, the words of the ULT come once
+ {
+  const t=runLayer({springs:false});t.layer.start();t.move(t.state.w*.5,t.state.h*.5);t.seconds(C.countdown+.3);const g=t.layer.game;g.calm=true;
+  const clear=()=>{g.gates.forEach(x=>{if(x.state==='ahead')x.state='passed';});g.obstacles.length=g.enemies.length=g.pads.length=g.boxes.length=g.plumes.length=g.bonuses.length=0;g.lives=C.lives;};
+  for(let i=0;i<150;i++){clear();t.frame();}
+  const score=t.hud.find(n=>n.classes.has('game-score')),label=score.children[0];assert.equal(label.textContent,TEXT.ru.score,'the word "score" in the bar');
+  const said=[];t.ctx.fillText=(text)=>said.push(String(text));
+  g.events.push({type:'gate',quality:'perfect',points:140,x:0,y:0,gate:{r:1},streak:5},{type:'bonus',x:0,y:0,r:.5,points:90},{type:'pad',x:0,y:0,r:.6,points:40},{type:'box',x:0,y:0,points:60,full:true},
+   {type:'destroy',kind:'pylon',x:0,y:0,z:1,r:.4,points:70},{type:'qte',move:'kill',ok:true,x:0,y:0,z:2,points:500},{type:'onbeat',points:50,streak:1},{type:'sprint',stage:'end',clean:true,bonus:250});
+  clear();t.frame();
+  assert.equal(label.textContent,'+'+(140+90+40+60+70+500+50+250),'the points add up in the bar');assert.ok(score.classes.has('is-gain')&&score.classes.has('is-bright'));
+  const flown=said.filter(x=>x.length>2&&!/^(WP|\+\d+ м$|TNT$)/.test(x));assert.deepEqual([...new Set(flown)],[TEXT.ru.killDone],'of all that only the manoeuvre is said on the field: '+flown.join(' | '));
+  for(let i=0;i<90;i++){clear();t.frame();}assert.ok(label.textContent===TEXT.ru.score&&!score.classes.has('is-gain'),'and the word comes back');
+  said.length=0;for(let k=0;k<3;k++){g.events.push({type:'ultReady'});clear();t.frame();for(let i=0;i<120;i++){clear();t.frame();}}
+  assert.equal(said.filter(x=>x.startsWith(TEXT.ru.ultReady)).length>0,true);const first=said.filter(x=>x.startsWith(TEXT.ru.ultReady)).length;said.length=0;g.events.push({type:'ultReady'});clear();t.frame();assert.ok(first<100&&!said.some(x=>x.startsWith(TEXT.ru.ultReady)),'the ULT words once a flight');
+  const game=read('css/flight-game.css');for(const rule of ['.flight-playground.is-game .scope-circle,.flight-playground.is-game .hud-cross{display:none}','.flight-playground.is-game .flight-readout{opacity:.36}','.game-score.is-gain span'])assert.ok(game.includes(rule),rule);
+  assert.ok(read('js/site/flight-demo.js').includes('const quiet=!!(lay&&lay.engaged);')&&read('js/site/flight-demo.js').includes('if(quiet)return;'),'the demo keeps only the horizon behind the game');
  }
 }
 rhythmChecks().then(()=>console.log('PASS: mini-game — hold the pointer seven seconds to start, FBWA flight with bank and pitch limits, wind, sprints, bonus rings, the 20 km route with its legs of modes, rings that never stop, about five minutes and a higher rank for a faster flight, weapon boxes and five weapons, feathers, the ULT, pylons and TNT crates, boost rings, rivals and places, the music of the main track in step with the flight (rings and touchdown on the beat, manoeuvres on the beat, static and inverted flight at every loop, the chiptune where the track cannot be read, own tracks), the AUTOLAND finale with the cup, camera, best score and time, the card layer in a stub DOM, demo hooks, page wiring and ru/uk/en texts.')).catch(error=>{console.error(error);process.exit(1);});

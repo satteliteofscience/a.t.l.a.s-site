@@ -28,18 +28,18 @@
  // ---- texts (the card is translated by the layer itself; i18n.js only knows the static page)
  const TEXT = {
   ru: { exit: 'ВЫХОД', score: 'СЧЁТ', best: 'РЕКОРД', gates: 'ВОРОТА', level: 'УРОВЕНЬ', ready: 'ПРИГОТОВЬСЯ', clickMusic: 'КЛИКНИ — ВКЛЮЧИТСЯ МУЗЫКА', touchMusic: 'КОСНИСЬ — ВКЛЮЧИТСЯ МУЗЫКА', go: 'СТАРТ',
-   perfect: 'ТОЧНО', good: 'ПРОЛЁТ', miss: 'МИМО', life: '+1 ЖИЗНЬ', gust: 'ПОРЫВ ВЕТРА', paused: 'ПАУЗА', pausedHint: 'Верни курсор в карточку или нажми пробел',
+   miss: 'МИМО', life: '+1 ЖИЗНЬ', gust: 'ПОРЫВ ВЕТРА', paused: 'ПАУЗА', pausedHint: 'Верни курсор в карточку или нажми пробел',
    over: 'ПОЛЁТ ЗАВЕРШЁН', again: 'ЕЩЁ РАЗ', accuracy: 'ТОЧНОСТЬ', streak: 'СЕРИЯ', rank: 'ЗВАНИЕ', newBest: 'НОВЫЙ РЕКОРД',
    hint: 'Цель — 20 км: веди курсором сквозь кольца', hintTouch: 'Цель — 20 км: веди пальцем сквозь кольца',
    ranks: ['КУРСАНТ', 'ПИЛОТ', 'КОМАНДИР', 'АС A.T.L.A.S.'],
-   ult: 'ULT', ultReady: 'ULT ГОТОВ', noTargets: 'НЕТ ЦЕЛЕЙ', shot: 'СБИТ', hitPylon: 'ОПОРА', hitEnemy: 'СТОЛКНОВЕНИЕ',
+   ult: 'ULT', ultReady: 'ULT ГОТОВ', noTargets: 'НЕТ ЦЕЛЕЙ', hitPylon: 'ОПОРА', hitEnemy: 'СТОЛКНОВЕНИЕ',
    modeTo: 'РЕЖИМ', finale: 'ЗАХОД НА ПОСАДКУ', final: 'ЗАХОД', touchdown: 'ПОСАДКА', gradePerfect: 'ИДЕАЛЬНО', gradeGood: 'ХОРОШО', gradeHard: 'ЖЁСТКАЯ',
    won: 'ФИНИШ · 20 КМ', landing: 'ПОСАДКА', kills: 'СБИТО',
    km: 'км', kmh: 'км/ч', time: 'ВРЕМЯ', distance: 'ДИСТАНЦИЯ', timeBonus: 'ЗА ВРЕМЯ', bestTime: 'ЛУЧШЕЕ ВРЕМЯ', newTime: 'ЛУЧШЕЕ ВРЕМЯ!', avgSpeed: 'СКОРОСТЬ',
-   feathers: 'ПЕРЬЯ', empty: 'ПУСТО', box: 'ЯЩИК', slotFull: 'СЛОТ ЗАНЯТ', weaponUp: 'ОРУЖИЕ: УР. {n}', weaponMax: 'ОРУЖИЕ: МАКС.', forgiven: 'МИМО · БЕЗ ШТРАФА', smashed: 'СНЕСЕНО', repelled: 'ОТБРОШЕН',
+   feathers: 'ПЕРЬЯ', empty: 'ПУСТО', weaponUp: 'ОРУЖИЕ: УР. {n}', weaponMax: 'ОРУЖИЕ: МАКС.', forgiven: 'МИМО · БЕЗ ШТРАФА', 
    wTurbo: 'ТУРБО', wGun: 'ПУЛЕМЁТ', wMissiles: 'РАКЕТЫ', wMask: 'НЕУЯЗВИМОСТЬ', wBarrier: 'БАРЬЕР',
    spaceKey: 'ПРОБЕЛ', weaponLabel: 'Применить оружие из ящика (пробел, F или правая кнопка)', weaponLabelTouch: 'Применить оружие из ящика', weaponEmptyLabel: 'Оружие: слот пуст', feathersLabel: 'каждые 10 перьев усиливают оружие',
-   wind: 'ВЕТЕР', windUnit: 'м/с', windShift: 'ВЕТЕР ПОМЕНЯЛСЯ', sprintWarn: 'ФОРСАЖ!', sprint: 'ФОРСАЖ', sprintClean: 'ЧИСТЫЙ ФОРСАЖ', bonus: 'БОНУС', handover: 'УПРАВЛЕНИЕ У ТЕБЯ',
+   wind: 'ВЕТЕР', windUnit: 'м/с', windShift: 'ВЕТЕР ПОМЕНЯЛСЯ', sprintWarn: 'ФОРСАЖ!', sprint: 'ФОРСАЖ', handover: 'УПРАВЛЕНИЕ У ТЕБЯ',
    music: 'МУЗЫКА', musicOn: 'ВКЛ', musicOff: 'ВЫКЛ', musicLabelOn: 'Музыка включена, нажми, чтобы выключить (клавиша M)', musicLabelOff: 'Музыка выключена, нажми, чтобы включить (клавиша M)',
    dwell: 'УДЕРЖИВАЙ КУРСОР — ИГРА ЧЕРЕЗ {n}', dwellTouch: 'УДЕРЖИВАЙ ПАЛЕЦ — ИГРА ЧЕРЕЗ {n}',
    tipFBWA: 'FBWA: крен до 45°, ветер сносит, ЛКМ — ускорение', tipFBWATouch: 'FBWA: самолёт летит за пальцем, ветер сносит',
@@ -65,7 +65,7 @@
    tipMissiles: 'РАКЕТЫ: сами находят чужие борта и опоры',
    tipMask: 'НЕУЯЗВИМОСТЬ: быстрее и сносишь всё на пути',
    tipBarrier: 'БАРЬЕР: отталкивает опоры и чужие борта',
-   qteRoll: 'БОЧКА ×2 В БИТ', qteKill: 'ОГОНЬ В БИТ', beatBtn: 'В БИТ', rollDone: 'БОЧКА!', killDone: 'СБИТ В БИТ', missBeat: 'МИМО БИТА', onBeat: 'В РИТМ',
+   qteRoll: 'БОЧКА ×2 В БИТ', qteKill: 'ОГОНЬ В БИТ', beatBtn: 'В БИТ', rollDone: 'БОЧКА!', killDone: 'СБИТ В БИТ', missBeat: 'МИМО БИТА', 
    invOn: 'ПЕРЕВЁРНУТЫЙ ПОЛЁТ', invOff: 'СНОВА РОВНО', staticWord: 'ПОМЕХИ', wPad: 'УСКОРЕНИЕ', tnt: 'TNT!', place: '{n} МЕСТО', placeShort: 'МЕСТО', rivalHit: 'СОПЕРНИК СБИТ С КУРСА', rivalDone: 'СОПЕРНИК НА ФИНИШЕ', cupTitle: 'ОФИЦИАЛЬНЫЙ ПИЛОТ A.T.L.A.S.', metres: 'м',
    tipBeat: 'Кольца прилетают в такт, действия в бит дают бонус', tipQte: 'Манёвр в такт: пробел или клик, бочка — дважды', tipQteTouch: 'Манёвр в такт: кнопка «В БИТ», бочка — дважды', tipPad: 'Кольца со стрелками дают ускорение', tipTnt: 'Ящики TNT взрываются: облетай или сбивай', tipRace: 'Это гонка: обгони трёх соперников',
    ultLabel: 'ULT: залп по чужим самолётам (пробел или E)',
@@ -78,18 +78,18 @@
    liveStart: 'Игра началась. Пролети 20 км сквозь кольца: самолёт летит за курсором, пробел — оружие из ящика или ULT, M — музыка.', liveOver: 'Игра окончена. Счёт {score}, ворота {gates}.',
    liveWon: 'Финиш: 20 км за {time}. Счёт {score}, ворота {gates}.' },
   uk: { exit: 'ВИХІД', score: 'РАХУНОК', best: 'РЕКОРД', gates: 'ВОРОТА', level: 'РІВЕНЬ', ready: 'ПРИГОТУЙСЯ', clickMusic: 'КЛІКНИ — УВІМКНЕТЬСЯ МУЗИКА', touchMusic: 'ТОРКНИСЬ — УВІМКНЕТЬСЯ МУЗИКА', go: 'СТАРТ',
-   perfect: 'ТОЧНО', good: 'ПРОЛІТ', miss: 'МИМО', life: '+1 ЖИТТЯ', gust: 'ПОРИВ ВІТРУ', paused: 'ПАУЗА', pausedHint: 'Поверни курсор у картку або натисни пробіл',
+   miss: 'МИМО', life: '+1 ЖИТТЯ', gust: 'ПОРИВ ВІТРУ', paused: 'ПАУЗА', pausedHint: 'Поверни курсор у картку або натисни пробіл',
    over: 'ПОЛІТ ЗАВЕРШЕНО', again: 'ЩЕ РАЗ', accuracy: 'ТОЧНІСТЬ', streak: 'СЕРІЯ', rank: 'ЗВАННЯ', newBest: 'НОВИЙ РЕКОРД',
    hint: 'Ціль — 20 км: веди курсором крізь кільця', hintTouch: 'Ціль — 20 км: веди пальцем крізь кільця',
    ranks: ['КУРСАНТ', 'ПІЛОТ', 'КОМАНДИР', 'АС A.T.L.A.S.'],
-   ult: 'ULT', ultReady: 'ULT ГОТОВИЙ', noTargets: 'НЕМАЄ ЦІЛЕЙ', shot: 'ЗБИТО', hitPylon: 'ОПОРА', hitEnemy: 'ЗІТКНЕННЯ',
+   ult: 'ULT', ultReady: 'ULT ГОТОВИЙ', noTargets: 'НЕМАЄ ЦІЛЕЙ', hitPylon: 'ОПОРА', hitEnemy: 'ЗІТКНЕННЯ',
    modeTo: 'РЕЖИМ', finale: 'ЗАХІД НА ПОСАДКУ', final: 'ЗАХІД', touchdown: 'ПОСАДКА', gradePerfect: 'ІДЕАЛЬНО', gradeGood: 'ДОБРЕ', gradeHard: 'ЖОРСТКА',
    won: 'ФІНІШ · 20 КМ', landing: 'ПОСАДКА', kills: 'ЗБИТО',
    km: 'км', kmh: 'км/год', time: 'ЧАС', distance: 'ДИСТАНЦІЯ', timeBonus: 'ЗА ЧАС', bestTime: 'НАЙКРАЩИЙ ЧАС', newTime: 'НАЙКРАЩИЙ ЧАС!', avgSpeed: 'ШВИДКІСТЬ',
-   feathers: 'ПІР’Я', empty: 'ПОРОЖНЬО', box: 'ЯЩИК', slotFull: 'СЛОТ ЗАЙНЯТИЙ', weaponUp: 'ЗБРОЯ: РІВ. {n}', weaponMax: 'ЗБРОЯ: МАКС.', forgiven: 'МИМО · БЕЗ ШТРАФУ', smashed: 'ЗНЕСЕНО', repelled: 'ВІДКИНУТО',
+   feathers: 'ПІР’Я', empty: 'ПОРОЖНЬО', weaponUp: 'ЗБРОЯ: РІВ. {n}', weaponMax: 'ЗБРОЯ: МАКС.', forgiven: 'МИМО · БЕЗ ШТРАФУ', 
    wTurbo: 'ТУРБО', wGun: 'КУЛЕМЕТ', wMissiles: 'РАКЕТИ', wMask: 'НЕВРАЗЛИВІСТЬ', wBarrier: 'БАР’ЄР',
    spaceKey: 'ПРОБІЛ', weaponLabel: 'Застосувати зброю з ящика (пробіл, F або права кнопка)', weaponLabelTouch: 'Застосувати зброю з ящика', weaponEmptyLabel: 'Зброя: слот порожній', feathersLabel: 'кожні 10 пір’їн підсилюють зброю',
-   wind: 'ВІТЕР', windUnit: 'м/с', windShift: 'ВІТЕР ЗМІНИВСЯ', sprintWarn: 'ФОРСАЖ!', sprint: 'ФОРСАЖ', sprintClean: 'ЧИСТИЙ ФОРСАЖ', bonus: 'БОНУС', handover: 'КЕРУВАННЯ У ТЕБЕ',
+   wind: 'ВІТЕР', windUnit: 'м/с', windShift: 'ВІТЕР ЗМІНИВСЯ', sprintWarn: 'ФОРСАЖ!', sprint: 'ФОРСАЖ', handover: 'КЕРУВАННЯ У ТЕБЕ',
    music: 'МУЗИКА', musicOn: 'УВІМК', musicOff: 'ВИМК', musicLabelOn: 'Музику ввімкнено, натисни, щоб вимкнути (клавіша M)', musicLabelOff: 'Музику вимкнено, натисни, щоб ввімкнути (клавіша M)',
    dwell: 'ТРИМАЙ КУРСОР — ГРА ЧЕРЕЗ {n}', dwellTouch: 'ТРИМАЙ ПАЛЕЦЬ — ГРА ЧЕРЕЗ {n}',
    tipFBWA: 'FBWA: крен до 45°, вітер зносить, ЛКМ — прискорення', tipFBWATouch: 'FBWA: літак летить за пальцем, вітер зносить',
@@ -115,7 +115,7 @@
    tipMissiles: 'РАКЕТИ: самі знаходять чужі борти й опори',
    tipMask: 'НЕВРАЗЛИВІСТЬ: швидше і зносиш усе на шляху',
    tipBarrier: 'БАР’ЄР: відштовхує опори та чужі борти',
-   qteRoll: 'БОЧКА ×2 У БІТ', qteKill: 'ВОГОНЬ У БІТ', beatBtn: 'У БІТ', rollDone: 'БОЧКА!', killDone: 'ЗБИТО В БІТ', missBeat: 'ПОВЗ БІТ', onBeat: 'У РИТМ',
+   qteRoll: 'БОЧКА ×2 У БІТ', qteKill: 'ВОГОНЬ У БІТ', beatBtn: 'У БІТ', rollDone: 'БОЧКА!', killDone: 'ЗБИТО В БІТ', missBeat: 'ПОВЗ БІТ', 
    invOn: 'ПЕРЕВЕРНУТИЙ ПОЛІТ', invOff: 'ЗНОВУ РІВНО', staticWord: 'ПЕРЕШКОДИ', wPad: 'ПРИСКОРЕННЯ', tnt: 'TNT!', place: '{n} МІСЦЕ', placeShort: 'МІСЦЕ', rivalHit: 'СУПЕРНИКА ЗБИТО З КУРСУ', rivalDone: 'СУПЕРНИК НА ФІНІШІ', cupTitle: 'ОФІЦІЙНИЙ ПІЛОТ A.T.L.A.S.', metres: 'м',
    tipBeat: 'Кільця прилітають у такт, дії в біт дають бонус', tipQte: 'Маневр у такт: пробіл або клік, бочка — двічі', tipQteTouch: 'Маневр у такт: кнопка «У БІТ», бочка — двічі', tipPad: 'Кільця зі стрілками дають прискорення', tipTnt: 'Ящики TNT вибухають: облітай або збивай', tipRace: 'Це перегони: обжени трьох суперників',
    ultLabel: 'ULT: залп по чужих літаках (пробіл або E)',
@@ -128,18 +128,18 @@
    liveStart: 'Гру розпочато. Пролети 20 км крізь кільця: літак летить за курсором, пробіл — зброя з ящика або ULT, M — музика.', liveOver: 'Гру закінчено. Рахунок {score}, ворота {gates}.',
    liveWon: 'Фініш: 20 км за {time}. Рахунок {score}, ворота {gates}.' },
   en: { exit: 'EXIT', score: 'SCORE', best: 'BEST', gates: 'GATE', level: 'LEVEL', ready: 'GET READY', clickMusic: 'CLICK FOR THE MUSIC', touchMusic: 'TOUCH FOR THE MUSIC', go: 'GO',
-   perfect: 'PERFECT', good: 'GATE', miss: 'MISSED', life: '+1 LIFE', gust: 'GUST', paused: 'PAUSED', pausedHint: 'Move the cursor back onto the card or press Space',
+   miss: 'MISSED', life: '+1 LIFE', gust: 'GUST', paused: 'PAUSED', pausedHint: 'Move the cursor back onto the card or press Space',
    over: 'FLIGHT OVER', again: 'AGAIN', accuracy: 'ACCURACY', streak: 'STREAK', rank: 'RANK', newBest: 'NEW BEST',
    hint: 'Goal 20 km: fly the cursor through the rings', hintTouch: 'Goal 20 km: fly your finger through the rings',
    ranks: ['CADET', 'PILOT', 'COMMANDER', 'A.T.L.A.S. ACE'],
-   ult: 'ULT', ultReady: 'ULT READY', noTargets: 'NO TARGETS', shot: 'SHOT DOWN', hitPylon: 'PYLON', hitEnemy: 'COLLISION',
+   ult: 'ULT', ultReady: 'ULT READY', noTargets: 'NO TARGETS', hitPylon: 'PYLON', hitEnemy: 'COLLISION',
    modeTo: 'MODE', finale: 'FINAL APPROACH', final: 'FINAL', touchdown: 'TOUCHDOWN', gradePerfect: 'PERFECT', gradeGood: 'GOOD', gradeHard: 'HARD',
    won: 'FINISH · 20 KM', landing: 'LANDING', kills: 'KILLS',
    km: 'km', kmh: 'km/h', time: 'TIME', distance: 'DISTANCE', timeBonus: 'TIME BONUS', bestTime: 'BEST TIME', newTime: 'BEST TIME!', avgSpeed: 'SPEED',
-   feathers: 'FEATHERS', empty: 'EMPTY', box: 'BOX', slotFull: 'SLOT FULL', weaponUp: 'WEAPONS: LV {n}', weaponMax: 'WEAPONS: MAX', forgiven: 'MISSED · NO PENALTY', smashed: 'SMASHED', repelled: 'PUSHED',
+   feathers: 'FEATHERS', empty: 'EMPTY', weaponUp: 'WEAPONS: LV {n}', weaponMax: 'WEAPONS: MAX', forgiven: 'MISSED · NO PENALTY', 
    wTurbo: 'TURBO', wGun: 'MACHINE GUN', wMissiles: 'MISSILES', wMask: 'INVINCIBLE', wBarrier: 'BARRIER',
    spaceKey: 'SPACE', weaponLabel: 'Use the weapon from a box (Space, F or the right button)', weaponLabelTouch: 'Use the weapon from a box', weaponEmptyLabel: 'Weapon: the slot is empty', feathersLabel: 'every 10 feathers make the weapons stronger',
-   wind: 'WIND', windUnit: 'm/s', windShift: 'WIND SHIFT', sprintWarn: 'AFTERBURNER!', sprint: 'AFTERBURNER', sprintClean: 'CLEAN BURN', bonus: 'BONUS', handover: 'YOUR CONTROL',
+   wind: 'WIND', windUnit: 'm/s', windShift: 'WIND SHIFT', sprintWarn: 'AFTERBURNER!', sprint: 'AFTERBURNER', handover: 'YOUR CONTROL',
    music: 'MUSIC', musicOn: 'ON', musicOff: 'OFF', musicLabelOn: 'Music is on, press to turn it off (key M)', musicLabelOff: 'Music is off, press to turn it on (key M)',
    dwell: 'HOLD THE CURSOR HERE — GAME IN {n}', dwellTouch: 'HOLD YOUR FINGER HERE — GAME IN {n}',
    tipFBWA: 'FBWA: bank up to 45°, the wind pushes, LMB boosts', tipFBWATouch: 'FBWA: the aircraft follows your finger, the wind pushes',
@@ -165,7 +165,7 @@
    tipMissiles: 'MISSILES: they find aircraft and pylons',
    tipMask: 'INVINCIBLE: faster, you smash all in the way',
    tipBarrier: 'BARRIER: pushes pylons and aircraft away',
-   qteRoll: 'ROLL ×2 ON BEAT', qteKill: 'FIRE ON BEAT', beatBtn: 'ON BEAT', rollDone: 'ROLL!', killDone: 'DOWN ON BEAT', missBeat: 'OFF BEAT', onBeat: 'IN RHYTHM',
+   qteRoll: 'ROLL ×2 ON BEAT', qteKill: 'FIRE ON BEAT', beatBtn: 'ON BEAT', rollDone: 'ROLL!', killDone: 'DOWN ON BEAT', missBeat: 'OFF BEAT', 
    invOn: 'INVERTED FLIGHT', invOff: 'UPRIGHT AGAIN', staticWord: 'STATIC', wPad: 'BOOST', tnt: 'TNT!', place: 'PLACE {n}', placeShort: 'PLACE', rivalHit: 'RIVAL KNOCKED OFF', rivalDone: 'A RIVAL FINISHED', cupTitle: 'OFFICIAL A.T.L.A.S. PILOT', metres: 'm',
    tipBeat: 'The rings come on the beat, acting on it pays', tipQte: 'Manoeuvre on the beat: Space or click, roll twice', tipQteTouch: 'Manoeuvre on the beat: ON BEAT button, roll twice', tipPad: 'Arrow rings give a boost', tipTnt: 'TNT crates explode: dodge or shoot them', tipRace: 'It is a race: overtake three rivals',
    ultLabel: 'ULT: salvo at the other aircraft (Space or E)',
@@ -431,8 +431,12 @@
  let hovering = false, dwellHeld = 0, dwellLock = false, dwellLast = 0, dwellText = '', dwellOn = false, lmbDown = false, tipPrio = 0;
  let sprintView = 0, lastWind = '', audioWait = 0, seenBonus = false, sprintOn = false, lastArsenal = '', seenBox = false, seenFeather = false, shotSide = 1, tipNow = null;
  let chosen = null, rollAnim = null, punch = 0, horizon = 0, turnBank = 0, seenPad = false, seenTnt = false, blocked = false;      // chosen: the player's own music ({music, buffers}); null: the main track
+ let gained = 0, gainLeft = 0, toldUlt = false;
+ const GAIN_TIME = 1.1;                        // how long the points just won stay in the score bar (s)
  const aimOut = { x: 0, y: 0, neutral: false };
  const WIND_UNIT = 6;                          // world units per second -> the metres per second shown on the card
+ const RIVAL_ALPHA = .6;                       // how bright the rivals are drawn (1: as bright as what hurts)
+ const LABEL_TOP = 104;                        // above this line of the card stand the score bar and the words of the middle
  // the streaks that show the wind (they drift with it) and the afterburner (they fly away from the vanishing point)
  const STREAKS = Array.from({ length: 28 }, (_, i) => ({ u: (i * .6180339 + .13) % 1, v: (i * .381966 + .31) % 1, s: .6 + ((i * .7311) % 1) * .8 }));
  const LINES = Array.from({ length: 34 }, (_, i) => ({ a: ((i * 137.508) % 360) * DEG, p: (i * .6180339) % 1, l: .5 + ((i * .37) % 1) * .8 }));
@@ -660,6 +664,7 @@
   tipsShown.clear(); tipQueue.length = 0; tipPrio = 0; tipNow = null; tip.hidden = true; tipTimer = 0;
   popups.length = rings.length = sparks.length = beams.length = tracers.length = shots.length = 0;
   sprintView = 0; sprintOn = false; lastWind = ''; lastArsenal = ''; audioWait = 0; seenBonus = false; seenBox = false; seenFeather = false; newTime = false; host.classList.remove('is-sprint', 'is-asking');
+  toldUlt = false; endGain();
   root.classList.add('is-game'); host.classList.add('is-game');
   hud.hidden = false; route.hidden = false; caption.hidden = false; bar.hidden = false; toggle.hidden = false; musicBtn.hidden = !audio.supported;
   paintStatic();
@@ -909,6 +914,13 @@
  }
 
  // ---- one frame of the game
+ /** Points won show for a moment where the word "score" stands, and add up while they keep coming: the field keeps only the words that matter. */
+ function award(points, bright) {
+  if (!(points > 0)) return;
+  gained = gainLeft > 0 ? gained + points : points; gainLeft = GAIN_TIME;
+  hudScoreLabel.textContent = '+' + gained; hudScore.classList.add('is-gain'); hudScore.classList.toggle('is-bright', !!bright);
+ }
+ function endGain() { gainLeft = 0; hudScore.classList.remove('is-gain', 'is-bright'); hudScoreLabel.textContent = tx('score'); }
  function hit() {
   if (reduced) return;
   flash.classList.remove('is-miss', 'is-ult'); void flash.offsetWidth; flash.classList.add('is-miss');
@@ -924,10 +936,9 @@
    if (e.type === 'start') { goBanner = .7; mode = 'run'; }
    else if (e.type === 'gate') {
     const perfect = e.quality === 'perfect';
-    popups.push({ text: `${perfect ? tx('perfect') : tx('good')} +${e.points}`, x: e.x, y: e.y, z: 0, age: 0, life: 1.1, color: perfect ? '#fff2b0' : '#cfd37a' });
+    award(e.points, perfect);
     rings.push({ x: e.x, y: e.y, r: e.gate.r, age: 0, life: .45, color: perfect ? '#fff2b0' : '#c7d070' });
     burst(e.x, e.y, perfect ? 14 : 8, 70 + Math.random() * 110);
-    if (e.streak % 5 === 0) popups.push({ text: `${tx('streak')} ×${e.streak}`, x: e.x, y: e.y - .8, z: 0, age: 0, life: 1.3, color: '#e6d05f' });
    } else if (e.type === 'miss') {
     popups.push({ text: tx('miss'), x: e.x, y: e.y, z: 0, age: 0, life: 1.2, color: '#e07b4f' });
     rings.push({ x: e.x, y: e.y, r: e.gate.r, age: 0, life: .5, color: '#e07b4f' });
@@ -940,53 +951,55 @@
     hit();
    } else if (e.type === 'qteAsk') { setBanner(tx(e.move === 'roll' ? 'qteRoll' : 'qteKill'), 2); showTip('qte', tx('tipQte')); }
    else if (e.type === 'qteTap') {
-    if (e.move === 'roll' && e.tap === 0 && !reduced) rollAnim = { t: 0, dur: .55, dir: e.dir || 1 };
-    popups.push({ text: e.quality === 'perfect' ? tx('perfect') : tx('onBeat'), x: game.plane.x, y: game.plane.y + .55, z: 0, age: 0, life: .55, color: '#bfefff' });
+    if (e.move === 'roll' && e.tap === 0 && !reduced) rollAnim = { t: 0, dur: .55, dir: e.dir || 1 };      // (the closing circle turns bright: no word for every press)
    } else if (e.type === 'qte') {
     if (!e.ok) popups.push({ text: tx('missBeat'), x: e.x, y: e.y, z: e.z, age: 0, life: .9, color: '#e07b4f' });
     else if (e.move === 'kill') {      // the aircraft shot down on the beat: the beam, the explosion and a lean-in of the camera
      beams.push({ x: e.x, y: e.y, z: e.z, age: 0, life: .4, thin: false });
      rings.push({ x: e.x, y: e.y, r: CFG.enemyR * 2.4, age: 0, life: .6, color: '#ffd9a8' });
      burst(e.x, e.y, 28, 180, e.z); audio.boom(.45); if (!reduced) punch = 1;
-     popups.push({ text: `${tx('killDone')} +${e.points}`, x: e.x, y: e.y + .5, z: e.z, age: 0, life: 1.5, color: '#fff2b0' });
-    } else popups.push({ text: `${tx('rollDone')} +${e.points} · ${tx('wPad')}`, x: e.x, y: e.y + .6, z: 0, age: 0, life: 1.4, color: '#bfefff' });
-   } else if (e.type === 'onbeat') popups.push({ text: `${tx('onBeat')} ×${e.streak} +${e.points}`, x: game.plane.x, y: game.plane.y - .65, z: 0, age: 0, life: 1, color: '#bfefff' });
+     popups.push({ text: tx('killDone'), x: e.x, y: e.y + .5, z: e.z, age: 0, life: 1.2, color: '#fff2b0' }); award(e.points, true);
+    } else { popups.push({ text: tx('rollDone'), x: e.x, y: e.y + .6, z: 0, age: 0, life: 1.1, color: '#bfefff' }); award(e.points, true); }
+   } else if (e.type === 'onbeat') award(e.points, true);
    else if (e.type === 'loop') setBanner(tx(e.inverted ? 'invOn' : 'invOff'), 2.6);
    else if (e.type === 'upright') setBanner(tx('invOff'), 2);
    else if (e.type === 'pad') {
-    popups.push({ text: `${tx('wPad')} +${e.points}`, x: e.x, y: e.y, z: 0, age: 0, life: 1, color: '#ffb35a' });
+    award(e.points);
     rings.push({ x: e.x, y: e.y, r: e.r, age: 0, life: .45, color: '#ffb35a' }); burst(e.x, e.y, 10, 120);
-   } else if (e.type === 'rivalHit') popups.push({ text: tx('rivalHit'), x: 0, y: .75, z: 0, age: 0, life: 1.4, color: '#fff2b0' });
+   } else if (e.type === 'rivalHit') popups.push({ text: tx('rivalHit'), x: 0, y: -.55, z: 0, age: 0, life: 1.4, color: '#fff2b0' });      // (news of the race: low, away from the words of the middle)
    else if (e.type === 'rivalFinish') setBanner(tx('rivalDone'), 1.6);
-   else if (e.type === 'place') { if (game.runTime > 8) popups.push({ text: tx('place').replace('{n}', String(e.place)), x: 0, y: .95, z: 0, age: 0, life: 1.4, color: e.up ? '#fff2b0' : '#e07b4f' }); }
+   else if (e.type === 'place') { if (game.runTime > 8) popups.push({ text: tx('place').replace('{n}', String(e.place)), x: 0, y: -.55, z: 0, age: 0, life: 1.4, color: e.up ? '#fff2b0' : '#e07b4f' }); }
    else if (e.type === 'effectEnd') { /* the timers show it */ }
-   else if (e.type === 'life') popups.push({ text: tx('life'), x: 0, y: .9, z: 0, age: 0, life: 1.4, color: '#e6d05f' });
+   else if (e.type === 'life') popups.push({ text: tx('life'), x: 0, y: -.55, z: 0, age: 0, life: 1.4, color: '#e6d05f' });
    else if (e.type === 'level') setBanner(`${tx('level')} ${e.level}`, 1.8);
    else if (e.type === 'gust') { gustInfo = e.stage === 'end' ? null : { dirX: e.dirX, dirY: e.dirY, stage: e.stage }; if (e.stage === 'warn') showTip('gust', tx('tipGust')); }
    else if (e.type === 'enemy') showTip('enemy', tx('tipEnemy'));
-   else if (e.type === 'ultReady') { const key = game.weapon || game.roll ? 'E' : tx('spaceKey'); popups.push({ text: coarse ? tx('ultReady') : `${tx('ultReady')} · ${key}`, x: 0, y: -1, z: 0, age: 0, life: 1.6, color: '#fff2b0' }); showTip('ult', tx('tipUlt'), true); }
+   else if (e.type === 'ultReady') {      // the words once a flight; after that the glowing button says it
+    if (!toldUlt) { toldUlt = true; const key = game.weapon || game.roll ? 'E' : tx('spaceKey'); popups.push({ text: coarse ? tx('ultReady') : `${tx('ultReady')} · ${key}`, x: 0, y: -1, z: 0, age: 0, life: 1.6, color: '#fff2b0' }); }
+    showTip('ult', tx('tipUlt'));
+   }
    else if (e.type === 'ultDenied') { popups.push({ text: tx('noTargets'), x: 0, y: -1, z: 0, age: 0, life: 1.1, color: '#e07b4f' }); ultBtn.classList.remove('is-denied'); void ultBtn.offsetWidth; ultBtn.classList.add('is-denied'); }
    else if (e.type === 'ult') {
     for (const t of e.targets) {
      beams.push({ x: t.x, y: t.y, z: t.z, age: 0, life: .45, thin: false });
      rings.push({ x: t.x, y: t.y, r: t.r * 1.8, age: 0, life: .6, color: '#fff2b0' });
      burst(t.x, t.y, 18, 150, 0);
-     popups.push({ text: `${tx('shot')} +${Math.round(e.points / e.targets.length)}`, x: t.x, y: t.y, z: 0, age: 0, life: 1.3, color: '#fff2b0' });
     }
+    award(e.points, true);
     if (!reduced) { flash.classList.remove('is-miss', 'is-ult'); void flash.offsetWidth; flash.classList.add('is-ult'); cam.kick = .04; }
    } else if (e.type === 'shot') {
     beams.push({ x: e.x, y: e.y, z: e.z, age: 0, life: .22, thin: true });
     rings.push({ x: e.x, y: e.y, r: e.r * 1.6, age: 0, life: .5, color: '#fff2b0' });
     burst(e.x, e.y, 14, 130, 0);
-    popups.push({ text: `${tx('shot')} +${e.points}`, x: e.x, y: e.y, z: 0, age: 0, life: 1.2, color: '#fff2b0' });
+    award(e.points, true);
    } else if (e.type === 'shotMiss') {
     const p = pointerScreen(); tracers.push({ x: p.x, y: p.y, age: 0, life: .16 });
    } else if (e.type === 'bonus') {
-    popups.push({ text: `${tx('bonus')} +${e.points}`, x: e.x, y: e.y, z: 0, age: 0, life: 1.1, color: '#9ff0dc' });
+    award(e.points);
     rings.push({ x: e.x, y: e.y, r: e.r, age: 0, life: .45, color: '#8fe3d0' });
     burst(e.x, e.y, 10, 90);
    } else if (e.type === 'box') {
-    popups.push({ text: `${e.full ? tx('slotFull') : tx('box')} +${e.points}`, x: e.x, y: e.y, z: 0, age: 0, life: 1.1, color: '#ffc45a' });
+    award(e.points);
     rings.push({ x: e.x, y: e.y, r: CFG.boxR, age: 0, life: .45, color: '#ffc45a' });
     burst(e.x, e.y, 12, 110);
    } else if (e.type === 'weapon') {
@@ -1005,12 +1018,11 @@
     burst(game.plane.x, game.plane.y, 22, 130);
    } else if (e.type === 'feather') burst(e.x, e.y, 5, 60);
    else if (e.type === 'destroy') {
-    popups.push({ text: `${e.tnt ? tx('tnt') : e.kind === 'enemy' ? tx('shot') : tx('smashed')} +${e.points}`, x: e.x, y: e.y, z: e.z, age: 0, life: 1.2, color: '#fff2b0' });
+    award(e.points);
     rings.push({ x: e.x, y: e.y, r: e.r * (e.tnt ? 2.4 : 1.5), age: 0, life: .5, color: e.tnt ? '#ff9d52' : '#fff2b0' });
     burst(e.x, e.y, e.tnt ? 26 : 14, 130, e.z);
     if (e.tnt) audio.boom(.3);
    } else if (e.type === 'repel') {
-    popups.push({ text: tx('repelled'), x: e.x, y: e.y, z: e.z, age: 0, life: .9, color: '#a9e8ff' });
     rings.push({ x: e.x, y: e.y, r: .7, age: 0, life: .45, color: '#8fe3ff' });
    } else if (e.type === 'gunShot') { shotSide = -shotSide; shots.push({ x: e.x, y: e.y, z: e.z, side: shotSide, age: 0, life: .09 }); }
    else if (e.type === 'forgiven') {
@@ -1018,7 +1030,7 @@
    } else if (e.type === 'sprint') {
     if (e.stage === 'warn') { setBanner(tx('sprintWarn'), 1.5); showTip('sprint', tx('tipSprint'), false, 2); }
     else if (e.stage === 'start') { setBanner(`${tx('sprint')} ×${e.peak.toFixed(1)}`, 1.5); cam.kick = (Math.random() < .5 ? -1 : 1) * .025; }
-    else if (e.clean) popups.push({ text: `${tx('sprintClean')} +${e.bonus}`, x: 0, y: .95, z: 0, age: 0, life: 1.7, color: '#fff2b0' });
+    else if (e.clean) award(e.bonus, true);
    } else if (e.type === 'wind') setBanner(tx('windShift'), 1.6);
    else if (e.type === 'mode') {
     firing = false;
@@ -1088,6 +1100,7 @@
   if (mode === 'run' && lastPointer !== 'touch' && !inside && state.pointerId === null && !keyPlay) { away += dt; if (away > AWAY) { away = 0; pause('away'); } }
   else away = 0;
   if (goBanner > 0) goBanner -= dt;
+  if (gainLeft > 0 && (gainLeft -= dt) <= 0) endGain();
   if (banner && (banner.age += dt) >= banner.life) banner = null;
   if (tipTimer > 0 && (tipTimer -= dt) <= 0) nextTip();
   for (const list of [popups, rings, sparks, beams, tracers, shots]) {
@@ -1134,7 +1147,8 @@
   if (isNext) {
    ctx.beginPath(); ctx.moveTo(gm.x - 5, gm.y); ctx.lineTo(gm.x + 5, gm.y); ctx.moveTo(gm.x, gm.y - 4); ctx.lineTo(gm.x, gm.y + 4); ctx.stroke();
    ctx.font = `700 ${Math.max(9, Math.min(12, gm.s * .17))}px ${MONO}`; ctx.textAlign = 'center'; ctx.fillStyle = '#d9cf8a';
-   ctx.fillText(gate.approach ? `${tx('final')} ${gate.index}/${CFG.landing.gates}` : `WP ${pad(gate.n, 2)}`, gm.x, gm.y - gate.r * gm.s * .83 - 9);
+   const above = gm.y - gate.r * gm.s * .83 - 9;      // near the top the middle of the card speaks there: the name goes under the ring
+   ctx.fillText(gate.approach ? `${tx('final')} ${gate.index}/${CFG.landing.gates}` : `WP ${pad(gate.n, 2)}`, gm.x, above < LABEL_TOP ? gm.y + gate.r * gm.s * .83 + 17 : above);
   }
   ctx.restore();
  }
@@ -1276,7 +1290,7 @@
   if (W.speed < .2 || mode === 'over') return;
   const n = Math.min(STREAKS.length, Math.round(5 + W.speed * 6)), dx = Math.cos(W.dir), dy = -Math.sin(W.dir), t = game.time, k = W.speed * .2;
   ctx.save(); ctx.lineCap = 'round'; ctx.lineWidth = 1; ctx.strokeStyle = '#d3d889';
-  ctx.globalAlpha = Math.min(.4, (.07 + .04 * W.speed) * (W.gust ? 1.7 : 1));
+  ctx.globalAlpha = W.gust ? Math.min(.34, (.07 + .04 * W.speed) * 1.5) : Math.min(.2, .04 + .022 * W.speed);      // faint in the steady wind, clearer in a gust
   ctx.beginPath();
   for (let i = 0; i < n; i++) {
    const s = STREAKS[i], x = (((s.u + t * dx * k * s.s) % 1) + 1) % 1 * state.w, y = state.h * .1 + (((s.v + t * dy * k * s.s) % 1) + 1) % 1 * state.h * .8, len = (8 + W.speed * 9) * s.s;
@@ -1329,8 +1343,8 @@
  function drawRival(ctx, o) {
   const gm = worldToPixels(o.x, o.y, o.z), alpha = fade(o.z), r = .5 * gm.s;
   if (alpha <= .01) return;
-  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(gm.x, gm.y);
-  ctx.strokeStyle = '#9fd8ff'; ctx.fillStyle = 'rgba(120,200,255,.16)'; ctx.lineWidth = 1.6; ctx.lineJoin = 'round'; ctx.shadowColor = 'rgba(120,200,255,.7)'; ctx.shadowBlur = 8;
+  ctx.save(); ctx.globalAlpha = alpha * RIVAL_ALPHA; ctx.translate(gm.x, gm.y);      // a rival is no danger: it stays in the background
+  ctx.strokeStyle = '#9fd8ff'; ctx.fillStyle = 'rgba(120,200,255,.1)'; ctx.lineWidth = 1.3; ctx.lineJoin = 'round'; ctx.shadowColor = 'rgba(120,200,255,.6)'; ctx.shadowBlur = 3;
   ctx.beginPath(); ctx.moveTo(-1.5 * r, .1 * r); ctx.lineTo(-.2 * r, -.12 * r); ctx.lineTo(.2 * r, -.12 * r); ctx.lineTo(1.5 * r, .1 * r); ctx.lineTo(.25 * r, .2 * r); ctx.lineTo(-.25 * r, .2 * r); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(0, -.1 * r); ctx.lineTo(-.55 * r, -.7 * r); ctx.moveTo(0, -.1 * r); ctx.lineTo(.55 * r, -.7 * r); ctx.stroke();
   if (o.named) { ctx.shadowBlur = 0; ctx.fillStyle = '#d6efff'; ctx.font = `700 ${Math.max(8, Math.min(11, gm.s * .16))}px ${MONO}`; ctx.textAlign = 'center'; ctx.fillText(`+${Math.round(o.lead)} ${tx('metres')}`, 0, -.95 * r - 4); }
@@ -1545,7 +1559,7 @@
    if (p.state !== 'ahead' || p.z <= 0 || p.z > reach) continue;
    const push = game.wind.sx * CFG.ringWind, x = bound(p.x + push * p.z / speed, -game.fieldX, game.fieldX), gm = worldToPixels(x, p.y, 0), k = bound(1 - p.z / reach, 0, 1), box = p.kind === 'box';
    const r = (box ? p.r + CFG.boxReach : (p.r + CFG.featherReach) * .45) * gm.s;
-   ctx.save(); ctx.globalAlpha = .25 + .6 * k; ctx.lineWidth = 1.2; ctx.strokeStyle = box ? '#ffc45a' : '#cfeffd'; ctx.setLineDash(box ? [5, 5] : [3, 3]);
+   ctx.save(); ctx.globalAlpha = box ? .18 + .45 * k : .1 + .3 * k; ctx.lineWidth = 1.1; ctx.strokeStyle = box ? '#ffc45a' : '#cfeffd'; ctx.setLineDash(box ? [5, 5] : [3, 3]);      // fainter than the red marks of what hurts
    ctx.beginPath();
    if (box) { ctx.moveTo(gm.x - r, gm.y - r * .83); ctx.lineTo(gm.x + r, gm.y - r * .83); ctx.lineTo(gm.x + r, gm.y + r * .83); ctx.lineTo(gm.x - r, gm.y + r * .83); }
    else { ctx.moveTo(gm.x, gm.y - r); ctx.lineTo(gm.x + r, gm.y); ctx.lineTo(gm.x, gm.y + r); ctx.lineTo(gm.x - r, gm.y); }
