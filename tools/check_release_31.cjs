@@ -6,12 +6,18 @@ const read=p=>fs.readFileSync(p,'utf8');
 const window={};vm.runInNewContext(read('data/changelog/3.1.js'),{window});
 const r=window.AtlasRelease31;
 assert.equal(r.version,'3.1');assert.equal(r.id,'release-3-1');assert.equal(r.channel,'UPDATE');
-assert.equal(r.changes.length,11,'the wind in the navigation, the modes, the NOAID_WIND bits, the GPS wind carry-over, no learning, the recommendations, the harm and nuances, the OSD, the configurator warning, the base 4.7.3, the validation');
+const revision=r.changes.slice(0,7), base=r.changes.slice(7);
+assert.equal(base.length,11,"the original wind, OSD, base and validation entries");
+const revisionTopics=[/EKF3.*SITL/, /EKF3.*GPS/, /EKF3.*GPS/, /ARMING_THR_PWM/, /NOAID_SOFT_LCH/, /NOAID_SOFT_LAND/, /FlightGear.*TAS/];
 const texts=[];
 const titles={ru:[/Ветер в наведении без GPS/,/режимы затронуты/,/Параметр NOAID_WIND/,/Перенос ветра из GPS/,/Без обучения/,/Рекомендации/,/вредно/,/OSD/,/предупреждение/,/ArduPlane 4\.7\.3/,/Проверки 3\.1/],uk:[/Вітер у наведенні без GPS/,/режими зачеплено/,/Параметр NOAID_WIND/,/Перенесення вітру з GPS/,/Без навчання/,/Рекомендації/,/шкідливо/,/OSD/,/попередження/,/ArduPlane 4\.7\.3/,/Перевірки 3\.1/],en:[/Wind in the navigation without GPS/,/modes are affected/,/NOAID_WIND parameter/,/Carrying the GPS wind over/,/Without learning/,/Recommendations/,/hurts/,/OSD/,/warning/,/ArduPlane 4\.7\.3/,/3\.1 validation/]};
 for(const lang of ['ru','uk','en']){
  for(const label of ['hint','baseLabel','modLabel','sourceLabel'])assert.ok(r[label][lang].length>10,label+' '+lang);
- r.changes.forEach((c,i)=>{assert.equal(c[lang].length,3);assert.ok(c[lang].every(t=>t.trim().length>20));assert.match(c[lang][0],titles[lang][i],lang+': title of item '+(i+1));texts.push(...c[lang]);});
+ assert.ok(r.revisionNotice[lang].includes("3.1"),lang+": revision status");
+ revision.forEach((c,i)=>{assert.equal(c[lang].length,3);assert.ok(c[lang].every(t=>t.trim().length>20));assert.match(c[lang][0],revisionTopics[i]);});
+ assert.match(revision[0][lang][2],/1[,.]12/,lang+": observed SITL position drift");
+ for(const token of ["RCMAP_THROTTLE","ARMING_THR_PWM","1050"])assert.ok(revision[3][lang][2].includes(token),lang+": "+token);
+ base.forEach((c,i)=>{assert.equal(c[lang].length,3);assert.ok(c[lang].every(t=>t.trim().length>20));assert.match(c[lang][0],titles[lang][i],lang+': title of item '+(i+1));texts.push(...c[lang]);});
  texts.push(r.hint[lang]);
  assert.match(r.hint[lang],/SITL/,lang+': the hint states how the version was tested');
  assert.ok(({ru:/ЭКСПЕРИМЕНТАЛЬНО/,uk:/ЕКСПЕРИМЕНТАЛЬНО/,en:/EXPERIMENTAL/})[lang].test(r.hint[lang]),lang+': the hint opens with the experimental notice');
@@ -20,7 +26,7 @@ for(const lang of ['ru','uk','en']){
  assert.ok(/\d+ (полётов|полёта|полёт|польотів|польоти|політ|flights)/.test(all),lang+': the validation item gives the number of flights');
  assert.ok(!/{{[A-Z]+}}/.test(all),lang+': no placeholder is left in the public text');
  // how and why it works, recommendations, harm, nuances: the words that must be there
- const item=i=>r.changes[i][lang].join(' ');
+ const item=i=>base[i][lang].join(' ');
  for(const name of ['NOAID_WIND','NOAID_WAGE','FBWA','GSPD','NWD','AUTO','RTL','GUIDED','LOITER','TAKEOFF','CRUISE'])assert.ok(all.includes(name),lang+': '+name);
  assert.ok(({ru:/экспериментальн/i,uk:/експериментальн/i,en:/experimental/i})[lang].test(item(0)),lang+': the first item says that the function is experimental');
  assert.ok(({ru:/не заменяет GPS/,uk:/не замінює GPS/,en:/does not replace GPS/})[lang].test(item(6)),lang+': the harm item says that it does not replace GPS');
