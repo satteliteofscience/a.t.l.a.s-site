@@ -23,6 +23,22 @@ window.AtlasFaq20=[
   en:[`What does the one-hour SITL flight show, and can it be trusted?`,`The same programme flown twice under identical conditions: EKF3 NoAID G.L.O.B.A.L. and the ordinary DCM. Launch from a catapult without GPS, rolls and rotations without GPS, a storm, wind up to 15 m/s, the GPS appearing and disappearing on a schedule. Horizon error: EKF3 1.6° RMS (2.1° in rolls and rotations), DCM 17.8° (38.9°). Position error without GPS: median 842 m against 1780 m, maximum 3.4 km against 6.3 km. It is a simulation recording with an approximate 7.2 kg model and a perfect GPS; the pilot script sees the true position. It is not flight testing: the result on a real aircraft must be checked separately. The test parameters, the map and the events are on the recording page.`]},
 
  // ------------------------------------------------------------------ EKF3 G.L.O.B.A.L.
+ {
+   "id": "noaid-gps-arm-checks",
+   "cat": "global",
+   "ru": [
+     "Как пропустить проверки GPS1 и GPS2 при ARM в NoAID?",
+     "Установи ARMING_SKIPCHK = 4104, если нужны только пропуски GPS. Это 8 (GPS lock, в том числе Bad fix) плюс 4096 (GPS Configuration, в том числе still configuring this GPS). Маска действует на GPS1 и GPS2. Если в маске уже есть другие биты, добавь оба GPS-бита в редакторе маски или нажми «Добавить два GPS-бита» в карточке EKF3 G.L.O.B.A.L. конфигуратора. Если EKF3 всё ещё сообщает AHRS: EK3 sources require GPS, проверь выбранный набор источников. Для старта с предварительным GPS-фиксом дождись установки Home и EKF Origin перед отключением GPS."
+   ],
+   "uk": [
+     "Як пропустити перевірки GPS1 і GPS2 під час ARM у NoAID?",
+     "Встанови ARMING_SKIPCHK = 4104, якщо потрібно пропустити лише перевірки GPS. Це 8 (GPS lock, зокрема Bad fix) плюс 4096 (GPS Configuration, зокрема still configuring this GPS). Маска діє на GPS1 і GPS2. Якщо маска вже містить інші біти, додай обидва біти GPS у редакторі маски або натисни «Додати два біти GPS» у картці EKF3 G.L.O.B.A.L. конфігуратора. Якщо EKF3 досі повідомляє AHRS: EK3 sources require GPS, перевір вибраний набір джерел. Для старту з попереднім GPS-фіксом дочекайся встановлення Home та EKF Origin перед вимкненням GPS."
+   ],
+   "en": [
+     "How do I skip GPS1 and GPS2 checks when arming in NoAID?",
+     "Set ARMING_SKIPCHK = 4104 if GPS checks are the only checks you want to skip. It combines 8 (GPS lock, including Bad fix) and 4096 (GPS Configuration, including still configuring this GPS). The mask covers GPS1 and GPS2. If other bits are already set, add both GPS bits in the mask editor or use “Add both GPS skip bits” in the configurator’s EKF3 G.L.O.B.A.L. card. If EKF3 still reports AHRS: EK3 sources require GPS, check the selected source set. For a launch with an initial GPS fix, wait until Home and EKF Origin are set before switching GPS off."
+   ]
+ },
  {id:'global-what',cat:'global',
   ru:[`Что такое EKF3 NoAID G.L.O.B.A.L. и из чего он состоит?`,`Это три опции EKF3 в версии 2.0 вокруг режима без GPS. EK3_NOAID_POS: положение для навигации и карты берётся из счисления EKF3, а не от GPS. EK3_NOAID_GPS: положение GPS показывается отдельной меткой (AHRS2, «таблетка» на карте) только для отображения. EK3_NOAID_AUTO: когда GPS хороший, EKF3 сам переходит на набор источников EK3_SRC2 (GPS) и следует за спутниками, а при потере GPS возвращается к EK3_SRC1 (NoAID). По умолчанию все три равны 0, то есть поведение прежнее; они работают при AHRS_GPS_USE не равном 0. Включаются профилем в конфигураторе.`],
   uk:[`Що таке EKF3 NoAID G.L.O.B.A.L. і з чого він складається?`,`Це три опції EKF3 у версії 2.0 навколо режиму без GPS. EK3_NOAID_POS: позиція для навігації та мапи береться зі лічби EKF3, а не від GPS. EK3_NOAID_GPS: позиція GPS показується окремою міткою (AHRS2, «таблетка» на мапі) лише для відображення. EK3_NOAID_AUTO: коли GPS хороший, EKF3 сам переходить на набір джерел EK3_SRC2 (GPS) і слідує за супутниками, а при втраті GPS повертається до EK3_SRC1 (NoAID). За замовчуванням усі три дорівнюють 0, тобто поведінка попередня; вони працюють при AHRS_GPS_USE, не рівному 0. Вмикаються профілем у конфігураторі.`],

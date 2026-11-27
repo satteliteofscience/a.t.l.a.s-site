@@ -727,6 +727,7 @@ window.AtlasCC = Object.freeze({
       if(!core.valid(name,value))throw Error(`Invalid G.L.O.B.A.L. profile parameter: ${name}=${value}`);
       const p=state.params.get(name);
       if(!p)throw Error(`${name}: not present on FC`);
+      if(name===core.GPS_SKIP_PARAM&&value!==core.gpsSkipTarget(p.value))throw Error('GPS skip mask changed. Review the current value and try again.');
       if(p.value!==value)changes.push({name,value,type:p.type});
     }
     const generation=txGeneration;
@@ -737,7 +738,10 @@ window.AtlasCC = Object.freeze({
         if(txGeneration!==generation||!state.connected||state.armed!==false||Date.now()-state.lastHeartbeat>=4000)throw Error('Disconnected or ARM state changed');
         onProgress({done,total:changes.length,name:change.name});
         // PARAM_VALUE echoes the accepted value; success is reported only after it arrives.
-        await writeParameterWithAck(change.name,change.value,change.type);
+        if(change.name===core.GPS_SKIP_PARAM&&change.value!==core.gpsSkipTarget(state.params.get(change.name)?.value))
+          throw Error('GPS skip mask changed. Review the current value and try again.');
+        const echoed=await writeParameterWithAck(change.name,change.value,change.type);
+        if(change.name===core.GPS_SKIP_PARAM&&echoed!==change.value)throw Error('GPS skip mask was not confirmed');
         done++;
       }
       onProgress({done,total:changes.length,name:''});

@@ -4,6 +4,9 @@
  * diffed and written without them, so the profile keeps working on 2.0 and 2.1. */
 ((root,factory)=>{const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.AtlasGlobalCore=api;})(globalThis,()=>{
  'use strict';
+ const GPS_SKIP_PARAM='ARMING_SKIPCHK';
+ const GPS_SKIP_MASK=(1<<3)|(1<<12);
+ const isMask=value=>Number.isInteger(value)&&value>=-2147483648&&value<=2147483647;
  const OPTIONS=Object.freeze(['EK3_NOAID_POS','EK3_NOAID_GPS','EK3_NOAID_AUTO']);
  /** Firmware 2.2: the operator correction from the station (the EKF3 correction button) and the height tie to HOME on the ground. */
  const CORRECTION=Object.freeze(['EK3_MAV_POS','EK3_MAV_HGT']);
@@ -21,7 +24,16 @@
   EK3_SRC1_POSXY:[0,6],EK3_SRC1_POSZ:[0,3],EK3_SRC1_VELXY:[0,6],EK3_SRC1_VELZ:[0,6],EK3_SRC1_YAW:[0,8],
   EK3_SRC2_POSXY:[0,6],EK3_SRC2_POSZ:[0,3],EK3_SRC2_VELXY:[0,6],EK3_SRC2_VELZ:[0,6],EK3_SRC2_YAW:[0,8]
  });
- const valid=(name,value)=>{const s=specs[name];return !!s&&Number.isFinite(value)&&value>=s[0]&&value<=s[1]&&(name==='EK3_NOAID_M_NSE'||Number.isInteger(value));};
+ const valid=(name,value)=>{
+  if(name===GPS_SKIP_PARAM)return isMask(value)&&Math.fround(value)===value&&(value&GPS_SKIP_MASK)===GPS_SKIP_MASK;
+  const s=specs[name];
+  return !!s&&Number.isFinite(value)&&value>=s[0]&&value<=s[1]&&(name==='EK3_NOAID_M_NSE'||Number.isInteger(value));
+ };
+ function gpsSkipTarget(current){
+  if(!isMask(current))return null;
+  const target=current|GPS_SKIP_MASK;
+  return valid(GPS_SKIP_PARAM,target)?target:null;
+ }
  const value=(params,name)=>{const p=params.get(name);return p&&Number.isFinite(p.value)?p.value:null;};
  /** Firmware 2.0 has the three new options; older firmware does not. */
  function supported(params){return OPTIONS.every(name=>params.has(name));}
@@ -38,5 +50,5 @@
  /** The updates that switch the three options off (EK3_NOAID_AUTO first), nothing else is touched. */
  const disableUpdates=()=>Object.fromEntries(['EK3_NOAID_AUTO','EK3_NOAID_GPS','EK3_NOAID_POS'].map(name=>[name,0]));
  const applyUpdates=params=>Object.fromEntries(diff(params).map(({name,target})=>[name,target]));
- return Object.freeze({OPTIONS,CORRECTION,PROFILE,specs,valid,supported,diff,status,disableUpdates,applyUpdates});
+ return Object.freeze({OPTIONS,CORRECTION,PROFILE,GPS_SKIP_PARAM,gpsSkipTarget,specs,valid,supported,diff,status,disableUpdates,applyUpdates});
 });

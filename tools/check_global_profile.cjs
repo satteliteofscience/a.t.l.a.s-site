@@ -51,6 +51,17 @@ assert.deepEqual(writeOrder.slice(-3),['EK3_NOAID_POS','EK3_NOAID_GPS','EK3_NOAI
 // a board that lacks some of the parameters is only diffed on the ones it has
 assert.equal(core.diff(P({...full,EK3_SRC2_YAW:undefined})).some(x=>x.name==='EK3_SRC2_YAW'),true);
 
+// GPS arming skips are an explicit action that merges into the live mask.
+assert.equal(core.GPS_SKIP_PARAM,'ARMING_SKIPCHK');
+assert.equal(core.gpsSkipTarget(0),4104);
+assert.equal(core.gpsSkipTarget(8),4104);
+assert.equal(core.gpsSkipTarget((1<<19)|4),528396);
+assert.equal(core.gpsSkipTarget(4108),4108);
+assert.equal(core.gpsSkipTarget(-1),-1);
+for(const invalid of [undefined,null,NaN,8.5,16777217,2147483648])assert.equal(core.gpsSkipTarget(invalid),null);
+assert.equal(core.valid('ARMING_SKIPCHK',4096),false);
+assert.deepEqual(core.applyUpdates(P({...full,ARMING_SKIPCHK:0})),{});
+
 // wiring: the core loads before configurator.js, the card after the O.R.D.E.R. card, the API call exists and re-validates every value
 const html=read('configurator.html'),cfg=read('js/configurator/configurator.js'),ui=read('js/configurator/global-profile-ui.js');
 const scripts=[...html.matchAll(/<script src="([^"?]+)/g)].map(m=>m[1]);
