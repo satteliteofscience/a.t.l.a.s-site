@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1209">
+  <meta name="description" content="Справочник параметров EKF3 NoAID, П.Р.И.К.А.З., взлёта, зумера и VTX в прошивке A.T.L.A.S.">
+  <title>A.T.L.A.S EKF3 NoAID параметры</title>
+  <link rel="canonical" href="https://satteliteofscience.github.io/a.t.l.a.s-site/noaid-parameters.html">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="css/styles.css?v=anchors-1">
+  <link rel="stylesheet" href="css/changelog.css?v=anchors-1">
+  <link rel="stylesheet" href="css/noaid-parameters.css?v=1">
+  <script src="js/site/frame-guard.js" defer></script>
+  <script src="data/noaid-parameters.js?v=1" defer></script>
+  <script src="js/site/noaid-parameters.js?v=1" defer></script>
+</head>
+<body class="ch-body noaid-page">
+  <header class="ch-head">
+    <a class="ch-brand" href="index.html">A.T.L.A.S.</a>
+    <nav class="ch-nav" id="primaryNavigation" aria-label="Навигация">
+      <a id="homeLink" href="index.html">Главная</a>
+      <a id="changeLink" href="changelog.html">Список изменений</a>
+      <a id="configLink" href="configurator.html">Конфигуратор</a>
+    </nav>
+    <div class="ch-lang" id="languagePicker" role="group" aria-label="Язык">
+      <button type="button" data-language="uk" lang="uk" aria-label="Українська">UA</button>
+      <button type="button" data-language="en" lang="en" aria-label="English">ENG</button>
+      <button type="button" data-language="ru" lang="ru" aria-label="Русский">RU</button>
+    </div>
+  </header>
+  <main class="ch-container">
+    <div class="ch-single-panel">
+      <p class="ch-eyebrow">ARDUPLANE 4.7.3</p>
+      <h1 id="referenceTitle">A.T.L.A.S EKF3 NoAID параметры</h1>
+      <p class="ch-intro" id="referenceIntro">Справочник настроек счисления без GPS, взлёта, посадки и периферии.</p>
+      <p class="noaid-release-note" id="revisionNotice">Мягкий взлёт и мягкая посадка описаны для подготовленной редакции 3.1.</p>
+      <section class="noaid-limits" id="limitations" aria-labelledby="limitationsTitle">
+        <h2 id="limitationsTitle">Ограничения без внешнего позиционирования</h2>
+        <ul id="limitationItems"></ul>
+      </section>
+      <nav id="parameterGroups" class="noaid-groups" aria-label="Группы параметров"></nav>
+      <div class="noaid-filter">
+        <label id="searchLabel" for="parameterSearch">Найти параметр</label>
+        <input id="parameterSearch" type="search" placeholder="Например, NOAID_SOFT_LAND" autocomplete="off" spellcheck="false">
+        <p id="noaidResults" role="status" aria-live="polite"></p>
+      </div>
+      <div id="parameterEntries"></div>
+      <noscript>Для поиска и отображения справочника требуется JavaScript.</noscript>
+    </div>
+  </main>
+</body>
+</html>

@@ -225,3 +225,27 @@ window.AtlasRelease31 = {
     "en": "Files containing verified changes"
   }
 };
+
+// AI-assisted. In-place revision of 3.1, without changing archived releases.
+window.AtlasRelease31.revisionNotice = {
+  ru: 'Три первых пункта описывают подготовленную редакцию 3.1. Сейчас в каталоге скачивается предыдущая сборка 3.1.',
+  uk: 'Перші три пункти описують підготовлену редакцію 3.1. Зараз у каталозі завантажується попередня збірка 3.1.',
+  en: 'The first three entries describe the prepared 3.1 revision. The catalog currently serves the previous 3.1 build.'
+};
+window.AtlasRelease31.changes.unshift(
+  {
+    ru: ['NOAID_SOFT_LCH · мягкий взлёт', 'Подтверждение запуска TAS опиралось на резкий продольный импульс.', 'Дополнительная ветка подтверждает плавный разгон по IMU, затем проверяет набор по барометру и вертикальный отклик IMU. Опция выключена по умолчанию и действует в обычных самолётных режимах.'],
+    uk: ['NOAID_SOFT_LCH · м’який зліт', 'Підтвердження запуску TAS спиралося на різкий поздовжній імпульс.', 'Додаткова гілка підтверджує плавний розгін за IMU, далі перевіряє набір за барометром і вертикальний відгук IMU. Опцію вимкнено за замовчуванням, вона діє у звичайних літакових режимах.'],
+    en: ['NOAID_SOFT_LCH · soft launch', 'TAS launch confirmation depended on a sharp forward impulse.', 'An optional path confirms sustained forward acceleration and then checks barometric climb and vertical IMU motion. It is off by default and applies in normal fixed-wing modes.']
+  },
+  {
+    ru: ['NOAID_SOFT_LAND · посадка в нескольких режимах', 'Посадочное удержание для ручного полёта было привязано к FBWA. Автоматическая посадка имела собственный путь.', 'При включённой опции общая трёхсекундная проверка доступна в FBWA, STABILIZE, MANUAL и на завершённой фазе LAND режимов AUTO и AUTOLAND. Она требует торможения, малого газа и устойчивой барометрической высоты рядом с посадочной отметкой. Уход на второй круг отменяет проверку. DISARM завершает цикл TAS.'],
+    uk: ['NOAID_SOFT_LAND · посадка в кількох режимах', 'Посадкове утримання для ручного польоту було прив’язане до FBWA. Автоматична посадка мала власний шлях.', 'За ввімкненої опції спільна трисекундна перевірка доступна у FBWA, STABILIZE, MANUAL і на завершеній фазі LAND режимів AUTO та AUTOLAND. Потрібні гальмування, малий газ і стала барометрична висота біля посадкової позначки. Вихід на друге коло скасовує перевірку. DISARM завершує цикл TAS.'],
+    en: ['NOAID_SOFT_LAND · multi-mode landing', 'Pilot-controlled landing hold was tied to FBWA. Automatic landing had its own path.', 'When enabled, the shared three-second check applies in FBWA, STABILIZE, MANUAL and the completed LAND phase of AUTO and AUTOLAND. It requires braking, low throttle and steady barometric height near the landing reference. A go-around cancels the check. DISARM ends the TAS cycle.']
+  },
+  {
+    ru: ['FlightGear и проверка переходов TAS', 'Состояние TAS при плавном пробеге и повторном взлёте требовало отдельной проверки.', 'На модели 7,2 кг проверены посадки без GPS, низкие проходы, уходы на второй круг и повторный взлёт после удержания. В трёх контрольных AUTO-посадках с боковым ветром 5 м/с дважды сработало удержание до DISARM, в одном прогоне TAS сбросилась при DISARM. В FlightGear положение модели у земли согласовано с рельефом сцены. Пито, GSPD и углы оценки выведены на OSD.'],
+    uk: ['FlightGear і перевірка переходів TAS', 'Стан TAS під час плавного пробігу та повторного зльоту потребував окремої перевірки.', 'На моделі 7,2 кг перевірено посадки без GPS, низькі проходи, вихід на друге коло та повторний зліт після утримання. У трьох контрольних AUTO-посадках із боковим вітром 5 м/с утримання двічі спрацювало до DISARM, в одному прогоні TAS скинулася під час DISARM. У FlightGear положення моделі біля землі узгоджено з рельєфом сцени. Піто, GSPD і кути оцінки виведено на OSD.'],
+    en: ['FlightGear and TAS transition checks', 'TAS behaviour during smooth rollout and relaunch needed separate testing.', 'The 7.2 kg model was used for GPS-denied landings, low passes, go-arounds and relaunch after ground hold. Ground hold engaged before DISARM in two of three AUTO landings with a 5 m/s crosswind. In the third run, TAS reset at DISARM. The FlightGear rendering follows the scene terrain near the ground. The OSD displays Pitot airspeed, GSPD and estimated attitude.']
+  }
+);

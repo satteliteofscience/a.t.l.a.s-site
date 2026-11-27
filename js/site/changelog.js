@@ -30,6 +30,8 @@ function renderRelease(release,u){
   head.append(version,add('p','ch-release-sub',release.hint?.[lang] ?? u.versionHint));
   group.append(head);
   const content=add('div','ch-release-content');group.append(content);
+  const revisionNotice=release.revisionNotice?.[lang];
+  if(revisionNotice){const notice=add('p','ch-experimental',revisionNotice);notice.setAttribute('role','note');content.append(notice);}
   if(release.version==='3.1'){const warn=add('div','ch-experimental');warn.setAttribute('role','note');warn.append(add('b','',EXPERIMENTAL[lang].label),add('p','',EXPERIMENTAL[lang].text));content.append(warn);}
   if(release.version==='2.1'){const demo=add('a','ch-sitl-cta',({ru:'45 минут: EKF3 и DCM · запись SITL и измеренные результаты ↗',uk:'45 хвилин: EKF3 та DCM · запис SITL і виміряні результати ↗',en:'45 minutes: EKF3 and DCM · SITL recording and measured results ↗'})[lang]);demo.href='sitl-demo-21.html';content.append(demo);}
   if(release.version==='3.0'){const demo=add('a','ch-sitl-cta',({ru:'SITL над Днепром: 45 минут 2.2 и 3.0, разные ветры, штиль · записи и результаты проверки ↗',uk:'SITL над Дніпром: 45 хвилин 2.2 і 3.0, різні вітри, штиль · записи й результати перевірки ↗',en:'SITL over Dnipro: 45 minutes of 2.2 and 3.0, different winds, calm air · recordings and validation results ↗'})[lang]);demo.href='sitl-demo-30.html';content.append(demo);}
@@ -66,6 +68,7 @@ function renderRelease(release,u){
 
 function render(){
   const u=UI[lang];
+  $('chNoaidParameters').textContent=({ru:'Параметры NoAID',uk:'Параметри NoAID',en:'NoAID parameters'})[lang];
   document.documentElement.lang=lang;
   window.dispatchEvent(new CustomEvent('atlas:languagechange',{detail:{lang}}));
   $('chHome').textContent=u.home;

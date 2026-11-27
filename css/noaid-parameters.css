@@ -1,0 +1,132 @@
+.noaid-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin: 1.2rem 0 1.7rem;
+}
+
+.noaid-groups a {
+  border: 1px solid #777044;
+  border-radius: 3px;
+  color: #e5d79b;
+  padding: .45rem .7rem;
+  text-decoration: none;
+}
+
+.noaid-groups a:hover,
+.noaid-groups a:focus-visible {
+  background: #2f321a;
+  color: #fff2b5;
+}
+
+.noaid-limits {
+  background: #24231a;
+  border-inline-start: 3px solid #b7a469;
+  margin: 1.1rem 0 1.4rem;
+  padding: .85rem 1rem;
+  scroll-margin-top: 7rem;
+}
+
+.noaid-limits h2 {
+  font-size: 1.08rem;
+  margin: 0 0 .45rem;
+}
+
+.noaid-limits ul {
+  line-height: 1.5;
+  margin: 0;
+  padding-inline-start: 1.15rem;
+}
+
+.noaid-limits li + li { margin-top: .4rem; }
+
+.noaid-release-note {
+  color: #d8c995;
+  font-size: .9rem;
+  margin: .65rem 0;
+}
+
+.noaid-filter {
+  display: grid;
+  gap: .4rem;
+  margin-bottom: 1.1rem;
+  max-width: 39rem;
+}
+
+.noaid-filter input {
+  background: #171e12;
+  border: 1px solid #777044;
+  border-radius: 3px;
+  color: #f6ebb7;
+  font: inherit;
+  min-width: 0;
+  padding: .65rem .8rem;
+}
+
+.noaid-filter p {
+  color: #c6c4a1;
+  font-size: .9rem;
+  margin: 0;
+  min-height: 1.45em;
+}
+
+.noaid-section {
+  margin: 0 0 1.75rem;
+  scroll-margin-top: 7rem;
+}
+
+.noaid-section h2 {
+  border-bottom: 1px solid #565436;
+  font-size: clamp(1.12rem, 2.2vw, 1.55rem);
+  margin: 0 0 .55rem;
+  padding-bottom: .5rem;
+}
+
+.noaid-row {
+  background: #171f13;
+  border: 1px solid #474633;
+  border-radius: 3px;
+  margin: .45rem 0;
+  overflow-wrap: anywhere;
+  scroll-margin-top: 7rem;
+}
+
+.noaid-row summary {
+  cursor: pointer;
+  padding: .68rem .8rem;
+}
+
+.noaid-row summary::marker {
+  color: #c8b775;
+}
+
+.noaid-row code {
+  color: #f0de95;
+  font: 600 .92rem/1.55 "IBM Plex Mono", monospace;
+}
+
+.noaid-row small {
+  color: #c2c4a1;
+  display: inline-block;
+  font-size: .78rem;
+  margin-inline: .55rem;
+}
+
+.noaid-row p {
+  border-top: 1px solid #474633;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 90ch;
+  padding: .72rem .8rem .86rem;
+}
+
+.noaid-page :is(a, button, input, summary):focus-visible {
+  outline: 2px solid #efe19b;
+  outline-offset: 3px;
+}
+
+@media (max-width: 620px) {
+  .noaid-page .ch-head { flex-wrap: wrap; }
+  .noaid-page .ch-nav { order: 2; flex-basis: 100%; }
+  .noaid-row small { margin-inline: .25rem; }
+}
