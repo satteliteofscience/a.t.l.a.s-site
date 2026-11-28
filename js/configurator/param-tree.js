@@ -66,13 +66,17 @@ function render({state,lang,formatParam,canWrite,edit,onSelect,limit}){
   groups.get(group).push(name);
  }
  // Group categories are based on exact FC parameter prefixes, like Mission Planner.
- const selection=state.treeSelection||'ALL';const searched=all.filter(([name])=>{const md=meta.get(name)||{};return name.includes(query)||String(md.Description||'').toUpperCase().includes(query)||String(md.DisplayName||'').toUpperCase().includes(query);});
- const selected=searched.filter(([name,p])=>{
-  if(selection!=='ALL' && selection.startsWith('G:') && groupOf(name)!==selection.slice(2))return false;
-  if(selection!=='ALL' && selection.startsWith('P:') && name!==selection.slice(2))return false;
-  const md=meta.get(name)||{};
-  if($('paramModifiedOnly')?.checked){const def=Number(md.Default);const fromDefault=md.Default!==undefined&&Number.isFinite(def)&&Math.abs(def-p.value)>1e-5;const changedImported=state.imported?.has(name)&&Math.abs(state.imported.get(name)-p.value)>1e-5;if(!fromDefault&&!changedImported)return false;}
-  if($('paramNoDefaultOnly')?.checked && md.Default!==undefined && md.Default!=='')return false;
+ const selection=state.treeSelection||'ALL';
+ const selectedGroup=selection.startsWith('G:')?selection.slice(2):null;
+ const selectedParam=selection.startsWith('P:')?selection.slice(2):null;
+ const modifiedOnly=$('paramModifiedOnly')?.checked,noDefaultOnly=$('paramNoDefaultOnly')?.checked;
+ const selected=all.filter(([name,p])=>{
+  if(selectedGroup!==null&&groupOf(name)!==selectedGroup)return false;
+  if(selectedParam!==null&&name!==selectedParam)return false;
+  const md=meta.get(name);
+  if(query&&!name.includes(query)&&!String(md?.Description||'').toUpperCase().includes(query)&&!String(md?.DisplayName||'').toUpperCase().includes(query))return false;
+  if(modifiedOnly){const def=Number(md?.Default);const fromDefault=md?.Default!==undefined&&Number.isFinite(def)&&Math.abs(def-p.value)>1e-5;const changedImported=state.imported?.has(name)&&Math.abs(state.imported.get(name)-p.value)>1e-5;if(!fromDefault&&!changedImported)return false;}
+  if(noDefaultOnly&&md?.Default!==undefined&&md.Default!=='')return false;
   return true;
  });
  root.replaceChildren();const allButton=document.createElement('button');allButton.className='pt-group all'+(selection==='ALL'?' selected':'');allButton.textContent=`⌂ ${tr('all')} (${all.length})`;allButton.addEventListener('click',()=>select('ALL'));root.append(allButton);
@@ -84,11 +88,12 @@ function render({state,lang,formatParam,canWrite,edit,onSelect,limit}){
   if(open){const list=document.createElement('div');list.className='pt-leaves';for(const name of names){if(query&&!name.includes(query)&&!String(meta.get(name)?.Description||'').toUpperCase().includes(query))continue;const leaf=document.createElement('button');leaf.className='pt-leaf'+(selection==='P:'+name?' selected':'');leaf.textContent=name;leaf.onclick=()=>select('P:'+name);list.append(leaf);}root.append(list);}
  }
  function select(v){state.treeSelection=v;state.tableLimit=150;treeOpen=false;$('paramTreeLayout')?.classList.remove('tree-open');onSelect();}
- tbody.replaceChildren();const frag=document.createDocumentFragment();const visible=selected.slice(0,Math.min(limit,3000));
+ const frag=document.createDocumentFragment(),visible=selected.slice(0,Math.min(limit,3000));
+ const writable=canWrite();
  for(const [name,p]of visible){const md=meta.get(name)||{},row=document.createElement('tr');
   const cName=document.createElement('td');cName.className='pt-name';cName.textContent=name;
   const cValue=document.createElement('td');const valueButton=document.createElement('button');valueButton.type='button';valueButton.className='pt-value';valueButton.textContent=formatParam(p.value);const readOnly=md.ReadOnly===true||md.readOnly===true||String(md.ReadOnly).toLowerCase()==='true'||name==='FORMAT_VERSION'||name==='SYSID_SW_MREV'||name.startsWith('STAT_');
-  valueButton.disabled=readOnly||!canWrite();valueButton.onclick=()=>edit(name);valueButton.title=readOnly?'Read-only parameter':canWrite()?'Edit '+name:'Requires live DISARMED MAVLink';cValue.append(valueButton);
+  valueButton.disabled=readOnly||!writable;valueButton.onclick=()=>edit(name);valueButton.title=readOnly?'Read-only parameter':writable?'Edit '+name:'Requires live DISARMED MAVLink';cValue.append(valueButton);
   const cDefault=document.createElement('td');cDefault.textContent=md.Default??'—';
   const cUnits=document.createElement('td');cUnits.textContent=md.Units??'—';
   const cOptions=document.createElement('td');cOptions.className='pt-options';const opt=optionsText(md);cOptions.textContent=opt;cOptions.title=opt;
@@ -97,7 +102,7 @@ function render({state,lang,formatParam,canWrite,edit,onSelect,limit}){
   row.append(cName,cValue,cDefault,cUnits,cOptions,cDesc,cFav);frag.append(row);
  }
  if(!visible.length){const row=document.createElement('tr'),cell=document.createElement('td');cell.colSpan=7;cell.className='pt-empty';cell.textContent=all.length?tr('nomatches'):tr('noParams');row.append(cell);frag.append(row);}
- tbody.append(frag);
+ tbody.replaceChildren(frag);
  const summary=$('paramsSummary');if(summary)summary.textContent=`${visible.length} / ${selected.length} · ${all.length} ${tr('count')}`;
  const more=$('moreParamsBtn');if(more)more.hidden=visible.length>=selected.length;
  const status=$('paramMetadataStatus');if(status&&status.textContent==='—')status.textContent=(metadataKind==='official'?tr('official'):tr('local'))+` · ${meta.size}`;

@@ -19,7 +19,7 @@ function display(state,live){
  const tr=key=>({simArmed:'ARMED / SIM',armed:'ARMED — WRITE LOCKED',disarmed:'DISARMED',unknown:'UNKNOWN',simulation:'SIM / NOT LIVE FLIGHT'})[key]||key;
  const context={
    state,heartbeatLive:()=>live,
-   $:id=>(elements[id]??=( {style:{},textContent:'',innerHTML:'',title:''} )),
+   $:id=>(elements[id]??=( {style:{},textContent:'',firstChild:{data:'--- '},title:''} )),
    tr,cleanNum:(v,p)=>Number(v).toFixed(p),modes:{},
    renderAhrsFilter:()=>{},Number,Math
  };
@@ -33,10 +33,12 @@ assert.equal(simulated.armedState.textContent,'ARMED / SIM');
 assert.equal(simulated.armedState.title,'SIM / NOT LIVE FLIGHT');
 assert.equal(demo.armed,null,'display must not update real armed state');
 assert.equal(simulated.flightMode.textContent,'FBWA / SIM');
+assert.equal(simulated.speedReadout.firstChild.data,'81 ');
 const stopped=display({...demo,demo:false,armed:false},true);
 assert.equal(stopped.armedState.textContent,'DISARMED','real disarmed state must be shown unchanged');
 const running=display({...demo,demo:false,armed:true},true);
 assert.equal(running.armedState.textContent,'ARMED — WRITE LOCKED','real armed state must be shown unchanged');
 const timeout=display({...demo,demo:false,armed:true},false);
 assert.equal(timeout.armedState.textContent,'UNKNOWN','lost MAVLink must not fabricate live ARM state');
+assert.equal(timeout.speedReadout.firstChild.data,'--- ');
 console.log('PASS: synthetic flight is ARMED / SIM, while live ARM, DISARM, heartbeat loss and write guards remain unchanged.');

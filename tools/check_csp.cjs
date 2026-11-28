@@ -1,4 +1,4 @@
-/* Content-Security-Policy and frame guard: every page carries the same strict policy, nothing executes inline except hashed scripts,
+/* Content-Security-Policy and frame guard: every page carries the shared policy or a stricter one, nothing executes inline except hashed scripts,
  * and every outside host the code talks to is named in the policy (and every host in the policy is still used). */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -24,9 +24,15 @@ for(const page of pages){
  const inline=[...html.matchAll(/<script(?![^>]*\bsrc=)([^>]*)>([\s\S]*?)<\/script>/gi)].filter(m=>!/type\s*=\s*["'](?:application\/(?:ld\+)?json|text\/plain)/i.test(m[1])).map(m=>"'sha256-"+crypto.createHash('sha256').update(m[2],'utf8').digest('base64')+"'");
  assert.deepEqual([...script.slice(1)].sort(),inline.sort(),page+': the hashes are exactly those of the inline scripts (a changed inline script needs a new hash)');
  assert.ok(!/\son[a-z]+\s*=\s*["']/i.test(html),page+': no inline event handlers');assert.ok(!/href\s*=\s*["']\s*javascript:/i.test(html),page+': no javascript: links');
- // every page has the same policy apart from the hashes
- const rest=JSON.stringify(Object.entries(p).filter(([k])=>k!=='script-src'));if(baseline===null)baseline=rest;assert.equal(rest,baseline,page+': same policy as the other pages');
- assert.ok(p['connect-src'].includes(gateway),page+': the firmware gateway of data/firmware-access.json is allowed');
+ const rest=Object.fromEntries(Object.entries(p).filter(([k])=>k!=='script-src'));
+ if(baseline===null)baseline=rest;
+ if(page==='noaid-parameters.html'){
+  // The standalone reference page has no firmware access, remote images, or inline styles.
+  assert.deepEqual(rest,{...baseline,'style-src':baseline['style-src'].filter(value=>value!=="'unsafe-inline'"),'img-src':["'self'"],'connect-src':["'self'"]},page);
+ }else{
+  assert.deepEqual(rest,baseline,page+': same policy as the other pages');
+  assert.ok(p['connect-src'].includes(gateway),page+': the firmware gateway of data/firmware-access.json is allowed');
+ }
  // frame guard: the first script of every page except the self-contained 404
  if(page==='404.html')assert.ok(!html.includes('frame-guard.js'));
  else{const first=/<script\b[^>]*>/i.exec(html);assert.equal(first[0],'<script src="js/site/frame-guard.js">',page+': the frame guard is the first script');assert.ok(first.index>at);}

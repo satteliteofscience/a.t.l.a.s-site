@@ -71,8 +71,10 @@ function p(...rows){return new Map(rows.map(([name,value])=>[name,{value,type:9,
  const first=js.indexOf('function navigate(tab){'),last=js.indexOf('function heartbeatLive(',first);
  assert.ok(first>=0&&last>first);
  const nav=js.slice(first,last);
- assert.match(nav,/if\(tab==='params'&&previous!=='params'\)\{renderParams\(\);showProgress\(\);\}/,
+ assert.match(nav,/if\(tab==='params'&&previous!=='params'\)renderParams\(\);/,
  'entering the parameter list should immediately show cached values');
+ assert.match(js,/function renderParams\(\)\{[\s\S]*?showProgress\(\);\s*\}/,
+ 'the parameter render must also update download progress');
  assert.match(nav,/state\.params\.size===0&&!state\.paramTransfer/,
  'navigation should only start an initial read when no cache or prior transfer exists');
  assert.doesNotMatch(nav,/tab==='params'&&previous!=='params'\)\|\|/,

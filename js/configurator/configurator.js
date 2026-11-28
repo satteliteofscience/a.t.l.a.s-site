@@ -115,7 +115,7 @@ function navigate(tab){
  // The first heartbeat already fetches the full parameter list.
  // Reopening Parameter List must show the cached data, not force another
  // expensive download over the radio. Explicit Refresh remains available.
- if(tab==='params'&&previous!=='params'){renderParams();showProgress();}
+ if(tab==='params'&&previous!=='params')renderParams();
  if(tab==='basic'&&previous!=='basic')renderBasic();
  if(state.params.size===0&&!state.paramTransfer&&
     (tab==='params'||['servos','esccal','osd','tuning','modes','radio','gimbal','parachute','temperature'].includes(tab))&&
@@ -253,23 +253,33 @@ function renderAhrsFilter(){
     const title=info.label+' — '+info.detail;if(detail.title!==title)detail.title=title;
   }
 }
-function updateTelemetryUI(){const t=state.demo||heartbeatLive()?state.telemetry:{roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};
- $('rollReadout').textContent=Number.isFinite(t.roll)?`${t.roll>=0?'+':''}${cleanNum(t.roll,1)}°`:'--.-°';
- $('pitchReadout').textContent=Number.isFinite(t.pitch)?`${t.pitch>=0?'+':''}${cleanNum(t.pitch,1)}°`:'--.-°';
- $('yawReadout').textContent=Number.isFinite(t.yaw)?`${cleanNum((t.yaw+360)%360,1)}°`:'---.-°';
+function updateTelemetryUI(){
+ function updateReadout(id,text){
+  const node=$(id);
+  if(node.textContent!==text)node.textContent=text;
+ }
+ const live=heartbeatLive();
+ const t=state.demo||live?state.telemetry:{};
+ updateReadout('rollReadout',Number.isFinite(t.roll)?`${t.roll>=0?'+':''}${cleanNum(t.roll,1)}°`:'--.-°');
+ updateReadout('pitchReadout',Number.isFinite(t.pitch)?`${t.pitch>=0?'+':''}${cleanNum(t.pitch,1)}°`:'--.-°');
+ updateReadout('yawReadout',Number.isFinite(t.yaw)?`${cleanNum((t.yaw+360)%360,1)}°`:'---.-°');
  const freshAirspeed=state.demo||(Number.isFinite(state.lastVfr)&&Date.now()-state.lastVfr<6500);
- $('speedReadout').innerHTML=freshAirspeed&&Number.isFinite(t.airspeed)&&t.airspeed>=0?`${Math.round(t.airspeed)} <em>km/h</em>`:'--- <em>km/h</em>';
- $('speedReadout').title=tr(freshAirspeed?'speedTitleFresh':'speedTitleStale');
- $('voltageReadout').textContent=Number.isFinite(t.voltage)?`${cleanNum(t.voltage,2)} V`:'—';
- $('altReadout').textContent=Number.isFinite(t.altitude)?`${cleanNum(t.altitude,1)} m`:'—';
- $('vehicleModel').textContent=state.demo?'SIM / ArduPlane':heartbeatLive()?`MAVLink SYS ${state.sysid}`:'—';
- const armed=heartbeatLive()?state.armed:null;
+ const speed=$('speedReadout');
+ const speedText=freshAirspeed&&Number.isFinite(t.airspeed)&&t.airspeed>=0?`${Math.round(t.airspeed)} `:'--- ';
+ const speedTitle=tr(freshAirspeed?'speedTitleFresh':'speedTitleStale');
+ if(speed.firstChild.data!==speedText)speed.firstChild.data=speedText;
+ if(speed.title!==speedTitle)speed.title=speedTitle;
+ updateReadout('voltageReadout',Number.isFinite(t.voltage)?`${cleanNum(t.voltage,2)} V`:'—');
+ updateReadout('altReadout',Number.isFinite(t.altitude)?`${cleanNum(t.altitude,1)} m`:'—');
+ updateReadout('vehicleModel',state.demo?'SIM / ArduPlane':live?`MAVLink SYS ${state.sysid}`:'—');
+ const armed=live?state.armed:null;
  // The demo depicts an aircraft already flying, so display a SIMULATED armed state.
  // Never change state.armed: real MAVLink ARM/DISARM and write interlocks are separate.
- $('armedState').textContent=state.demo?tr('simArmed'):armed===true?tr('armed'):armed===false?tr('disarmed'):tr('unknown');
+ updateReadout('armedState',state.demo?tr('simArmed'):armed===true?tr('armed'):armed===false?tr('disarmed'):tr('unknown'));
  $('armedState').style.color=state.demo||armed===true?'#efae7f':'#c4d685';
  $('armedState').title=state.demo?tr('simulation'):'';
- $('flightMode').textContent=state.demo?'FBWA / SIM':heartbeatLive()&&state.mode!==null?(modes[state.mode]||`CUSTOM ${state.mode}`):'—';renderAhrsFilter();
+ updateReadout('flightMode',state.demo?'FBWA / SIM':live&&state.mode!==null?(modes[state.mode]||`CUSTOM ${state.mode}`):'—');
+ renderAhrsFilter();
 }
 function enterDemo(){if(state.connected||state.connecting){toast(tr('needlink'),true);return;}state.demo=!state.demo;stopParamRepair();state.paramTransfer=null;state.params.clear();state.telemetry={roll:null,pitch:null,yaw:null,airspeed:null,altitude:null,throttle:null,voltage:null};state.paramCount=null;state.armed=null;
  if(state.demo){const demo={'ROLL_LIMIT_DEG':45,'PTCH_LIM_MAX_DEG':20,'PTCH_LIM_MIN_DEG':-15,'AIRSPEED_MIN':16,'AIRSPEED_MAX':45,'AIRSPEED_CRUISE':22,'THR_MIN':0,'THR_MAX':100,'STALL_PREVENTION':1,'FS_LONG_ACTN':0,'ARSPD_USE':1,'RUD_LIMIT_DEG':30,'EK3_PRIMARY':0,'EK3_IMU_MASK':3,'TECS_SPDWEIGHT':1,'TKOFF_ALT':150,'SERVO1_FUNCTION':4,'SERVO2_FUNCTION':19,'SERVO3_FUNCTION':70,'OSD_TYPE':1,'OSD_UNITS':0,'OSD1_ENABLE':1,'OSD1_ALTITUDE_EN':1,'OSD1_ALTITUDE_X':24,'OSD1_ALTITUDE_Y':2,'OSD1_ASPEED_EN':1,'OSD1_ASPEED_X':1,'OSD1_ASPEED_Y':3,'OSD1_BAT_VOLT_EN':1,'OSD1_BAT_VOLT_X':2,'OSD1_BAT_VOLT_Y':13,'OSD1_HORIZON_EN':1,'OSD1_HORIZON_X':15,'OSD1_HORIZON_Y':8,'OSD1_RSSI_EN':1,'OSD1_RSSI_X':2,'OSD1_RSSI_Y':1,'OSD1_MESSAGE_EN':0,'OSD1_MESSAGE_X':1,'OSD1_MESSAGE_Y':12};for(const [name,value]of Object.entries(demo))state.params.set(name,{value,type:Number.isInteger(value)?6:9,index:state.params.size});state.paramCount=state.params.size;toast('SIM DEMO · no USB hardware connected');}else toast('Demo exited');
@@ -952,7 +962,7 @@ async function saveEdit(ev){
  }catch(err){toast(`${tr('senderror')} ${name}: ${err.message}`,true);}
 }
 
-function renderBasic(){const grid=$('basicGrid');grid.replaceChildren();const filter=state.group;for(const s of settingDefs){if(filter!=='all'&&filter!==s.group)continue;
+function renderBasic(){if(state.selectedTab!=='basic')return;const grid=$('basicGrid');grid.replaceChildren();const filter=state.group;for(const s of settingDefs){if(filter!=='all'&&filter!==s.group)continue;
  const value=state.params.get(s.key);const card=document.createElement('article');card.className='cc-setting-card';
  const row=document.createElement('div');row.className='cc-setting-line';const code=document.createElement('code');code.textContent=s.key;const label=document.createElement('span');label.className='cc-setting-tag';label.textContent=s.group==='order'?window.AtlasOrderCore.protocolName(lang):s.group.toUpperCase();row.append(code,label);
  const desc=document.createElement('div');desc.className='cc-setting-label';desc.textContent=s.desc[lang==='uk'?1:lang==='en'?2:0].replaceAll('O.R.D.E.R.',window.AtlasOrderCore.protocolName(lang));
@@ -969,10 +979,10 @@ function renderCategoryNav(){
  }
 }
 function renderParams(){
- if(window.AtlasParamTree){
+ if(state.selectedTab==='params'&&window.AtlasParamTree){
   window.AtlasParamTree.render({state,lang,formatParam,canWrite,edit:openEdit,onSelect:renderParams,limit:state.tableLimit});
-  showProgress();return;
  }
+ showProgress();
 }
 
 function exportParams(){if(state.params.size===0){toast(tr('exportempty'),true);return;}
@@ -1081,6 +1091,7 @@ async function parseApj(file){if(!file)return;state.apj=null;state.apjFilename=f
  const node=$('apjMetadata');node.replaceChildren();const pair=(k,v)=>{const dl=document.createElement('dl'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=k;dd.textContent=String(v);dl.append(dt,dd);node.append(dl);};pair(tr('filename'),file.name);pair(tr('boardid'),obj.board_id);pair(tr('size'),(obj.image_size===undefined?'?':`${(obj.image_size/1024).toFixed(1)} KiB`));pair(tr('format'),'ArduPilot APJ / JSON');pair('STATUS',tr('metaFound'));toast(`APJ board_id=${obj.board_id} · ${file.name}`);
  }catch(err){$('apjMetadata').textContent=tr('metaBad');toast(`${tr('error')}: ${err.message}`,true);}}
 // Schedule work only while the user can see the dashboard; keep the same ~30 FPS when active.
+let lastHorizonFrame=null;
 function scheduleHorizon(){
  if(state.pageLeaving||!state.hudLoopActive||document.hidden||state.selectedTab!=='dashboard'||state.hudRaf)return;
  state.hudRaf=requestAnimationFrame(drawHorizon);
@@ -1090,12 +1101,22 @@ function drawHorizon(ts){
  if(!state.hudLoopActive||state.pageLeaving||document.hidden||state.selectedTab!=='dashboard')return;
  if(ts-(state.lastCanvasDraw||0)<33){scheduleHorizon();return;}
  state.lastCanvasDraw=ts;
- const canvas=$('attitudeCanvas'),ctx=canvas.getContext('2d');const rect=canvas.getBoundingClientRect();
+ const canvas=$('attitudeCanvas'),rect=canvas.getBoundingClientRect();
  if(rect.width<10)return;
- const dpr=Math.min(2,window.devicePixelRatio||1),w=rect.width,h=rect.height;if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+ const dpr=Math.min(2,window.devicePixelRatio||1),w=rect.width,h=rect.height;
  if(state.demo){const t=ts/1000;state.telemetry.roll=19*Math.sin(t*.66);state.telemetry.pitch=8*Math.sin(t*.41);state.telemetry.yaw=(220+(t*3.2)%360)%360;state.telemetry.airspeed=104+28*Math.sin(t*.21);state.telemetry.altitude=150+16*Math.sin(t*.32);state.telemetry.voltage=23.2+0.1*Math.cos(t*.05);}
- const visualValid=state.demo||heartbeatLive();
- const roll=visualValid?(state.telemetry.roll||0):0,pitch=visualValid?(state.telemetry.pitch||0):0;const r=roll*Math.PI/180;
+ const live=heartbeatLive(),visualValid=state.demo||live;
+ const roll=visualValid?(state.telemetry.roll||0):0,pitch=visualValid?(state.telemetry.pitch||0):0;
+ const source=state.demo?'SYNTHETIC':live?'MAVLINK':state.connected?'NO HEARTBEAT':'OFFLINE';
+ if(ts-state.renderTimer>140){state.renderTimer=ts;updateTelemetryUI();}
+ scheduleHorizon();
+ const previous=lastHorizonFrame;
+ if(previous&&previous.w===w&&previous.h===h&&previous.dpr===dpr&&previous.roll===roll&&previous.pitch===pitch&&previous.source===source)return;
+ lastHorizonFrame={w,h,dpr,roll,pitch,source};
+ const ctx=canvas.getContext('2d');
+ if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+ const r=roll*Math.PI/180;
  const midx=w/2,midy=h/2;ctx.save();ctx.beginPath();ctx.rect(0,0,w,h);ctx.clip();ctx.translate(midx,midy);ctx.rotate(-r);ctx.translate(0,pitch*h/88);const W=2*Math.max(w,h);
  const sky=ctx.createLinearGradient(0,-W,0,0);sky.addColorStop(0,'#0a201b');sky.addColorStop(1,'#304b38');ctx.fillStyle=sky;ctx.fillRect(-W,-W,2*W,W);
  const ground=ctx.createLinearGradient(0,0,0,W);ground.addColorStop(0,'#474326');ground.addColorStop(1,'#18190d');ctx.fillStyle=ground;ctx.fillRect(-W,0,2*W,W);
@@ -1108,8 +1129,7 @@ function drawHorizon(ts){
  ctx.lineWidth=3.2;ctx.strokeStyle='#ffe48a';ctx.lineCap='square';ctx.beginPath();ctx.moveTo(midx-w*.23,midy);ctx.lineTo(midx-w*.085,midy);ctx.lineTo(midx-w*.05,midy+12);ctx.moveTo(midx+w*.23,midy);ctx.lineTo(midx+w*.085,midy);ctx.lineTo(midx+w*.05,midy+12);ctx.moveTo(midx-13,midy);ctx.lineTo(midx+13,midy);ctx.moveTo(midx,midy-13);ctx.lineTo(midx,midy+13);ctx.stroke();
  ctx.strokeStyle='#d4c368b8';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(midx,midy,Math.min(w,h)*.45,Math.PI*1.1,Math.PI*1.9);ctx.stroke();for(let a=-60;a<=60;a+=15){const deg=(a-90)*Math.PI/180,rad=Math.min(w,h)*.45;ctx.beginPath();ctx.moveTo(midx+rad*Math.cos(deg),midy+rad*Math.sin(deg));ctx.lineTo(midx+(rad-((a%30)?7:13))*Math.cos(deg),midy+(rad-((a%30)?7:13))*Math.sin(deg));ctx.stroke();}
  ctx.fillStyle='#f6e17b';ctx.beginPath();ctx.moveTo(midx,midy-Math.min(w,h)*.46);ctx.lineTo(midx-9,midy-Math.min(w,h)*.46-13);ctx.lineTo(midx+9,midy-Math.min(w,h)*.46-13);ctx.fill();
- ctx.font='bold 12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.fillStyle='#e4d088';ctx.fillText('A.T.L.A.S. // ATTITUDE',midx,h-20);ctx.textAlign='left';ctx.fillStyle='#b9c495a6';ctx.textAlign='right';ctx.fillText(state.demo?'SYNTHETIC':heartbeatLive()?'MAVLINK':state.connected?'NO HEARTBEAT':'OFFLINE',w-15,26);
- if(ts-state.renderTimer>140){state.renderTimer=ts;updateTelemetryUI();}scheduleHorizon();
+ ctx.font='bold 12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.fillStyle='#e4d088';ctx.fillText('A.T.L.A.S. // ATTITUDE',midx,h-20);ctx.textAlign='left';ctx.fillStyle='#b9c495a6';ctx.textAlign='right';ctx.fillText(source,w-15,26);
 }
 function wire(){
  // Apply the default for automatic dashboard/quick setup and manual reads.
@@ -1140,6 +1160,9 @@ function wire(){
  window.addEventListener('pagehide',leavePage,{capture:true});
  window.addEventListener('beforeunload',leavePage,{capture:true});
  document.addEventListener('visibilitychange',scheduleHorizon);
+ const invalidateHorizon=()=>{lastHorizonFrame=null;scheduleHorizon();};
+ $('attitudeCanvas').addEventListener('contextrestored',invalidateHorizon);
+ document.fonts?.ready.then(invalidateHorizon);
  window.addEventListener('pageshow',ev=>{if(ev.persisted){state.pageLeaving=false;state.hudLoopActive=true;state.lastHeartbeat=0;updateConnectionUI();scheduleHorizon();}});
 }
 const oneClickToken=consumeOneClickTcpToken();

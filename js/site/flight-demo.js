@@ -221,16 +221,21 @@
     state.heading=(state.heading+rate*dt+360)%360;
     if(hooks.layer&&hooks.layer.update)hooks.layer.update(dt);
   }
+  function updateReadout(node,value){
+    const text=String(value);
+    if(node.textContent!==text)node.textContent=text;
+  }
   function setUi(){
     const lay=hooks.layer,rollSign=lay&&lay.engaged?lay.rollSign:1;
-    ui.roll.textContent=digits(((state.roll*rollSign%360)+540)%360-180);      // within -180..180 (the inverted flight and the rolls of the game)
-    ui.pitch.textContent=digits(state.pitch);
-    ui.yaw.textContent=`${state.heading.toFixed(1).padStart(5,'0')}°`;
-    ui.speed.textContent=Math.round(state.speed);
-    ui.throttle.textContent=`${Math.round(state.throttle)}%`;
+    updateReadout(ui.roll,digits(((state.roll*rollSign%360)+540)%360-180));      // within -180..180 (the inverted flight and the rolls of the game)
+    updateReadout(ui.pitch,digits(state.pitch));
+    updateReadout(ui.yaw,`${state.heading.toFixed(1).padStart(5,'0')}°`);
+    updateReadout(ui.speed,Math.round(state.speed));
+    updateReadout(ui.throttle,`${Math.round(state.throttle)}%`);
     ui.speedbar.style.height=`${bound((state.speed-90)/(((lay&&lay.speedTop)||310)-90)*100,10,100)}%`;
     const gameText=lay&&lay.status?lay.status():null;
-    ui.status.textContent=gameText||(window.AtlasI18n?.t(state.boosted?'BOOST ACTIVE':state.hovered?'FLIGHT CONTROL':'HOVER TO CONTROL') ?? (state.boosted?'BOOST ACTIVE':state.hovered?'FLIGHT CONTROL':'HOVER TO CONTROL'));
+    const status=state.boosted?'BOOST ACTIVE':state.hovered?'FLIGHT CONTROL':'HOVER TO CONTROL';
+    updateReadout(ui.status,gameText||(window.AtlasI18n?.t(status)??status));
   }
   function resize(){
     const rect=host.getBoundingClientRect();

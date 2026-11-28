@@ -31,7 +31,7 @@ const mkHeartbeat=(sysid,vehicleType=1,compid=1)=>{
  const cfg=read('js/configurator/configurator.js'),wizard=read('js/configurator/quick-setup.js'),temp=read('js/configurator/tempcal-ui.js');
  assert.match(cfg,/if\(!data\|\|!M\.belongsToSelectedVehicle\(message,data,state\.sysid\)\)return/,'FC identity must be enforced before processing any parsed message');
  assert.match(cfg,/function heartbeatLive\(now=Date\.now\(\)\)/,'fresh heartbeat gate must exist');
- assert.match(cfg,/const t=state\.demo\|\|heartbeatLive\(\)\?state\.telemetry/,'old dashboard telemetry must not be displayed as live');
+ assert.match(cfg,/const live=heartbeatLive\(\);\s*const t=state\.demo\|\|live\?state\.telemetry:\{\}/,'old dashboard telemetry must not be displayed as live');
  assert.match(cfg,/if\(state\.sysid!==null&&!heartbeatLive\(\)&&!state\.heartbeatStale\)/,'heartbeat loss must be detected only once per outage');
  assert.match(cfg,/else if\(recovered\)\{updateConnectionUI\(\);updateTelemetryUI\(\);/,'heartbeat recovery must restore UI status');
  assert.match(cfg,/WebSocket bridge handshake timed out \(12 s\)/,'network handshake must have a bounded timeout');
